@@ -47,7 +47,7 @@ use kartik\grid\GridView;
 
 $this->title = 'Transferencias';
 $this->params['breadcrumbs'][] = ['label' => 'Facturas', 'url' => ['/ventas/factura/index']];
-$this->params['breadcrumbs'][] = ['label' => 'Items de Factura', 'url' => ['/ventas/facturadetalle/index', 'idfactura' => $idfactura]];
+$this->params['breadcrumbs'][] = ['label' => 'Factura Items', 'url' => ['/ventas/facturaitem/index', 'idfactura' => $idfactura]];
 $this->params['breadcrumbs'][] = $this->title;
 
 $totalDocumentoOK = Transferencia::totalDocumentoOK ($idfactura);

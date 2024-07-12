@@ -45,19 +45,6 @@ use yii\widgets\ActiveForm;
         <div class="col-lg-3">
             <?= $form->field($model, 'bodega')->textInput(['maxlength' => true]) ?>
         </div>
-
-        <div class="col-lg-3">
-            <?= $form->field($model, 'error')->dropDownList(
-                                            [   //'0' => 'Registro OK', 
-                                                //'1' => 'No Tiene Bodega',
-                                                '2' => 'Valor Cero',
-                                                '3' => 'No Tiene Código Barras'
-                                            ], 
-                    [   'prompt' => ' Seleccionar Opción ... ', 
-                        'id' => 'error',
-                        'required'=>false]);
-            ?>
-        </div>
     </div>
 
 

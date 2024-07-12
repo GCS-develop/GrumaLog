@@ -85,6 +85,7 @@ $gridColumns = [
     'numeroOrdenCompra',
     'nit',
     'razonSocial',
+    'modeloLogistico',
     [
         'attribute' => 'fechaCita', // Nombre del atributo en el modelo
         'label' => 'Fecha Cita',
@@ -131,7 +132,10 @@ $gridColumns = [
     [
         'attribute' => 'created_at', // Nombre del atributo en el modelo
         'label' => 'Fecha Registro', // Etiqueta de la columna
-        'format' => ['date', 'php:Y-m-d H:i'],
+        'value' => function($model){
+                    return substr($model->created_at,0, 16);
+        }
+        //'format' => ['date', 'php:Y-m-d H:i'],
     ], 
     [
         'attribute' => 'created_by', // Nombre del atributo en el modelo
@@ -246,6 +250,13 @@ $gridColumns = [
                 'vAlign' => 'middle', // Alineación vertical al centro
             ],
             [
+                'attribute' => 'modeloLogistico', // Nombre del atributo en el modelo
+                'label' => 'Modelo Logístico', // Etiqueta de la columna
+                'hAlign' => 'left', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+            ],
+
+            [
                 'attribute' => 'nombreCategoria', // Nombre del atributo en el modelo
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
@@ -341,9 +352,12 @@ $gridColumns = [
             ],
             [
                 'attribute' => 'created_at', // Nombre del atributo en el modelo
-                'format' => ['date', 'php:Y-m-d H:i'],
+                //'format' => ['date', 'php:Y-m-d H:i'],
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
+                'value' => function($model){
+                    return substr($model->created_at,0, 16);
+                }
             ],
             
             [

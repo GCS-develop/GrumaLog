@@ -163,10 +163,11 @@ $baseUrl = Url::base(true);
 
 					[
                         'label' => 'Ventas',
-                        'icon' => 'users',
+                        'icon' => 'dollar-sign',
                         'badge' => '<span class="right badge badge-info">1</span>',
                         'items' => [
                             ['label' => 'Consulta', 'url' => ['/ventas/factura/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Cotización Precio', 'url' => ['/ventas/cotizacionprecio/index'], 'iconStyle' => 'far'],
                         ]
                     ],
 					

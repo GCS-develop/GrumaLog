@@ -14,6 +14,8 @@ use yii\web\Response;
 use frontend\modules\ventas\models\Viewventapos;
 use frontend\modules\ventas\models\Estadofactura;
 use frontend\modules\ventas\models\Facturadetalle;
+use frontend\modules\ventas\models\Facturaitem;
+use frontend\modules\ventas\models\Transferencia;
 
 /**
  * FacturaController implements the CRUD actions for Factura model.
@@ -97,11 +99,22 @@ class FacturaController extends Controller
             if ($model->load($this->request->post())) {
                 if ($model->validate()){
 
-                    $total = Viewventapos::totalEntradas($model->proveedor->codigo,
+                    $totalEntrada = Viewventapos::totalEntradas($model->proveedor->codigo,
                                                         $model->fechaDesde,
                                                         $model->fechaHasta);
 
-                    if ($total <> 0){
+                    $totalDevolucion = Viewventapos::totalDevoluciones($model->proveedor->codigo,
+                                                        $model->fechaDesde,
+                                                        $model->fechaHasta);
+
+                    $total = $totalEntrada + $totalDevolucion;
+
+                    $model->valorDocumento = $total;
+                    $model->save();   
+
+                    $result = Facturadetalle::grabarItems ($model, $model->tieneNotaCredito);
+
+                    /*if ($total <> 0){
                         $model->valorDocumento = $total;
                         $model->save();   
 
@@ -122,7 +135,7 @@ class FacturaController extends Controller
 
                             $result = Facturadetalle::grabarItems ($modeldevol, $model->tieneNotaCredito);
                         }
-                    }
+                    }*/
 
                     return $this->redirect(['index']);
                 }else{
@@ -177,6 +190,9 @@ class FacturaController extends Controller
     public function actionDelete($id)
     {
         $numRegistrosBorrados = Facturadetalle::deleteAll(['idFactura' => $id]);
+        $numRegistrosBorrados = Facturaitem::deleteAll(['idFactura' => $id]);
+        $numRegistrosBorrados = Transferencia::deleteAll(['idFactura' => $id]);
+
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);

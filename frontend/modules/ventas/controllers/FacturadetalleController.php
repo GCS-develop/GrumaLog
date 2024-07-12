@@ -13,6 +13,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 use frontend\modules\ventas\models\Factura;
+use frontend\modules\ventas\models\Facturaitem;
 
 /**
  * FacturadetalleController implements the CRUD actions for Facturadetalle model.
@@ -42,17 +43,25 @@ class FacturadetalleController extends Controller
      *
      * @return string
      */
-    public function actionIndex($idfactura)
+    public function actionIndex($idfacturaitem = null)
     {
-        $modelfactura = Factura::findOne(['id' => $idfactura]);
+        $modelfactura = new Factura();
+        $modelitem = new Facturaitem();
+
+        if ($idfacturaitem){
+            $modelitem = Facturaitem::findOne(['id' => $idfacturaitem]);
+
+            $modelfactura = Factura::findOne(['id' => $modelitem->idFactura]);
+        }
 
         $searchModel = new FacturadetalleSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams, $idfactura);
+        $dataProvider = $searchModel->search($this->request->queryParams, $modelitem);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'modelfactura' => $modelfactura
+            'modelfactura' => $modelfactura,
+            //'modelitem' => $modelitem
         ]);
     }
 
@@ -111,6 +120,36 @@ class FacturadetalleController extends Controller
         ]);
     }
 
+    public function actionUpdateprecio($id)
+    {
+        $model = $this->findModel($id);
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+
+            $preciounitario = $model->precioUnitario;
+            if ($preciounitario > 0){
+                Facturadetalle::updateAll(
+                    [
+                        'precioUnitario' => $preciounitario,
+                        'error' => 1
+                    ], 
+                    [
+                        'item' => $model->item, 
+                        'codigoBarra' => $model->codigoBarra, 
+                        'color' => $model->color, 
+                        'talla' => $model->talla
+                    ]
+                );
+            }
+
+            return $this->redirect(['index', 'idfactura' => $model->idFactura]);
+        }
+
+        return $this->render('update', [
+            'model' => $model,
+        ]);
+    }
+
     /**
      * Deletes an existing Facturadetalle model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
@@ -123,12 +162,6 @@ class FacturadetalleController extends Controller
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
-    }
-
-    public function actionSincronizarbodega ($idfactura){
-        FacturadetalleSearch::buscarBodega ($idfactura);
-
-        return $this->redirect(['index', 'idfactura' => $idfactura]);
     }
 
     /**

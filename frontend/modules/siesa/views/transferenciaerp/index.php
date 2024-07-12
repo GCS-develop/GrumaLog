@@ -249,6 +249,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     }, 
 
                 ],
+                'visibleButtons' => [
+                    'transferencia' => function ($model, $key, $index) {
+                return $model->origen == 'E'; // Condición para mostrar el botón
+            },
+                ],
 
             ],
         ],

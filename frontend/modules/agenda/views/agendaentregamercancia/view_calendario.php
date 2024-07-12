@@ -5,6 +5,7 @@ use yii\widgets\DetailView;
 use yii2fullcalendar\yii2fullcalendar;
 
 use kartik\icons\Icon;
+
 Icon::map($this, Icon::FAS);
 
 /** @var yii\web\View $this */
@@ -25,40 +26,43 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 
     <?=
-        \yii2fullcalendar\yii2fullcalendar::widget(array(
-            'events'=> $events,
-            'clientOptions' => [
-                'lang' => 'es', // Configurar el idioma en español
-                //'defaultView' => 'month',
-                'dayNamesShort' => ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
-                'monthNames' => ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
-                'buttonText' => [
-                    'month' => 'Mes', // Cambiar el texto del botón "Month" a "Mes"
-                    'week' => 'Semana', // Cambiar el texto del botón "Week" a "Semana"
-                    'day' => 'Día', // Cambiar el texto del botón "Week" a "Semana"
-                    'prev' => 'Anterior', // Cambiar el texto del botón "prev" a "Anterior"
-                    'next' => 'Siguiente', // Cambiar el texto del botón "next" a "Siguiente"
-                ],
-                'header' => [
-                    'left' => 'prev,next', // Mostrar solo los botones "prev" y "next"
-                    'center' => 'title',
-                    'right' => 'month,agendaWeek,agendaDay', // Mostrar las vistas "month", "agendaWeek" y "agendaDay"
-                ],
-                'eventRender' => new \yii\web\JsExpression('
+        \yii2fullcalendar\yii2fullcalendar::widget(
+            array(
+                'events' => $events,
+                'clientOptions' => [
+                    'lang' => 'es', // Configurar el idioma en español
+                    //'defaultView' => 'month',
+                    'dayNamesShort' => ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+                    'monthNames' => ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                    'buttonText' => [
+                        'month' => 'Mes', // Cambiar el texto del botón "Month" a "Mes"
+                        'week' => 'Semana', // Cambiar el texto del botón "Week" a "Semana"
+                        'day' => 'Día', // Cambiar el texto del botón "Week" a "Semana"
+                        'prev' => 'Anterior', // Cambiar el texto del botón "prev" a "Anterior"
+                        'next' => 'Siguiente', // Cambiar el texto del botón "next" a "Siguiente"
+                    ],
+                    'header' => [
+                        'left' => 'prev,next', // Mostrar solo los botones "prev" y "next"
+                        'center' => 'title',
+                        'right' => 'month,agendaWeek,agendaDay', // Mostrar las vistas "month", "agendaWeek" y "agendaDay"
+                    ],
+                    'eventRender' => new \yii\web\JsExpression('
                     function(event, element) {
                         var title = event.title;
                         if (title.length > 20) {
                             element.css("font-size", "10px"); // Cambiar el tamaño de fuente si el título es largo
                         }
 
-                        if (event.title.includes("LOCAL")) {
+                        if(event.estado.nombre.includes("No")){
                             element.css("color", "white");
-                            element.css("background-color", "red");
+                            element.css("background-color", "red");                       
                         }
+
                     }
                 ')
-            ],
-        ));
+                ],
+            )
+        );
     ?>
 
 </div>

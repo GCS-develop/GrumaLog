@@ -45,50 +45,30 @@ use kartik\grid\GridView;
 /** @var frontend\modules\ventas\models\search\FacturadetalleSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Items de Factura';
+$this->title = 'Detalle Ventas Factura';
 $this->params['breadcrumbs'][] = ['label' => 'Facturas', 'url' => ['/ventas/factura/index']];
+if ($modelfactura){
+    $this->params['breadcrumbs'][] = ['label' => 'Items Facturas', 'url' => ['/ventas/facturaitem/index', 'idfactura' => $modelfactura->id]];
+}
 $this->params['breadcrumbs'][] = $this->title;
-
-$totalDocumentoOK = Facturadetalle::totalDocumentoOK ($modelfactura->id);
-if ($totalDocumentoOK == null){
-    $totalDocumentoOK = 0;
-}
-$formateadoOK = number_format($totalDocumentoOK, 2, ',', '.');
-
-$totalDocumentoError = Facturadetalle::totalDocumentoError ($modelfactura->id);
-if ($totalDocumentoError == null){
-    $totalDocumentoError = 0;
-}
-$formateadoError = number_format($totalDocumentoError, 2, ',', '.');
 
 ?>
 <div class="facturadetalle-index">
 
-    <?php echo $this->render('_search', ['model' => $searchModel, 'idfactura' => $modelfactura->id]); ?>
-
-    <?= Html::tag('hr', '', ['class' => 'horizontal-line']) ?>
+    <?php // echo $this->render('_search', ['model' => $searchModel, 'idfactura' => $modelfactura->id]); ?>
 
     <div class="row">
-        <div class="col-lg-4 titulonombre">
-            <?= Html::encode('Total Documento OK: ' . $formateadoOK) ?>
+        <div class="col-lg-3 titulonombre">
+            <?= Html::encode('Documento: ' . $modelfactura->prefijoDocumentoProveedor . '-' .
+                                            $modelfactura->consecutivoDocumentoProveedor) ?>
         </div>
 
-        <div class="col-lg-4 titulonombre">
-            <?= Html::encode('Total Documento Error: ' . $formateadoError) ?>
+        <div class="col-lg-3 titulonombre">
+            <?= Html::encode('Proveedor: ' . $modelfactura->proveedor->razonSocial) ?>
         </div>
     </div>
 
     <?= Html::tag('hr', '', ['class' => 'horizontal-line']) ?>
-
-    <div class="row">
-        <div class="col-lg-6 derecha">
-            <?= Html::a('Sincronizar Bodegas', ['sincronizarbodega', 'idfactura' => $modelfactura->id], ['class' => 'btn btn-success btn-lg btn-create']) ?>
-        </div>
-
-        <div class="col-lg-6 izquierda">
-            <?= Html::a('Ver Archivo Transferencia', ['/ventas/transferencia/index', 'idfactura' => $modelfactura->id], ['class' => 'btn btn-success btn-lg btn-create']) ?>
-        </div>
-    </div>
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
@@ -199,6 +179,55 @@ $formateadoError = number_format($totalDocumentoError, 2, ',', '.');
                 'width' => '5%',
                 'pageSummary' => true,
             ],
+
+            [
+                'attribute' => 'tipoMovimiento', // Nombre del atributo en el modelo
+                'hAlign' => 'center', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+                'width' => '5%',
+            ],
+
+            /*[
+                'class' => ActionColumn::className(),
+                'header'=>'Acción',
+                'headerOptions' => ['width' => '15%'],
+                //'template' => '{update} {updatedatabasic} {change} {cancel} {delete}',
+                'template' => '{update} {delete}',
+
+                'buttons' => [
+
+                    'update' => function ($url, $model) {                                
+                        return Html::a('<i class="fa fa-edit"></i>',
+                                [   'updateprecio',
+                                    'id' => $model->id
+                                ], 
+                                [
+                                    'title' => 'Actualizar Precio Venta',
+                                    'class' => 'btn btn-default btn_detalle',
+                                ]
+                        );
+                    },
+
+                    'delete' => function ($url, $model) {                                  
+                        return Html::a('<i class="fa fa-trash"></i>', 
+                                [   'delete', 'id' => $model->id], 
+                                [   'class' => 'btn btn-default',
+                                    'title' => 'Eliminar Registro',
+                                    'data' => [
+                                        'confirm' => 'Esta Seguro de Eliminar Este Registro? ( OC:' . $model->codigoBarra . '-' . 
+                                                                                        $model->item . '-' .
+                                                                                        $model->color . '-' .
+                                                                                        $model->talla .  ' - Precio:' .
+                                                                                        $model->precioUnitario . ' )',
+                                        'method' => 'post',
+                                    ]
+                                ]
+                        );
+                    },
+
+                ],
+
+            ],*/
 
             /*[
                 'class' => ActionColumn::className(),

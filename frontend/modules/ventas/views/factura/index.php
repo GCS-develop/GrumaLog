@@ -199,7 +199,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                     'detalle' => function ($url, $model) {                                
                         return Html::a('<i class="fa fa-list"></i>',
-                                [   '/ventas/facturadetalle/index',
+                                [   '/ventas/facturaitem/index',
                                     'idfactura' => $model->id
                                 ], 
                                 [

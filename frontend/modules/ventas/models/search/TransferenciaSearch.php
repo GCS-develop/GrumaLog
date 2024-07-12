@@ -39,14 +39,17 @@ class TransferenciaSearch extends Transferencia
      *
      * @return ActiveDataProvider
      */
-    public function search($params)
+    public function search($params, $idfactura)
     {
-        $query = Transferencia::find();
+        $query = Transferencia::find()->where(['idFactura' => $idfactura]);
 
         // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'pagination' => [
+                'pageSize' => 200,
+            ],
         ]);
 
         $this->load($params);
