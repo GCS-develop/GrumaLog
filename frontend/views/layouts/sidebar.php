@@ -1,13 +1,16 @@
 <?php
+// use Yii;
 use yii\helpers\Url;
 
-$baseUrl = Url::base(true); 
-?> 
+$baseUrl = Url::base(true);
+
+?>
 
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <a href=<?=rtrim($baseUrl, '/') . '/index.php' ?> class="brand-link">
-        <img src="<?=$assetDir?>/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+    <a href=<?= rtrim($baseUrl, '/') . '/index.php' ?> class="brand-link">
+        <img src="<?= $assetDir ?>/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
+            style="opacity: .8">
         <span class="brand-text font-weight-light">GRUMALog Total 2.0</span>
     </a>
 
@@ -16,10 +19,16 @@ $baseUrl = Url::base(true);
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             <div class="image">
-                <img src="<?=$assetDir?>/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
+                <img src="<?= $assetDir ?>/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
             </div>
             <div class="info">
-                <a href="#" class="d-block">GCS Soluciones</a>
+                <a href="#" class="d-block">
+                    <?php if (!Yii::$app->user->isGuest): ?>
+                        <?= Yii::$app->user->identity->username; ?>
+                    <?php else: ?>
+                        GCS Soluciones
+                    <?php endif; ?>
+                </a>
             </div>
         </div>
 
@@ -40,7 +49,7 @@ $baseUrl = Url::base(true);
         <nav class="mt-2 sidebar-no-expand">
             <?php
             echo \hail812\adminlte\widgets\Menu::widget([
-                
+
                 'items' => [
                     [
                         'label' => 'SIESA - Consultas',
@@ -49,7 +58,7 @@ $baseUrl = Url::base(true);
                         'items' => [
                             ['label' => 'Bodegas', 'url' => ['/siesa/bodegas-ws/index'], 'iconStyle' => 'far'],
                             ['label' => 'Tipos Documento', 'url' => ['/siesa/tipos-documento-ws/index'], 'iconStyle' => 'far'],
-							['label' => 'Productos', 'url' => ['/siesa/productos-ws/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Productos', 'url' => ['/siesa/productos-ws/index'], 'iconStyle' => 'far'],
                             ['label' => 'Proveedores', 'url' => ['/siesa/proveedores-ws/index'], 'iconStyle' => 'far'],
                             ['label' => 'Inventarios', 'url' => ['/siesa/inventarios-ws/index'], 'iconStyle' => 'far'],
                             ['label' => 'Ordenes Compra', 'url' => ['/siesa/ordenes-compra-ws/index'], 'iconStyle' => 'far'],
@@ -65,7 +74,7 @@ $baseUrl = Url::base(true);
                             ['label' => 'Integración ERP', 'url' => ['/siesa/transferenciaerp/index'], 'iconStyle' => 'far'],
                         ]
                     ],
-					
+
                     [
                         'label' => 'Logística',
                         'icon' => 'calendar',
@@ -76,10 +85,10 @@ $baseUrl = Url::base(true);
                                 'icon' => 'book',
                                 'badge' => '<span class="right badge badge-info">3</span>',
                                 'items' => [
-                                    [   'label' => 'Usuarios conteos programación OC', 'url' => ['/nomina/userconteo/index'], 'iconStyle' => 'far'],
-                                    [   'label' => 'Período recibo mercancia', 'url' => ['/agenda/agendapresupuesto/indexperiodo'], 'iconStyle' => 'far'],
-                                    [   'label' => 'Fechas recibo mercancia', 'url' => ['/agenda/agendapresupuesto/index'], 'iconStyle' => 'far'],
-                                    [   'label' => 'Recibo mercancia categoria', 'url' => ['/agenda/agendapresupuestosubcategoria/indexperiodo'], 'iconStyle' => 'far'],
+                                    ['label' => 'Usuarios conteos programación OC', 'url' => ['/nomina/userconteo/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Período recibo mercancia', 'url' => ['/agenda/agendapresupuesto/indexperiodo'], 'iconStyle' => 'far'],
+                                    ['label' => 'Fechas recibo mercancia', 'url' => ['/agenda/agendapresupuesto/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Recibo mercancia categoria', 'url' => ['/agenda/agendapresupuestosubcategoria/indexperiodo'], 'iconStyle' => 'far'],
                                 ],
                             ],
                             [
@@ -102,7 +111,7 @@ $baseUrl = Url::base(true);
                                     //['label' => 'Gestionar Conteo', 'url' => ['/programacion/conteoentregamercancia/indexall'], 'iconStyle' => 'far'],
                                 ],
                             ],
-                            
+
                         ],
                         //'labelTemplate' => '<span style="font-size: 10px;">{label}</span>',
                     ],
@@ -117,7 +126,7 @@ $baseUrl = Url::base(true);
                             ['label' => 'Legalizar Factura', 'url' => ['/crossdocking/conteocdscdestinofactura/indexlegaliza'], 'iconStyle' => 'far'],
                             ['label' => 'Entrada Factura', 'url' => ['/crossdocking/conteocdscdestinofactura/indexentrada'], 'iconStyle' => 'far'],
                             ['label' => 'Generar Traspaso', 'url' => ['/crossdocking/conteocdscdestinofactura/indextraspaso'], 'iconStyle' => 'far'],
-                            
+
                             ['label' => 'Exportar - Destino', 'url' => ['/crossdocking/conteocdscdestino/index'], 'iconStyle' => 'far'],
 
 
@@ -161,7 +170,7 @@ $baseUrl = Url::base(true);
                         ]
                     ],
 
-					[
+                    [
                         'label' => 'Ventas',
                         'icon' => 'dollar-sign',
                         'badge' => '<span class="right badge badge-info">1</span>',
@@ -170,7 +179,7 @@ $baseUrl = Url::base(true);
                             ['label' => 'Cotización Precio', 'url' => ['/ventas/cotizacionprecio/index'], 'iconStyle' => 'far'],
                         ]
                     ],
-					
+
                     /*[
                         'label' => 'Nomina',
                         'icon' => 'users',
@@ -180,7 +189,7 @@ $baseUrl = Url::base(true);
                         ]
                     ],*/
 
-					[
+                    [
                         'label' => 'Configuración',
                         'icon' => 'tachometer-alt',
                         'badge' => '<span class="right badge badge-info">7</span>',
@@ -195,37 +204,37 @@ $baseUrl = Url::base(true);
                             ['label' => 'Usuarios Logistica', 'url' => ['/nomina/empleadologistica/index'], 'iconStyle' => 'far'],
                         ]
                     ],
-					
+
                     //['label' => 'Simple Link', 'icon' => 'th', 'badge' => '<span class="right badge badge-danger">New</span>'],
-                    
-					['label' => 'Ingreso Sistema', 'header' => true],
+            
+                    ['label' => 'Ingreso Sistema', 'header' => true],
                     ['label' => 'Login', 'url' => ['/admin/user/login'], 'icon' => 'user', 'visible' => Yii::$app->user->isGuest],
-                    
-					/*['label' => 'Gii',  'icon' => 'file-code', 'url' => ['/gii'], 'target' => '_blank'],
-                    ['label' => 'Debug', 'icon' => 'bug', 'url' => ['/debug'], 'target' => '_blank'],
-                    ['label' => 'MULTI LEVEL EXAMPLE', 'header' => true],
-                    ['label' => 'Level1'],
-                    [
-                        'label' => 'Level1',
-                        'items' => [
-                            ['label' => 'Level2', 'iconStyle' => 'far'],
-                            [
-                                'label' => 'Level2',
-                                'iconStyle' => 'far',
-                                'items' => [
-                                    ['label' => 'Level3', 'iconStyle' => 'far', 'icon' => 'dot-circle'],
-                                    ['label' => 'Level3', 'iconStyle' => 'far', 'icon' => 'dot-circle'],
-                                    ['label' => 'Level3', 'iconStyle' => 'far', 'icon' => 'dot-circle']
-                                ]
-                            ],
-                            ['label' => 'Level2', 'iconStyle' => 'far']
-                        ]
-                    ],
-                    ['label' => 'Level1'],
-                    ['label' => 'LABELS', 'header' => true],
-                    ['label' => 'Important', 'iconStyle' => 'far', 'iconClassAdded' => 'text-danger'],
-                    ['label' => 'Warning', 'iconClass' => 'nav-icon far fa-circle text-warning'],
-                    ['label' => 'Informational', 'iconStyle' => 'far', 'iconClassAdded' => 'text-info'],*/
+
+                    /*['label' => 'Gii',  'icon' => 'file-code', 'url' => ['/gii'], 'target' => '_blank'],
+                                   ['label' => 'Debug', 'icon' => 'bug', 'url' => ['/debug'], 'target' => '_blank'],
+                                   ['label' => 'MULTI LEVEL EXAMPLE', 'header' => true],
+                                   ['label' => 'Level1'],
+                                   [
+                                       'label' => 'Level1',
+                                       'items' => [
+                                           ['label' => 'Level2', 'iconStyle' => 'far'],
+                                           [
+                                               'label' => 'Level2',
+                                               'iconStyle' => 'far',
+                                               'items' => [
+                                                   ['label' => 'Level3', 'iconStyle' => 'far', 'icon' => 'dot-circle'],
+                                                   ['label' => 'Level3', 'iconStyle' => 'far', 'icon' => 'dot-circle'],
+                                                   ['label' => 'Level3', 'iconStyle' => 'far', 'icon' => 'dot-circle']
+                                               ]
+                                           ],
+                                           ['label' => 'Level2', 'iconStyle' => 'far']
+                                       ]
+                                   ],
+                                   ['label' => 'Level1'],
+                                   ['label' => 'LABELS', 'header' => true],
+                                   ['label' => 'Important', 'iconStyle' => 'far', 'iconClassAdded' => 'text-danger'],
+                                   ['label' => 'Warning', 'iconClass' => 'nav-icon far fa-circle text-warning'],
+                                   ['label' => 'Informational', 'iconStyle' => 'far', 'iconClassAdded' => 'text-info'],*/
                 ],
             ]);
             ?>

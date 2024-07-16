@@ -29,6 +29,7 @@ $this->registerCssFile('https://code.ionicframework.com/ionicons/2.0.1/css/ionic
     <!-- /.login-logo -->
 
     <?= $content ?>
+
 </div>
 <!-- /.login-box -->
 

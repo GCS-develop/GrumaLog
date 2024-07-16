@@ -2,7 +2,9 @@
 /* @var $content string */
 
 use yii\bootstrap4\Breadcrumbs;
+
 ?>
+<link rel="stylesheet" href="css/login.css">
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <div class="content-header">
@@ -35,6 +37,7 @@ use yii\bootstrap4\Breadcrumbs;
     <!-- /.content-header -->
 
     <!-- Main content -->
+
     <div class="content">
         <?= $content ?><!-- /.container-fluid -->
     </div>
