@@ -1,7 +1,23 @@
 <?php
 
+// Definir el estilo CSS directamente en la vista
+$this->registerCss('
+
+    .btn-create {
+        width: 300px;
+    }
+    
+    .centrar {
+        text-align: center;
+    }
+        
+');
+
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use frontend\models\Bodegas;
+use frontend\models\Estadotraspaso;
+
 
 /** @var yii\web\View $this */
 /** @var frontend\models\Traspaso $model */
@@ -10,34 +26,77 @@ use yii\widgets\ActiveForm;
 
 <div class="traspaso-form">
 
-    <?php $form = ActiveForm::begin(); ?>
+    <?php $form = ActiveForm::begin([
+        'id' => 'modal-form-traspaso',
+        'enableAjaxValidation' => true,
+    ]);
+    ?>
 
-    <?= $form->field($model, 'idCentroOperacion')->textInput() ?>
+    <div class="row">
 
-    <?= $form->field($model, 'idBodegaOrigen')->textInput() ?>
+        <!-- <div class="col-6">
+            <?= $form->field($model, 'idCentroOperacion')->textInput() ?>
+        </div> -->
 
-    <?= $form->field($model, 'idBodegaDestino')->textInput() ?>
+        <div class="col-6">
+            <?= $form->field($model, 'idBodegaOrigen')->dropDownList(
+                Bodegas::getListaData(),
+                [
+                    'prompt' => ' Bodega Origen ... ',
+                    'id' => 'id-bodega-origen',
+                    'required' => true
+                ]
+            )
+                ?>
+        </div>
 
-    <?= $form->field($model, 'numeroCajas')->textInput() ?>
+        <div class="col-6">
+            <?= $form->field($model, 'idBodegaDestino')->dropDownList(
+                Bodegas::getListaData(),
+                [
+                    'prompt' => ' Bodega Destino ... ',
+                    'id' => 'id-bodega-destino',
+                    'required' => true
+                ]
+            )
+                ?>
+        </div>
 
-    <?= $form->field($model, 'idTipoDocumento')->textInput() ?>
+        <div class="col-6">
+            <?= $form->field($model, 'numeroCajas')->textInput(
+                ['maxlength' => true, 'id' => 'numero-cajas', 'type' => 'number']
+            )
+                ?>
+        </div>
 
-    <?= $form->field($model, 'consecutivo')->textInput() ?>
+        <!-- <div class="col-6">
+            <?= $form->field($model, 'idTipoDocumento')->textInput() ?>
+        </div> -->
 
-    <?= $form->field($model, 'idEstado')->textInput() ?>
+        <!-- <div class="col-6">
+            <?= $form->field($model, 'consecutivo')->textInput() ?>
+        </div> -->
 
-    <?= $form->field($model, 'idUltimoItem')->textInput() ?>
+        <div class="col-6">
+            <?= $form->field($model, 'idEstado')->dropDownList(
+                 Estadotraspaso::getListaData(),
+                [
+                    'prompt' => ' Estado ... ',
+                    'id' => 'id-estado',
+                    'required' => true,
+                    'disabled' => true,
+                ]
+            )
+                ?>
+        </div>
 
-    <?= $form->field($model, 'created_at')->textInput() ?>
+        <!-- <div class="col-6">
+            <?= $form->field($model, 'idUltimoItem')->textInput() ?>
+        </div> -->
+    </div>
 
-    <?= $form->field($model, 'created_by')->textInput() ?>
-
-    <?= $form->field($model, 'updated_at')->textInput() ?>
-
-    <?= $form->field($model, 'updated_by')->textInput() ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+    <div class="form-group centrar">
+        <?= Html::submitButton('Registrar', ['class' => 'btn btn-success btn-lg btn-create']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

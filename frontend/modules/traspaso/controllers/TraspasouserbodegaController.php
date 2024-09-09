@@ -3,19 +3,17 @@
 namespace frontend\modules\traspaso\controllers;
 
 use Yii;
-use frontend\models\Traspaso;
-use frontend\models\Inventario;
-use frontend\models\searchTraspasoSearch;
-use frontend\models\search\TraspasoSearch;
+use frontend\models\Traspasouserbodega;
+use frontend\models\search\TraspasouserbodegaSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\widgets\ActiveForm;
 
 /**
- * TraspasoController implements the CRUD actions for Traspaso model.
+ * TraspasouserbodegaController implements the CRUD actions for Traspasouserbodega model.
  */
-class TraspasoController extends Controller
+class TraspasouserbodegaController extends Controller
 {
     /**
      * @inheritDoc
@@ -36,13 +34,13 @@ class TraspasoController extends Controller
     }
 
     /**
-     * Lists all Traspaso models.
+     * Lists all Traspasouserbodega models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        $searchModel = new TraspasoSearch();
+        $searchModel = new TraspasouserbodegaSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
         return $this->render('index', [
@@ -52,7 +50,7 @@ class TraspasoController extends Controller
     }
 
     /**
-     * Displays a single Traspaso model.
+     * Displays a single Traspasouserbodega model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -65,13 +63,13 @@ class TraspasoController extends Controller
     }
 
     /**
-     * Creates a new Traspaso model.
+     * Creates a new Traspasouserbodega model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new Traspaso();
+        $model = new Traspasouserbodega();
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -105,7 +103,7 @@ class TraspasoController extends Controller
     }
 
     /**
-     * Updates an existing Traspaso model.
+     * Updates an existing Traspasouserbodega model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -114,7 +112,6 @@ class TraspasoController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -146,14 +143,14 @@ class TraspasoController extends Controller
     }
 
     /**
-     * Deletes an existing Traspaso model.
+     * Deletes an existing Traspasouserbodega model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($id)
-    {
+    public function actionDelete($id){
+
         $model = $this->findModel($id);
 
         if ($model !== null) {
@@ -171,56 +168,20 @@ class TraspasoController extends Controller
         return $this->redirect(['index']);
     }
 
+
     /**
-     * Finds the Traspaso model based on its primary key value.
+     * Finds the Traspasouserbodega model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return Traspaso the loaded model
+     * @return Traspasouserbodega the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Traspaso::findOne(['id' => $id])) !== null) {
+        if (($model = Traspasouserbodega::findOne(['id' => $id])) !== null) {
             return $model;
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-
-    public function actionAnular($id)
-    {
-        $model = $this->findModel($id);
-        $filasAfectadas = 0;
-
-        if ($model->idEstado !== 1) {
-            return $this->redirect(['index']);
-        }
-
-        if ($this->request->isPost) {
-
-            $model->idEstado = 2;
-
-            if ($model->save()) {
-
-                foreach ($model->traspasodetalles as $detalle) {
-                    $filasAfectadas += $detalle->retornarInventario();
-                    Yii::$app->session->setFlash('success', 'Items: ' . $filasAfectadas . ' regresaron fueron regresados al inventario');
-                }
-
-                return $this->redirect(['index']);
-
-            } else {
-
-                Yii::$app->session->setFlash('error', 'Ups!, ocurrio un problema con : ' . $model);
-
-            }
-        }
-    }
-
-    public function actionFactura($id)
-    {
-        $model = $this->findModel($id);
-        return $this->redirect(['/traspaso/traspasodetalle/print', 'idtraspaso' => $model->id]);
-    }
-
 }

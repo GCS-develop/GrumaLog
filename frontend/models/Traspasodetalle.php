@@ -2,10 +2,14 @@
 
 namespace frontend\models;
 
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use Vtiful\Kernel\Format;
 use Yii;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "traspasodetalle".
@@ -14,13 +18,9 @@ use yii\db\Expression;
  * @property int $idTraspaso
  * @property int $idItem
  * @property int $cantidad
- * @property string $created_at
- * @property int $created_by
- * @property string $updated_at
- * @property int $updated_by
  *
- * @property Traspaso $traspaso
  * @property Item $item
+ * @property Traspaso $traspaso
  */
 class Traspasodetalle extends \yii\db\ActiveRecord
 {
@@ -39,7 +39,6 @@ class Traspasodetalle extends \yii\db\ActiveRecord
     {
         return 'traspasodetalle';
     }
-
     public function behaviors()
     {
         return [
@@ -59,18 +58,17 @@ class Traspasodetalle extends \yii\db\ActiveRecord
             ],
         ];
     }
-
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['idTraspaso', 'idItem'], 'required'],
-            [['idTraspaso', 'idItem', 'cantidad', 'created_by', 'updated_by'], 'integer'],
+            [['idTraspaso', 'idItem', 'codigoitem'], 'required', 'message' => '{attribute} Es Un Valor Obligatorio'],
+            [['idTraspaso', 'cantidad', 'created_by', 'updated_by', 'idItem'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
             [['idTraspaso'], 'exist', 'skipOnError' => true, 'targetClass' => Traspaso::class, 'targetAttribute' => ['idTraspaso' => 'id']],
-            [
+            /*[
                 ['idItem'],
                 'exist',
                 'skipOnError' => true,
@@ -86,9 +84,10 @@ class Traspasodetalle extends \yii\db\ActiveRecord
                     return $item !== null;
                 },
                 'message' => 'El Item seleccionado no está activo.',
-            ],
+            ],*/
         ];
     }
+
 
     /**
      * {@inheritdoc}
@@ -96,17 +95,34 @@ class Traspasodetalle extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => 'ID',
-            'idTraspaso' => 'Id Traspaso',
-            'idItem' => 'Id Item',
+            'id' => 'Id',
+            'idTraspaso' => 'Id traspaso',
+            'idItem' => 'Item',
             'cantidad' => 'Cantidad',
-            'created_at' => 'Created At',
-            'created_by' => 'Created By',
-            'updated_at' => 'Updated At',
-            'updated_by' => 'Updated By',
+            'codigoitem' => 'Codigo EAN',
+            'total' => 'Cantidad total',
+            'bodegaorigen' => 'Bodega origen',
+            'bodegadestino' => 'Bodega destino',
+            'total' => 'Cantidad total',
+            'count' => 'Total',
+            'updated_at' => 'Fecha',
+            'ultimo_codigo' => 'Ultimo codigo',
+            'cantidad_paquetes' => 'Registros',
+            'unidad' => 'Unidad de medida',
+            'totalum' => 'Um/total',
         ];
     }
 
+    /**
+     * Gets query for [[Item]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getItem()
+    {
+        return $this->hasOne(Item::class, ['id' => 'idItem'])
+            ->where(['idEstado' => 'ACTIVO']);
+    }
     /**
      * Gets query for [[Traspaso]].
      *
@@ -117,36 +133,45 @@ class Traspasodetalle extends \yii\db\ActiveRecord
         return $this->hasOne(Traspaso::class, ['id' => 'idTraspaso']);
     }
 
-    public function getItem()
+    public static function getInventario($codigobarras, $codigobodega)
     {
-        return $this->hasOne(Traspaso::class, ['id' => 'idItem'])
-                    ->where(['idEstado' => 'ACTIVO']);
+
+        $command = \Yii::$app->dbsiesa->createCommand("
+                select 
+                t400.f400_cant_existencia_1
+                -- t131.f131_id, f150_id_co, f150_id, t400.f400_cant_existencia_1
+                -- t400.f400_cant_comprometida_1, t400.f400_cant_existencia_2
+                from t400_cm_existencia t400
+                inner join t150_mc_bodegas t150
+                ON t400.f400_rowid_bodega = t150.f150_rowid
+                left join [t131_mc_items_barras] t131
+                ON t400.f400_rowid_item_ext = t131.f131_rowid_item_ext
+                WHERE 1 = 1
+                AND t131.f131_id = '" . $codigobarras .
+            "' AND f150_id = '" . $codigobodega . "';");
+
+        // $result = $command->queryAll();
+
+        $existencia = $command->queryScalar();
+
+        return $existencia;
     }
 
-    public function getFindCount($idTraspaso)
+    public static function getInventarioWS($codigobarras, $codigobodega)
     {
-        return $this->find()->where(['idTraspaso' => $idTraspaso])->count();
-    }
-    
-    public function getCantidadPaquetes()
-    {
-        return $this->getItems()->where(['unidadOrden' => null])->count();
-    }
-
-    public static function getInventario ($codigobarras, $codigobodega = null){
 
         $existencia = 0;
         $existenciaBodega = 0;
 
-        if ($codigobarras){
+        if ($codigobarras) {
 
             $modelinventario = new InventariosWs();
             $lista = $modelinventario->getAllInventariosSiesa($codigobarras);
-            foreach($lista as $bodega){
+            foreach ($lista as $bodega) {
 
                 $existencia = $existencia + $bodega['CantidadExistente'];
 
-                if ($codigobodega != null){
+                if ($codigobodega != null) {
                     if ($bodega['Bodega'] == $codigobodega) {
                         $existenciaBodega = $existenciaBodega + $bodega['CantidadExistente'];
                     }
@@ -154,10 +179,135 @@ class Traspasodetalle extends \yii\db\ActiveRecord
             }
         }
 
-        if ($codigobodega != null){
+        if ($codigobodega != null) {
             $existencia = $existenciaBodega;
         }
 
         return $existencia;
     }
+
+    public static function generarTransferenciaWS($traspaso)
+    {
+
+        if ($traspaso->transferenciaerp == 0) {
+
+            $iddocumento = 165613;
+            $descripcion = $traspaso->tipodocumento->nombre . ' - ' .
+                $traspaso->bodegaDestino->codigo . ' - ' .
+                $traspaso->bodegaOrigen->codigo . ' - ' .
+                $traspaso->created_at;
+            $documento = $traspaso->consecutivo;
+            $notas = 'Transferencia Modulo Traspaso GRUMALOG';
+            $origen = 'T';
+            $transferencia = Transferenciaerp::crearRegistro($iddocumento, $descripcion, $documento, $notas, $origen);
+
+            $fila = 0;
+            foreach ($traspaso->traspasodetalles as $detalle) {
+                $modeltransferencia = new Transferenciatransitoexcel();
+
+                $fila = $fila + 1;
+                $unidad = $detalle->item->unidadEmpaque ? $detalle->item->unidadEmpaque : $detalle->item->unidadOrden;
+
+                $modeltransferencia->idTransferenciaerp = $transferencia->id;
+                $modeltransferencia->centroOperacionDocumento = '002';
+                $modeltransferencia->tipoDocumento = $traspaso->tipodocumento->codigo;
+                $modeltransferencia->fechaDocumento = Yii::$app->formatter->asDatetime($traspaso->updated_at, 'php:Ymd');
+                $modeltransferencia->bodegaSalidaDocumento = $traspaso->bodegaDestino->codigo;
+                $modeltransferencia->bodegaEntradaDocumento = $traspaso->bodegaOrigen->codigo;
+                $modeltransferencia->centroOperacion = '002';
+                $modeltransferencia->tipoDocumentoMovimiento = $traspaso->tipodocumento->codigo;
+                $modeltransferencia->bodegaSalidaMovimiento = $traspaso->bodegaDestino->codigo;
+                $modeltransferencia->centroOperacionMovimiento = '002';
+                $modeltransferencia->unidadSalida = $unidad;
+                $modeltransferencia->cantidadBase = $detalle->cantidad;
+                $modeltransferencia->costoPromedioUnitario = 0;
+                $modeltransferencia->item = $detalle->item->item;
+                $modeltransferencia->color = $detalle->item->color->nombre;
+                $modeltransferencia->talla = $detalle->item->talla->nombre;
+                $modeltransferencia->numero = $traspaso->tipodocumento->codigo . $traspaso->consecutivo;
+                $modeltransferencia->procesado = 0;
+                $modeltransferencia->fila = $fila;
+
+                $modeltransferencia->save();
+            }
+
+            if ($fila > 0) {
+
+                $respuesta = 0;
+                $model = Transferenciaerp::findOne(['id' => $transferencia->id]);
+                $respuesta = Transferenciatransitoexcel::transferenciaSalidaWS($transferencia->id, Yii::$app->user->identity->username);
+
+                if ($respuesta == 0) {
+                    //$mensaje = "Proceso de Actualización Finalizo Con Éxito";
+                    //Yii::$app->session->setFlash( 'success', $mensaje);
+
+                    $model->enviadoWS = 1;
+                } else {
+                    //$mensaje = "Proceso de Actualización Presenta Inconsistencia";
+                    //Yii::$app->session->setFlash( 'error', $mensaje);
+                    $model->enviadoWS = 0;
+                }
+                $model->save();
+            }
+        }
+    }
+    public function retornarInventario()
+    {
+        return Inventario::updateAllCounters(
+            ['existencia' => $this->cantidad],
+            ['codigoBarras' => $this->item->codigoBarras, 'codigoBodega' => $this->traspaso->bodegaOrigen->codigo]
+        );
+
+    }
+
+    public static function generarArchivotransferencia($traspaso)
+    {
+        $archivo = Yii::getAlias('@app/web/archivos/Formato_Traspaso.xlsx'); // Ruta a la planilla de Excel 
+
+        $spreadsheet = IOFactory::load($archivo);
+
+        $sheet = $spreadsheet->getSheetByName('Documentos');
+        $spreadsheet->setActiveSheetIndex(0);
+
+        $linea = 2;
+
+        $sheet->setCellValue('A' . $linea, '002');
+        $sheet->setCellValue('B' . $linea, $traspaso->tipodocumento->codigo);
+        $sheet->setCellValue('C' . $linea, $traspaso->updated_at);
+        $sheet->setCellValue('D' . $linea, $traspaso->bodegaDestino->codigo);
+        $sheet->setCellValue('E' . $linea, $traspaso->bodegaOrigen->codigo);
+
+        $sheet = $spreadsheet->getSheetByName('Movimientos');
+        $spreadsheet->setActiveSheetIndex(1);
+
+
+        foreach ($traspaso->traspasodetalles as $detalle) {
+            $unidad = $detalle->item->unidadEmpaque ? $detalle->item->unidadEmpaque : $detalle->item->unidadOrden;
+            $sheet->setCellValue('A' . $linea, '002');
+            $sheet->setCellValue('B' . $linea, $traspaso->tipodocumento->codigo);
+            $sheet->setCellValue('C' . $linea, $traspaso->bodegaDestino->codigo);
+            $sheet->setCellValue('D' . $linea, '002');
+            $sheet->setCellValue('E' . $linea, $unidad); //
+            $sheet->setCellValue('F' . $linea, $detalle->cantidad);
+            $sheet->setCellValue('G' . $linea, '0');
+            $sheet->setCellValue('H' . $linea, $detalle->item->item);
+            $sheet->setCellValue('I' . $linea, $detalle->item->color->nombre);
+            $sheet->setCellValue('J' . $linea, $detalle->item->talla->nombre);
+
+            $linea = $linea + 1;
+        }
+
+        $nombreArchivo = "Entrada_Traspaso_" . $traspaso->tipodocumento->codigo . ' ' . $traspaso->serie . "_" .
+            $traspaso->consecutivo . "_" . $traspaso->usuario->username . '.xlsx';
+
+        $writer = new Xlsx($spreadsheet);
+
+        $rutaGuardado = Yii::getAlias('@app/web/archivos/') . $nombreArchivo;
+
+        // Guardar el archivo Excel
+        $writer->save($rutaGuardado);
+
+        return $rutaGuardado;
+    }
+
 }
