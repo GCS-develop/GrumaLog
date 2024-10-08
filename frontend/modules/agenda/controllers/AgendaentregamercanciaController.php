@@ -10,6 +10,7 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\widgets\ActiveForm;
 use yii\web\Response;
+use yii\web\UploadedFile;
 
 use frontend\models\Ordendecompra;
 use frontend\models\Agendapresupuesto;
@@ -23,6 +24,10 @@ use frontend\models\Ordendecompradetalle;
 use frontend\models\search\OrdendecompradetalleSearch;
 
 use common\models\OrdenesCompraWs;
+
+use frontend\models\FileAgendaInput;
+
+use common\models\ProcedimientosGenerales;
 
 /**
  * AgendaentregamercanciaController implements the CRUD actions for Agendaentregamercancia model.
@@ -599,23 +604,39 @@ class AgendaentregamercanciaController extends Controller
     public function actionObtenerDatosOrden($idCentroOperacion, $idTipoDocumento, $numeroOrdenCompra)
     {
         
+    
         // Buscar la orden de compra en la base de datos
-        $ordenCompra = Ordendecompra::findOne(['idCO' => $idCentroOperacion,
+        /*$model = Ordendecompra::find()->where(['idCO' => $idCentroOperacion,
                                                 'idTipoDocumento' => $idTipoDocumento,
                                                 'consecutivo' => $numeroOrdenCompra
-                                            ]);
+                                            ])->one();*/
 
-        if ($ordenCompra == null) {
+        
+        /*if ($ordenCompra) {
+            
+            $filasEliminadas = Ordendecompradetalle::deleteAll([
+                'idOrdenCompra' => $ordenCompra->id
+            ]);
+
+            $filasEliminadas = Ordendecompra::deleteAll([
+                                                'id' => $ordenCompra->id
+                                            ]);
+        }
+        */
+
+        //if ($model == null) {
             $model = new Ordendecompra();
             $model->idCO = $idCentroOperacion;
             $model->idTipoDocumento = $idTipoDocumento;
 
-            $idordencompra = OrdenesCompraWs::sincronizarERPAgenda ($model->cO->codigo, $model->tipoDocumento->codigo, $numeroOrdenCompra);
-        }else{
-            $idordencompra = $ordenCompra->id;
-        }
+        //    $idordencompra = OrdenesCompraWs::sincronizarERPAgenda ($model->cO->codigo, $model->tipoDocumento->codigo, $numeroOrdenCompra);
+        // }else{
+        //    $idordencompra = $model->id;
+        //}
 
-        $ordenCompra = Ordendecompra::findOne(['id' => $idordencompra]);
+        $modelordencompra = OrdenesCompraWs::sincronizarERPAgenda ($model->cO->codigo, $model->tipoDocumento->codigo, $numeroOrdenCompra);
+
+        $ordenCompra = Ordendecompra::findOne(['id' => $modelordencompra->id]);
         
         //$ordenCompra = OrdenesCompraWs::sincronizarERPAgenda ('002', '2CA', 64035);
         //var_dump($idordencompra); die("HOLA 6");
@@ -651,7 +672,7 @@ class AgendaentregamercanciaController extends Controller
     public function actionSchedule($idagenda)
     {
         // $model = new Agendaentregamercancia();
-        $model = $this->findModel($id);
+        $model = $this->findModel($idagenda);
 
         /*$model->fechaContacto = date('Y-m-d h:i');
 
@@ -737,5 +758,18 @@ class AgendaentregamercanciaController extends Controller
         }  
     }
 
+    public function actionReportdaily($id, $anio, $mes){
+
+        $searchModel = new AgendaentregamercanciaSearch();
+        $dataProvider = $searchModel->searchReportDaily($id, $anio, $mes, "1");
+
+        $dataProviderVMI = $searchModel->searchReportDaily($id, $anio, $mes, "3");
+
+        return $this->render('view_reportdaily', [
+            'dataProvider' => $dataProvider,
+            'dataProviderVMI' => $dataProviderVMI,
+        ]);
+
+    }
 
 }

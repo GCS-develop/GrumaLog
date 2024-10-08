@@ -11,7 +11,14 @@ return [
     'basePath' => dirname(__DIR__),
     'controllerNamespace' => 'backend\controllers',
     'bootstrap' => ['log'],
-    'modules' => [],
+    'modules' => [
+        'catalogos' => [
+            'class' => 'backend\modules\catalogos\Module',
+        ],
+        'siesa' => [
+            'class' => 'backend\modules\siesa\Module',
+        ],
+    ],
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-backend',
@@ -47,4 +54,5 @@ return [
         */
     ],
     'params' => $params,
+    'timeZone' => 'America/Bogota',
 ];

@@ -62,9 +62,10 @@ class Ordendecompra extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['idCO', 'idTipoDocumento', 'idProveedor', 'idEstado', 'created_by', 'updated_by'], 'integer'],
-            [['consecutivo'], 'number'],
-            [['fecha', 'created_at', 'updated_at', 'fechaEntrega'], 'safe'],
+            [['idCO', 'idTipoDocumento', 'idProveedor', 'idEstado', 'created_by', 'updated_by',
+            'nroPaquetes'], 'integer'],
+            [['consecutivo', 'nitcomprador'], 'number'],
+            [['fecha', 'created_at', 'updated_at', 'fechaEntrega', 'comprador', 'sucursalProveedor'], 'safe'],
             [['idTipoDocumento'], 'exist', 'skipOnError' => true, 'targetClass' => Tipodocumento::class, 'targetAttribute' => ['idTipoDocumento' => 'id']],
             [['idCO'], 'exist', 'skipOnError' => true, 'targetClass' => Centrooperacion::class, 'targetAttribute' => ['idCO' => 'id']],
             [['idProveedor'], 'exist', 'skipOnError' => true, 'targetClass' => Proveedor::class, 'targetAttribute' => ['idProveedor' => 'id']],
@@ -122,8 +123,35 @@ class Ordendecompra extends \yii\db\ActiveRecord
         return $this->hasOne(Tipodocumento::class, ['id' => 'idTipoDocumento']);
     }
 
+    public function getTipoDocumentoentrada()
+    {
+        return $this->hasOne(Tipodocumento::class, ['id' => 'idTipoDocumentoEntrada']);
+    }
+
     public function getPurchaseOrderItems()
+    {
+        return $this->hasMany(Ordendecompradetalle::className(), ['idOrdenCompra' => 'id']);
+    }
+
+    public function validarItemsOC (){
+
+        $totalconitem = $this->getPurchaseOrderItems()->andWhere(['IS NOT', 'idItem', null])->sum('cantidadPendiente');
+        $totalOC = $this->getPurchaseOrderItems()->sum('cantidadPendiente');
+
+        if ($totalconitem != $totalOC){
+            return false;
+        }
+
+        return true;
+
+    }
+
+    public function getValidacionItemsOC()
 {
-    return $this->hasMany(Ordendecompradetalle::className(), ['idOrdenCompra' => 'id']);
+    if ($this->validarItemsOC()) {
+        return 'Sí'; // O cualquier otro texto que desees mostrar
+    } else {
+        return 'No'; // O cualquier otro texto que desees mostrar
+    }
 }
 }

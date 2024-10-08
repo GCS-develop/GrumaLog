@@ -27,13 +27,11 @@ use common\models\User;
  */
 class Userconteo extends \yii\db\ActiveRecord
 {
-    public $nombreEmpleado;
     public $identificacion;
-    public $username;
-    public $idEstado;
+    public $nombreEmpleado;
     public $email;
-    public $retypePassword;
-    public $password;
+    public $status;
+    public $username;
 
     /**
      * {@inheritdoc}
@@ -69,7 +67,7 @@ class Userconteo extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['username', 'idEmpleadoLogistica', 'email', 'password', 'retypePassword'], 'required', 
+            [['idUser', 'idEmpleadoLogistica',], 'required', 
             'message' => '{attribute} Es Un Valor Obligatorio'],
             [['idUser', 'idEmpleadoLogistica', 'created_by', 'updated_by'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
@@ -89,17 +87,10 @@ class Userconteo extends \yii\db\ActiveRecord
             'id' => 'ID',
             'idUser' => 'Usuario',
             'idEmpleadoLogistica' => 'Empleado',
-            'nombreEmpleado' => 'Nombre Empleado',
-            'identificacion' => 'Identificación',
-            'username' => 'Nombre Usuario',
-            'idEstado' => 'Estado',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
             'updated_by' => 'Updated By',
-            'email' => 'Correo Electrónico',
-            'password' => 'Contraseña',
-            'retypePassword' => 'Repetir Contraseña',
         ];
     }
 
@@ -151,5 +142,78 @@ class Userconteo extends \yii\db\ActiveRecord
                         ->orderBy('em.nombreEmpleado')->asArray()->all();
     	$listadata = ArrayHelper::map($data, 'id', 'nombre');
     	return $listadata;
+    }
+
+    public static function getListaDataHabilOC($idagenda, $item){
+        $sql = "
+            SELECT usc.id,  
+            emp.nombreEmpleado + ' - ' + CAST(emp.identificacion AS NVARCHAR(50)) + ' - ' + co.nombre AS nombre
+            FROM userconteo usc 
+            INNER JOIN [user] us ON usc.idUser = us.id
+            INNER JOIN empleado emp ON us.idEmpleado = emp.id 
+            LEFT JOIN centrooperacion co ON emp.idCO = co.id 
+            INNER JOIN 
+            (
+            SELECT Q1.idUserConteo
+            FROM (
+            SELECT pem.idUserConteo
+                FROM programacionentregamercancia pem
+                WHERE ISNULL(pem.idEstado,0) = 1 AND pem.idAgendaEntregaMercancia = " . $idagenda . " AND pem.idUserConteo IS NOT NULL
+            ) Q1
+            LEFT JOIN (
+            SELECT pem.idUserConteo
+                FROM programacionentregamercancia pem
+                WHERE ISNULL(pem.idEstado,0) = 1 AND pem.idAgendaEntregaMercancia = " . $idagenda . " AND pem.item = " . $item . 
+            ") Q2 
+            ON Q1.idUserConteo = Q2.idUserConteo 
+            WHERE Q2.idUserConteo IS NULL
+            ) Q3 ON Q3.idUserConteo = usc.id
+            UNION
+            SELECT usc.id,  
+            emp.nombreEmpleado + ' - ' + CAST(emp.identificacion AS NVARCHAR(50)) + ' - ' + co.nombre AS nombre
+            FROM userconteo usc 
+            INNER JOIN [user] us ON usc.idUser = us.id
+            INNER JOIN empleado emp ON us.idEmpleado = emp.id 
+            LEFT JOIN centrooperacion co ON emp.idCO = co.id 
+            LEFT JOIN 
+            (
+                SELECT distinct pem.idUserConteo
+                FROM programacionentregamercancia pem
+                WHERE ISNULL(pem.idEstado,0) = 1 AND pem.idUserConteo IS NOT NULL
+            ) Q1 ON usc.id = Q1.idUserConteo
+            WHERE Q1.idUserConteo IS NULL
+        ";
+
+        // Ejecutar la consulta y devolver los resultados
+        $command = Yii::$app->db->createCommand($sql);
+        $results = $command->queryAll(); 
+
+        $listadata = ArrayHelper::map($results, 'id', 'nombre');
+    	return $listadata;
+    }
+
+    public static function actualizarUsuario ($status, $iduser, $idempleadologistica){
+
+        // die($status . ' - ' . $iduser . ' - ' . $idempleadologistica);
+
+        $resultado = FALSE;
+        if ($status == 1){
+            $conteo = Userconteo::find()->where(['idUser' => $iduser])->one();
+            if ($conteo == null){
+                $conteo = new Userconteo();
+                $conteo->idUser = $iduser;
+            }
+            $conteo->idEmpleadoLogistica = $idempleadologistica;
+            $conteo->save();
+            $resultado = TRUE;
+        }else{
+            $conteo = Userconteo::find()->where(['idUser' => $iduser])->one();
+            if ($conteo != null){
+                $conteo->delete();
+                $resultado = TRUE;
+            }
+        }
+
+        return $resultado;
     }
 }

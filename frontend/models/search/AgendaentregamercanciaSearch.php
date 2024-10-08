@@ -20,13 +20,45 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
     public function rules()
     {
         return [
-            [['id', 'idOrdenCompra', 'numeroCajas', 'idTransportadora', 'idEstado', 
-            'created_by', 'updated_by', 'idAgenda', 'idEstadoConteo'], 'integer'],
-            [['fechaCita', 'contacto', 'fechaContacto', 'numeroGuia', 'observacion', 
-            'created_at', 'updated_at', 'razonSocial', 'codigoTipoDocumento',
-            'codigoCentroOperacion', 'numeroOrdenCompra', 'nit', 'proveedor', 
-            'nombreTransportadora', 'subcategorias',
-            'fechaDesde', 'fechaHasta', 'nombreEstado', 'radicado', 'serie'], 'safe'],
+            [
+                [
+                    'id',
+                    'idOrdenCompra',
+                    'numeroCajas',
+                    'idTransportadora',
+                    'idEstado',
+                    'created_by',
+                    'updated_by',
+                    'idAgenda',
+                    'idEstadoConteo'
+                ],
+                'integer'
+            ],
+            [
+                [
+                    'fechaCita',
+                    'contacto',
+                    'fechaContacto',
+                    'numeroGuia',
+                    'observacion',
+                    'created_at',
+                    'updated_at',
+                    'razonSocial',
+                    'codigoTipoDocumento',
+                    'codigoCentroOperacion',
+                    'numeroOrdenCompra',
+                    'nit',
+                    'proveedor',
+                    'nombreTransportadora',
+                    'subcategorias',
+                    'fechaDesde',
+                    'fechaHasta',
+                    'nombreEstado',
+                    'radicado',
+                    'serie'
+                ],
+                'safe'
+            ],
             [['unidades'], 'number'],
         ];
     }
@@ -101,18 +133,18 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
 
         //$query->andWhere(['>', 'det.cargosAbonos', 0]);
 
-        if ($idagenda != null){
-            $query->andWhere(['=', 'det.idAgenda', $idagenda]);  
+        if ($idagenda != null) {
+            $query->andWhere(['=', 'det.idAgenda', $idagenda]);
         }
 
-        if ($idestadoconteo != null){
-            $query->andWhere(['=', 'det.idEstadoConteo', $idestadoconteo]);  
+        if ($idestadoconteo != null) {
+            $query->andWhere(['=', 'det.idEstadoConteo', $idestadoconteo]);
         }
 
-        if ($idestado != null){
-            $query->andWhere(['=', 'det.idEstado', $idestado]);  
+        if ($idestado != null) {
+            $query->andWhere(['=', 'det.idEstado', $idestado]);
         }
-            
+
         $query->orderBy(['det.created_at' => SORT_DESC]);
 
         // add conditions that should always apply here
@@ -160,7 +192,7 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
         if ($this->fechaDesde && $this->fechaHasta) {
             $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
             $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
-        
+
             // Aplicar filtro de rango de fechas
             $query->andFilterWhere(['between', 'CONVERT(VARCHAR(10), det.fechaCita, 23)', $fechaInicio, $fechaFin]);
         }
@@ -202,20 +234,23 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
             'det.idTransportadora',
             'det.numeroFactura',
             'det.observacionLegalizacion',
+            'det.subcategorias',
             'ap.desde',
             'ap.hasta',
             'es.nombre AS nombreEstado',
             'pr.nit',
             'pr.razonSocial',
             'pr.criterioMercancia',
-            'pr.criterioModeloLogistico',
+            'pr.criterioModeloLogistico AS modeloLogistico',
             'oc.idTipoDocumento',
             'oc.idCO',
             'oc.consecutivo AS numeroOrdenCompra',
+            'oc.nroPaquetes',
             'td.codigo AS codigoTipoDocumento',
             'co.codigo AS codigoCentroOperacion',
             'tr.nombre AS nombreTransportadora',
-            'cat.nombre AS nombreCategoria'
+            'cat.nombre AS nombreCategoria',
+
         ]);
 
         $query->orderBy(['det.created_at' => SORT_DESC]);
@@ -234,15 +269,15 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
             return $dataProvider;
         }
 
-        switch ($menu){
+        switch ($menu) {
             case 'recepcion':
                 if (!empty($lista_estados)) {
                     $query->andWhere(['NOT', ['det.idEstado' => $lista_estados]]);
                 }
                 break;
             case 'programacion':
-                $lista_codigo = [1,99];   
-                $idsEncontrados = []; 
+                $lista_codigo = [1, 99];
+                $idsEncontrados = [];
 
                 foreach ($lista_codigo as $codigo) {
                     // Buscar el modelo Estado por el código
@@ -260,8 +295,8 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
                 }
                 break;
             case 'legalizacion':
-                $lista_codigo = [2];   
-                $idsEncontrados = []; 
+                $lista_codigo = [2];
+                $idsEncontrados = [];
 
                 foreach ($lista_codigo as $codigo) {
                     // Buscar el modelo Estado por el código
@@ -278,7 +313,7 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
                     $query->andWhere(['IN', 'det.idEstadoConteo', $idsEncontrados]);
                 }
                 break;
-            default:  
+            default:
                 if (!empty($lista_estados)) {
                     $query->andWhere(['IN', 'det.idEstadoConteo', $lista_estados]);
                 }
@@ -306,7 +341,7 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
         if ($this->fechaDesde && $this->fechaHasta) {
             $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
             $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
-        
+
             // Aplicar filtro de rango de fechas
             $query->andFilterWhere(['between', 'CONVERT(VARCHAR(10), det.fechaCita, 23)', $fechaInicio, $fechaFin]);
         }
@@ -314,7 +349,8 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
         return $dataProvider;
     }
 
-    public function searchReportGeneral($params, $idagenda){
+    public function searchReportGeneral($params, $idagenda)
+    {
 
         $sql = "SELECT 
         Q1.periodoAnio
@@ -347,6 +383,10 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
         ,Q2.unidadesConteo
         ,Q1.idOrdenCompra
         ,Q1.idEstado
+        ,Q1.nroPaquetes
+        ,Q4.minFechaConteo
+        ,Q4.maxFechaConteo
+        ,Q5.usuariosConteo
         FROM 
         (
             SELECT aem.id  AS radicado, ap.periodoAnio, ap.periodoMes, FORMAT(ap.desde, 'dd/MM/yyyy') AS 'desde', 
@@ -374,7 +414,8 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
             estl.nombre AS nombreEstadoLegaliza,
             aem.observacion AS 'observacion',
             it.idCategoria, cat.nombre AS nombreCategoria, 
-            it.idSubcategoria , sub.nombre AS nombreSubcategoria, SUM(det.cantidadPendiente) AS unidadesOC
+            it.idSubcategoria , sub.nombre AS nombreSubcategoria, SUM(det.cantidadPendiente) AS unidadesOC,
+            SUM(det.nroPaquetes) AS nroPaquetes
             FROM agendaentregamercancia aem 
             INNER JOIN ordendecompradetalle det ON aem.idOrdenCompra = det.idOrdenCompra
             INNER JOIN ordendecompra oc  ON det.idOrdenCompra = oc.id
@@ -422,53 +463,76 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
         ) Q3
         ON Q1.idOrdenCompra = Q3.idOrdenCompra AND  Q1.idCategoria = Q3.idCategoria 
         AND Q1.idSubcategoria = Q3.idSubcategoria 
+        LEFT JOIN
+        (
+            SELECT idConteoFactura AS idAgenda , 
+                MAX(created_at) AS maxFechaConteo, MIN(created_at) AS minFechaConteo
+            FROM Conteobylecturacodigo 
+            WHERE modulo = 1
+            GROUP BY idConteoFactura
+        ) Q4 ON Q1.radicado = Q4.idAgenda
+        LEFT JOIN 
+        (
+            SELECT DISTINCT pem1.idAgendaEntregaMercancia AS idAgenda, 
+                STUFF(
+                    (SELECT DISTINCT  ' , ' + CAST(us.username as varchar)
+                    FROM programacionentregamercancia pem 
+                    INNER JOIN userconteo uc ON pem.idUserConteo = uc.id 
+                    LEFT JOIN [user] us ON uc.idUser = us.id
+                    LEFT JOIN empleado emp ON us.idEmpleado = emp.id 
+                    WHERE idAgendaEntregaMercancia = pem1.idAgendaEntregaMercancia
+                    FOR XML PATH('')), 
+                1, 2, '') AS usuariosConteo
+            FROM 
+                programacionentregamercancia pem1 
+        ) Q5 ON Q1.radicado = Q5.idAgenda 
         WHERE 1 = 1 ";
 
         $this->load($params);
 
-        if (!$this->validate()) {
-            // La validación falla, no se aplican filtros y se devuelve todo
-            return $dataProvider;
-        }
-
-        if ($this->radicado){
+        if ($this->radicado) {
             $sql = $sql . " AND Q1.radicado = " . $this->radicado;
         }
 
-        if ($this->serie){
+        if ($this->serie) {
             $sql = $sql . " AND Q1.serie = " . "'" . $this->serie . "'";
         }
 
-        if ($this->numeroOrdenCompra){
+        if ($this->numeroOrdenCompra) {
             $sql = $sql . " AND Q1.numeroOrdenCompra = " . $this->numeroOrdenCompra;
         }
 
-        if ($this->idEstado){
+        if ($this->idEstado) {
             $sql = $sql . " AND Q1.idEstado = " . $this->idEstado;
         }
 
-        if ($this->proveedor){
+        if ($this->proveedor) {
             $sql = $sql . " AND Q1.proveedor LIKE " . "'%" . $this->proveedor . "%'";
         }
 
-        if ($this->nombreTransportadora){
+        if ($this->nombreTransportadora) {
             $sql = $sql . " AND Q1.nombreTransportadora LIKE " . "'%" . $this->nombreTransportadora . "%'";
         }
 
         if ($this->fechaDesde && $this->fechaHasta) {
             $fechaInicio = date('d/m/Y', strtotime($this->fechaDesde));
             $fechaFin = date('d/m/Y', strtotime($this->fechaHasta));
-        
+
             // Aplicar filtro de rango de fechas
-            $sql = $sql . "AND Q1.fechaCita BETWEEN " . "'" . $fechaInicio . "' AND '" . $fechaFin . "'"; 
+            $sql = $sql . "AND Q1.fechaCita BETWEEN " . "'" . $fechaInicio . "' AND '" . $fechaFin . "'";
         }
 
-        $condiciones = [':condicion' => $idagenda]; 
+        $condiciones = [':condicion' => $idagenda];
         $query = Agendaentregamercancia::findBySql($sql, $condiciones);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
+
+        if (!$this->validate()) {
+            // La validación falla, no se aplican filtros y se devuelve todo
+            return $dataProvider;
+        }
 
         $dataProvider->sort = [
             'attributes' => [
@@ -484,6 +548,64 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
         // Obtener el SQL que se está ejecutando
         //$sql = $query->createCommand()->getRawSql();
         //var_dump($sql); // Mostrar el SQL en pantalla
+
+        return $dataProvider;
+    }
+
+    public function searchReportDaily($idagenda, $anio, $mes, $crossdocking)
+    {
+        $sql = "
+            SELECT 
+                cal.fecha, 
+                ISNULL(Q1.cantidad,0) AS total ,
+                ISNULL(Q2.cantidad,0) AS agendado,
+                ISNULL(Q3.cantidad,0) AS sinagendar
+            FROM calendario cal
+            LEFT JOIN 
+            (
+            	SELECT fechaLlegada, SUM(ISNULL(cantidad,0)) AS cantidad
+            	FROM agendapresupuestosubcategoria
+            	WHERE  crossdocking_id IN (" . $crossdocking . ") AND idAgendaPresupuesto = " . $idagenda . " 
+            	GROUP BY fechaLlegada
+            ) Q1 ON cal.fecha = Q1.fechaLlegada
+            LEFT JOIN
+            (
+            	SELECT fechaLlegada, SUM(ISNULL(cantidadAgendada,0)) AS cantidad
+            	FROM agendapresupuestosubcategoria
+            	WHERE  crossdocking_id IN (" . $crossdocking . ") AND idAgendaPresupuesto = " . $idagenda . " 
+            	GROUP BY fechaLlegada
+            ) Q2 ON cal.fecha = Q2.fechaLlegada
+            LEFT JOIN 
+            (
+            	SELECT fechaLlegada, (SUM(ISNULL(cantidad,0)) - SUM(ISNULL(cantidadAgendada,0))) AS cantidad
+            	FROM agendapresupuestosubcategoria
+            	WHERE  crossdocking_id IN (" . $crossdocking . ") AND idAgendaPresupuesto = " . $idagenda . " 
+            	GROUP BY fechaLlegada
+            ) Q3 ON cal.fecha = Q3.fechaLlegada
+            WHERE YEAR(cal.fecha) = " . $anio . " AND MONTH(cal.fecha) = " . $mes;
+
+        $count = Yii::$app->db->createCommand(
+            'SELECT COUNT(*)
+                FROM calendario cal
+                WHERE YEAR(cal.fecha) = ' . $anio .
+            ' AND MONTH(cal.fecha) = ' . $mes
+        )->queryScalar();
+
+        $dataProvider = new SqlDataProvider([
+            'sql' => $sql,
+            'totalCount' => $count,
+            'pagination' => [
+                'pageSize' => 50,
+            ],
+        ]);
+
+        $dataProvider->sort = [
+            'attributes' => [
+                'column_name' => [
+                    'asc' => ['fecha' => SORT_ASC],
+                ],
+            ],
+        ];
 
         return $dataProvider;
     }

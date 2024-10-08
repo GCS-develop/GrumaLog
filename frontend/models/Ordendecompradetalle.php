@@ -72,10 +72,12 @@ class Ordendecompradetalle extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['idOrdenCompra', 'idItem', 'created_by', 'updated_by', 'idCategoria', 'idSubcategoria'], 
-            'integer'],
+            [['idOrdenCompra', 'idItem', 'created_by', 'updated_by', 'idCategoria', 'idSubcategoria',
+            'nroPaquetes'], 'integer'],
             [['cantidadPedida', 'cantidadEntrada', 'cantidadPendiente'], 'number'],
-            [['fechaEntrega', 'created_at', 'updated_at'], 'safe'],
+            [['fechaEntrega', 'created_at', 'updated_at', 'unidadPaquete', 'nitcomprador', 
+            'comprador', 'bodega', 'codigointernomovto'], 'safe'],
+            [['idItem'], 'exist', 'skipOnError' => true, 'targetClass' => Item::class, 'targetAttribute' => ['idItem' => 'id']],
         ];
     }
 
@@ -107,6 +109,11 @@ class Ordendecompradetalle extends \yii\db\ActiveRecord
     public function getOrdenCompra()
     {
         return $this->hasOne(Ordencompra::class, ['id' => 'idOrdenCompra']);
+    }
+
+    public function getItem()
+    {
+        return $this->hasOne(Item::class, ['id' => 'idItem']);
     }
 
     public static function listarCategoriasOrdenCompra ($idordencompra)
@@ -157,6 +164,7 @@ class Ordendecompradetalle extends \yii\db\ActiveRecord
                                             ->select(['SUM(cantidadPendiente) AS total'])
                                             ->andFilterWhere(['idOrdenCompra' => $idordencompra])
                                             ->andFilterWhere(['idCategoria' => $idcategoria])
+                                            ->andWhere(['IS NOT', 'idItem', null]) 
                                             ->scalar();                                            
         return $total;
     }
@@ -247,4 +255,5 @@ class Ordendecompradetalle extends \yii\db\ActiveRecord
 
         return '-';
     }
+
 }

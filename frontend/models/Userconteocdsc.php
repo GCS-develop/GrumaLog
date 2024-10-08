@@ -27,14 +27,12 @@ use common\models\User;
  */
 class Userconteocdsc extends \yii\db\ActiveRecord
 {
-    public $nombreEmpleado;
     public $identificacion;
-    public $username;
-    public $idEstado;
+    public $nombreEmpleado;
     public $email;
-    public $retypePassword;
-    public $password;
-
+    public $status;
+    public $username;
+    
     /**
      * {@inheritdoc}
      */
@@ -69,7 +67,7 @@ class Userconteocdsc extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['username', 'idEmpleadoLogistica', 'email', 'password', 'retypePassword'], 'required', 
+            [['idUser', 'idEmpleadoLogistica'], 'required', 
             'message' => '{attribute} Es Un Valor Obligatorio'],
             [['idUser', 'idEmpleadoLogistica', 'created_by', 'updated_by'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
@@ -89,17 +87,10 @@ class Userconteocdsc extends \yii\db\ActiveRecord
             'id' => 'ID',
             'idUser' => 'Usuario',
             'idEmpleadoLogistica' => 'Empleado',
-            'nombreEmpleado' => 'Nombre Empleado',
-            'identificacion' => 'Identificación',
-            'username' => 'Nombre Usuario',
-            'idEstado' => 'Estado',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
             'updated_by' => 'Updated By',
-            'email' => 'Correo Electrónico',
-            'password' => 'Contraseña',
-            'retypePassword' => 'Repetir Contraseña',
         ];
     }
 
@@ -151,5 +142,30 @@ class Userconteocdsc extends \yii\db\ActiveRecord
                         ->orderBy('em.nombreEmpleado')->asArray()->all();
     	$listadata = ArrayHelper::map($data, 'id', 'nombre');
     	return $listadata;
+    }
+
+    public static function actualizarUsuario ($status, $iduser, $idempleadologistica){
+
+        // die($status . ' - ' . $iduser . ' - ' . $idempleadologistica);
+
+        $resultado = FALSE;
+        if ($status == 1){
+            $conteo = Userconteocdsc::find()->where(['idUser' => $iduser])->one();
+            if ($conteo == null){
+                $conteo = new Userconteocdsc();
+                $conteo->idUser = $iduser;
+            }
+            $conteo->idEmpleadoLogistica = $idempleadologistica;
+            $conteo->save();
+            $resultado = TRUE;
+        }else{
+            $conteo = Userconteocdsc::find()->where(['idUser' => $iduser])->one();
+            if ($conteo != null){
+                $conteo->delete();
+                $resultado = TRUE;
+            }
+        }
+
+        return $resultado;
     }
 }

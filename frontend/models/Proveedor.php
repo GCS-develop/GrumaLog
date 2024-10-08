@@ -7,6 +7,8 @@ use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 
+use yii\helpers\ArrayHelper;
+
 /**
  * This is the model class for table "proveedor".
  *
@@ -114,5 +116,13 @@ class Proveedor extends \yii\db\ActiveRecord
         $respuesta = $model->save();
         
         return $model->id;
+    }
+
+    public static  function  getListaData(){
+        $data = Proveedor::find()
+                        ->select(['id', "(nit + ' - ' + razonSocial) AS nombre"])
+                        ->orderBy('razonSocial')->asArray()->all();
+    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
+    	return $listadata;
     }
 }

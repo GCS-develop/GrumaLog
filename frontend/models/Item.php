@@ -125,6 +125,12 @@ class Item extends \yii\db\ActiveRecord
     public function getUnidadempaque()
     {
         return $this->hasOne(Unidadempaque::class, ['codigo' => 'unidadEmpaque']);
+
+    }
+
+    public function getUnidadorden()
+    {
+        return $this->hasOne(Unidadempaque::class, ['codigo' => 'unidadOrden']);
     }
 
     /**
@@ -167,60 +173,88 @@ class Item extends \yii\db\ActiveRecord
         return $this->hasOne(Categoria::class, ['id' => 'idCategoria']);
     }
 
-    public static function actualizarRegistro ($item, $referencia, $descripcion, $categoria,
-                                            $subcategoria, $codigotalla, $nombretalla, 
-                                            $codigocolor, $nombrecolor, $codigobarras){
+    public static function actualizarRegistro(
+        $item,
+        $referencia,
+        $descripcion,
+        $categoria,
+        $subcategoria,
+        $codigotalla,
+        $nombretalla,
+        $codigocolor,
+        $nombrecolor,
+        $codigobarras
+    ) {
 
         $modelCategoria = new Categoria();
         $cadena = $categoria;
         $tokens = explode('/', $cadena);
         $modelCategoria->codigoERP = trim($tokens[0]);
         $modelCategoria->nombre = trim($tokens[1]);
-        $idcategoria = Categoria::actualizarRegistro ($modelCategoria);
-        
+        $idcategoria = Categoria::actualizarRegistro($modelCategoria);
+
         $modelSubcategoria = new Subcategoria();
         $cadena = $subcategoria;
         $tokens = explode('/', $cadena);
         $modelSubcategoria->codigoERP = trim($tokens[0]);
         $modelSubcategoria->nombre = trim($tokens[1]);
         $modelSubcategoria->idCategoria = $idcategoria;
-        $idsubcategoria = Subcategoria::actualizarRegistro ($modelSubcategoria);
+        $idsubcategoria = Subcategoria::actualizarRegistro($modelSubcategoria);
 
-        $idtalla = Talla::actualizarRegistro ($codigotalla, $nombretalla);
-		$idcolor = Color::actualizarRegistro ($codigocolor, $nombrecolor);
+        $idtalla = Talla::actualizarRegistro($codigotalla, $nombretalla);
+        $idcolor = Color::actualizarRegistro($codigocolor, $nombrecolor);
 
-        if ($codigobarras){
+        if ($codigobarras) {
             $model = Item::findOne(['codigoBarras' => $codigobarras]);
-            if ($model == null){
+            if ($model == null) {
                 $model = new Item();
                 $model->codigoBarras = $codigobarras;
             }
             $model->item = $item;
             $model->idTalla = $idtalla;
             $model->idColor = $idcolor;
-        }else{
-            $model = Item::findOne(['item' => $item,
-                                    'idTalla' => $idtalla,
-                                    'idColor' => $idcolor
-                                ]);
+        } else {
+            $model = Item::findOne([
+                'item' => $item,
+                'idTalla' => $idtalla,
+                'idColor' => $idcolor
+            ]);
 
-            if ($model == null){
+            if ($model == null) {
                 $model = new Item();
                 $model->item = $item;
                 $model->idTalla = $idtalla;
                 $model->idColor = $idcolor;
             }
         }
-        
+
         $model->referencia = $referencia;
         $model->descripcion = $descripcion;
         $model->idCategoria = $idcategoria;
-        $model->idSubcategoria = $idsubcategoria;    
-        
-        if(!$model->save()){
-            var_dump($model->getErrors()); die("hola");
+        $model->idSubcategoria = $idsubcategoria;
+
+        if (!$model->save()) {
+            var_dump($model->getErrors());
+            die("hola");
         }
 
         return $model->id;
+    }
+
+
+    public static  function  getListaData(){
+        $data = Item::find()
+                    ->select([  
+                                'it.id', 
+                                //'descripcion AS nombre'
+                                "(CAST(it.item AS VARCHAR) + ' - '  + it.descripcion + ' - ' + col.codigo + ' - ' + tal.codigo) AS nombre"
+                            ])
+                    ->alias('it')
+                    ->join('LEFT JOIN', 'color col','it.idColor = col.id')
+                    ->join('LEFT JOIN', 'talla tal','it.idTalla = tal.id')
+                    ->orderBy('it.item')->asArray()->all();
+
+    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
+    	return $listadata;
     }
 }

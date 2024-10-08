@@ -144,7 +144,7 @@ class TransferenciaerpController extends Controller
         }  
     }
 
-    public function actionTransferencia ($id){
+    public function actionTransferencia ($id, $origen = null){
 
         $model = $this->findModel($id);
 
@@ -169,6 +169,9 @@ class TransferenciaerpController extends Controller
         }
         $model->save();
 
+        if ($origen == 'Conteo'){
+            return $this->redirect(['/programacion/conteoentregamercancia']);    
+        }
         return $this->redirect(['index']);
     }
 

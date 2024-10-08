@@ -2,6 +2,10 @@
 
 namespace frontend\modules\programacion\controllers;
 
+use frontend\models\Conectoresdinamicos;
+use frontend\models\DataDocumentoEntrada;
+use frontend\models\Ordendecompra;
+use frontend\models\Transferenciaerp;
 use Yii;
 use frontend\models\Conteoentregamercancia;
 use frontend\models\search\ConteoentregamercanciaSearch;
@@ -10,16 +14,20 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\widgets\ActiveForm;
 
+use yii\web\UploadedFile;
+
 use frontend\models\Programacionentregamercancia;
 use frontend\models\Agendaentregamercancia;
 use frontend\models\search\OrdendecompradetalleSearch;
 use frontend\models\search\AgendaentregamercanciaSearch;
+use frontend\models\search\TransferenciaordencompraexcelSearch;
 use frontend\models\Ordendecompradetalle;
 use frontend\models\Userconteo;
 use frontend\models\Estadoprogramacion;
 use frontend\models\Estadoconteo;
 use frontend\models\Estadolegalizacion;
 use frontend\models\LegalizaConteoForm;
+use frontend\models\FileAgendaInput;
 
 use common\models\ProcedimientosGenerales;
 
@@ -60,6 +68,7 @@ class ConteoentregamercanciaController extends Controller
 
         $searchModel = new ConteoentregamercanciaSearch();
         $dataProvider = $searchModel->search($this->request->queryParams, $idprogramacion, $item);
+
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -109,6 +118,8 @@ class ConteoentregamercanciaController extends Controller
             }
             $dataByItem[$item][] = $model;
         }
+
+        //var_dump($dataProvider); die("hola");
 
         return $this->render('index_detalleoc_agenda', [
             'dataProvider' => $dataProvider,
@@ -220,6 +231,56 @@ class ConteoentregamercanciaController extends Controller
                 'dataProviderDetalleOC' => $dataProviderDetalleOC,
             ]);
         }
+    }
+
+    public function actionActualizardocumentoentrada ($idagenda){
+
+        $agenda = Agendaentregamercancia::findOne(['id' => $idagenda]);
+
+        $ordencompra = Ordendecompra::findOne(['id' => $agenda->idOrdenCompra]);
+
+        $model = new DataDocumentoEntrada();
+
+        $model->fechaDocumento = $ordencompra->fechaDocumentoEntrada;
+        $model->idTipoDocumento = $ordencompra->idTipoDocumentoEntrada;
+        $model->consignacion = $ordencompra->consignacion;
+        $model->consecutivo = $ordencompra->consecutivoDocumentoEntrada;
+        $model->idCO = $ordencompra->idCODocumentoEntrada;
+
+        if($model->consignacion == null){
+            $model->consignacion = 1;
+        }
+
+        if($model->consecutivo == null){
+            $model->consecutivo = 1;
+        }
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }
+        
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                $ordencompra->fechaDocumentoEntrada = $model->fechaDocumento;
+                $ordencompra->idTipoDocumentoEntrada = $model->idTipoDocumento;
+                $ordencompra->consignacion = $model->consignacion;
+                $ordencompra->consecutivoDocumentoEntrada = $model->consecutivo;
+                $ordencompra->idCODocumentoEntrada = $model->idCO;
+
+                $ordencompra->save();
+
+                return $this->redirect(['indexlegalizacion']);
+            }
+        }
+
+        if (Yii::$app->request->isAjax){  
+            return $this->renderAjax('create_documentoentrada', [
+                'model' => $model,
+            ]);
+        }
+
+
     }
 
     public function actionSelect ($idprogramacion, $iditem){
@@ -388,7 +449,7 @@ class ConteoentregamercanciaController extends Controller
         $iduserconteo = null;
 
         $searchModel = new ConteoentregamercanciaSearch();
-        $dataProviderBD = $searchModel->search($this->request->queryParams, $idprogramacion, $item, $idagenda, $iduserconteo);
+        $dataProviderBD = $searchModel->searchSIESA( $idagenda);
 
         $idordencompra = null;
         $idcategoria = null;
@@ -415,6 +476,14 @@ class ConteoentregamercanciaController extends Controller
     public function actionGenerarexcelconteocurvas ($idagenda){
         
         $filename = Conteoentregamercancia::generarExcelConteoCurvas ($idagenda);
+
+        //$rutaGuardado = Transferencia::generarArchivotransferencia($factura);
+
+        Yii::$app->response->sendFile($filename)->send();
+        
+        return $this->redirect(['indexlegalizacion']);
+
+        //$filename = Conteoentregamercancia::generarExcelConteoCurvas ($idagenda);
     }
 
     public function actionLegalizarconteo ($idagenda){
@@ -473,6 +542,64 @@ class ConteoentregamercanciaController extends Controller
 
         return $this->redirect(['indexlegalizacion']);
     }
+
+    public function actionExtraerdataocsiesa (){
+        $model = new FileAgendaInput(); 
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }         
+
+        if ($model->load(Yii::$app->request->post())) {
+
+            $userId = Yii::$app->user->id;
+            $model->archivo = UploadedFile::getInstance($model, 'archivo');
+
+            $respuesta = Agendaentregamercancia::uploadocsiesa($model->archivo);
+
+            if ($respuesta) {
+
+                Yii::$app->session->setFlash('success', 'El Archivo se ha cargado correctamente. ');
+                return $this->redirect(['indexlegalizacion']);
+            }else{
+                $errorString = ProcedimientosGenerales::erroresModelo ($model->getErrors());
+                Yii::$app->session->setFlash('error', 'Ocurrió un error al cargar los archivos: ' . $errorString);
+            }
+
+            return $this->redirect(['indexlegalizacion']);
+
+        }
+
+        if (Yii::$app->request->isAjax){  
+            return $this->renderAjax('uploaddataocsiesa', [
+                'model' => $model,
+            ]);
+        }  
+    }
+
+    public function actionTransferencia ($idagenda){
+
+        $searchModel = new ConteoentregamercanciaSearch();
+        $dataProviderBD = $searchModel->searchSIESA( $idagenda);
+
+        $idtransferenciaerp = Conteoentregamercancia::crearRegistroTransferencia($idagenda, $dataProviderBD);
+    
+        return $this->redirect(['viewtransferenciaocerp', 'id' => $idtransferenciaerp]);
+    }
+
+    public function actionViewtransferenciaocerp($id)
+    {
+        $searchModel = new TransferenciaordencompraexcelSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams, $id);
+
+        return $this->render('index_transferenciaocerp', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'idtransferenciaerp' => $id
+        ]);
+    }
+
 
     /**
      * Finds the Conteoentregamercancia model based on its primary key value.

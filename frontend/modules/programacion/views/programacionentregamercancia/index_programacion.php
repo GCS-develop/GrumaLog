@@ -39,6 +39,7 @@ use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use kartik\grid\GridView;
 use kartik\export\ExportMenu;
+use common\widgets\Alert;
 
 use common\models\ProcedimientosGenerales;
 use frontend\models\Transportadora;
@@ -56,6 +57,8 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <div class="agendaentregamercancia-index">
+
+    <?= Alert::widget() ?>
 
     <?php echo $this->render('_search_programacion', ['model' => $searchModel, 'menu' => $menu]); ?>
 
@@ -199,12 +202,38 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
 
             [
+                'attribute' => 'validacion_items_oc', // Nombre del atributo en el modelo
+                'label' => 'Validación OC',
+                'hAlign' => 'center', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+                'value' => function ($model){
+                    return $model->ordenCompra->getValidacionItemsOC();
+                }
+            ],
+
+            [
                 'class' => ActionColumn::className(),
                 'header'=>'Acción',
                 'headerOptions' => ['width' => '15%'],
-                'template' => '{assignuser}',
+                'template' => '{assignuser} {validaritemsorden}',
 
                 'buttons' => [
+
+                    'validaritemsorden' => function ($url, $model) {                                  
+                        return Html::a('<i class="fa fa-check"></i>', 
+                                [   'actualizadataordencompraws', 'idagenda' => $model->id], 
+                                [   'class' => 'btn btn-default',
+                                    'title' => 'Validar Items OC',
+                                    /*'data' => [
+                                        'confirm' => 'Esta Seguro de Legalizar Este Conteo? ( OC:' . $model->codigoCentroOperacion . '-' . 
+                                                                                        $model->codigoTipoDocumento . '-' .
+                                                                                        $model->numeroOrdenCompra .  ' - Fecha Cita:' .
+                                                                                        $model->fechaCita . ' )',
+                                        'method' => 'post',
+                                    ]*/
+                                ]
+                        );
+                    },
 
                     'assignuser' => function ($url, $model) {                                
                         return Html::a('<i class="fa fa-users"></i>',
@@ -230,6 +259,16 @@ $this->params['breadcrumbs'][] = $this->title;
 
             ],
         ],
+
+        'rowOptions' => function ($model) {
+                    $options = [];
+                
+                    if ($model->ordenCompra->getValidacionItemsOC() == 'No'){
+                        $options['style'] = 'background-color: #ff4d4d; color:white; font-weight: bold;'; // Puedes cambiar el color aquí
+                    }
+                
+                    return $options;
+                },
     ]); ?>
 
 

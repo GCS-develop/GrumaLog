@@ -17,7 +17,7 @@ class UsertraspasoSearch extends Usertraspaso
     public function rules()
     {
         return [
-            [['id', 'idUser', 'idEmpleadoLogistica', 'created_by', 'updated_by', 'idEstado'], 'integer'],
+            [['id', 'idUser', 'idEmpleadoLogistica', 'created_by', 'updated_by', 'status'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
         ];
     }
@@ -43,16 +43,16 @@ class UsertraspasoSearch extends Usertraspaso
         $query = Usertraspaso::find()->alias('usc');
 
         $query->join('INNER JOIN', 'user us', 'usc.idUser = us.id');
-        $query->join('INNER JOIN', 'empleadologistica empl', 'usc.idEmpleadoLogistica = empl.id');
-        $query->join('INNER JOIN', 'empleado emp', 'empl.idEmpleado = emp.id');
+        $query->join('LEFT JOIN', 'empleado emp', 'us.idEmpleado = emp.id');
 
         $query->select([
             'usc.id',
             'usc.idUser',
             'usc.idEmpleadoLogistica',
             'us.username',
-            'empl.idEstado',
-            'empl.idEmpleado',
+            'us.status',
+            'us.idEmpleado',
+            'us.email',
             'emp.identificacion',
             'emp.nombreEmpleado',
         ]);
@@ -81,10 +81,11 @@ class UsertraspasoSearch extends Usertraspaso
             'usc.updated_at' => $this->updated_at,
             'usc.updated_by' => $this->updated_by,
             'emp.identificacion' => $this->identificacion,
-            'empl.idEstado' => $this->idEstado
+            'us.status' => $this->status
         ]);
 
         $query->andFilterWhere(['like', 'emp.nombreEmpleado', $this->nombreEmpleado])
+            ->andFilterWhere(['like', 'us.email', $this->username])
             ->andFilterWhere(['like', 'us.username', $this->username]);
 
         return $dataProvider;

@@ -41,6 +41,12 @@ return [
 		'ventas' => [
             'class' => 'frontend\modules\ventas\Module',
         ],
+        'transporte' => [
+            'class' => 'frontend\modules\transporte\Module',
+        ],
+        'ordencompra' => [
+            'class' => 'frontend\modules\ordencompra\Module',
+        ],
     ],
 	
     'components' => [

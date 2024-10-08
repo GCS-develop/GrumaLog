@@ -174,6 +174,8 @@ class OrdenesCompraWs extends Model
             $totalCantidadPedida = 0;
             $totalCantidadEntrada = 0;
             $totalCantidadPendiente = 0;
+            $nroPaquetes = 0;
+
             $idOrdenCompra = null;
 
             $array = array();
@@ -296,6 +298,19 @@ class OrdenesCompraWs extends Model
                 $modeldetalle->cantidadEntrada = $ordendecompra['CantidadEntrada'];
                 $modeldetalle->cantidadPendiente = $ordendecompra['CantidadPendiente'];
 
+                if ($modelItem->unidadempaque == null){
+                    $modeldetalle->unidadPaquete = 'UND';
+                    $modeldetalle->nroPaquetes = $modeldetalle->cantidadPendiente;    
+                }else{
+                    $modeldetalle->unidadPaquete = $modelItem->unidadempaque->codigo;
+                    if ($modeldetalle->unidadPaquete){
+                        $modeldetalle->nroPaquetes = $modeldetalle->cantidadPendiente / 
+                                                    $modelItem->unidadempaque->equivalencia;
+                    }else{
+                        $modeldetalle->nroPaquetes = $modeldetalle->cantidadPendiente;
+                    }
+                }
+
                 if (!$modeldetalle->save()){
                     var_dump($modeldetalle->getErrors()); die("hola");
                 }
@@ -303,6 +318,7 @@ class OrdenesCompraWs extends Model
                 $totalCantidadPedida = $totalCantidadPedida + $ordendecompra['CantidadPedida'];
                 $totalCantidadEntrada = $totalCantidadEntrada + $ordendecompra['CantidadEntrada'];
                 $totalCantidadPendiente = $totalCantidadPendiente + $ordendecompra['CantidadPendiente'];
+                $nroPaquetes = $nroPaquetes + $modeldetalle->nroPaquetes;
 			}
 
             if ($idOrdenCompra != null){
@@ -311,6 +327,7 @@ class OrdenesCompraWs extends Model
                     $model->totalCantidadPedida = $totalCantidadPedida;
                     $model->totalCantidadEntrada = $totalCantidadEntrada;
                     $model->totalCantidadPendiente = $totalCantidadPendiente;
+                    $model->nroPaquetes = $nroPaquetes;
 
                     $model->save();
 
@@ -341,6 +358,8 @@ class OrdenesCompraWs extends Model
             $totalCantidadPedida = 0;
             $totalCantidadEntrada = 0;
             $totalCantidadPendiente = 0;
+            $nroPaquetes = 0;
+
             $idOrdenCompra = null;
 
             $array = array();
@@ -426,9 +445,15 @@ class OrdenesCompraWs extends Model
 				}
 
                 $modeldetalle = new Ordendecompradetalle();
-                $modeldetalle->idOrdenCompra = $idOrdenCompra;       
+                $modeldetalle->idOrdenCompra = $idOrdenCompra;    
+                
+                if (!in_array($ordendecompra['Item'], $array)) {
+                    $array[] = $ordendecompra['Item'];
 
-                $modeldetalle->idItem = Item::actualizarRegistro( $ordendecompra['Item'], 
+                    $respuesta = ProductosWs::sincronizarERP ($ordendecompra['Item']);
+                } 
+
+                /*$modeldetalle->idItem = Item::actualizarRegistro( $ordendecompra['Item'], 
                                                     $ordendecompra['Referencia_Item'],
                                                     $ordendecompra['Descripcion_Item'],
                                                     $ordendecompra['criterio_CATEGORIA'],
@@ -439,9 +464,11 @@ class OrdenesCompraWs extends Model
                                                     $ordendecompra['Descripcion_Ext_2'],
                                                     $ordendecompra['CodigoBarras']
                                                 );
+                */
 
                 $modelitem = Item::findOne(['codigoBarras' => $ordendecompra['CodigoBarras']]);
                 
+                $modeldetalle->idItem = $modelitem->id;
                 $modeldetalle->idCategoria = $modelitem->categoria->id;
                 $modeldetalle->idSubcategoria = $modelitem->subcategoria->id;
 
@@ -450,6 +477,27 @@ class OrdenesCompraWs extends Model
                 $modeldetalle->cantidadEntrada = $ordendecompra['CantidadEntrada'];
                 $modeldetalle->cantidadPendiente = $ordendecompra['CantidadPendiente'];
 
+                if ($modelitem->unidadempaque == null){
+                    $modeldetalle->unidadPaquete = 'UND';
+                    $modeldetalle->nroPaquetes = $modeldetalle->cantidadPendiente;    
+                }else{
+                    $modeldetalle->unidadPaquete = $modelitem->unidadempaque->codigo;
+                    if ($modeldetalle->unidadPaquete){
+                        $modeldetalle->nroPaquetes = $modeldetalle->cantidadPendiente / 
+                                                    $modelitem->unidadempaque->equivalencia;
+                    }else{
+                        $modeldetalle->nroPaquetes = $modeldetalle->cantidadPendiente;
+                    }
+                }
+
+                /*$modeldetalle->unidadPaquete = $modelitem->unidadempaque->codigo;
+                if ($modeldetalle->unidadPaquete){
+                    $modeldetalle->nroPaquetes = $modeldetalle->cantidadPendiente / 
+                                                $modelitem->unidadempaque->equivalencia;
+                }else{
+                    $modeldetalle->nroPaquetes = $modeldetalle->cantidadPendiente;
+                }*/
+
                 if (!$modeldetalle->save()){
                     var_dump($modeldetalle->getErrors()); die("hola");
                 }
@@ -457,6 +505,7 @@ class OrdenesCompraWs extends Model
                 $totalCantidadPedida = $totalCantidadPedida + $ordendecompra['CantidadPedida'];
                 $totalCantidadEntrada = $totalCantidadEntrada + $ordendecompra['CantidadEntrada'];
                 $totalCantidadPendiente = $totalCantidadPendiente + $ordendecompra['CantidadPendiente'];
+                $nroPaquetes = $nroPaquetes + $modeldetalle->nroPaquetes;
 			}
 
             if ($idOrdenCompra != null){
@@ -465,6 +514,7 @@ class OrdenesCompraWs extends Model
                     $model->totalCantidadPedida = $totalCantidadPedida;
                     $model->totalCantidadEntrada = $totalCantidadEntrada;
                     $model->totalCantidadPendiente = $totalCantidadPendiente;
+                    $model->nroPaquetes = $nroPaquetes;
 
                     $model->save();
 

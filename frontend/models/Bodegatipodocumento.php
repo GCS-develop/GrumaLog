@@ -37,6 +37,11 @@ class Bodegatipodocumento extends \yii\db\ActiveRecord
         return $this->hasOne(Tipodocumento::class, ['id' => 'idTipoDocumento']);
     }
 
+    public function getBodega()
+    {
+        return $this->hasOne(Bodegas::class, ['id' => 'idBodega']);
+    }
+
     /**
      * {@inheritdoc}
      */

@@ -7,6 +7,8 @@ use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
 use common\models\User;
 
 /**
@@ -81,7 +83,11 @@ class Agendaentregamercancia extends \yii\db\ActiveRecord
     public $nombreEstadoLegaliza;
 
     public $motivo;
-
+    public $nroPaquetes;
+    public $minFechaConteo;
+    public $maxFechaConteo;
+    public $usuariosConteo;
+    public $numeroItemsOC;
 
     /**
      * {@inheritdoc}
@@ -426,6 +432,153 @@ class Agendaentregamercancia extends \yii\db\ActiveRecord
             }
         }
         return $respuesta;
+    }
+
+    public static function uploadocsiesa($archivo)
+    {
+        $file = $archivo;
+
+        $tempPath = Yii::getAlias('@app/temp/');
+        $tempFileName = $tempPath . $file->baseName . '.' . $file->extension;
+        $file->saveAs($tempFileName);
+
+        $respuesta = Agendaentregamercancia::extraer_data_archivo ($tempFileName);
+            
+        unlink($tempFileName);
+        return $respuesta;
+    }
+
+    public static function extraer_data_archivo ($archivoExcel){
+
+        ini_set('memory_limit', '2048M'); // Aumentar el límite de memoria a 256 MB (puedes ajustar este valor según tus necesidades)
+
+        ini_set('max_execution_time', '1500'); //300 seconds = 5 minutes
+
+        // Cargar el archivo de Excel
+        $spreadsheet = IOFactory::load($archivoExcel);
+
+        // Obtener la hoja activa
+        //$sheet = $spreadsheet->getActiveSheet();
+
+        // Obtener la hoja específica por su nombre
+        $sheet = $spreadsheet->getSheetByName('Data');
+ 
+        // Obtener el número total de filas en la hoja activa
+        $totalFilas = $sheet->getHighestRow();
+
+        $grabar = false;
+
+        // Iterar por cada fila
+        for ($fila = 1; $fila <= $totalFilas; $fila++) {
+        
+
+            $grabar = true;
+
+            if ($fila < 2){
+                continue;
+            }
+
+            $idtipodcto = null;
+            $valor_celda = $sheet->getCell('B' . $fila)->getValue();
+            if ($valor_celda){
+                $tipodcto = Tipodocumento::find()->where(['codigo' => trim($valor_celda)])->one();
+                $idtipodcto = $tipodcto->id;
+            }
+
+            $consecutivo = null;
+            $valor_celda = $sheet->getCell('C' . $fila)->getValue();
+            if ($valor_celda){
+                $consecutivo = floatval(substr($valor_celda,4,8));
+            }
+
+            $idCO = null;
+            $valor_celda = $sheet->getCell('AC' . $fila)->getValue();
+            if ($valor_celda){
+                $centrooperacion = Centrooperacion::find()->where(['codigo' => trim($valor_celda)])->one();
+                $idCO = $centrooperacion->id;
+            }
+
+            $orden = Ordendecompra::find()->where([
+                                                'idCO' => $idCO,
+                                                'idTipoDocumento' => $idtipodcto,
+                                                'consecutivo' => $consecutivo
+                                                ])->one();
+
+            //var_dump($orden); die("STOP");
+
+            if ($orden == null){
+                continue;
+            }
+
+            $codigobarras = null;
+            $valor_celda = $sheet->getCell('F' . $fila)->getValue();
+            if ($valor_celda){
+                $codigobarras = $valor_celda;
+            }
+
+            if ($codigobarras == null){
+                continue;
+            }
+
+            $bodega = null;
+            $valor_celda = $sheet->getCell('A' . $fila)->getValue();
+            if ($valor_celda){
+                $bodega = $valor_celda;
+            }
+
+            $sucursal = null;
+            $valor_celda = $sheet->getCell('H' . $fila)->getValue();
+            if ($valor_celda){
+                $sucursal = $valor_celda;
+            }
+
+            $comprador = null;
+            $nitcomprador = null;
+            $valor_celda = $sheet->getCell('AA' . $fila)->getValue();
+            if ($valor_celda){
+                $comprador = $valor_celda;
+
+                $modelcomprador = Comprador::find()->where(['nombre' => $comprador])->one();
+                $nitcomprador = $modelcomprador->documento;
+            }
+
+            $codigointernomovto = null;
+            $valor_celda = $sheet->getCell('AK' . $fila)->getValue();
+            if ($valor_celda){
+                $codigointernomovto = $valor_celda;
+            }
+
+            $orden->nitcomprador = $nitcomprador;
+            $orden->comprador = $comprador;
+            $orden->sucursalProveedor = $sucursal;
+            
+            if (!$orden->save()){
+                var_dump($orden->getErrors()); die("hola");
+            };
+
+            $item = Item::find()->where(['codigoBarras' => $codigobarras])->one();
+
+            $detalle = Ordendecompradetalle::find()->where([
+                                                            'idOrdenCompra' => $orden->id,
+                                                            'idItem' => $item->id
+                                                        ])->one();
+
+            if ($detalle){
+                $detalle->bodega = $bodega;
+                $detalle->codigointernomovto = $codigointernomovto;
+
+                if (!$detalle->save()){
+                    var_dump($detalle->getErrors()); die("hola");
+                }
+            }
+        }
+
+        return $grabar;
+
+    }
+
+    public static function actualizarItemsOC (){
+        
     }
 
 }

@@ -29,6 +29,10 @@ $this->registerCss('
     }
 ');
 
+$this->registerJsFile(Yii::$app->request->baseUrl.'/js/mainDataModal.js',
+['depends' => [\yii\web\JqueryAsset::className()]]
+);
+
 use frontend\models\Agendaentregamercancia;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -37,6 +41,11 @@ use kartik\grid\GridView;
 use kartik\export\ExportMenu;
 
 use common\widgets\Alert;
+use yii\bootstrap4\Modal;
+
+use kartik\icons\Icon;
+Icon::map($this, Icon::FAS);
+
 use common\models\ProcedimientosGenerales;
 use frontend\models\Transportadora;
 use frontend\models\Conteoentregamercancia;
@@ -57,6 +66,21 @@ $this->params['breadcrumbs'][] = $this->title;
 $fecha_actual = date("Y-m-d");
 $filename = "Relacion_LegalizacionConteo_" . $fecha_actual;
 
+?>
+
+<?php
+    Modal::begin([                
+        'title'=>'<h4>Datos Básicos Ordenes de Compra SIESA</h4>',
+        'id'=>'modaldata',
+        'size'=>'modal-lg',
+        'options' => [
+            'tabindex' => false  // Importante para que funcione el Select
+        ]
+    ]);
+        
+    echo "<div id='modalContentData'></div>";
+        
+    Modal::end(); 
 ?>
 
 <?php
@@ -140,7 +164,7 @@ $gridColumns = [
 
     <div class="row">
 
-        <div class="col-lg-12 centrar">   
+        <div class="col-lg-6 derecha">   
             <?php echo ExportMenu::widget(
                 [
                     'dataProvider' => $dataProvider,
@@ -172,6 +196,20 @@ $gridColumns = [
                     ]                            
                 ]);
             ?>        
+        </div>
+
+        <div class="col-lg-6 izquierda">
+            <?php 
+                $url = Url::to(
+                    [  'extraerdataocsiesa'
+                        ]);
+            ?>
+            
+            <p>
+            <?= Html::button('Importar Datos OC SIESA', 
+                        ['value'=>  $url, 'class' => 'btn btn-success btn-lg btn-create', 'id'=>'modalButtonCreate']) 
+            ?>
+            </p>
         </div>
 
     </div>    
@@ -361,9 +399,18 @@ $gridColumns = [
                 'class' => ActionColumn::className(),
                 'header'=>'Acción',
                 'headerOptions' => ['width' => '15%'],
-                'template' => '{legalizaconteo} {habilitarconteo}',
+                'template' => '{legalizaconteo} {habilitarconteo} {exportarmatriz} {documentoentrada} {transferencia}',
 
                 'buttons' => [
+
+                    'exportarmatriz' => function ($url, $model) {                                  
+                        return Html::a('<i class="fa fa-file-excel"></i>', 
+                                [   'generarexcelconteocurvas', 'idagenda' => $model->id], 
+                                [   'class' => 'btn btn-default',
+                                    'title' => 'Exportar Matriz',
+                                ]
+                        );
+                    },
 
                     'legalizaconteo' => function ($url, $model) {                                  
                         return Html::a('<i class="fa fa-check"></i>', 
@@ -391,6 +438,34 @@ $gridColumns = [
                                                                                         $model->codigoTipoDocumento . '-' .
                                                                                         $model->numeroOrdenCompra .  ' - Fecha Cita:' .
                                                                                         $model->fechaCita . ' )',
+                                        'method' => 'post',
+                                    ]
+                                ]
+                        );
+                    },
+
+                    'documentoentrada' => function ($url, $model) {                                
+                        $t = Url::to([  'actualizardocumentoentrada', 
+                                        'idagenda' => $model->id
+                                    ]);
+
+                        return Html::button('<i class="fa fa-edit"></i>',[
+                                    'value'=> $t,
+                                    'title' => 'Registrar Datos Documento Entrada SIESA',
+                                    'class' => 'btn btn-default btn_upload',
+                        ]);
+                    },
+
+                    'transferencia' => function ($url, $model) {                                  
+                        return Html::a('<i class="fa fa-globe"></i>', 
+                                [   'transferencia', 'idagenda' => $model->id], 
+                                [   'class' => 'btn btn-default',
+                                    'title' => 'Transferencia ERP',
+                                    'data' => [
+                                        'confirm' => 'Esta Seguro de Realizar Transaferencia? ( OC:' . $model->codigoCentroOperacion . '-' . 
+                                                                                        $model->codigoTipoDocumento . '-' .
+                                                                                        $model->numeroOrdenCompra .  ' - Factura:' .
+                                                                                        $model->numeroFactura . ' )',
                                         'method' => 'post',
                                     ]
                                 ]

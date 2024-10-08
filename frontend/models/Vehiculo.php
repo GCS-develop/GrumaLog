@@ -83,9 +83,9 @@ class Vehiculo extends \yii\db\ActiveRecord
     }
 
     public static  function  getListaData(){
-        $data = Bodegas::find()
-                        ->select(['id', 'descripcion AS nombre'])
-                        ->orderBy('descripcion')->asArray()->all();
+        $data = Vehiculo::find()
+                        ->select(['id', "(placa + ' - ' + descripcion) AS nombre"])
+                        ->orderBy('placa')->asArray()->all();
     	$listadata = ArrayHelper::map($data, 'id', 'nombre');
     	return $listadata;
     }

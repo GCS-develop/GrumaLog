@@ -3,6 +3,11 @@
 namespace frontend\models;
 
 use Yii;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use yii\db\Expression;
+
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "cargo".
@@ -27,6 +32,26 @@ class Cargo extends \yii\db\ActiveRecord
         return 'cargo';
     }
 
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => 'updated_at',
+                'value' => new Expression('GETDATE()'),
+            ],
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+                'value' => function ($event) {
+                    return Yii::$app->user->id;
+                },
+            ],
+        ];
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -48,7 +73,7 @@ class Cargo extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'codigo' => 'Codigo',
+            'codigo' => 'Código',
             'nombre' => 'Nombre',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
@@ -65,5 +90,13 @@ class Cargo extends \yii\db\ActiveRecord
     public function getEmpleados()
     {
         return $this->hasMany(Empleado::class, ['idCargo' => 'id']);
+    }
+
+    public static  function  getListaData(){
+        $data = Cargo::find()
+                        ->select(['id', "(codigo + ' - ' + nombre) AS nombre"])
+                        ->orderBy('nombre')->asArray()->all();
+    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
+    	return $listadata;
     }
 }

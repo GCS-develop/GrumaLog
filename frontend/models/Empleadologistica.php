@@ -69,6 +69,31 @@ class Empleadologistica extends \yii\db\ActiveRecord
         return $this->hasOne(Empleado::class, ['id' => 'idEmpleado']);
     }
 
+    public static function actualizarUsuario ($model){
+        $empleado = Empleadologistica::find()->where(['idEmpleado' => $model->idEmpleado])->one();
+
+        $estado = 0;
+        if ($model->status == 10){
+            $estado = 1;
+        }
+
+        if ($empleado == null){
+            $empleado = new Empleadologistica();
+
+            $empleado->idEmpleado = $model->idEmpleado;
+        }
+        $empleado->idEstado = $estado;
+
+        if ($empleado->save()){
+            $resultado = Userconteo::actualizarUsuario ($model->conteo, $model->id, $empleado->id);
+            $resultado = Userconteocdsc::actualizarUsuario ($model->conteocdsc, $model->id, $empleado->id);
+            $resultado = Usertraspaso::actualizarUsuario ($model->traspaso, $model->id, $empleado->id);
+            $resultado = Userdespacho::actualizarUsuario ($model->traspaso, $model->id, $empleado->id);
+        }
+
+        return $empleado;
+    }
+
     public static  function  getListaData(){
         $data = Empleadologistica::find()
                         ->select(['eml.id', "em.nombreEmpleado + ' - ' + CAST(em.identificacion AS NVARCHAR(50)) + ' - ' + co.nombre AS nombre"])

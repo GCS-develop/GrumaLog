@@ -20,6 +20,14 @@ $this->registerCss('
         text-align: center;
     }
 
+    .izquierda {
+        text-align: left;
+    }
+
+    .derecha {
+        text-align: right;
+    }
+
     .mi-titulo-red {
         font-weight: bold;
         font-size: 18px;
@@ -33,8 +41,9 @@ $this->registerCss('
     }
 ');
 
-$this->registerJsFile(Yii::$app->request->baseUrl.'/js/mainDataModal.js',
-['depends' => [\yii\web\JqueryAsset::className()]]
+$this->registerJsFile(
+    Yii::$app->request->baseUrl . '/js/mainDataModal.js',
+    ['depends' => [\yii\web\JqueryAsset::className()]]
 );
 
 use yii\helpers\Html;
@@ -57,7 +66,7 @@ $fecha_actual = date("Y-m-d");
 $consecutivo = $modelagenda->ordenCompra->consecutivo;
 $tipodocumento = $modelagenda->ordenCompra->tipoDocumento->codigo;
 $co = $modelagenda->ordenCompra->cO->codigo;
-$numeroorden = $co . '-' .$tipodocumento . '-' .$consecutivo ;
+$numeroorden = $co . '-' . $tipodocumento . '-' . $consecutivo;
 
 $filename = "Relacion_Conteo_Matriz_CurvaTallasColores_" . $numeroorden . "_" . $fecha_actual;
 $filenameBD = "Relacion_Conteo_BD_CurvaTallasColores_" . $numeroorden . "_" . $fecha_actual;
@@ -65,18 +74,18 @@ $filenameBD = "Relacion_Conteo_BD_CurvaTallasColores_" . $numeroorden . "_" . $f
 ?>
 
 <?php
-    Modal::begin([                
-        'title'=>'<h4>Registro datos básicos legalización conteo</h4>',
-        'id'=>'modaldata',
-        'size'=>'modal-lg',
-        'options' => [
-            'tabindex' => false  // Importante para que funcione el Select
-        ]
-    ]);
-        
-    echo "<div id='modalContentData'></div>";
-        
-    Modal::end(); 
+Modal::begin([
+    'title' => '<h4>Registro datos básicos legalización conteo</h4>',
+    'id' => 'modaldata',
+    'size' => 'modal-lg',
+    'options' => [
+        'tabindex' => false  // Importante para que funcione el Select
+    ]
+]);
+
+echo "<div id='modalContentData'></div>";
+
+Modal::end();
 ?>
 
 <?php
@@ -95,65 +104,178 @@ foreach ($dataProvider as $fila) {
 
 //					
 
+// $gridColumns = [
+//     [
+//         'attribute' => 'codigoCentroOperacion', 
+//         'label' => 'f470_id_co', 
+//     ],
+//     [
+//         'attribute' => 'codigoTipoDocumento', 
+//         'label' => 'f470_id_tipo_docto', 
+//     ],
+//     [
+//         'attribute' => 'consecutivo', 
+//         'label' => 'f470_consec_docto', 
+//     ],
+//     [
+//         'attribute' => 'numeroRegistro', 
+//         'label' => 'f470_nro_registro', 
+//     ],
+//     [
+//         'attribute' => 'idBodega', 
+//         'label' => 'f470_id_bodega',
+//         'value' => function (){
+//             return '210';
+//         } 
+//     ],
+//     [
+//         'attribute' => 'unidadEmpaque', 
+//         'label' => 'f470_id_unidad_medida', 
+//     ],
+//     [
+//         'attribute' => 'fechaEntrega', 
+//         'label' => 'f421_fecha_entrega', 
+//         'format' => ['date', 'php:Ymd'],
+//     ],
+//     [
+//         'attribute' => 'unidadesConteo', 
+//         'label' => 'f470_cant_base', 
+//     ],
+//     [
+//         'attribute' => 'notas', 
+//         'label' => 'f470_notas',
+//         'value' => function ($model){
+//             return 'Recepción Mercancía OC: ' . $model->tipoDocumento .'-' . $model->consecutivo . ' PRV: ' . $model->razonSocial;
+//         } 
+//     ],
+//     [
+//         'attribute' => 'item', 
+//         'label' => 'f470_id_item', 
+//     ],
+//     [
+//         'attribute' => 'talla', 
+//         'label' => 'f470_id_ext1_detalle', 
+//     ],
+//     [
+//         'attribute' => 'color', 
+//         'label' => 'f470_id_ext2_detalle', 
+//     ],
+//     [
+//         'attribute' => 'numeroFila',
+//         'label' => 'f470_rowid', 
+//     ],
+
+// ];
+
 $gridColumns = [
     [
-        'attribute' => 'codigoCentroOperacion', 
-        'label' => 'f470_id_co', 
+        'attribute' => 'codigoCentroOperacionDocumentoEntrada',
+        'label' => 'CENTRO DE OPERACION',
     ],
     [
-        'attribute' => 'codigoTipoDocumento', 
-        'label' => 'f470_id_tipo_docto', 
+        'attribute' => 'codigoTipoDocumentoEntrada',
+        'label' => 'TIPO DE DOCUMENTO',
     ],
     [
-        'attribute' => 'consecutivo', 
-        'label' => 'f470_consec_docto', 
+        'attribute' => 'consecutivoDocumentoEntrada',
+        'label' => 'CONSECUTIVO DOCUMENTO',
     ],
     [
-        'attribute' => 'numeroRegistro', 
-        'label' => 'f470_nro_registro', 
+        'attribute' => 'fechaDocumentoEntrada',
+        'label' => 'FECHA DOCUMENTO AAAAMMDD',
     ],
     [
-        'attribute' => 'idBodega', 
-        'label' => 'f470_id_bodega',
-        'value' => function (){
-            return '210';
-        } 
+        'attribute' => 'tercero',
+        'label' => 'TERCERO',
     ],
     [
-        'attribute' => 'unidadEmpaque', 
-        'label' => 'f470_id_unidad_medida', 
+        'attribute' => 'numeroFactura',
+        'label' => 'No Factura',
     ],
     [
-        'attribute' => 'fechaEntrega', 
-        'label' => 'f421_fecha_entrega', 
-        'format' => ['date', 'php:Ymd'],
+        'attribute' => 'sucursalProveedor',
+        'label' => 'SUCURSAL PROVEEDOR',
     ],
     [
-        'attribute' => 'unidadesConteo', 
-        'label' => 'f470_cant_base', 
+        'attribute' => 'nitcomprador',
+        'label' => 'ID TERCERO COMPRADOR',
     ],
     [
-        'attribute' => 'notas', 
+        'attribute' => 'consignacion',
+        'label' => 'CONSIGNACION No=0  Si=1',
+    ],
+    /*[
+        'attribute' => 'notas',
         'label' => 'f470_notas',
-        'value' => function ($model){
-            return 'Recepción Mercancía OC: ' . $model->tipoDocumento .'-' . $model->consecutivo . ' PRV: ' . $model->razonSocial;
-        } 
+        'value' => function ($model) {
+            return 'Recepción Mercancía OC: ' . $model->tipoDocumento . '-' . $model->consecutivo . ' PRV: ' . $model->razonSocial;
+        }
+    ],*/
+
+    [
+        'attribute' => 'codigoCentroOperacionOC',
+        'label' => 'CENTRO OPERACION ORDEN DE COMPRA',
     ],
     [
-        'attribute' => 'item', 
-        'label' => 'f470_id_item', 
+        'attribute' => 'codigoTipoDoctoOC',
+        'label' => 'TIPO DOCTO OC',
     ],
     [
-        'attribute' => 'talla', 
-        'label' => 'f470_id_ext1_detalle', 
+        'attribute' => 'consecutivoOC',
+        'label' => 'CONSECUTIVO OC',
     ],
     [
-        'attribute' => 'color', 
-        'label' => 'f470_id_ext2_detalle', 
+        'attribute' => 'codigoCentroOperacionDocumentoEntrada',
+        'label' => 'CENTRO DE OPERACION',
     ],
     [
-        'attribute' => 'numeroFila',
-        'label' => 'f470_rowid', 
+        'attribute' => 'codigoTipoDocumentoEntrada',
+        'label' => 'TIPO DE DOCUMENTO',
+    ],
+    [
+        'attribute' => 'consecutivoDocumentoEntrada',
+        'label' => 'CONSECUTIVO DOCUMENTO',
+    ],
+
+    [
+        'attribute' => 'noRegistro10',
+        'label' => 'No REGISTRO 10',
+        'value' => function () {
+            return '1';
+        }
+    ],
+    [
+        'attribute' => 'bodega',
+        'label' => 'BODEGA',
+    ],
+
+    [
+        'attribute' => 'unidadEmpaque',
+        'label' => 'UND',
+    ],
+    [
+        'attribute' => 'fechaEntrega',
+        'label' => 'FECHA DE ENTREGA AAAMMDD',
+    ],
+    [
+        'attribute' => 'unidadesConteo',
+        'label' => 'f470_cant_base',
+    ],
+    [
+        'attribute' => 'item',
+        'label' => 'f470_id_item',
+    ],
+    [
+        'attribute' => 'color',
+        'label' => 'COLOR',
+    ],
+    [
+        'attribute' => 'talla',
+        'label' => 'TALLA',
+    ],
+    [
+        'attribute' => 'codigointernomovto',
+        'label' => 'CAMPOINTERNO',
     ],
 
 ];
@@ -215,7 +337,7 @@ foreach ($tallasUnicas as $talla) {
                     // La clave 'unidadesConteo' está definida en la fila actual
                     $unidades = $model[$talla]['unidadesConteo'];
                 }
-            } 
+            }
 
             return $unidades;
         },
@@ -263,7 +385,7 @@ foreach ($dataProvider as $fila) {
 
     <div class="row">
 
-        <div class="col-lg-4 centrar">   
+        <div class="col-lg-6 derecha">
             <?php echo ExportMenu::widget(
                 [
                     'dataProvider' => new \yii\data\ArrayDataProvider([
@@ -285,7 +407,7 @@ foreach ($dataProvider as $fila) {
                         ExportMenu::FORMAT_CSV => false,
                         ExportMenu::FORMAT_EXCEL_X => [
                             'label' => 'Excel 2007+',
-                            'icon' => 'file-excel-o' ,
+                            'icon' => 'file-excel-o',
                             'iconOptions' => ['class' => 'text-success'],
                             'linkOptions' => [],
                             'options' => ['title' => 'Microsoft Excel 2007+ (xlsx)'],
@@ -294,25 +416,30 @@ foreach ($dataProvider as $fila) {
                             'extension' => 'xlsx',
                             'writer' => ExportMenu::FORMAT_EXCEL_X
                         ],
-                        
-                    ]                            
-                ]);
-            ?>        
+
+                    ]
+                ]
+            );
+            ?>
         </div>
 
-        <div class="col-lg-4 centrar">
+        <div class="col-lg-6 izquierda">
             <?php $url = Url::to(['legalizarconteo', 'idagenda' => $modelagenda->id]); ?>
-            
+
             <p>
-            <?= Html::button('Legalizar Conteo', 
-                        [   'value'=>  $url, 
-                            'class' => 'btn btn-success btn-lg btn-create', 'id'=>'modalButtonCreate',
-                        ]) 
-            ?>
+                <?= Html::button(
+                    'Legalizar Conteo',
+                    [
+                        'value' => $url,
+                        'class' => 'btn btn-success btn-lg btn-create',
+                        'id' => 'modalButtonCreate',
+                    ]
+                )
+                    ?>
             </p>
         </div>
 
-        <div class="col-lg-4 centrar">   
+        <div class="col-lg-4 centrar d-none">
             <?php echo ExportMenu::widget(
                 [
                     'dataProvider' => $dataProviderBD,
@@ -331,7 +458,7 @@ foreach ($dataProvider as $fila) {
                         ExportMenu::FORMAT_CSV => false,
                         ExportMenu::FORMAT_EXCEL_X => [
                             'label' => 'Excel 2007+',
-                            'icon' => 'file-excel-o' ,
+                            'icon' => 'file-excel-o',
                             'iconOptions' => ['class' => 'text-success'],
                             'linkOptions' => [],
                             'options' => ['title' => 'Microsoft Excel 2007+ (xlsx)'],
@@ -340,21 +467,22 @@ foreach ($dataProvider as $fila) {
                             'extension' => 'xlsx',
                             'writer' => ExportMenu::FORMAT_EXCEL_X
                         ],
-                        
-                    ]                            
-                ]);
-            ?>        
+
+                    ]
+                ]
+            );
+            ?>
         </div>
 
-    </div>    
+    </div>
 
     <!-- Espacio -->
     <div class="row">
         <div class="col-md-12" style="margin-bottom: 20px;"></div>
     </div>
 
-    <?php 
-        echo '<div class="mi-titulo-black">OC:' . $modelagenda->ordenCompra->tipoDocumento->codigo . '-' . 
+    <?php
+    echo '<div class="mi-titulo-black">OC:' . $modelagenda->ordenCompra->tipoDocumento->codigo . '-' .
         $modelagenda->ordenCompra->cO->codigo . '-' .
         $modelagenda->ordenCompra->consecutivo . '</div>';
     ?>
@@ -363,57 +491,69 @@ foreach ($dataProvider as $fila) {
         <div class="col-md-12" style="margin-bottom: 20px;"></div>
     </div>
 
-    <?php 
-        // Mostrar un GridView por cada bodega
+    <?php
+    // Mostrar un GridView por cada bodega
     foreach ($dataByItem as $item => $data) {
 
-    $modelprogramacion = Programacionentregamercancia::findOne([
-                                                        'idAgendaEntregaMercancia' => $modelagenda->id,
-                                                        'item' => $item
-                                                    ]);
+        $modelprogramacion = Programacionentregamercancia::findOne([
+            'idAgendaEntregaMercancia' => $modelagenda->id,
+            'item' => $item
+        ]);
 
-    $nombreempleado = $modelprogramacion->userConteo->empleadoLogistica->empleado->nombreEmpleado;
+        $nombreempleado = null;
+        if ($modelprogramacion->userConteo != null) {
+            //var_dump($modelagenda->id . ' - ' . $item); die("hola");
+            $nombreempleado = $modelprogramacion->userConteo->empleadoLogistica->empleado->nombreEmpleado;
+        }
 
-    $totalUnidadesAsignadas = $modelprogramacion->unidadesAsignadas;
-    $totalUnidadesConteo = Conteoentregamercancia::totalCantidadConteo ($modelprogramacion->id,
-                                                                        $item,
-                                                                        null);
+        if ($nombreempleado == null) {
+            $nombreempleado = $modelprogramacion->empleadoLogistica->empleado->nombreEmpleado;
+        }
 
-    if ($totalUnidadesAsignadas != $totalUnidadesConteo){
-        echo "<p class='mi-titulo-red'>Item: $item" . ' - ' . 'Total UND Asignadas: ' . $totalUnidadesAsignadas. " - Usuario Conteo: " . $nombreempleado . "</p>";
-    }else{
-        echo "<p class='mi-titulo-black'>Item: $item" . ' - ' . 'Total UND Asignadas: ' . $totalUnidadesAsignadas. " - Usuario Conteo: " . $nombreempleado . "</p>";
-    }
-    ?>
+        //$nombreempleado = $modelprogramacion->userConteo->empleadoLogistica->empleado->nombreEmpleado;
+    
+        $totalUnidadesAsignadas = $modelprogramacion->unidadesAsignadas;
+        $totalUnidadesConteo = Conteoentregamercancia::totalCantidadConteo(
+            $modelprogramacion->id,
+            $item,
+            null
+        );
 
-    <?= GridView::widget([
-        'dataProvider' => new \yii\data\ArrayDataProvider([
-            //'allModels' => $dataProvider,
-            'allModels' => $data,
-            'pagination' => false, // Opcional: desactiva la paginación si no la necesitas
-        ]),
+        if ($totalUnidadesAsignadas != $totalUnidadesConteo) {
+            echo "<p class='mi-titulo-red'>Item: $item" . ' - ' . 'Total UND Asignadas: ' . $totalUnidadesAsignadas . " - Usuario Conteo: " . $nombreempleado . "</p>";
+        } else {
+            echo "<p class='mi-titulo-black'>Item: $item" . ' - ' . 'Total UND Asignadas: ' . $totalUnidadesAsignadas . " - Usuario Conteo: " . $nombreempleado . "</p>";
+        }
+        ?>
 
-        'summary' => '',
-		'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
-		'options' => [
-			'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
-		],
-        'showPageSummary' => true,
+        <?= GridView::widget([
+            'dataProvider' => new \yii\data\ArrayDataProvider([
+                //'allModels' => $dataProvider,
+                'allModels' => $data,
+                'pagination' => false, // Opcional: desactiva la paginación si no la necesitas
+            ]),
 
-        'columns' => $columns,
+            'summary' => '',
+            'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
+            'options' => [
+                'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
+            ],
+            'showPageSummary' => true,
 
-        /*'rowOptions' => function ($model, $key, $index, $grid) {
-            $options = [];
-            $diferencia = $model['totalUnidadesAsignadas'] - $model['totalUnidadesConteo'];
+            'columns' => $columns,
 
-            if ($diferencia != 0){
-                $options['style'] = 'background-color: #ff9999;'; // Puedes cambiar el color aquí
-            }
+            /*'rowOptions' => function ($model, $key, $index, $grid) {
+                $options = [];
+                $diferencia = $model['totalUnidadesAsignadas'] - $model['totalUnidadesConteo'];
 
-            return $options;
-        },*/
+                if ($diferencia != 0){
+                    $options['style'] = 'background-color: #ff9999;'; // Puedes cambiar el color aquí
+                }
 
-    ]); ?>
+                return $options;
+            },*/
+
+        ]); ?>
 
     <?php } ?>
 

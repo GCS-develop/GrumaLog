@@ -271,7 +271,7 @@ Modal::end();
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
     // 'filterModel' => $searchModel,
-
+    'showPageSummary' => true,
     'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
     'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
     'options' => [
@@ -317,7 +317,11 @@ Modal::end();
     return $model->bodegaDestino->nombre;
 },
         ],
-        'numeroCajas',
+        [
+            'attribute' => 'numeroCajas',
+            'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+            'pageSummary' => true,
+        ],
 
         [
             'attribute' => 'Cantidad registros',
@@ -325,6 +329,8 @@ Modal::end();
             'value' => function ($model) {
     return $model->AllRecords;
 },
+            'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+            'pageSummary' => true,
 
         ],
 
@@ -347,6 +353,7 @@ Modal::end();
     return $model->created_by . ' - ' . ($model->createdByUser ? $model->createdByUser->username : '(sin usuario)');
 },
         ],
+
 
         // 'updated_at',
         [

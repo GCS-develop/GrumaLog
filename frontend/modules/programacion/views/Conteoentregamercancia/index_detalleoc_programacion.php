@@ -296,6 +296,7 @@ foreach ($dataProvider as $fila) {
 
 <div class="ordendecompradetalle-index">
 
+    <!--
     <div class="row">
         <div class="col-lg-12 centrar">
             <?= Html::a(
@@ -310,6 +311,7 @@ foreach ($dataProvider as $fila) {
             ) ?>
         </div>
     </div>
+    -->
 
     <div class="row">
 

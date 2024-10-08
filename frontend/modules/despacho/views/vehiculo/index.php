@@ -59,14 +59,15 @@ $gridColumns = [
     ],
 
     [
-        'attribute' => 'descripcion',
+        'attribute' => 'placa',
         'format' => 'html',
     ],
 
     [
-        'attribute' => 'placa',
+        'attribute' => 'descripcion',
         'format' => 'html',
     ],
+
 ];
 ?>
 
@@ -162,7 +163,7 @@ $gridColumns = [
             ],*/
 
             [
-                'attribute' => 'descripcion',
+                'attribute' => 'placa',
                 'format' => 'html',
                 'vAlign'=>'middle',
                 'hAlign'=>'left',                
@@ -170,7 +171,7 @@ $gridColumns = [
             ],
 
             [
-                'attribute' => 'placa',
+                'attribute' => 'descripcion',
                 'format' => 'html',
                 'vAlign'=>'middle',
                 'hAlign'=>'left',                

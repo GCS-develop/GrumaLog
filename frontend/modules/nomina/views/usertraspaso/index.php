@@ -69,6 +69,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?= Alert::widget() ?>
 
+    <!--
     <div class="row">
         <div class="col-lg-12 centrar">
             <?php $url = Url::to(['create']); ?>
@@ -80,6 +81,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </p>
         </div>
     </div>
+    -->
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
@@ -109,6 +111,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
             [
                 'attribute' => 'nombreEmpleado', 
+                'label' => 'Nombre Empleado',
                 'hAlign' => 'left', 
                 'vAlign' => 'middle', 
                 'width' => '35%',
@@ -116,23 +119,26 @@ $this->params['breadcrumbs'][] = $this->title;
             
             [
                 'attribute' => 'username', 
+                'label' => 'Nombre Usuario',
                 'hAlign' => 'left', 
                 'vAlign' => 'middle', 
                 'width' => '15%',
             ],  
 
             [
-                'attribute' => 'idEstado',
+                'attribute' => 'status',
+                'label' => 'Estado',
                 'hAlign' => 'left', 
                 'vAlign' => 'middle', 
-                'filter' => ['0' => 'Inactivo', '1' => 'Activo'],
+                'filter' => ['0' => 'Inactivo', '10' => 'Activo'],
                 'filterInputOptions' => ['class' => 'form-control', 'prompt' => 'Seleccione una opción'],
                 'value' => function($model){
-                    return $model->idEstado == 0 ? 'Inactivo' : 'Activo';
+                    return $model->status != 10 ? 'Inactivo' : 'Activo';
                 },
                 'width' => '15%',
             ],
-            [
+
+            /*[
                 'class' => ActionColumn::className(),
                 'header'=>'Acción',
                 'headerOptions' => ['width' => '15%'],
@@ -192,7 +198,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 ],
 
-            ],
+            ],*/
         ],
     ]); ?>
 

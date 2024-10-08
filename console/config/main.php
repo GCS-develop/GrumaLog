@@ -31,6 +31,21 @@ return [
                 ],
             ],
         ],
+
+        'user' => [
+            'class' => 'yii\web\User',
+            'identityClass' => 'common\models\User', // Cambia esto a tu modelo User
+            'enableAutoLogin' => false,
+            'enableSession' => false, // No hay sesiones en consola
+        ],
+
+        'errorHandler' => [
+            'class' => 'yii\console\ErrorHandler', // Configuración para la consola
+        ],
+        'authManager' => [
+            'class' => 'yii\rbac\DbManager', // Si estás usando RBAC a través de base de datos
+            // o 'class' => 'yii\rbac\PhpManager', si lo manejas con archivos PHP
+        ],
     ],
     'params' => $params,
 ];

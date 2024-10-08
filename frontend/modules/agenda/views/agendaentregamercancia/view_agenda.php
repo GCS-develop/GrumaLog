@@ -106,6 +106,10 @@ $gridColumns = [
         'label' => 'No. Guía',
     ],
     [
+        'attribute' => 'nroPaquetes', // Nombre del atributo en el modelo
+        'label' => 'Und. Empaque', // Etiqueta de la columna
+    ],
+    [
         'attribute' => 'unidadesOC', // Nombre del atributo en el modelo
         'label' => 'Unidades',
     ],
@@ -126,7 +130,20 @@ $gridColumns = [
         'label' => 'Legaliza',
     ],
     
-    'observacion'
+    'observacion',
+
+    [
+        'attribute' => 'minFechaConteo', // Nombre del atributo en el modelo
+        'label' => 'Fecha Inicio Conteo',
+    ],
+    [
+        'attribute' => 'maxFechaConteo', // Nombre del atributo en el modelo
+        'label' => 'Fecha Fin Conteo',
+    ],
+    [
+        'attribute' => 'usuariosConteo', // Nombre del atributo en el modelo
+        'label' => 'Usuarios Conteo',
+    ],
 
 ];
 ?>
@@ -237,16 +254,26 @@ $gridColumns = [
                 'attribute' => 'unidadesOC', // Nombre del atributo en el modelo
                 'label' => 'Unidades',
                 'pageSummary' => true,
+                'format' => ['decimal',0]
             ],
+            [
+                'attribute' => 'nroPaquetes', // Nombre del atributo en el modelo
+                'label' => 'Und. Empaque', // Etiqueta de la columna
+                'pageSummary' => true,
+                'format' => ['decimal',0]
+            ],
+
             [
                 'attribute' => 'programadas', // Nombre del atributo en el modelo
                 'label' => 'Und. Programadas',
                 'pageSummary' => true,
+                'format' => ['decimal',0]
             ],
             [
                 'attribute' => 'unidadesConteo', // Nombre del atributo en el modelo
                 'label' => 'Und. Conteo',
                 'pageSummary' => true,
+                'format' => ['decimal',0]
             ],
             [
                 'attribute' => 'nombreEstadoAgenda', // Nombre del atributo en el modelo

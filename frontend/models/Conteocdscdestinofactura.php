@@ -465,6 +465,7 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
                                                     $direccionEmpresa,
                                                     $telefonoEmpresa,
                                                     $destino){
+        // var_dump($destino);die('csc');
 
         $serie = $destino->factura->tipodocumento->codigo;
         $numero = $destino->factura->numeroEntrada;

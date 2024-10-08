@@ -18,6 +18,7 @@ use frontend\models\Estadoprogramacion;
 use frontend\models\Agendaentregamercancia;
 use frontend\models\Conteoentregamercancia;
 use frontend\models\Ordendecompradetalle;
+use common\models\OrdenesCompraWs;
 
 /**
  * ProgramacionentregamercanciaController implements the CRUD actions for Programacionentregamercancia model.
@@ -592,6 +593,21 @@ class ProgramacionentregamercanciaController extends Controller
         }
 
         return $this->redirect(['/programacion/conteoentregamercancia/index', 'idprogramacion' => $id]);
+    }
+
+    public function actionActualizadataordencompraws ($idagenda){
+
+        $model = Agendaentregamercancia::findOne(['id' => $idagenda]);
+
+        $modelordencompra = OrdenesCompraWs::sincronizarERPAgenda (
+                                        $model->ordenCompra->cO->codigo, 
+                                        $model->ordenCompra->tipoDocumento->codigo, 
+                                        $model->ordenCompra->consecutivo);
+
+        Yii::$app->session->setFlash( 'success', 'Orden de Compra Actualizada Con Éxito');
+        
+        return $this->redirect(['indexprogramacion', 'menu' => 'programacion']);
+
     }
 
     /**

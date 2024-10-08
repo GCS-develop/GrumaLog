@@ -27,14 +27,12 @@ use common\models\User;
  */
 class Usertraspaso extends \yii\db\ActiveRecord
 {
-    public $nombreEmpleado;
     public $identificacion;
-    public $username;
-    public $idEstado;
+    public $nombreEmpleado;
     public $email;
-    public $retypePassword;
-    public $password;
-    
+    public $status;
+    public $username;
+
     /**
      * {@inheritdoc}
      */
@@ -69,8 +67,11 @@ class Usertraspaso extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['username', 'idEmpleadoLogistica', 'email', 'password', 'retypePassword'], 'required', 
-            'message' => '{attribute} Es Un Valor Obligatorio'],
+            [
+                ['idUser', 'idEmpleadoLogistica'],
+                'required',
+                'message' => '{attribute} Es Un Valor Obligatorio'
+            ],
             [['idUser', 'idEmpleadoLogistica', 'created_by', 'updated_by'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
             [['idUser'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['idUser' => 'id']],
@@ -89,17 +90,10 @@ class Usertraspaso extends \yii\db\ActiveRecord
             'id' => 'ID',
             'idUser' => 'Usuario',
             'idEmpleadoLogistica' => 'Empleado',
-            'nombreEmpleado' => 'Nombre Empleado',
-            'identificacion' => 'Identificación',
-            'username' => 'Nombre Usuario',
-            'idEstado' => 'Estado',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
             'updated_by' => 'Updated By',
-            'email' => 'Correo Electrónico',
-            'password' => 'Contraseña',
-            'retypePassword' => 'Repetir Contraseña',
         ];
     }
 
@@ -118,17 +112,68 @@ class Usertraspaso extends \yii\db\ActiveRecord
         return $this->hasOne(User::class, ['id' => 'idUser']);
     }
 
-    public static  function  getListaData(){
-        $data = Userconteocdsc::find()
-                        ->select(['usc.id', "em.nombreEmpleado + ' - ' + CAST(em.identificacion AS NVARCHAR(50)) + ' - ' + co.nombre AS nombre"])
-                        ->alias('usc')
-                        ->join('INNER JOIN', 'empleadologistica eml', 'usc.idEmpleadoLogistica = eml.id')
-                        ->join('INNER JOIN', 'empleado em', 'eml.idEmpleado = em.id')
-                        ->join('INNER JOIN', 'centrooperacion co', 'em.idCO = co.id')
-                        ->join('INNER JOIN', 'user us', 'usc.idUser = us.id')
-                        ->where(['eml.idEstado' => 1, 'us.status' => 10])
-                        ->orderBy('em.nombreEmpleado')->asArray()->all();
-    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
-    	return $listadata;
+    public static function getListaData()
+    {
+        $data = Usertraspaso::find()
+            ->select(['usc.id', "em.nombreEmpleado + ' - ' + CAST(em.identificacion AS NVARCHAR(50)) + ' - ' + co.nombre AS nombre"])
+            ->alias('usc')
+            ->join('INNER JOIN', 'empleadologistica eml', 'usc.idEmpleadoLogistica = eml.id')
+            ->join('INNER JOIN', 'empleado em', 'eml.idEmpleado = em.id')
+            ->join('INNER JOIN', 'centrooperacion co', 'em.idCO = co.id')
+            ->join('INNER JOIN', 'user us', 'usc.idUser = us.id')
+            ->where(['eml.idEstado' => 1, 'us.status' => 10])
+            ->orderBy('em.nombreEmpleado')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+
+        return $listadata;
+    }
+
+    public static function getListaDataUsertraspaso()
+    {
+        $data = Usertraspaso::find()
+            ->select([
+                'us.id', // ID del registro Usertraspaso
+                "CONCAT(em.nombreEmpleado, ' - ', CAST(em.identificacion AS NVARCHAR(50)), ' - ', co.nombre, ' - User ID: ', us.id) AS nombre"
+            ])
+            ->alias('usc')
+            ->innerJoin('empleadologistica eml', 'usc.idEmpleadoLogistica = eml.id')
+            ->innerJoin('empleado em', 'eml.idEmpleado = em.id')
+            ->innerJoin('centrooperacion co', 'em.idCO = co.id')
+            ->innerJoin('user us', 'usc.idUser = us.id')
+            ->where(['eml.idEstado' => 1, 'us.status' => 10])
+            ->orderBy('em.nombreEmpleado')
+            ->asArray()
+            ->all();
+
+        // Mapear los resultados para crear un array usable en formularios
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
+    }
+
+
+    public static function actualizarUsuario($status, $iduser, $idempleadologistica)
+    {
+
+        // die($status . ' - ' . $iduser . ' - ' . $idempleadologistica);
+
+        $resultado = FALSE;
+        if ($status == 1) {
+            $conteo = Usertraspaso::find()->where(['idUser' => $iduser])->one();
+            if ($conteo == null) {
+                $conteo = new Usertraspaso();
+                $conteo->idUser = $iduser;
+            }
+            $conteo->idEmpleadoLogistica = $idempleadologistica;
+            $conteo->save();
+            $resultado = TRUE;
+        } else {
+            $conteo = Usertraspaso::find()->where(['idUser' => $iduser])->one();
+            if ($conteo != null) {
+                $conteo->delete();
+                $resultado = TRUE;
+            }
+        }
+
+        return $resultado;
     }
 }

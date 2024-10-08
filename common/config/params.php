@@ -26,4 +26,14 @@ return [
             'idCompania' => '8203',
         ],
     ],
+
+    //trapasos
+    'proyectoNombre' => 'GRUMALOG traspaso',
+    'tipodocumento_traspaso' => '2TB',
+    'tipodocumento_crossdocking' => '2TA',
+    'tituloTraspaso' => 'TRASPASO DE MERCANCIA',
+    'grupo' => 'Grupo mayorista S.A',
+    'nit' => '900.091.175',
+    'direccion' => 'Cr 32 14-25',
+    'tel' => '3229200',
 ];

@@ -65,21 +65,6 @@ $this->params['breadcrumbs'][] = $this->title;
     Modal::end(); 
 ?>
 
-<?php
-    Modal::begin([                
-        'title'=>'<h4>Registro datos básicos Usuario del Sistema</h4>',
-        'id'=>'modaldatalogistica',
-        'size'=>'modal-lg',
-        'options' => [
-            'tabindex' => false  // Importante para que funcione el Select
-        ]
-    ]);
-        
-    echo "<div id='modalContentDataLogistica'></div>";
-        
-    Modal::end(); 
-?>
-
 <div class="empleadologistica-index">
 
     <?= Alert::widget() ?>
@@ -131,12 +116,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 'width' => '35%',
             ],
             
-            [
+            /*[
                 'attribute' => 'username', 
                 'hAlign' => 'left', 
                 'vAlign' => 'middle', 
                 'width' => '15%',
-            ],  
+            ],*/  
 
             [
                 'attribute' => 'idEstado',
@@ -153,8 +138,8 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'class' => ActionColumn::className(),
                 'header'=>'Acción',
-                'headerOptions' => ['width' => '15%'],
-                'template' => '{update} {user} {assign} {delete}',
+                'headerOptions' => ['width' => '10%'],
+                'template' => '{update} {delete}',
 
                 'buttons' => [
 
@@ -167,30 +152,6 @@ $this->params['breadcrumbs'][] = $this->title;
                                     'value'=> $t,
                                     'title' => 'Actualizar Registro Empleado',
                                     'class' => 'btn btn-default btn_update',
-                        ]);
-                    },
-
-                    'assign' => function ($url, $model) {                                
-                        $t = Url::to([  'assign', 
-                                        'id' => $model->id
-                                    ]);
-
-                        return Html::button('<i class="fa fa-user"></i>',[
-                                    'value'=> $t,
-                                    'title' => 'Crear Usuario Nuevo Conteo',
-                                    'class' => 'btn btn-default btn_user',
-                        ]);
-                    },
-
-                    'user' => function ($url, $model) {                                
-                        $t = Url::to([  'user', 
-                                        'id' => $model->id
-                                    ]);
-
-                        return Html::button('<i class="fa fa-user-plus"></i>',[
-                                    'value'=> $t,
-                                    'title' => 'Asignar usuario Conteo',
-                                    'class' => 'btn btn-default btn_user',
                         ]);
                     },
 

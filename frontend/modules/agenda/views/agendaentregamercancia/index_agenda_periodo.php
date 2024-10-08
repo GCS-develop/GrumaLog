@@ -40,7 +40,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <div class="agendapresupuesto-index"> 
-
+    
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         //'filterModel' => $searchModel,
@@ -120,7 +120,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'class' => ActionColumn::className(),
                 'header'=>'Acción',
                 'headerOptions' => ['width' => '15%'],
-                'template' => '{agendarcita} {view}',
+                'template' => '{agendarcita} {view} {reportdaily}',
 
                 'buttons' => [
 
@@ -143,6 +143,21 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ]
                         );
                     },
+
+                    'reportdaily' => function ($url, $model) {                                
+                        return Html::a('<i class="fa fa-list"></i>',
+                                [   'reportdaily', 
+                                        'id' => $model->id, 
+                                        'anio' => $model->periodoAnio,
+                                        'mes' => $model->periodoMes
+                                ], 
+                                [
+                                    'title' => 'Reporte Diario',
+                                    'class' => 'btn btn-default btn_report',
+                                ]
+                        );
+                    },
+
 
                 ],
 

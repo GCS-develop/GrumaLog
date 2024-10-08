@@ -124,12 +124,12 @@ $gridColumns = [
         'label' => 'f470_id_item', 
     ],
     [
-        'attribute' => 'talla', 
-        'label' => 'f470_id_ext1_detalle', 
-    ],
-    [
         'attribute' => 'color', 
         'label' => 'f470_id_ext2_detalle', 
+    ],
+    [
+        'attribute' => 'talla', 
+        'label' => 'f470_id_ext1_detalle', 
     ],
     [
         'attribute' => 'numeroFila',
@@ -240,18 +240,6 @@ foreach ($dataProvider as $fila) {
 ?>
 
 <div class="ordendecompradetalle-index">
-
-    <div class="row">
-        <div class="col-lg-12 centrar"> 
-            <?= Html::a('Generar Excel', [   'generarexcelconteocurvas', 
-                                                'id' => $modelagenda->id,
-                                                'origen' => 'ordendecompra'
-                                            ], 
-                                            [
-                                                'class' => 'btn btn-success btn-lg btn-create',
-                                            ]) ?>
-        </div>
-    </div>
 
     <div class="row">
 

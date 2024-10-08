@@ -91,6 +91,16 @@ class FileAgendaInput extends Model
                 continue;
             }
 
+            $valor_cantidad = $sheet->getCell('J' . $fila)->getValue();
+            if (!$valor_cantidad || $valor_cantidad = ""){
+                continue;
+            }
+
+            $valor_fecha = $sheet->getCell('L' . $fila)->getValue();
+            if (!$valor_fecha || $valor_fecha = ""){
+                continue;
+            }
+
             $codigo = null;
             $valor_celda = $sheet->getCell('A' . $fila)->getValue();
             if ($valor_celda){
@@ -153,7 +163,12 @@ class FileAgendaInput extends Model
             }
 
             $fechaFormateada = null;
-            $valor_celda = $sheet->getCell('L' . $fila)->getValue();
+
+            $valor = $sheet->getCell('L' . $fila)->getValue();
+            $valor_limpio = preg_replace('/[\x00-\x1F\x7F-\xA0\xAD]/u', '', $valor);
+
+            $valor_celda = $valor_limpio;
+
             if ($valor_celda){
                 if ($valor_celda != '-'){
                     try {

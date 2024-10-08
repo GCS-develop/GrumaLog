@@ -51,7 +51,7 @@ $baseUrl = Url::base(true);
             echo \hail812\adminlte\widgets\Menu::widget([
 
                 'items' => [
-                    [
+                    /*[
                         'label' => 'SIESA - Consultas',
                         'icon' => 'cogs',
                         'badge' => '<span class="right badge badge-info">7</span>',
@@ -64,7 +64,7 @@ $baseUrl = Url::base(true);
                             ['label' => 'Ordenes Compra', 'url' => ['/siesa/ordenes-compra-ws/index'], 'iconStyle' => 'far'],
                             ['label' => 'Transferencias', 'url' => ['/siesa/transferencias-ws/index'], 'iconStyle' => 'far'],
                         ]
-                    ],
+                    ],*/
 
                     [
                         'label' => 'SIESA -Conectores',
@@ -78,14 +78,22 @@ $baseUrl = Url::base(true);
                     [
                         'label' => 'Logística',
                         'icon' => 'calendar',
-                        'badge' => '<span class="right badge badge-info">4</span>',
+                        'badge' => '<span class="right badge badge-info">5</span>',
                         'items' => [
+                            [
+                                'label' => 'Ordenes de Compra',
+                                'icon' => 'book',
+                                'badge' => '<span class="right badge badge-info">1</span>',
+                                'items' => [
+                                    ['label' => 'Registrar', 'url' => ['/ordencompra/ordendecompratemporal/index'], 'iconStyle' => 'far'],
+                                ],
+                            ],
                             [
                                 'label' => 'Datos de Control',
                                 'icon' => 'book',
                                 'badge' => '<span class="right badge badge-info">3</span>',
                                 'items' => [
-                                    ['label' => 'Usuarios conteos programación OC', 'url' => ['/nomina/userconteo/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Usuarios', 'url' => ['/nomina/userconteo/index'], 'iconStyle' => 'far'],
                                     ['label' => 'Período recibo mercancia', 'url' => ['/agenda/agendapresupuesto/indexperiodo'], 'iconStyle' => 'far'],
                                     ['label' => 'Fechas recibo mercancia', 'url' => ['/agenda/agendapresupuesto/index'], 'iconStyle' => 'far'],
                                     ['label' => 'Recibo mercancia categoria', 'url' => ['/agenda/agendapresupuestosubcategoria/indexperiodo'], 'iconStyle' => 'far'],
@@ -121,7 +129,7 @@ $baseUrl = Url::base(true);
                         'icon' => 'store',
                         'badge' => '<span class="right badge badge-info">2</span>',
                         'items' => [
-                            ['label' => 'Usuarios conteos CDSC', 'url' => ['/nomina/userconteocdsc/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Usuarios', 'url' => ['/nomina/userconteocdsc/index'], 'iconStyle' => 'far'],
                             ['label' => 'Factura', 'url' => ['/crossdocking/conteocdscdestinofactura/index'], 'iconStyle' => 'far'],
                             ['label' => 'Legalizar Factura', 'url' => ['/crossdocking/conteocdscdestinofactura/indexlegaliza'], 'iconStyle' => 'far'],
                             ['label' => 'Entrada Factura', 'url' => ['/crossdocking/conteocdscdestinofactura/indexentrada'], 'iconStyle' => 'far'],
@@ -148,8 +156,10 @@ $baseUrl = Url::base(true);
                         'icon' => 'window-restore',
                         'badge' => '<span class="right badge badge-info">1</span>',
                         'items' => [
-                            ['label' => 'Usuarios Traspaso', 'url' => ['/nomina/usertraspaso/index'], 'iconStyle' => 'far'],
-                            ['label' => 'Exportar', 'url' => ['/traspaso/traspaso/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Usuarios', 'url' => ['/nomina/usertraspaso/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Traspasos', 'url' => ['/traspaso/traspaso/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Bodegas / Usuario', 'url' => ['/traspaso/traspasouserbodega/index'], 'iconStyle' => 'far'],
+
                         ]
                     ],
 
@@ -162,13 +172,32 @@ $baseUrl = Url::base(true);
                                 'label' => 'Catálogos',
                                 'icon' => 'edit',
                                 'items' => [
-                                    ['label' => 'Bodega', 'url' => ['/catalogos/bodegas/indexcedi', 'cedi' => 1], 'iconStyle' => 'far'],
-                                    ['label' => 'Usuarios - Planillas', 'url' => ['/despacho/userbodega/index'], 'iconStyle' => 'far'],
+                                    //['label' => 'Bodega', 'url' => ['/catalogos/bodegas/indexcedi', 'cedi' => 1], 'iconStyle' => 'far'],
+                                    //['label' => 'Usuarios - Planillas', 'url' => ['/despacho/userbodega/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Conductores', 'url' => ['/despacho/conductor/index'], 'iconStyle' => 'far'],
                                     ['label' => 'Vehículos', 'url' => ['/despacho/vehiculo/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Usuarios', 'url' => ['/nomina/userdespacho/index'], 'iconStyle' => 'far'],
                                 ]
                             ],
                         ]
                     ],
+
+                    /*[
+                        'label' => 'Trasporte',
+                        'icon' => 'car',
+                        'badge' => '<span class="right badge badge-info">1</span>',
+                        'items' => [
+                            [
+                                'label' => 'Config',
+                                'icon' => 'edit',
+                                'items' => [
+                                    // ['label' => 'Bodega', 'url' => ['/catalogos/bodegas/indexcedi', 'cedi' => 1], 'iconStyle' => 'far'],
+                                    // ['label' => 'Usuarios - Planillas', 'url' => ['/despacho/userbodega/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Vehículos', 'url' => ['/transporte/vehiculo/index'], 'iconStyle' => 'far'],
+                                ]
+                            ],
+                        ]
+                    ],*/
 
                     [
                         'label' => 'Ventas',

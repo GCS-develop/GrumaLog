@@ -3,6 +3,9 @@
 namespace frontend\models;
 
 use Yii;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use yii\db\Expression;
 use yii\helpers\ArrayHelper;
 
 /**
@@ -53,6 +56,26 @@ class Empleado extends \yii\db\ActiveRecord
         ];
     }
 
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => 'updated_at',
+                'value' => new Expression('GETDATE()'),
+            ],
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+                'value' => function ($event) {
+                    return Yii::$app->user->id;
+                },
+            ],
+        ];
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -60,13 +83,13 @@ class Empleado extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'identificacion' => 'Identificacion',
+            'identificacion' => 'Identificación',
             'nombreEmpleado' => 'Nombre Empleado',
             'ndc' => 'Ndc',
-            'idEstado' => 'Id Estado',
-            'idCargo' => 'Id Cargo',
-            'idCO' => 'Id Co',
-            'idCC' => 'Id Cc',
+            'idEstado' => 'Estado',
+            'idCargo' => 'Cargo',
+            'idCO' => 'CO',
+            'idCC' => 'CC',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
@@ -89,7 +112,7 @@ class Empleado extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getCC()
+    public function getCc()
     {
         return $this->hasOne(Centrocostos::class, ['id' => 'idCC']);
     }
@@ -99,7 +122,7 @@ class Empleado extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getCO()
+    public function getCo()
     {
         return $this->hasOne(Centrooperacion::class, ['id' => 'idCO']);
     }

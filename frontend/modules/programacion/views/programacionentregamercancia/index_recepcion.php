@@ -29,8 +29,9 @@ $this->registerCss('
     }
 ');
 
-$this->registerJsFile(Yii::$app->request->baseUrl.'/js/mainDataModal.js',
-['depends' => [\yii\web\JqueryAsset::className()]]
+$this->registerJsFile(
+    Yii::$app->request->baseUrl . '/js/mainDataModal.js',
+    ['depends' => [\yii\web\JqueryAsset::className()]]
 );
 
 use frontend\models\Agendaentregamercancia;
@@ -47,6 +48,7 @@ use common\widgets\Alert;
 use yii\bootstrap4\Modal;
 
 use kartik\icons\Icon;
+
 Icon::map($this, Icon::FAS);
 
 /** @var yii\web\View $this */
@@ -62,18 +64,18 @@ $filename = "Relacion_RecepcionMercancia_" . $fecha_actual;
 ?>
 
 <?php
-    Modal::begin([                
-        'title'=>'<h4>Datos Básicos Recepción Mercancía</h4>',
-        'id'=>'modaldata',
-        'size'=>'modal-lg',
-        'options' => [
-            'tabindex' => false  // Importante para que funcione el Select
-        ]
-    ]);
-        
-    echo "<div id='modalContentData'></div>";
-        
-    Modal::end(); 
+Modal::begin([
+    'title' => '<h4>Datos Básicos Recepción Mercancía</h4>',
+    'id' => 'modaldata',
+    'size' => 'modal-lg',
+    'options' => [
+        'tabindex' => false  // Importante para que funcione el Select
+    ]
+]);
+
+echo "<div id='modalContentData'></div>";
+
+Modal::end();
 ?>
 
 <?php
@@ -85,7 +87,7 @@ $gridColumns = [
         'attribute' => 'fechaCita', // Nombre del atributo en el modelo
         //'label' => 'Desde', // Etiqueta de la columna
         'format' => ['date', 'php:Y-m-d'],
-    ], 
+    ],
     [
         'attribute' => 'horaCita', // Nombre del atributo en el modelo
         //'label' => 'Desde', // Etiqueta de la columna
@@ -105,6 +107,10 @@ $gridColumns = [
         'label' => 'Categoría', // Etiqueta de la columna
     ],
     [
+        'attribute' => 'subcategorias', // Nombre del atributo en el modelo
+        'label' => 'SubCategoría', // Etiqueta de la columna
+    ],
+    [
         'attribute' => 'codigoTipoDocumento',
         'label' => 'Serie',
     ],
@@ -117,13 +123,18 @@ $gridColumns = [
         'label' => 'UND Agendadas', // Etiqueta de la columna
     ],
 
+    /*[
+        'attribute' => 'unidades empaque', // Nombre del atributo en el modelo
+        'label' => 'Und empaque', // Etiqueta de la columna
+    ],*/
+
     [
         'attribute' => 'unidadesCumplidas', // Nombre del atributo en el modelo
         'label' => 'UND Cumplidas', // Etiqueta de la columna
     ],
     [
         'attribute' => 'idEstado', // Nombre del atributo en el modelo
-        'value' => function ($model){
+        'value' => function ($model) {
             return $model->estado->nombre;
         }
     ],
@@ -132,7 +143,7 @@ $gridColumns = [
         'label' => 'Tipo Proveedor', // Etiqueta de la columna
     ],
     [
-        'attribute' => 'criterioModeloLogistico', // Nombre del atributo en el modelo
+        'attribute' => 'modeloLogistico', // Nombre del atributo en el modelo
         'label' => 'Modelo Logístico', // Etiqueta de la columna
     ],
     [
@@ -171,7 +182,7 @@ $gridColumns = [
 
     //'numeroGuia',
     //'observacion',
-    */    
+    */
 ];
 ?>
 
@@ -183,7 +194,7 @@ $gridColumns = [
 
     <div class="row">
 
-        <div class="col-lg-12 centrar">   
+        <div class="col-lg-12 centrar">
             <?php echo ExportMenu::widget(
                 [
                     'dataProvider' => $dataProvider,
@@ -202,7 +213,7 @@ $gridColumns = [
                         ExportMenu::FORMAT_CSV => false,
                         ExportMenu::FORMAT_EXCEL_X => [
                             'label' => 'Excel 2007+',
-                            'icon' => 'file-excel-o' ,
+                            'icon' => 'file-excel-o',
                             'iconOptions' => ['class' => 'text-success'],
                             'linkOptions' => [],
                             'options' => ['title' => 'Microsoft Excel 2007+ (xlsx)'],
@@ -211,27 +222,28 @@ $gridColumns = [
                             'extension' => 'xlsx',
                             'writer' => ExportMenu::FORMAT_EXCEL_X
                         ],
-                        
-                    ]                            
-                ]);
-            ?>        
+
+                    ]
+                ]
+            );
+            ?>
         </div>
 
-    </div>    
+    </div>
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         //'filterModel' => $searchModel,
-
+    
         'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
-		'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
-		'options' => [
-			'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
-		],
+        'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
+        'options' => [
+            'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
+        ],
 
         'columns' => [
             //['class' => 'yii\grid\SerialColumn'],
-
+    
             [
                 'attribute' => 'id', // Nombre del atributo en el modelo
                 'hAlign' => 'center', // Alineación horizontal al centro
@@ -255,7 +267,7 @@ $gridColumns = [
                 'label' => 'Número Orden', // Etiqueta de la columna
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
-
+    
             ],
             [
                 'attribute' => 'nit', // Nombre del atributo en el modelo
@@ -277,7 +289,7 @@ $gridColumns = [
                 'format' => ['date', 'php:Y-m-d H:i'],
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
-            ],  
+            ],
 
             [
                 'attribute' => 'numeroCajas', // Nombre del atributo en el modelo
@@ -285,7 +297,7 @@ $gridColumns = [
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
                 'format' => ['decimal', 0], // Formato decimal con 0 decimales
-
+    
             ],
 
             [
@@ -293,13 +305,13 @@ $gridColumns = [
                 'label' => 'Transportadora', // Etiqueta de la columna
                 'hAlign' => 'left', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
-                'value' => function ($model){
-                    $nombre = '-';
-                    if ($model->idTransportadora){
-                        $nombre = $model->transportadora->nombre;
-                    }
-                    return $nombre;
-                }
+                'value' => function ($model) {
+            $nombre = '-';
+            if ($model->idTransportadora) {
+                $nombre = $model->transportadora->nombre;
+            }
+            return $nombre;
+        }
             ],
 
             [
@@ -307,7 +319,13 @@ $gridColumns = [
                 //'label' => 'Contacto', // Etiqueta de la columna
                 'hAlign' => 'left', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
-            ],  
+            ],
+
+            [
+                'attribute' => 'modeloLogistico', // Nombre del atributo en el modelo
+                'label' => 'Modelo Logístico', // Etiqueta de la columna
+            ],
+
             [
                 'attribute' => 'fechaContacto', // Nombre del atributo en el modelo
                 //'label' => 'Fecha Contacto', // Etiqueta de la columna
@@ -315,7 +333,18 @@ $gridColumns = [
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
             ],
-            
+
+            [
+                'attribute' => 'nroPaquetes', // Nombre del atributo en el modelo
+                'label' => 'Und. Empaque', // Etiqueta de la columna
+                'hAlign' => 'center', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+                'format' => ['decimal', 0], // Formato decimal con 0 decimales
+            ],
+            [
+                'attribute' => 'subcategorias', // Nombre del atributo en el modelo
+                'label' => 'SubCategoría', // Etiqueta de la columna
+            ],
             [
                 'attribute' => 'unidades', // Nombre del atributo en el modelo
                 'label' => 'UND Agendadas', // Etiqueta de la columna
@@ -331,37 +360,38 @@ $gridColumns = [
                 'vAlign' => 'middle', // Alineación vertical al centro
                 'format' => ['decimal', 0], // Formato decimal con 0 decimales
             ],
- 
+
             //'numeroGuia',
             //'observacion',
             [
                 'attribute' => 'idEstado', // Nombre del atributo en el modelo
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
-                'value' => function ($model){
-                    return $model->estado->nombre;
-                }
+                'value' => function ($model) {
+            return $model->estado->nombre;
+        }
             ],
 
             [
                 'class' => ActionColumn::className(),
-                'header'=>'Acción',
+                'header' => 'Acción',
                 'headerOptions' => ['width' => '15%'],
                 'template' => '{receive}',
 
                 'buttons' => [
 
-                    'receive' => function ($url, $model) {                                
-                        $t = Url::to([  'receive', 
-                                        'idagendaentrega' => $model->id
-                                    ]);
+                    'receive' => function ($url, $model) {
+                $t = Url::to([
+                    'receive',
+                    'idagendaentrega' => $model->id
+                ]);
 
-                        return Html::button('<i class="fa fa-edit"></i>',[
-                                    'value'=> $t,
-                                    'title' => 'Actualizar Estado - Unidades Cumplidas En Puerta',
-                                    'class' => 'btn btn-default btn_update',
-                        ]);
-                    },
+                return Html::button('<i class="fa fa-edit"></i>', [
+                    'value' => $t,
+                    'title' => 'Actualizar Estado - Unidades Cumplidas En Puerta',
+                    'class' => 'btn btn-default btn_update',
+                ]);
+            },
 
                 ],
 

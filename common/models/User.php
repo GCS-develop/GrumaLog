@@ -10,6 +10,8 @@ use yii\web\IdentityInterface;
 
 use yii\helpers\ArrayHelper;
 
+use frontend\models\Empleado;
+
 /**
  * User model
  *
@@ -222,6 +224,11 @@ class User extends ActiveRecord implements IdentityInterface
                         ->orderBy('us.username')->asArray()->all();
     	$listadata = ArrayHelper::map($data, 'id', 'nombre');
     	return $listadata;
+    }
+	
+	public function getEmpleado()
+    {
+        return $this->hasOne(Empleado::class, ['id' => 'idEmpleado']);
     }
     
 }

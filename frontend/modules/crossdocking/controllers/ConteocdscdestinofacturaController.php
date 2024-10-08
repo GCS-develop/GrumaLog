@@ -64,11 +64,13 @@ class ConteocdscdestinofacturaController extends Controller
         $idestadotraspaso = null;
 
         $searchModel = new ConteocdscdestinofacturaSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams, 
-                                                $idestadofactura, 
-                                                $idestadolegaliza, 
-                                                $idestadoentrada, 
-                                                $idestadotraspaso);
+        $dataProvider = $searchModel->search(
+            $this->request->queryParams,
+            $idestadofactura,
+            $idestadolegaliza,
+            $idestadoentrada,
+            $idestadotraspaso
+        );
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -84,11 +86,13 @@ class ConteocdscdestinofacturaController extends Controller
         $idestadotraspaso = null;
 
         $searchModel = new ConteocdscdestinofacturaSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams, 
-                                                $idestadofactura, 
-                                                $idestadolegaliza, 
-                                                $idestadoentrada, 
-                                                $idestadotraspaso);
+        $dataProvider = $searchModel->search(
+            $this->request->queryParams,
+            $idestadofactura,
+            $idestadolegaliza,
+            $idestadoentrada,
+            $idestadotraspaso
+        );
 
         return $this->render('index_legaliza', [
             'searchModel' => $searchModel,
@@ -102,13 +106,15 @@ class ConteocdscdestinofacturaController extends Controller
         $idestadolegaliza = null;
         $idestadoentrada = 1;
         $idestadotraspaso = null;
-        
+
         $searchModel = new ConteocdscdestinofacturaSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams, 
-                                                $idestadofactura, 
-                                                $idestadolegaliza, 
-                                                $idestadoentrada, 
-                                                $idestadotraspaso);
+        $dataProvider = $searchModel->search(
+            $this->request->queryParams,
+            $idestadofactura,
+            $idestadolegaliza,
+            $idestadoentrada,
+            $idestadotraspaso
+        );
 
         return $this->render('index_entrada', [
             'searchModel' => $searchModel,
@@ -122,13 +128,15 @@ class ConteocdscdestinofacturaController extends Controller
         $idestadolegaliza = null;
         $idestadoentrada = 2;
         $idestadotraspaso = 2;
-        
+
         $searchModel = new ConteocdscdestinofacturaSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams, 
-                                                $idestadofactura, 
-                                                $idestadolegaliza, 
-                                                $idestadoentrada, 
-                                                $idestadotraspaso);
+        $dataProvider = $searchModel->search(
+            $this->request->queryParams,
+            $idestadofactura,
+            $idestadolegaliza,
+            $idestadoentrada,
+            $idestadotraspaso
+        );
 
         return $this->render('index_traspaso', [
             'searchModel' => $searchModel,
@@ -186,20 +194,20 @@ class ConteocdscdestinofacturaController extends Controller
                 $id = null;
                 $mensajeError = 'Error Actualizando Registro';
 
-                if ($model->validate()){
+                if ($model->validate()) {
 
                     $respuesta = Conteocdscdestinofactura::grabarOrdenCompra($model);
 
-                    if ($respuesta){
-                        Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
-                    }else{
-                        Yii::$app->session->setFlash( 'error', $mensajeError);
+                    if ($respuesta) {
+                        Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                    } else {
+                        Yii::$app->session->setFlash('error', $mensajeError);
                     }
                 }
 
                 return $this->redirect(['index', 'id' => $model->idAgenda]);
             }
-        } 
+        }
 
         return $this->render('create_orden_compra', [
             'model' => $model,
@@ -240,7 +248,7 @@ class ConteocdscdestinofacturaController extends Controller
         $model = $this->findModel($idconteofactura);
 
         $modeldestinos = $model->conteocdscdestinos;
-        foreach($modeldestinos as $destinos){
+        foreach ($modeldestinos as $destinos) {
             $id = $destinos->id;
 
             // Define la condición
@@ -264,7 +272,7 @@ class ConteocdscdestinofacturaController extends Controller
 
         $model->delete();
 
-        Yii::$app->session->setFlash( 'success', $count . ' Registros Eliminados Con Éxito');
+        Yii::$app->session->setFlash('success', $count . ' Registros Eliminados Con Éxito');
 
         return $this->redirect(['index']);
     }
@@ -279,7 +287,7 @@ class ConteocdscdestinofacturaController extends Controller
         $idproveedor = $modelfactura->idProveedor;
         $numerofactura = $modelfactura->numeroFactura;
 
-        $dataProvider = Conteocdscdestinofactura::generarDataConteoCurvas ($idconteofactura, $idproveedor, $numerofactura);
+        $dataProvider = Conteocdscdestinofactura::generarDataConteoCurvas($idconteofactura, $idproveedor, $numerofactura);
 
         return $this->render('view_legalizacion_conteo', [
             'dataProvider' => $dataProvider,
@@ -288,19 +296,20 @@ class ConteocdscdestinofacturaController extends Controller
         ]);
     }
 
-    public function actionLegalizarconteo ($idconteofactura){
+    public function actionLegalizarconteo($idconteofactura)
+    {
 
-        $model = new LegalizaConteoCDSCForm ();
+        $model = new LegalizaConteoCDSCForm();
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return ActiveForm::validate($model);
         }
-        
+
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
-                if ($model->validate()){
+                if ($model->validate()) {
 
                     $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
                     $modelfactura->idLegalizado = 1;
@@ -310,27 +319,27 @@ class ConteocdscdestinofacturaController extends Controller
                     $modelfactura->idEstadoEntrada = 1; // Autorizada
                     $modelfactura->idEstadoTraspaso = 1; // Pendiente
 
-                    $modelfactura->fechaLegaliza = date('Y-m-d h:i');
+                    $modelfactura->fechaLegaliza = date('Y-m-d h:i:s');
                     $modelfactura->idUserLegaliza = Yii::$app->user->identity->id;
 
                     $respuesta = $modelfactura->save();
-                    
-                    if ($respuesta){
-                        Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
-                    }else{
-                        Yii::$app->session->setFlash( 'error', 'Error Actualizando Registro');
+
+                    if ($respuesta) {
+                        Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                    } else {
+                        Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
                     }
                 }
 
                 return $this->redirect(['indexlegaliza']);
             }
-        } 
+        }
 
-        if (Yii::$app->request->isAjax){  
+        if (Yii::$app->request->isAjax) {
             return $this->renderAjax('create_legaliza_conteo', [
                 'model' => $model,
             ]);
-        }  
+        }
     }
 
     public function actionViewentradafactura($idconteofactura)
@@ -343,7 +352,7 @@ class ConteocdscdestinofacturaController extends Controller
         $idproveedor = $modelfactura->idProveedor;
         $numerofactura = $modelfactura->numeroFactura;
 
-        $dataProvider = Conteocdscdestinofactura::generarDataConteoCurvas ($idconteofactura, $idproveedor, $numerofactura);
+        $dataProvider = Conteocdscdestinofactura::generarDataConteoCurvas($idconteofactura, $idproveedor, $numerofactura);
 
         return $this->render('view_entrada_factura', [
             'dataProvider' => $dataProvider,
@@ -352,19 +361,20 @@ class ConteocdscdestinofacturaController extends Controller
         ]);
     }
 
-    public function actionEntradafactura ($idconteofactura){
+    public function actionEntradafactura($idconteofactura)
+    {
 
-        $model = new EntradaFacturaCDSCForm ();
+        $model = new EntradaFacturaCDSCForm();
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return ActiveForm::validate($model);
         }
-        
+
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
-                if ($model->validate()){
+                if ($model->validate()) {
 
                     $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
                     $modelfactura->idSerieEntrada = $model->idTipoDocumento;
@@ -377,23 +387,23 @@ class ConteocdscdestinofacturaController extends Controller
                     $modelfactura->idUserEntrada = Yii::$app->user->identity->id;
 
                     $respuesta = $modelfactura->save();
-                    
-                    if ($respuesta){
-                        Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
-                    }else{
-                        Yii::$app->session->setFlash( 'error', 'Error Actualizando Registro');
+
+                    if ($respuesta) {
+                        Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                    } else {
+                        Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
                     }
                 }
 
                 return $this->redirect(['indexentrada']);
             }
-        } 
+        }
 
-        if (Yii::$app->request->isAjax){  
+        if (Yii::$app->request->isAjax) {
             return $this->renderAjax('create_entrada_factura', [
                 'model' => $model,
             ]);
-        }  
+        }
     }
 
     public function actionViewtraspasofactura($idconteofactura)
@@ -406,7 +416,7 @@ class ConteocdscdestinofacturaController extends Controller
         $idproveedor = $modelfactura->idProveedor;
         $numerofactura = $modelfactura->numeroFactura;
 
-        $dataProvider = Conteocdscdestinofactura::generarDataConteoCurvas ($idconteofactura, $idproveedor, $numerofactura);
+        $dataProvider = Conteocdscdestinofactura::generarDataConteoCurvas($idconteofactura, $idproveedor, $numerofactura);
 
         return $this->render('view_traspaso_factura', [
             'dataProvider' => $dataProvider,
@@ -415,19 +425,20 @@ class ConteocdscdestinofacturaController extends Controller
         ]);
     }
 
-    public function actionTraspasofactura ($idconteofactura){
+    public function actionTraspasofactura($idconteofactura)
+    {
 
-        $model = new TraspasoFacturaCDSCForm ();
+        $model = new TraspasoFacturaCDSCForm();
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return ActiveForm::validate($model);
         }
-        
+
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
-                if ($model->validate()){
+                if ($model->validate()) {
 
                     $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
 
@@ -437,11 +448,11 @@ class ConteocdscdestinofacturaController extends Controller
                     $modelfactura->idUserTraspaso = Yii::$app->user->identity->id;
 
                     $respuesta = $modelfactura->save();
-                    
-                    if ($respuesta){
-                        Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
-                    }else{
-                        Yii::$app->session->setFlash( 'error', 'Error Actualizando Registro');
+
+                    if ($respuesta) {
+                        Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                    } else {
+                        Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
                     }
 
                     return $this->redirect(['printtraspaso', 'idconteofactura' => $idconteofactura]);
@@ -449,16 +460,16 @@ class ConteocdscdestinofacturaController extends Controller
 
                 return $this->redirect(['indexentrada']);
             }
-        } 
+        }
 
-        if (Yii::$app->request->isAjax){  
+        if (Yii::$app->request->isAjax) {
             return $this->renderAjax('create_traspaso_factura', [
                 'model' => $model,
             ]);
-        }  
+        }
     }
 
-    public function actionImprimirtraspasos($idconteofactura, $idcentrooperacion=null)
+    public function actionImprimirtraspasos($idconteofactura, $idcentrooperacion = null)
     {
         // Datos de ejemplo para el recibo (puedes reemplazarlos con tus propios datos)
 
@@ -478,28 +489,30 @@ class ConteocdscdestinofacturaController extends Controller
         $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
 
         $dataProviderDestino = $modelfactura->getConteocdscdestinos()
-                                    ->andFilterWhere([
-                                        'idConteocdscdestinofactura' => $idconteofactura,
-                                        'idCentroOperacion' => $idcentrooperacion,
-                                    ])->all();;
+            ->andFilterWhere([
+                'idConteocdscdestinofactura' => $idconteofactura,
+                'idCentroOperacion' => $idcentrooperacion,
+            ])->all();
+        ;
 
         // Recorrer los recibos y generar e imprimir cada uno
-        foreach($dataProviderDestino as $destino){
+        foreach ($dataProviderDestino as $destino) {
 
             $encabezado = Conteocdscdestinofactura::generarTraspasoEncabezado(
-                                                                    $nombreEmpresa,
-                                                                    $nitEmpresa,
-                                                                    $direccionEmpresa,
-                                                                    $telefonoEmpresa,
-                                                                    $destino);
+                $nombreEmpresa,
+                $nitEmpresa,
+                $direccionEmpresa,
+                $telefonoEmpresa,
+                $destino
+            );
 
             $dataProviderDetalle = $destino->getConteocdscdestinodetalles()
-                                        ->where(['>', 'totalUnidades', 0])
-                                        ->all();
+                ->where(['>', 'totalUnidades', 0])
+                ->all();
 
-            $detalle = Conteocdscdestinofactura::generarTraspasoDetalle($dataProviderDetalle); 
+            $detalle = Conteocdscdestinofactura::generarTraspasoDetalle($dataProviderDetalle);
 
-            $piepagina = Conteocdscdestinofactura::generarTraspasoPiePagina($destino); 
+            $piepagina = Conteocdscdestinofactura::generarTraspasoPiePagina($destino);
 
             // Renderizar la vista del recibo con los datos
             $content = $this->render('view_print_traspaso_POS', [
@@ -520,7 +533,8 @@ class ConteocdscdestinofacturaController extends Controller
         }
     }
 
-    public function actionPrinttraspaso ($idconteofactura, $idcentrooperacion = null){
+    public function actionPrinttraspaso($idconteofactura, $idcentrooperacion = null)
+    {
 
         $content = Conteocdscdestinofactura::printTraspaso($idconteofactura, $idcentrooperacion);
 

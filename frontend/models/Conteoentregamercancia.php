@@ -10,6 +10,12 @@ use yii\db\Expression;
 use PhpOffice\PhpSpreadsheet\Helper\Sample;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+
+use yii\web\Response;
 
 use frontend\models\search\ConteoentregamercanciaSearch;
 
@@ -47,6 +53,25 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
     public $numeroRegistro;
     public $numeroFila;
     public $fechaEntrega;
+    public $equivalencia;
+    //
+    //
+    public $codigoCentroOperacionDocumentoEntrada;
+    public $codigoTipoDocumentoEntrada;
+    public $consecutivoDocumentoEntrada;
+    public $fechaDocumentoEntrada;
+    public $codigoCentroOperacionOC;
+    public $codigoTipoDoctoOC;
+    public $consecutivoOC;
+    public $codigointernomovto;
+    public $bodega;
+    public $nroRegistro10;
+    public $tercero;
+    public $numeroFactura;
+    public $sucursalProveedor;
+    public $nitcomprador;
+    public $consignacion;
+
 
     /**
      * {@inheritdoc}
@@ -170,6 +195,8 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
 
     public static function generarDataConteoCurvas ($idagenda, $idordencompra, $idcategoria, $iduserconteo, $idprogramacion=null) {
 
+        //var_dump($idordencompra . ' - ' .$idagenda . ' - ' . $idprogramacion);die("hola");
+
         if ($idordencompra){
             $arrayresultado = self::procesoOrdenCompra ($idordencompra, $idcategoria);
         }
@@ -248,7 +275,8 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
             SELECT aem.id AS radicado, pem.id AS numProgramacion, aem.idOrdenCompra,
             (td.codigo + '-' +  CAST(oc.consecutivo AS nvarchar(50))) AS numeroOrden,
             cat.nombre AS categoria, prv.razonSocial,
-            it.item, it.idColor, it.descripcion,
+            it.item, it.idColor, 
+            (it.descripcion + ' - ' + ISNULL(it.unidadEmpaque, 'UND')) AS descripcion,
             col.codigo AS color, tal.codigo AS talla, 
             pem.unidadesAsignadas AS unidadesAsignadasUser,
             cem.unidadesAsignadas, cem.unidadesConteo
@@ -338,13 +366,23 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
             $filas[$identificador]['totalUnidadesAsignadas'] += $fila['unidadesAsignadas'];
             $filas[$identificador]['totalUnidadesConteo'] += $fila['unidadesConteo'];
         
+            if (!isset($filas[$identificador][$fila['talla']])) {
+                $filas[$identificador][$fila['talla']] = [
+                    'unidadesAsignadas' => 0,
+                    'unidadesConteo' => 0
+                ];
+            }
             // Agregar los demás valores a la fila
             // Puedes agregar aquí las demás columnas que quieras incluir en la fila
             $filas[$identificador][$fila['talla']] = [
-                'unidadesAsignadas' => $fila['unidadesAsignadas'],
-                'unidadesConteo' => $fila['unidadesConteo'],
+                //'unidadesAsignadas' => $fila['unidadesAsignadas'],
+                'unidadesAsignadas' => $filas[$identificador][$fila['talla']]['unidadesAsignadas'] += $fila['unidadesAsignadas'],
+                'unidadesConteo' => $filas[$identificador][$fila['talla']]['unidadesConteo'] += $fila['unidadesConteo'],
+                //'unidadesConteo' => $fila['unidadesConteo'],
             ];
         }
+
+        //die("hola");
 
         return $filas;
     }
@@ -402,35 +440,95 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
             }
         }
 
+        // Obtener los encabezados dinámicamente del primer elemento del array
+
+        $data = $dataByItem;
+
+        $programacion = Programacionentregamercancia::find()
+                            ->where(['idAgendaEntregaMercancia' => $idagenda])
+                            ->all();
+        
+        $usuariosconteo = "";
+        $numerousuarios = 0;
+        foreach($programacion as $registro){
+            $nombreempleado = null;
+            if ($registro->userConteo != null){
+                //var_dump($modelagenda->id . ' - ' . $item); die("hola");
+                $nombreempleado = $registro->userConteo->empleadoLogistica->empleado->nombreEmpleado;
+            }
+
+            if ($nombreempleado == null){
+                $nombreempleado = $registro->empleadoLogistica->empleado->nombreEmpleado;
+            }
+            if ($numerousuarios == 0){
+                $usuariosconteo = $nombreempleado;    
+            }else{
+                if (!str_contains($usuariosconteo, $nombreempleado)) {
+                    $usuariosconteo = $nombreempleado . " , " . $usuariosconteo;
+                } 
+            }
+            $numerousuarios = $numerousuarios + 1;
+        }
+
+        // var_dump($usuariosconteo); die("hola");
+
+        $headers = [];
+        $columnsToExport = [];
+        if (!empty($data)) {
+            $firstItem = reset($data); // Obtener el primer elemento del array
+            if (is_array($firstItem)) {
+                foreach ($firstItem[0] as $key => $value) {
+                    if (strpos($key, 'numeroOrden') === false) { // Omitir 'numeroOrden'
+                        if (is_array($value)) {
+                            foreach ($value as $subKey => $subValue) {
+                                if (strpos($subKey, 'Asignadas') === false) {
+                                    $headers[] = $key . ' ' . ucfirst($subKey); // Ejemplo: "6-12 unidadesConteo"
+                                    $columnsToExport[] = [$key, $subKey]; // Guardar qué columnas exportar
+                                }
+                            }
+                        } else {
+                            if (strpos($key, 'Asignadas') === false) {
+                                $headers[] = $key;
+                                $columnsToExport[] = $key; // Guardar qué columnas exportar
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //var_dump($data); die("hole");
+
         // Crea un nuevo objeto Spreadsheet
-        $spreadsheet = new Spreadsheet();
+        $archivo = Yii::getAlias('@app/web/archivos/Formato_Legalizacion_Conteo.xlsx'); // Ruta al archivo Excel
+        
+        $spreadsheet = IOFactory::load($archivo);
+        $sheet = $spreadsheet->getSheetByName('Data');
+        $spreadsheet->setActiveSheetIndex(0);
 
-        // Set document properties
-        $spreadsheet->getProperties()->setCreator('GRUMA Logistica Total')
-                ->setLastModifiedBy('GRUMA Logistica Total')
-                ->setTitle('Excel creado con PhpSpreadSheet')
-                ->setSubject('Excel Demostración')
-                ->setDescription('Excel generado como prueba')
-                ->setKeywords('office openxml php')
-                ->setCategory('PHPSpreadsheet');
-
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle("Data");
+        // Relleno de color desde A1 hasta A9
+        $sheet->getStyle('A1:A10')->applyFromArray([
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => [
+                    'rgb' => 'D3D3D3', // Color gris claro
+                ],
+            ],
+        ]);
 
         // Agrega los encabezados de las columnas
-        $sheet->setCellValue('A1', 'Radicado');
+        //$sheet->setCellValue('A1', 'Radicado');
         $sheet->setCellValue('B1', $modelagenda->id);
-        $sheet->setCellValue('A2', 'Almacén');
+        //$sheet->setCellValue('A2', 'Almacén');
         $sheet->setCellValue('B2', $modelagenda->bodega->codigo . ' - ' . $modelagenda->bodega->nombre);
-        $sheet->setCellValue('A3', 'Orden');
+        //$sheet->setCellValue('A3', 'Orden');
         $sheet->setCellValue('B3', $modelagenda->ordenCompra->tipoDocumento->codigo . ' - ' . $modelagenda->ordenCompra->consecutivo);
-        $sheet->setCellValue('A4', 'Proveedor');
+        //$sheet->setCellValue('A4', 'Proveedor');
         $sheet->setCellValue('B4', $modelagenda->ordenCompra->proveedor->nit . ' - ' . $modelagenda->ordenCompra->proveedor->razonSocial);
-        $sheet->setCellValue('A5', 'Número Factura');
+        //$sheet->setCellValue('A5', 'Número Factura');
         $sheet->setCellValue('B5', $modelagenda->numeroFactura);
-        $sheet->setCellValue('A6', 'Tipo de Carga');
+        //$sheet->setCellValue('A6', 'Tipo de Carga');
         $sheet->setCellValue('B6', $modelagenda->ordenCompra->proveedor->criterioModeloLogistico);
-        $sheet->setCellValue('A7', 'Fecha');
+        //$sheet->setCellValue('A7', 'Fecha');
         $sheet->setCellValue('B7', date('Y-m-d H:i'));
 
         $minDate = Conteobylecturacodigo::find()
@@ -443,12 +541,210 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
                             ->where(['modulo' => 1, 'idConteoFactura' => $modelagenda->id])
                             ->scalar();
 
-        $sheet->setCellValue('A8', 'Fecha Inicio Conteo');
+        //$sheet->setCellValue('A8', 'Fecha Inicio Conteo');
         $sheet->setCellValue('B8', $minDate);
-        $sheet->setCellValue('A9', 'Fecha Fin Conteo');
-        $sheet->setCellValue('B9', $minDate);
+        //$sheet->setCellValue('A9', 'Fecha Fin Conteo');
+        $sheet->setCellValue('B9', $maxDate);
 
-        return $spreadsheet;
+        $sheet->setCellValue('B10', $usuariosconteo);
+
+        // Ajuste para intercambiar el orden de las columnas B y C
+        if (isset($columnsToExport[1]) && isset($columnsToExport[2])) {
+            $temp = $columnsToExport[1];
+            $columnsToExport[1] = $columnsToExport[2];
+            $columnsToExport[2] = $temp;
+
+            // También intercambiar los encabezados correspondientes
+            $tempHeader = $headers[1];
+            $headers[1] = $headers[2];
+            $headers[2] = $tempHeader;
+        }
+
+        // Escribir los encabezados en la primera fila
+        $column = 'A';
+        foreach ($headers as $header) {
+            $textoABuscar = 'UnidadesConteo';
+            $cadena = $header;
+            if (strpos($header, $textoABuscar) !== false) {
+                $cadena = '[' . str_replace($textoABuscar, "", $header) . ']';
+            }
+
+            $sheet->setCellValue($column . '12', strtoupper($cadena));
+            $column++;
+        }
+
+        // Aplicar formato a los encabezados
+        $sheet->getStyle('A11:' . $column . '12')->applyFromArray([
+            'font' => [
+                'bold' => true,
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                ],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => [
+                    'rgb' => 'D3D3D3', // Color amarillo
+                ],
+            ],
+        ]);
+
+                // Fila inicial para los datos
+        $row = 13;
+
+        // Recorrer el array y escribir los datos en las celdas
+        foreach ($data as $items) {
+            foreach ($items as $item) {
+                $column = 'A';
+                foreach ($columnsToExport as $key) {
+                    if (is_array($key)) {
+                        $sheet->setCellValue($column . $row, $item[$key[0]][$key[1]]);
+                    } else {
+                        $sheet->setCellValue($column . $row, $item[$key]);
+                    }
+                    $column++;
+                }
+
+                // Aplicar formato a cada fila de datos
+                $sheet->getStyle('A' . $row . ':' . $column . $row)->applyFromArray([
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ],
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                        ],
+                    ],
+                ]);
+
+                $row++;
+            }
+        }
+
+        // Relacion_Conteo_Matriz_CurvaTallasColores_002-2EA-386_2024-09-02
+        
+        $nombreArchivo = "Legalizacion_Conteo_Matriz_CurvaTallasColores_" . 
+                            $modelagenda->ordenCompra->tipoDocumento->codigo . '_' . 
+                            $modelagenda->ordenCompra->consecutivo . '.xlsx';
+
+        $writer = new Xlsx($spreadsheet);
+
+        $rutaGuardado = Yii::getAlias('@app/web/archivos/') . $nombreArchivo;
+
+        // Guardar el archivo Excel
+        $writer->save($rutaGuardado);
+
+        return $rutaGuardado;
+    }
+
+    public static function crearRegistroTransferencia ($idagenda, $dataProviderBD){
+
+        $agenda = Agendaentregamercancia::findOne(['id' => $idagenda]);
+        $ordencompra = Ordendecompra::findOne(['id' => $agenda->idOrdenCompra]);
+
+        $transferenciaerp = Transferenciaerp::findOne(['idOrdenCompra' => $agenda->idOrdenCompra]);
+
+        if ($transferenciaerp){
+            $numRegistrosBorrados = Transferenciaerp::deleteAll(['id' => $transferenciaerp->id]);
+            $numRegistrosBorrados = Transferenciaordencompraexcel::deleteAll(['idTransferenciaerp' => $transferenciaerp->id]);
+        }
+
+        $idtransferenciaerp = Conteoentregamercancia::cabeceraTransferencia ($agenda, $ordencompra);
+
+        $respuesta = Conteoentregamercancia::detalleTransferencia($idtransferenciaerp, $dataProviderBD);
+
+        if ($respuesta){
+            $count = Transferenciaordencompraexcel::find()->where(['idTransferenciaerp' => $idtransferenciaerp])->count();
+
+            $model = Transferenciaerp::findOne(['id' => $idtransferenciaerp]);
+            $model->numeroRegistros = $count;
+            $model->save();
+        }
+        return $idtransferenciaerp;
+    }
+
+    public static function cabeceraTransferencia ($agenda, $ordencompra){
+
+        $conector = Conectoresdinamicos::find()->where(['idDocumento' => '165604'])->one();
+
+        $descripcion = 'Transferencia: ' . 
+                                $ordencompra->proveedor->razonSocial . ' ' .
+                                $ordencompra->tipoDocumento->codigo . '-' . 
+                                $ordencompra->consecutivo . ' - ' . 
+                                'No. Factura: ' . $agenda->numeroFactura;
+
+        $notas = 'Fecha Documento: ' . 
+                                $ordencompra->fechaDocumentoEntrada . ' ' .
+                                'Documento Entrada: ' . $ordencompra->tipoDocumentoentrada->codigo . '-' . 
+                                $ordencompra->consecutivoDocumentoEntrada;
+
+        $model = new Transferenciaerp();
+        $model->descripcion = $descripcion;
+        $model->notas = $notas;
+        $model->documento = $agenda->id;
+        $model->numeroRegistros = 0;
+        $model->enviadoWS = 0;
+        $model->origen = 'C';
+        $model->idConectorDinamico = $conector->id;
+        $model->idOrdenCompra = $ordencompra->id;
+
+        if (!$model->save()){
+            var_dump($model->getErrors()); die("STOP");
+        }
+
+        return $model->id;
+    }
+
+    public static function detalleTransferencia ($idtransferenciaerp, $dataProviderBD){
+
+        $ok = true;
+        $models = $dataProviderBD->getModels();
+
+        foreach($models as $registro){
+            $model = new Transferenciaordencompraexcel();
+            $model->centroOperacionDocumento = $registro->codigoCentroOperacionDocumentoEntrada;
+            $model->tipoDocumento = $registro->codigoTipoDocumentoEntrada;
+            $model->consecutivoDocumento = $registro->consecutivoDocumentoEntrada;
+            $model->fechaDocumento = $registro->fechaDocumentoEntrada;
+            $model->tercero = $registro->tercero;
+            $model->numeroFactura = $registro->numeroFactura;
+            $model->sucursal = $registro->sucursalProveedor;
+            $model->idTerceroComprador = $registro->nitcomprador;
+            $model->consignacion = $registro->consignacion;
+            $model->centroOperacionOrdenCompra = $registro->codigoCentroOperacionOC;
+            $model->tipoDocumentoOrdenCompra = $registro->codigoTipoDoctoOC;
+            $model->consecutivoOrdenCompra = $registro->consecutivoOC;
+            $model->centroOperacionMovimiento = $registro->codigoCentroOperacionDocumentoEntrada;
+            $model->tipoDocumentoMovimiento = $registro->codigoTipoDocumentoEntrada;
+            $model->consecutivoMovimiento = $registro->consecutivoDocumentoEntrada;
+            $model->numeroRegistroMovimiento = 1;
+            $model->bodegaMovimiento = $registro->bodega;
+            $model->unidadMovimiento = 'UND';
+            $model->cantidadBase = $registro->unidadesConteo;
+            $model->fechaEntregaMovimiento = $registro->fechaEntrega;
+            $model->item = $registro->item;
+            $model->color = $registro->color;
+            $model->talla = $registro->talla;
+            $model->rowid = $registro->codigointernomovto;
+            $model->idTransferenciaerp = $idtransferenciaerp;
+
+            if (!$model->save()){
+                $ok = false;
+                //var_dump($model->getErrors()); die("hola");
+                continue;
+            }
+        }
+
+
+        return $ok;
+
     }
 
 }
