@@ -314,7 +314,7 @@ Modal::end();
             'filter' => Bodegas::getListaData(),
             'contentOptions' => ['data-cellvalue' => 'idBodegaDestino', 'class' => 'hidden-xs'],
             'value' => function ($model) {
-    return $model->bodegaDestino->nombre;
+    return $model->bodegaDestino->codigo . ' ' . $model->bodegaDestino->nombre;
 },
         ],
         [
@@ -355,7 +355,7 @@ Modal::end();
         ],
 
 
-        // 'updated_at',
+        'updated_at',
         [
             'attribute' => 'updated_by',
             'label' => 'Ultimo usuario',

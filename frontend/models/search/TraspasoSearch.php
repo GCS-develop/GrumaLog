@@ -2,6 +2,7 @@
 
 namespace frontend\models\search;
 
+use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use frontend\models\Traspaso;
@@ -25,7 +26,7 @@ class TraspasoSearch extends Traspaso
     {
         return [
             [['id', 'idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado'], 'integer'],
-            [['updated_at', 'created_by', 'updated_by' , 'fechaDesde', 'fechaHasta',], 'safe'],
+            [['updated_at', 'created_by', 'updated_by', 'fechaDesde', 'fechaHasta',], 'safe'],
             [['consecutivo',], 'number'],
             [['serie'], 'string', 'max' => 5],
         ];
@@ -67,6 +68,10 @@ class TraspasoSearch extends Traspaso
             return $dataProvider;
         }
 
+        $this->load($params);
+        Yii::debug($this->fechaDesde, 'fechaDesde');
+        Yii::debug($this->fechaHasta, 'fechaHasta');
+
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
@@ -77,22 +82,34 @@ class TraspasoSearch extends Traspaso
             'idEstado' => $this->idEstado,
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
-            // 'created_at' => $this->created_at,
-            
+            'created_at' => $this->created_at,
+            // 'fechaDesde' => $this->fechaDesde,
+            // 'fechaHasta' => $this->fechaHasta,
 
-            
+
 
         ]);
 
         // $query->andFilterWhere(['LIKE', 'updated_at', $this->updated_at]);
-
-        if ($this->fechaDesde && $this->fechaHasta) {
-            $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
-            $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
-
-            // Aplicar filtro de rango de fechas
-            $query->andFilterWhere(['between', 'CONVERT(VARCHAR(10), created_at, 23)', $fechaInicio, $fechaFin]);
+        if ($this->fechaDesde || $this->fechaHasta) {
+            // Si solo está presente fechaDesde, buscar por esa fecha exacta
+            if ($this->fechaDesde && !$this->fechaHasta) {
+                $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
+                $query->andWhere(['=', new \yii\db\Expression('CAST(created_at AS DATE)'), $fechaInicio]);
+            }
+            // Si solo está presente fechaHasta, buscar hasta esa fecha
+            elseif (!$this->fechaDesde && $this->fechaHasta) {
+                $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
+                $query->andWhere(['<=', new \yii\db\Expression('CAST(created_at AS DATE)'), $fechaFin]);
+            }
+            // Si están presentes ambas, buscar entre ambas fechas
+            elseif ($this->fechaDesde && $this->fechaHasta) {
+                $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
+                $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
+                $query->andWhere(['between', new \yii\db\Expression('CAST(created_at AS DATE)'), $fechaInicio, $fechaFin]);
+            }
         }
+
 
         $query->andFilterWhere(['like', 'consecutivo', $this->consecutivo]);
 
@@ -130,7 +147,7 @@ class TraspasoSearch extends Traspaso
         }
 
         return $dataProvider;
-        
+
     }
 
 }

@@ -5,14 +5,12 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var frontend\models\Planillaembarque $model */
 
-$this->title = 'Update Planillaembarque: ' . $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Planillaembarques', 'url' => ['index']];
+$this->title = 'Actualizar Planilla embarque: ' . $model->id;
+$this->params['breadcrumbs'][] = ['label' => 'Planilla embarques', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 <div class="planillaembarque-update">
-
-    <h1><?= Html::encode($this->title) ?></h1>
 
     <?= $this->render('_form', [
         'model' => $model,

@@ -94,11 +94,12 @@ use frontend\models\Usertraspaso;
                 $form->field($model, 'fechaDesde')->widget(DatePicker::className(), [
                     'name' => 'fechadesde',
                     'language' => 'es',
-                    'options' => ['placeholder' => 'Fecha Cita Desde ...'],
+                    'options' => ['placeholder' => 'Fecha Cita Desde ...' , 'disabled' => false],
                     'pluginOptions' => [
                         'autoclose' => true,
                         'format' => 'yyyy-mm-dd',
-                        'todayHighlight' => true
+                        // 'format' =>'yyyy-mm-dd hh:ii:ss',
+                        'todayHighlight' => false
                     ]
                 ])
                 ?>
@@ -109,7 +110,7 @@ use frontend\models\Usertraspaso;
                 $form->field($model, 'fechaHasta')->widget(DatePicker::className(), [
                     'name' => 'fechahasta',
                     'language' => 'es',
-                    'options' => ['placeholder' => 'Fecha Cita Hasta ...'],
+                    'options' => ['placeholder' => 'Fecha Cita Hasta ...', 'disabled' => false],
                     'pluginOptions' => [
                         'autoclose' => true,
                         'format' => 'yyyy-mm-dd',

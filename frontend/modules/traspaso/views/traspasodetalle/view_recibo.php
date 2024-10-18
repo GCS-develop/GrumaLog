@@ -109,13 +109,17 @@ $this->registerJsFile('@web/js/JsBarcode.all.min.js', ['depends' => [\yii\web\Jq
         margin-left: 10px;
     }
 
+    
     .anulado {
-        position: absolute;
-        top: 50vh;
-        left: 25vw;
-        transform: translate(-50%, -50%) rotate(-45deg);
+        margin-top: 290px;
+        margin-left: 100px;
+        position: fixed;
+        /* Fijo para que no se mueva al hacer scroll */
+        /* top: 30vh; */
+        /* left: 15vw; */
+        transform: translate(-50%, -50%) rotate(-85deg);
         /* Centra y rota en diagonal */
-        font-size: 100px;
+        font-size: 90px;
         /* Ajusta el tamaño según el diseño */
         color: rgba(100, 0, 0, 0.2);
         /* Color semi-transparente */
@@ -125,6 +129,7 @@ $this->registerJsFile('@web/js/JsBarcode.all.min.js', ['depends' => [\yii\web\Jq
         /* Evita que el texto se divida en varias líneas */
         pointer-events: none;
         /* No interfiere con la interacción del usuario */
+
     }
 </style>
 

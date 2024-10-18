@@ -84,7 +84,7 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getIdBodegaDestino0()
+    public function getBodegaDestino()
     {
         return $this->hasOne(Bodegas::class, ['id' => 'idBodegaDestino']);
     }
@@ -94,7 +94,7 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getIdBodegaOrigen0()
+    public function getBodegaOrigen()
     {
         return $this->hasOne(Bodegas::class, ['id' => 'idBodegaOrigen']);
     }
@@ -114,7 +114,7 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getIdTraspaso0()
+    public function getTraspaso()
     {
         return $this->hasOne(Traspaso::class, ['id' => 'idTraspaso']);
     }

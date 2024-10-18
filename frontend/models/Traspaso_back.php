@@ -79,7 +79,7 @@ class Traspaso extends \yii\db\ActiveRecord
             'numeroCajas' => 'Número Cajas',
             'idCentroOperacion' => 'Centro Operación',
             'idTipoDocumento' => 'Tipo Documento',
-            'consecutivo' => 'Consecutivo'
+            'consecutivo' => 'Consecutivo',
         ];
     }
 

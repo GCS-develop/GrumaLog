@@ -17,7 +17,7 @@ class PlanillaembarqueSearch extends Planillaembarque
     public function rules()
     {
         return [
-            [['id', 'idTransportadora', 'idVehiculo', 'idConductor', 'created_by', 'updated_by'], 'integer'],
+            [['id', 'idTransportadora', 'idVehiculo', 'idConductor', 'idEstado', 'created_by', 'updated_by'], 'integer'],
             [['fechaDespacho', 'horaDespacho', 'placa', 'nombreConductor', 'sello', 'created_at', 'updated_at'], 'safe'],
         ];
     }
@@ -63,6 +63,7 @@ class PlanillaembarqueSearch extends Planillaembarque
             'idTransportadora' => $this->idTransportadora,
             'idVehiculo' => $this->idVehiculo,
             'idConductor' => $this->idConductor,
+            'idEstado' => $this->idEstado,
             'created_at' => $this->created_at,
             'created_by' => $this->created_by,
             'updated_at' => $this->updated_at,

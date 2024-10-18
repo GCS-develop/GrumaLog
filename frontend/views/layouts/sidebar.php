@@ -168,9 +168,22 @@ $baseUrl = Url::base(true);
                         'icon' => 'car',
                         'badge' => '<span class="right badge badge-info">1</span>',
                         'items' => [
+
+                            ['label' => 'Planilla Embarque', 'url' => ['/despacho/planillaembarque/index'], 'iconStyle' => 'far'],
+
+                            // [
+                            //     // 'label' => 'planillaembarque',
+                            //     // 'icon' => 'book',
+                            //     // 'badge' => '<span class="right badge badge-info">1</span>',
+                            //     // 'items' => [
+                            //     //     ['label' => 'planillaembarque', 'url' => ['/despacho/planillaembarque/index'], 'iconStyle' => 'far'],
+                            //     // ],
+                            // ],
+                            
                             [
-                                'label' => 'Catálogos',
-                                'icon' => 'edit',
+                                // 'label' => 'Catálogos',
+                                'label' => 'Config',
+                                'icon' => 'cog',
                                 'items' => [
                                     //['label' => 'Bodega', 'url' => ['/catalogos/bodegas/indexcedi', 'cedi' => 1], 'iconStyle' => 'far'],
                                     //['label' => 'Usuarios - Planillas', 'url' => ['/despacho/userbodega/index'], 'iconStyle' => 'far'],
