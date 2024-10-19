@@ -61,157 +61,43 @@ $this->params['breadcrumbs'][] = $this->title;
 $fecha_actual = date("Y-m-d");
 $filename = "Relacion_Traspaso_" . $fecha_actual;
 
-// var_dump($planillasEmbarque);
-foreach ($planillasEmbarque as $planilla) {
-
-    $gridColumns = [
-
-        [
-            'label' => 'Origen',
-            'value' => function ($planilla) {
-                return $planilla->bodegaOrigen->codigo ?? 'Sin seleccionar';
-            },
-        ],
-
-
-    ];
-
-}
-
-// $gridColumns = [
-//     [
-//         'label' => 'Origen',
-// 'value' => function ($model) {
-//     return isset($model->planillaembarquetraspaso[0])
-//         ? $model->planillaembarquetraspaso[0]->bodegaOrigen->codigo
-//         : 'Sin seleccionar';
-// },
-//     'value' => function ($model) {
-//         return implode(', ', array_map(function ($item) {
-//             return $item->bodegaOrigen->codigo;
-//         }, $model->planillaembarquetraspaso));
-//     },
-// ],
-// [
-//     'label' => 'Almacen origen',
-//     'value' => function ($model) {
-//         return isset($model->planillaembarquetraspaso[0])
-//             ? $model->planillaembarquetraspaso[0]->bodegaOrigen->nombre
-//             : 'Sin seleccionar';
-//     },
-// ],
-// [
-//     'label' => 'Destino',
-//     'value' => function ($model) {
-//         return isset($model->planillaembarquetraspaso[0])
-//             ? $model->planillaembarquetraspaso[0]->bodegaDestino->codigo
-//             : 'Sin seleccionar';
-//     },
-// ],
-// [
-//     'label' => 'Almacen destino',
-//     'value' => function ($model) {
-//         return isset($model->planillaembarquetraspaso[0])
-//             ? $model->planillaembarquetraspaso[0]->bodegaDestino->nombre
-//             : 'Sin seleccionar';
-//     },
-
-// ],
-
-
-// [
-//     'label' => 'Serie',
-//     'value' => function ($model) {
-//         return $model->planillaembarquetraspaso->traspaso->tipodocumento->codigo;
-//     },
-// ],
-// [
-//     'label' => 'Numero',
-//     'value' => function ($model) {
-//         return $model->planillaembarquetraspaso->traspaso->serie;
-//     },
-// ],
-// [
-//     'label' => 'Fecha',
-//     'value' => function ($model) {
-//         return $model->planillaembarquetraspaso->traspaso->created_at;
-//     },
-// ],
-// [
-//     'label' => 'Fecha despacho',
-//     'value' => function ($model) {
-//         return $model->fechaDespacho;
-//     },
-// ],
-// [
-//     'label' => 'Hora despacho',
-//     'value' => function ($model) {
-//         return $model->horaDespacho;
-//     },
-// ],
-// [
-//     'label' => 'Unidades',//validar esto, creo que no trae la unidad del traspaso
-//     'value' => function ($model) {
-//         return $model->totalUnidades;
-//     },
-// ],
-// [
-//     'label' => 'Unidades empaque',//validar esto, Gilberto pide que se permita ingresar este valor
-//     'value' => function ($model) {
-//         // return $model->totalUnidades;
-//     },
-// ],
-// [
-//     'label' => 'Estado',
-//     'value' => function ($model) {
-//         return $model->estado->descripcion;
-//     },
-// ],
-// [
-//     'label' => 'Fecha recibo', // ajustar esto que no existe
-//     'value' => function ($model) {
-//         // return $model->estado->descripcion;
-//     },
-// ],
-// [
-//     'label' => 'Hora recibo',  //esto no existe
-//     'value' => function ($model) {
-//         // return $model->estado->descripcion;
-//     },
-// ],
-// [ // esto no existe
-//     'label' => 'Usuario recibo',
-//     'value' => function ($model) {
-//         // return $model->estado->descripcion;
-//     },
-// ],
-// [
-//     'label' => 'Planilla', // no se que es esto
-//     'value' => function ($model) {
-//         // return $model->estado->descripcion;
-//     },
-// ],
-// [
-//     'label' => 'Fecha recibido', // ya no existe?
-//     'value' => function ($model) {
-//         // return $model->estado->descripcion;
-//     },
-// ],
-// [
-//     'label' => 'Hora recibido',
-//     'value' => function ($model) {
-//         // return $model->estado->descripcion;
-//     },
-// ],
-
-// [
-//     'label' => 'Planilla transito',
-//     'value' => function ($model) {
-//         // return $model->estado->descripcion;
-//     },
-// ],
-
-// ];
+$gridColumns = [
+    'fechaDespacho',
+    'horaDespacho',
+    [
+        'attribute' => 'idTransportadora',
+        'filter' => Transportadora::getListaData(),
+        'contentOptions' => ['data-cellvalue' => 'serie'],
+        'value' => function ($model) {
+            return $model->transportadora->nombre;
+        },
+    ],
+    [
+        'attribute' => 'idVehiculo',
+        'filter' => Vehiculo::getListaData(),
+        'contentOptions' => ['data-cellvalue' => 'serie'],
+        'value' => function ($model) {
+            return $model->vehiculo ? $model->vehiculo->descripcion : ' Sin seleccionar ';
+        },
+    ],
+    'placa',
+    'nombreConductor',
+    'sello',
+    [
+        'attribute' => 'idEstado',
+        'value' => function ($model) {
+            return $model->estado->nombre;
+        },
+    ],
+    [
+        'attribute' => 'idEstado',
+        'filter' => Estadodespacho::getListaData(),
+        'contentOptions' => ['data-cellvalue' => 'serie'],
+        'value' => function ($model) {
+            return $model->estado->nombre;
+        },
+    ],
+];
 
 ?>
 

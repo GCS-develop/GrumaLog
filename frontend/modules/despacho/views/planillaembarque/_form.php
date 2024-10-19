@@ -104,7 +104,7 @@ use yii\widgets\ActiveForm;
     <?= $form->field($model, 'updated_by')->textInput() ?> -->
 
     <div class="form-group centrar">
-        <?= Html::submitButton('Registrar', ['class' => 'btn btn-success btn-lg btn-create']) ?>
+        <?= Html::submitButton('Buscar', ['class' => 'btn btn-success btn-lg']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

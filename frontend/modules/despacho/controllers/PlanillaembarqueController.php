@@ -44,13 +44,9 @@ class PlanillaembarqueController extends Controller
         $searchModel = new PlanillaembarqueSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
-        $planillasEmbarque = Planillaembarquetraspaso::find()->all();
-        // ['idPlanillaEmbarque' => 'id']);
-
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'planillasEmbarque' => $planillasEmbarque,
         ]);
     }
 

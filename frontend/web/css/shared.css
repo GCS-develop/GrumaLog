@@ -1,0 +1,20 @@
+.mi-gridview {
+    font-size: 12px; /* Ajusta el tamaño de la fuente según sea necesario */
+    /* Otros estilos CSS según sea necesario */
+}
+
+.btn-create {
+    width: 300px;
+}
+
+.centrar {
+    text-align: center;
+}
+
+.izquierda {
+    text-align: left;
+}
+
+.derecha {
+    text-align: right;
+}    

@@ -1,36 +1,5 @@
 <?php
 
-// Definir el estilo CSS directamente en la vista
-$this->registerCss('
-    .mi-gridview {
-        font-size: 12px; /* Ajusta el tamaño de la fuente según sea necesario */
-        /* Otros estilos CSS según sea necesario */
-    }
-
-    .btn-create {
-        width: 300px;
-    }
-    
-    .centrar {
-        text-align: center;
-    }
-
-        .izquierda {
-        text-align: left;
-    }
- 
-    .derecha {
-        text-align: right;
-    }    
-
-    
-');
-
-$this->registerJsFile(
-    Yii::$app->request->baseUrl . '/js/mainDataModal.js',
-    ['depends' => [\yii\web\JqueryAsset::className()]]
-);
-
 use frontend\models\Traspaso;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -52,7 +21,10 @@ use yii\bootstrap4\Modal;
 $this->title = 'Traspasos';
 $this->params['breadcrumbs'][] = $this->title;
 
-
+$this->registerJsFile(
+    Yii::$app->request->baseUrl . '/js/mainDataModal.js',
+    ['depends' => [\yii\web\JqueryAsset::className()]]
+);
 
 $fecha_actual = date("Y-m-d");
 $filename = "Relacion_Traspaso_" . $fecha_actual;
@@ -193,6 +165,8 @@ $gridColumns = [
 ];
 
 ?>
+
+<link rel="stylesheet" href="css/shared.css">
 
 <?php
 Modal::begin([
@@ -393,25 +367,6 @@ Modal::end();
             ]
         );
     },
-
-                //                 'delete' => function ($url, $model) {
-                //     return Html::a(
-                //         '<i class="fa fa-trash"></i>',
-                //         ['delete', 'id' => $model->id],
-                //         [
-                //             'class' => 'btn btn-default',
-                //             'title' => 'Eliminar Categoría',
-                //             'data' => [
-                //                 'confirm' => 'Esta accion eliminara el traspaso ' .
-                //                     ($model->bodegaOrigen !== null && $model->bodegaOrigen->tipodocumento !== null ?
-                //                         $model->bodegaOrigen->tipodocumento->tipodocumento->codigo : 'Sin código')
-                //                     . ' - ' . $model->consecutivo
-                //                 ,
-                //                 'method' => 'post',
-                //             ]
-                //         ]
-                //     );
-                // },
 
                 'anular' => function ($url, $model) {
         return Html::a(

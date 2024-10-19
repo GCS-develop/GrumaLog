@@ -4,7 +4,8 @@ use frontend\models\Planillaembarquetraspaso;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
-use yii\grid\GridView;
+use kartik\grid\GridView;
+use kartik\export\ExportMenu;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\PlanillaembarquetraspasoSearch $searchModel */
@@ -12,46 +13,176 @@ use yii\grid\GridView;
 
 $this->title = 'Planillaembarquetraspasos';
 $this->params['breadcrumbs'][] = $this->title;
+
+$fecha_actual = date("Y-m-d");
+$filename = "Relacion_PlanillaEmbarque_" . $fecha_actual;
+
 ?>
+
+<link rel="stylesheet" href="css/shared.css">
+
+<?php
+$gridColumns = [
+    // 'id',
+    // 'idPlanillaEmbarque',
+    // 'idTraspaso',
+    'codAlmacenOrigen',
+    'almacenOrigen',
+    'codAlmacenDestino',
+    'almacenDestino',
+    'tipoDocumento',
+    'consecutivoDocumento',
+
+    [
+        'attribute' => 'fechaTraspaso',
+        'contentOptions' => ['data-cellvalue' => 'fechaTraspaso'],
+        'value' => function ($model) {
+            return  Yii::$app->formatter->asDate($model->fechaTraspaso, 'php:Y-m-d')  ;
+        },
+    ],
+    [
+        'attribute' => 'horaTraspaso',
+        'contentOptions' => ['data-cellvalue' => 'horaTraspaso'],
+        'value' => function ($model) {
+            return  Yii::$app->formatter->asDate($model->fechaTraspaso, 'php:H:i:s')  ;
+        },
+    ],
+    // '',
+    // 'hora',
+
+    'fechaPlanillaembarque',
+    'horaPlanillaembarque',
+    [
+        'attribute' => 'unidades',
+        'contentOptions' => ['data-cellvalue' => 'unidades',],
+        'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+        'pageSummary' => true,
+    ],
+    // 'unidadesEmpaque'
+    'estado',
+
+    'fechaRecibido',
+    //   'horaRecibido',
+    'usuarioRecibido',
+    [
+        'label' => 'Planilla',
+        'value' => function ($model) {
+            return TRIM($model->codAlmacenOrigen) . '-' . $model->consecutivoDocumento;
+        },
+
+    ],
+
+    // 'fechaRecibido',// Fecha recibido transito : es para los documentos TRT o documentos elaborados para traslados entre tiendas ,este sector es para el recibo de estos documentos en transito CEDI , seguido a este se cambia a despachado CEDI ,asi se identifican los docuemtos elaborados para nivelacion de producto entre tiendas .
+
+    // 'horaRecibido',// Hora recibido transito  : indica la hora en que los documentos en trasito fueron recibidos en el CEDI por el auxiliar administrativo de transporte. 
+
+    // 'planillaTransito ',// Planilla transito     : planilla que se elabora para el envío nuevamente desde el CEDI de los documentos TRT o traslados entre tiendas recibidos en trasito CEDI
+
+
+];
+
+
+?>
+
+
 <div class="planillaembarquetraspaso-index">
 
-    <h1><?= Html::encode($this->title) ?></h1>
 
-    <p>
-        <?= Html::a('Create Planillaembarquetraspaso', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
+    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
 
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+    <?= Html::tag('hr', '', ['class' => 'horizontal-line']) ?>
+
+    <div class="row">
+
+        <div class="col-lg-12 centrar"></div>
+
+        <div class="col-lg-12 centrar">
+
+
+            <?php echo ExportMenu::widget(
+                [
+                    'dataProvider' => $dataProvider,
+                    'columns' => $gridColumns,
+                    'fontAwesome' => true,
+                    'filename' => $filename,
+                    'dropdownOptions' => [
+                        'label' => 'Exportar',
+                        'class' => 'btn btn-primary btn-lg btn-create ',
+                        // btn disabled',
+                    ],
+                    'exportConfig' => [
+                        ExportMenu::FORMAT_TEXT => false,
+                        ExportMenu::FORMAT_HTML => false,
+                        ExportMenu::FORMAT_EXCEL => false,
+                        ExportMenu::FORMAT_PDF => false,
+                        ExportMenu::FORMAT_CSV => false,
+                        ExportMenu::FORMAT_EXCEL_X => [
+                            'label' => 'Excel 2007+',
+                            'icon' => 'file-excel-o',
+                            'iconOptions' => ['class' => 'text-success btn-create'],
+                            'linkOptions' => [],
+                            'options' => ['title' => 'Microsoft Excel 2007+ (xlsx)'],
+                            'alertMsg' => 'Se va a generar un archivo en formato EXCEL 2007+ (xlsx).',
+                            'mime' => 'application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            'extension' => 'xlsx',
+                            'writer' => ExportMenu::FORMAT_EXCEL_X
+                        ],
+                    ]
+                ]
+            );
+            ?>
+        </div>
+    </div>
+
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-
-            'id',
-            'idPlanillaEmbarque',
-            'idTraspaso',
-            'idBodegaOrigen',
-            'idBodegaDestino',
-            //'unidades',
-            //'unidadesEmp',
-            //'sello',
-            //'fechaRecibido',
-            //'idUsuarioRecibido',
-            //'idEstado',
-            //'created_at',
-            //'created_by',
-            //'updated_at',
-            //'updated_by',
-            [
-                'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Planillaembarquetraspaso $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                 }
-            ],
+        // 'filterModel' => $searchModel,
+        'showPageSummary' => true,
+        'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
+        'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
+        'options' => [
+            'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
         ],
+
+        'columns' => array_merge(
+            [
+                ['class' => 'kartik\grid\SerialColumn'],
+            ],
+            $gridColumns,
+            [
+                [
+                    'class' => ActionColumn::className(),
+                    'header' => 'Acción',
+                    'headerOptions' => ['width' => '5%'],
+                    'template' => ' {view} {update} ',
+                    'buttons' => [
+                        'view' => function ($url, $model) {
+                    return Html::a(
+                        '<i class="fa fa-eye"></i>',
+                        ['view', 'id' => $model->id],
+                        [
+                            'title' => 'Ver',
+                            'class' => 'btn btn-default d-none',
+                        ]
+                    );
+                },
+                        'update' => function ($url, $model) {
+                    $t = Url::to(['update', 'id' => $model->id]);
+                    return Html::button('<i class="fa fa-edit"></i>', [
+                        'value' => $t,
+                        'title' => 'Actualizar',
+                        'class' => 'btn btn-default btn_update d-none',
+                    ]);
+                },
+                    ],
+                ],
+            ]
+        ),
+
+
     ]); ?>
+
 
 
 </div>

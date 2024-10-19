@@ -30,6 +30,20 @@ use Yii;
  */
 class Planillaembarquetraspaso extends \yii\db\ActiveRecord
 {
+
+    public $codAlmacenOrigen;
+    public $almacenOrigen;
+    public $codAlmacenDestino;
+    public $almacenDestino;
+    public $tipoDocumento;
+    public $consecutivoDocumento;
+    public $fechaPlanillaembarque;
+    public $horaPlanillaembarque;
+    public $estado;
+    public $usuarioRecibido;
+    public $fechaTraspaso;
+    public $horaTraspaso;
+
     /**
      * {@inheritdoc}
      */
@@ -71,14 +85,34 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
             'sello' => 'Sello',
             'fechaRecibido' => 'Fecha Recibido',
             'idUsuarioRecibido' => 'Id Usuario Recibido',
-            'idEstado' => 'Id Estado',
+            'idEstado' => 'Estado',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
             'updated_by' => 'Updated By',
+
+            'codAlmacenOrigen' => 'Cod. Almacén Origen',
+            'almacenOrigen' => 'Almacén Origen',
+            'codAlmacenDestino' => 'Cod. Almacén Destino',
+            'almacenDestino' => 'Almacén Destino',
+            'tipoDocumento' => 'Almacén tipoDocumento',
+            'consecutivoDocumento' => 'numero',
+            'fechaPlanillaembarque' => 'Fec.Des',
+            'horaPlanillaembarque' => 'Hor.Des',
+            'estado' => 'Estado',
+            'usuarioRecibido' => 'Usu.Rec',
+            'fechaTraspaso'=> 'Fecha',
+            'horaTraspaso'=> 'Hora',
         ];
     }
-
+    // Fec.Rec  : fecha en la cuan se recibe el documento en las tiendas después de haberse enviado con planilla de embarque 
+    // Hor.Rec  : hora en la cual es recibido el documento por parte de la tienda
+    // Usu.Rec  : nombre del usuario de la tienda que recibe el documento luego de recibirlo físicamente y con planilla de embarque 
+    // Planilla    : numero de la planilla     (210-xxxx)    la primera cifra indica el sector de la planilla (210) bodega principal,  los números siguientes es el consegutivo usado para cada planilla 
+    // Fecha recibido transito : es para los documentos TRT o documentos elaborados para traslados entre tiendas ,este sector es para el recibo de estos documentos en transito CEDI , seguido a este se cambia a despachado CEDI ,asi se identifican los docuemtos elaborados para nivelacion de producto entre tiendas .
+    // Hora recibido transito  : indica la hora en que los documentos en trasito fueron recibidos en el CEDI por el auxiliar administrativo de transporte. 
+    // Planilla transito     : planilla que se elabora para el envío nuevamente desde el CEDI de los documentos TRT o traslados entre tiendas recibidos en trasito CEDI
+    
     /**
      * Gets query for [[IdBodegaDestino0]].
      *
@@ -104,7 +138,7 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getIdPlanillaEmbarque0()
+    public function getPlanillaEmbarque()
     {
         return $this->hasOne(Planillaembarque::class, ['id' => 'idPlanillaEmbarque']);
     }

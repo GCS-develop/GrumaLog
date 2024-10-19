@@ -2,11 +2,14 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use frontend\models\Estadodespacho;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\PlanillaembarquetraspasoSearch $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
+
+<link rel="stylesheet" href="css/shared.css">
 
 <div class="planillaembarquetraspaso-search">
 
@@ -15,39 +18,54 @@ use yii\widgets\ActiveForm;
         'method' => 'get',
     ]); ?>
 
-    <?= $form->field($model, 'id') ?>
+    <div class="row">
+        <div class="col-2">
+            <?= $form->field($model, 'codAlmacenOrigen') ?>
+        </div>
 
-    <?= $form->field($model, 'idPlanillaEmbarque') ?>
+        <div class="col-4">
+            <?= $form->field($model, 'almacenOrigen') ?>
+        </div>
 
-    <?= $form->field($model, 'idTraspaso') ?>
+        <div class="col-2">
+            <?= $form->field($model, 'codAlmacenDestino') ?>
+        </div>
 
-    <?= $form->field($model, 'idBodegaOrigen') ?>
+        <div class="col-4">
+            <?= $form->field($model, 'almacenDestino') ?>
+        </div>
+    </div>
 
-    <?= $form->field($model, 'idBodegaDestino') ?>
+    <div class="row">
+        <div class="col-2">
+        <?php echo $form->field($model, 'idEstado')->dropDownList(
+                Estadodespacho::getListaData(),
+                [
+                    'prompt' => ' Seleccionar estado ... ',
+                    'id' => 'idEstado',
+                ]
+            );
+            ?>
 
-    <?php // echo $form->field($model, 'unidades') ?>
+        </div>
 
-    <?php // echo $form->field($model, 'unidadesEmp') ?>
+        <div class="col-4">
+            <?= $form->field($model, 'usuarioRecibido') ?>
+        </div>
 
-    <?php // echo $form->field($model, 'sello') ?>
+        <div class="col-2">
+            <?= $form->field($model, 'tipoDocumento') ?>
+        </div>
 
-    <?php // echo $form->field($model, 'fechaRecibido') ?>
+        <div class="col-4">
+            <?= $form->field($model, 'consecutivoDocumento') ?>
+        </div>
+    </div>
 
-    <?php // echo $form->field($model, 'idUsuarioRecibido') ?>
 
-    <?php // echo $form->field($model, 'idEstado') ?>
-
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
+    <div class="form-group centrar">
+        <?= Html::submitButton('Buscar', ['class' => 'btn btn-primary btn-lg btn-create']) ?>
+        <!-- <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary btn-lg btn-create']) ?> -->
     </div>
 
     <?php ActiveForm::end(); ?>

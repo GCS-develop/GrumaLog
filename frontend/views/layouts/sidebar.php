@@ -170,6 +170,7 @@ $baseUrl = Url::base(true);
                         'items' => [
 
                             ['label' => 'Planilla Embarque', 'url' => ['/despacho/planillaembarque/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Planilla - Detalles', 'url' => ['/despacho/planillaembarquetraspaso/index'], 'iconStyle' => 'far'],
 
                             // [
                             //     // 'label' => 'planillaembarque',
