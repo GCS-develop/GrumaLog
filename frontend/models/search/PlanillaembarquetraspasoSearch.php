@@ -80,6 +80,7 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             'pet.idPlanillaEmbarque',
             'pet.idTraspaso',
             'pet.unidades',
+            'pet.unidadesEmp',
             'pet.fechaRecibido',
             'us.username AS usuarioRecibido',
             'ed.nombre AS estado',
@@ -154,7 +155,7 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             ->andFilterWhere(['like', 'pe.fechaDespacho', $this->fechaPlanillaembarque])
             ->andFilterWhere(['like', 'pe.horaDespacho', $this->horaPlanillaembarque]);
 
-        $query->orderBy(['pet.idTraspaso' => SORT_DESC, 'bo.codigo' => SORT_ASC, 'bd.codigo' => SORT_ASC]);
+        $query->orderBy(['pet.idPlanillaEmbarque' => SORT_DESC, 'bo.codigo' => SORT_ASC, 'bd.codigo' => SORT_ASC]);
 
         return $dataProvider;
     }
