@@ -5,6 +5,7 @@ namespace frontend\models\search;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use frontend\models\Traspasodetalle;
+use frontend\models\Item;
 
 /**
  * TraspasodetalleSearch represents the model behind the search form of `frontend\models\Traspasodetalle`.
@@ -38,9 +39,14 @@ class TraspasodetalleSearch extends Traspasodetalle
      *
      * @return ActiveDataProvider
      */
-    public function search($params)
+    public function search($params, $id = null)
     {
-        $query = Traspasodetalle::find();
+
+        if ($id == null) {
+            $query = Traspasodetalle::find();
+        } else {
+            $query = Traspasodetalle::find()->where(['idTraspaso' => $id]);
+        }
 
         // add conditions that should always apply here
 
@@ -67,6 +73,8 @@ class TraspasodetalleSearch extends Traspasodetalle
             'updated_at' => $this->updated_at,
             'updated_by' => $this->updated_by,
         ]);
+
+        $query->orderBy(['idItem' => SORT_ASC]); // Orden por defecto
 
         return $dataProvider;
     }

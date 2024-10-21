@@ -2,6 +2,7 @@
 
 namespace frontend\models;
 
+use common\models\User;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Vtiful\Kernel\Format;
@@ -110,6 +111,9 @@ class Traspasodetalle extends \yii\db\ActiveRecord
             'cantidad_paquetes' => 'Registros',
             'unidad' => 'Unidad de medida',
             'totalum' => 'Um/total',
+            'created_at' => 'creado',
+            'created_by' => 'creado',
+            'updated_by' => 'actualizado'
         ];
     }
 
@@ -132,6 +136,15 @@ class Traspasodetalle extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Traspaso::class, ['id' => 'idTraspaso']);
     }
+    public function getUsuariocreated()
+    {
+        return $this->hasOne(User::class, ['id' => 'created_by']);
+    }
+    public function getUsuarioupdated()
+    {
+        return $this->hasOne(User::class, ['id' => 'updated_by']);
+    }
+    
 
     public static function getInventario($codigobarras, $codigobodega)
     {

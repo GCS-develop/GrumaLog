@@ -307,6 +307,15 @@ Modal::end();
             'pageSummary' => true,
 
         ],
+        [
+            'label' => 'unidades',
+            'value' => function ($model) {
+    return $model->TotalUnidades;
+},
+            'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+            'pageSummary' => true,
+
+        ],
 
         // 'idEstado',
         [
@@ -342,8 +351,20 @@ Modal::end();
             'class' => ActionColumn::className(),
             'header' => 'Acción',
             'headerOptions' => ['width' => '10%'],
-            'template' => '{update} {anular} {factura}  ',
+            'template' => ' {view} {update} {anular} {factura}  ',
             'buttons' => [
+
+                'view' => function ($url, $model) {
+        return Html::a(
+            '<i class="fa fa-eye"></i>',
+            ['/traspaso/traspasodetalle/index', 'idtraspaso' => $model->id],
+            [
+                'title' => 'Ver',
+                'class' => 'btn btn-default btn-view',
+            ]
+        );
+    },
+
                 'update' => function ($url, $model) {
         $t = Url::to([
             'update',

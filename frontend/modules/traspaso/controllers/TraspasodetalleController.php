@@ -46,15 +46,18 @@ class TraspasodetalleController extends Controller
      *
      * @return string
      */
-    public function actionIndex($idtraspaso = 0)
+    public function actionIndex($idtraspaso = null)
     {
         $searchModel = new TraspasodetalleSearch();
         $dataProvider = $searchModel->search($this->request->queryParams, $idtraspaso);
 
+        $traspaso = Traspaso::findOne($idtraspaso);
+        
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'idtraspaso' => $idtraspaso,
+            'traspaso' => $traspaso, 
         ]);
     }
 
