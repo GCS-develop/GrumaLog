@@ -11,7 +11,8 @@ use kartik\export\ExportMenu;
 /** @var frontend\models\search\PlanillaembarquetraspasoSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Planill Embarque Traspasos';
+$this->title = 'Planilla Embarque Traspaso';
+$this->params['breadcrumbs'][] = ['label' => 'Planilla Embarque', 'url' => ['/despacho/planillaembarque/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
 $fecha_actual = date("Y-m-d");
@@ -32,6 +33,7 @@ $gridColumns = [
     'almacenDestino',
     'tipoDocumento',
     'consecutivoDocumento',
+
     [
         'attribute' => 'fechaTraspaso',
         'contentOptions' => ['data-cellvalue' => 'fechaTraspaso'],

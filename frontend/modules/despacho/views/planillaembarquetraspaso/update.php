@@ -5,10 +5,10 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var frontend\models\Planillaembarquetraspaso $model */
 
-$this->title = 'Update Planillaembarquetraspaso: ' . $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Planillaembarquetraspasos', 'url' => ['index']];
+$this->title = 'Actualizar Planillaembarque traspaso: ' . $model->id;
+$this->params['breadcrumbs'][] = ['label' => 'Planillaembarque traspasos', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' => $model->id]];
-$this->params['breadcrumbs'][] = 'Update';
+$this->params['breadcrumbs'][] = 'Actualizar';
 ?>
 <div class="planillaembarquetraspaso-update">
 

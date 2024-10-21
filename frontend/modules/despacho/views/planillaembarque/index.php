@@ -52,14 +52,11 @@ use yii\bootstrap4\Modal;
 /** @var frontend\models\search\PlanillaembarqueSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Planilla embarque';
+$this->title = 'Planilla Embarque';
 $this->params['breadcrumbs'][] = $this->title;
 
-
-
-
 $fecha_actual = date("Y-m-d");
-$filename = "Relacion_Traspaso_" . $fecha_actual;
+$filename = "Relacion_PlanillaEmbarque_" . $fecha_actual;
 
 $gridColumns = [
     'fechaDespacho',
@@ -209,8 +206,8 @@ Modal::end();
             'filter' => Transportadora::getListaData(),
             'contentOptions' => ['data-cellvalue' => 'serie'],
             'value' => function ($model) {
-    return $model->transportadora->nombre;
-},
+                    return $model->transportadora->nombre;
+            },
         ],
         // 'idVehiculo',
         [
@@ -218,8 +215,8 @@ Modal::end();
             'filter' => Vehiculo::getListaData(),
             'contentOptions' => ['data-cellvalue' => 'serie'],
             'value' => function ($model) {
-    return $model->vehiculo ? $model->vehiculo->descripcion : ' Sin seleccionar ';
-},
+                    return $model->vehiculo ? $model->vehiculo->descripcion : ' Sin seleccionar ';
+            },
         ],
         'placa',
         // 'idConductor',
@@ -231,93 +228,87 @@ Modal::end();
             'filter' => Estadodespacho::getListaData(),
             'contentOptions' => ['data-cellvalue' => 'serie'],
             'value' => function ($model) {
-    return $model->estado->nombre;
-},
+                    return $model->estado->nombre;
+            },
+        ],
+
+        [
+            'class' => ActionColumn::className(),
+            'header'=>'Acción',
+            'headerOptions' => ['width' => '15%'],
+            'template' => '{view} {update} {print} {anular}',
+
+            'buttons' => [
+
+                'update' => function ($url, $model) {                                
+                    $t = Url::to([
+                        'update',
+                        'id' => $model->id
+                    ]);
+
+                    return Html::button('<i class="fa fa-edit"></i>', [
+                        'value' => $t,
+                        'title' => 'Actualizar',
+                        'class' => 'btn btn-default btn_update',
+                    ]);
+                },
+
+                'view' => function ($url, $model) {
+                    return Html::a(
+                        '<i class="fa fa-eye"></i>',
+                        ['/despacho/planillaembarquetraspaso/index', 'id' => $model->id],
+                        [
+                            'title' => 'Ver',
+                            'class' => 'btn btn-default btn-view',
+                        ]
+                    );
+                },
+
+                'anular' => function ($url, $model) {
+                    return Html::a(
+                        '<i class="fa fa-ban"></i>',
+                        ['anular', 'id' => $model->id],
+                        [
+                            'class' => 'btn btn-default',
+                            'title' => 'Anular este registro',
+                            'data' => [
+                                'confirm' => 'Esta seguro de anular este registro? ( Fecha: '
+                                    . $model->fechaDespacho . ', Placa: '
+                                    . $model->placa . ', Transportadora: '
+                                    . $model->transportadora->nombre . ' )',
+                                'method' => 'post',
+                            ]
+                        ]
+                    );
+                },
+
+                'print' => function ($url, $model) {
+                    return Html::a(
+                        '<i class="fa fa-print"></i>',
+                        ['generatepdf', 'id' => $model->id],
+                        [
+                            'title' => 'Imprimir Planilla Embarque',
+                            'target' => '_blank',
+                            'class' => 'btn btn-default btn-print',
+                        ]
+                    );
+                },
+            ],
+
+            'visibleButtons' => [
+                'update' => function ($model, $key, $index) {
+                    return $model->idEstado == 1; // Condición para mostrar el botón
+                },
+                'anular' => function ($model, $key, $index) {
+                    return $model->idEstado != 5; // Condición para mostrar el botón
+                },
+            ],
         ],
         //'created_at',
         //'created_by',
         //'updated_at',
         //'updated_by',
-        [
-            //             'class' => ActionColumn::className(),
-//             'urlCreator' => function ($action, Planillaembarque $model, $key, $index, $column) {
-//     return Url::toRoute([$action, 'id' => $model->id]);
-// }
-            'class' => ActionColumn::className(),
-            'header' => 'Acción',
-            'headerOptions' => ['width' => '15%'],
-            'template' => ' {view} {update} {anular} {print}   ',
-            'buttons' => [
-
-                'view' => function ($url, $model) {
-        return Html::a(
-            '<i class="fa fa-eye"></i>',
-            ['view', 'id' => $model->id],
-            [
-                'title' => 'Ver',
-                'class' => 'btn btn-default d-none',
-            ]
-        );
-    },
-
-                'update' => function ($url, $model) {
-        $t = Url::to([
-            'update',
-            'id' => $model->id
-        ]);
-
-        return Html::button('<i class="fa fa-edit"></i>', [
-            'value' => $t,
-            'title' => 'Actualizar',
-            'class' => 'btn btn-default btn_update',
-        ]);
-    },
-
-
-
-                'anular' => function ($url, $model) {
-        return Html::a(
-            '<i class="fa fa-ban"></i>',
-            ['anular', 'id' => $model->id],
-            [
-                'class' => 'btn btn-default',
-                'title' => 'Anular este registro',
-                'data' => [
-                    'confirm' => 'Esta seguro de anular este registro? ( Fecha: '
-                        . $model->fechaDespacho . ', Placa: '
-                        . $model->placa . ', Transportadora: '
-                        . $model->transportadora->nombre . ' )',
-                    'method' => 'post',
-                ]
-            ]
-        );
-    },
-
-                'print' => function ($url, $model) {
-        return Html::a(
-            '<i class="fa fa-print"></i>',
-            ['print', 'id' => $model->id],
-            [
-                'title' => 'Ver pdf',
-                'class' => 'btn btn-default btn disabled',
-            ]
-        );
-    },
-            ],
-
-            'visibleButtons' => [
-
-                //             'view' => function ($model, $key, $index) {
-                //     return $model->idEstado == 0; // Condición para mostrar el botón
-                // },
-                'update' => function ($model, $key, $index) {
-        return $model->idEstado == 1; // Condición para mostrar el botón
-    },
-                'anular' => function ($model, $key, $index) {
-        return $model->idEstado != 5; // Condición para mostrar el botón
-    },
-            ],
-        ],
+        
     ],
 ]); ?>
 

@@ -11,6 +11,15 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\widgets\ActiveForm;
 
+use frontend\models\search\PlanillaembarquetraspasoSearch;
+use frontend\models\Parametroscontrol;
+
+use kartik\mpdf\Pdf;
+use Mpdf\Mpdf;
+
+use Mpdf\Config\ConfigVariables;
+use Mpdf\Config\FontVariables;
+
 /**
  * PlanillaembarqueController implements the CRUD actions for Planillaembarque model.
  */
@@ -234,5 +243,185 @@ class PlanillaembarqueController extends Controller
         }
     }
 
+    public function actionGeneratepdf($id)
+    {
+        // Crear una nueva instancia de Mpdf
+        $mpdf = new Mpdf();
+
+        // Configurar el pie de página para incluir la paginación
+        $mpdf->SetFooter('{PAGENO} de {nbpg}'); // PAGENO para el número de página actual, nbpg para el total de páginas
+
+        $username = Yii::$app->user->identity->username;
+        $planillaembarque = Planillaembarque::findOne(['id' => $id]);
+
+        $nombreEmpresa = Parametroscontrol::getValorparametro('001');
+        $nitEmpresa = Parametroscontrol::getValorparametro('002');
+        $direccion = Parametroscontrol::getValorparametro('003');
+        $telefono = Parametroscontrol::getValorparametro('004');
+        $email = Parametroscontrol::getValorparametro('006');
+        $ciudad = Parametroscontrol::getValorparametro('007');
+        $paginaweb = Parametroscontrol::getValorparametro('008');
+
+        $planillaData = [
+            'nombreEmpresa' => $nombreEmpresa,
+            'nitEmpresa' => $nitEmpresa,
+            'direccion' => $direccion,
+            'telefono' => $telefono,
+            'email' => $email,
+            'ciudad' => $ciudad,
+            'paginaweb' => $paginaweb
+        ];
+
+        $searchModel = new PlanillaembarquetraspasoSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams, $id);
+
+        $data = $dataProvider->getModels();
+        
+        $totalGeneral = 0; // Para almacenar el total general
+        $totalGeneralUndEmp = 0;
+
+        $previousDestino = null;
+        $totalDestino = 0;
+        $totalUnidadesEmp = 0;
+        $tableRows = ''; // Para acumular las filas de la tabla por destino
+        $numeroBodegasDestino = 0;
+
+        foreach ($data as $registro) {
+            if ($previousDestino !== null && $previousDestino !== $registro['almacenDestino']) {
+
+                $htmlTotalDestino = $this->renderPartial('_tabla_destino', [
+                    'rows' => $tableRows,
+                    'destino' => $previousDestino,
+                    'totalDestino' => $totalDestino,
+                    'totalUnidadesEmp' => $totalUnidadesEmp,
+                    'planillaData' => $planillaData,
+                    'planillaembarque' => $planillaembarque
+                ]);
+                $mpdf->WriteHTML($htmlTotalDestino);
+
+                // Hacer un salto de página
+                $mpdf->AddPage();
+
+                // Resetear la tabla y el total del nuevo destino
+                $tableRows = '';
+                $totalDestino = 0;
+                $totalUnidadesEmp = 0;
+                $numeroBodegasDestino += 1;
+            }
+
+            // Acumular las filas de la tabla para el destino actual
+            $tableRows .= $this->renderPartial('_fila_registro', [
+                'registro' => $registro,
+            ]);
+
+            // Acumular unidades para el destino actual
+            $totalDestino += $registro['unidades'];
+            $totalUnidadesEmp += $registro['unidadesEmp'];
+
+            // Acumular el total general
+            $totalGeneral += $registro['unidades'];
+            $totalGeneralUndEmp += $registro['unidadesEmp'];
+
+            // Actualizar el destino previo
+            $previousDestino = $registro['almacenDestino'];
+        }
+
+        // Después de recorrer todos los registros, renderizar la última tabla acumulada
+        if (!empty($tableRows)) {
+            $numeroBodegasDestino += 1;
+
+            $htmlTable = $this->renderPartial('_tabla_destino', [
+                'rows' => $tableRows,
+                'destino' => $previousDestino,
+                'totalDestino' => $totalDestino,
+                'totalUnidadesEmp' => $totalUnidadesEmp,
+                'planillaData' => $planillaData,
+                'planillaembarque' => $planillaembarque
+            ]);
+            $mpdf->WriteHTML($htmlTable);
+        }
+
+        // Agregar un salto de página antes del total general
+        //$mpdf->AddPage();
+
+        // Mostrar el total general
+        $htmlTotalGeneral = $this->renderPartial('_total_general', [
+            'totalGeneral' => $totalGeneral,
+            'totalGeneralUndEmp' => $totalGeneralUndEmp,
+            'numeroBodegasDestino' => $numeroBodegasDestino
+        ]);
+        $mpdf->WriteHTML($htmlTotalGeneral);
+
+        // Generar y mostrar el PDF en una nueva pestaña
+        return $mpdf->Output('reporte.pdf', 'I');
+
+        /*$content = $this->renderPartial('print', [
+            'planillaembarque' => $planillaembarque,
+            'dataProvider' => $dataProvider
+        ]);
+
+        $pdf = new Pdf([
+            // set to use UTF8 encode only
+            'mode' => Pdf::MODE_UTF8,
+
+            // A4 paper format
+            'format' => Pdf::FORMAT_A4,
+
+            // portrait orientation
+            'orientation' => Pdf::ORIENT_PORTRAIT,
+
+            'filename' => 'PlanillaEmbarque_' . $planillaembarque->id . '_' . date("YMd") . '.pdf',
+            'content' => $content,
+            'cssFile' => '@vendor/kartik-v/yii2-mpdf/src/assets/kv-mpdf-bootstrap.min.css',
+            // 'cssInline' => '.firma{font-family: Pacifico, cursive; color:red;}',
+            'cssInline' => '
+            #firma{
+                font-family: "Pacifico", cursive !important;
+                font-size:44px !important;
+                // color:#ffff !important,
+            }',
+            'options' => ['title' => 'Krajee Report Title'],
+            'methods' => [
+                'SetTitle' => 'Planilla de Embarque',
+                'SetSubject' => 'Generating PDF : ' . $username,
+                // 'SetHeader' => ['Hoja de vida ||Generado el: ' . date("d M Y")],
+                'SetFooter' => ['|Pagina {PAGENO}|'],
+                'SetAuthor' => $username,
+                'SetCreator' => $username,
+                'SetKeywords' => 'Krajee, Yii2, Export, PDF, MPDF, Output, Privacy, Policy, yii2-mpdf',
+                // 'SetFooter' => [
+                //     '<i style="font-family: Pacifico, cursive;">Firma: ' . $model->primerNombre . '</i>'
+                // ],
+                // 'SetFooter' => ['<i style="text-align:end; font-weight:blod; font-family:"Pacifico"; font-size:25px; font-style: italic;">' . $model->primerNombre . '</i>'],
+
+            ]
+        ]);
+
+        $defaultConfig = (new ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
+
+        $defaultFontConfig = (new FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
+
+        $pdf->options['fontDir'] = array_merge($fontDirs, [
+            Yii::getAlias('@webroot') . '/fonts'
+        ]);
+
+        $pdf->options['fontdata'] = $fontData + [
+            // 'pacifico' => [
+            //     'R' => 'Pacifico.ttf',
+            //     'TTCfontID' => [
+            //         'R' => 1,
+            //     ],
+            // ],
+            'Satisfy' => [
+                'R' => 'Sarabun-Bold.ttf',
+            ]
+        ];
+
+        return $pdf->render();
+        */
+
+    }
 
 }

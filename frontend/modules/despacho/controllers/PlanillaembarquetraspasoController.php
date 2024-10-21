@@ -36,12 +36,17 @@ class PlanillaembarquetraspasoController extends Controller
      *
      * @return string
      */
-    public function actionIndex()
+    public function actionIndex($id = null)
     {
         $searchModel = new PlanillaembarquetraspasoSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider = $searchModel->search($this->request->queryParams, $id);
 
-        return $this->render('index', [
+        $programa = 'index';
+        if ($id != null){
+            $programa = 'index_planilla';
+        }
+
+        return $this->render($programa, [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);

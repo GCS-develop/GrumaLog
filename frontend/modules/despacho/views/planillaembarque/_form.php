@@ -62,7 +62,7 @@ use yii\widgets\ActiveForm;
 
 
 
-        <div class="col-4">
+        <div class="col-8">
             <?= $form->field($model, 'idConductor')->dropDownList(
                 Conductor::getListaData(),
                 [
@@ -73,13 +73,15 @@ use yii\widgets\ActiveForm;
             )
                 ?>
         </div>
+
         <!-- <div class="col-4">
             <?= $form->field($model, 'nombreConductor')->textInput(['maxlength' => true]) ?>
         </div> -->
-        <div class="col-4">
-            <?= $form->field($model, 'sello')->textInput(['maxlength' => true]) ?>
 
-        </div>
+        <!-- <div class="col-4">
+            <?= $form->field($model, 'sello')->textInput(['maxlength' => true]) ?>
+        </div> -->
+
         <div class="col-4">
             <?= $form->field($model, 'idEstado')->dropDownList(
                 Estadodespacho::getListaData(),
