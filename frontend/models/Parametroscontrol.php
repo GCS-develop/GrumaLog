@@ -60,4 +60,14 @@ class Parametroscontrol extends \yii\db\ActiveRecord
             'update_by' => 'Update By',
         ];
     }
+
+    public static function getValorparametro ($codigo){
+        $parametroscontrol = Parametroscontrol::find()->where(['codigo' => $codigo])->one();
+        
+        if ($parametroscontrol){
+            return $parametroscontrol->valor;
+        }
+
+        return null;
+    }
 }
