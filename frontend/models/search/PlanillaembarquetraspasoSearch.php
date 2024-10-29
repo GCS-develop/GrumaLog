@@ -66,7 +66,7 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             $query = Planillaembarquetraspaso::find()->where(['idPlanillaEmbarque' => $id])->alias('pet');
         }
 
-        $query->join('INNER JOIN', 'planillaembarque pe', 'pet.idPlanillaEmbarque = pe.id');
+        $query->join('INNER JOIN', 'planillaembarque pe', 'pet.idPlanillaEmbarque = pe.id'); // planillaembarque
         $query->join('INNER JOIN', 'traspaso tr', 'pet.idTraspaso = tr.id');
         $query->join('INNER JOIN', 'bodegas bo', 'pet.idBodegaOrigen = bo.id');
         $query->join('INNER JOIN', 'bodegas bd', 'pet.idBodegaDestino = bd.id');
@@ -82,16 +82,23 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             'pet.unidades',
             'pet.unidadesEmp',
             'pet.fechaRecibido',
+            'pet.created_at',
+
+            'pe.fechaDespacho AS fechaPlanillaembarque',
+            'pe.horaDespacho AS horaPlanillaembarque',
+
             'us.username AS usuarioRecibido',
+
             'ed.nombre AS estado',
+
             'bo.codigo AS codAlmacenOrigen',
             'bo.nombre AS almacenOrigen',
             'bd.codigo AS codAlmacenDestino',
             'bd.nombre AS almacenDestino',
+
             'td.codigo AS tipoDocumento',
+
             'tr.consecutivo AS consecutivoDocumento',
-            'pe.fechaDespacho AS fechaPlanillaembarque',
-            'pe.horaDespacho AS horaPlanillaembarque',
             'tr.created_at AS fechaTraspaso',
             //'pet.*'
         ]);

@@ -2,6 +2,8 @@
 
 namespace frontend\models;
 
+use common\models\User;
+
 use Yii;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -53,8 +55,18 @@ class Planillaembarque extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['fechaDespacho', 'horaDespacho', 'idTransportadora', 'flotaPropia', 
-            'placa', 'nombreConductor'], 'required', 'message' => '{attribute} Es Un Valor Obligatorio'],
+            [
+                [
+                    'fechaDespacho',
+                    'horaDespacho',
+                    'idTransportadora',
+                    'flotaPropia',
+                    'placa',
+                    'nombreConductor'
+                ],
+                'required',
+                'message' => '{attribute} Es Un Valor Obligatorio'
+            ],
             [['fechaDespacho', 'created_at', 'updated_at', 'flotaPropia'], 'safe'],
             [['idTransportadora', 'idVehiculo', 'idConductor', 'created_by', 'updated_by', 'idEstado'], 'integer'],
             [['horaDespacho'], 'string', 'max' => 10],
@@ -138,6 +150,12 @@ class Planillaembarque extends \yii\db\ActiveRecord
         return $this->hasMany(Planillaembarquetraspaso::class, ['idPlanillaEmbarque' => 'id']);
     }
 
+    public function getPlanillaembarquetraspasoanulado()
+    {
+        return $this->hasOne(Planillaembarquetraspaso::class, ['idPlanillaEmbarque' => 'id'])
+            ->andWhere(['idEstado' => '5']);
+    }
+
     public function getTotalUnidades()
     {
         // Obtiene la relación de Conteoentregamercancias y suma la cantidad de cada uno
@@ -152,6 +170,11 @@ class Planillaembarque extends \yii\db\ActiveRecord
     public function getEstado()
     {
         return $this->hasOne(Estadodespacho::class, ['id' => 'idEstado']);
+    }
+
+    public function getUsuario()
+    {
+        return $this->hasOne(user::class, ['id' => 'created_by']);
     }
 
 }

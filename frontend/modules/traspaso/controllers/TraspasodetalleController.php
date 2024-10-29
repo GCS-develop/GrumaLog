@@ -622,6 +622,14 @@ class TraspasodetalleController extends Controller
         $isMobile = Device::$isMobile;
         $impresoras = Impresora::getListaData();
 
+        // $nombreEmpresa = Parametroscontrol::getValorparametro('001');
+        // $nitEmpresa = Parametroscontrol::getValorparametro('002');
+        // $direccion = Parametroscontrol::getValorparametro('003');
+        // $telefono = Parametroscontrol::getValorparametro('004');
+        // $email = Parametroscontrol::getValorparametro('006');
+        // $ciudad = Parametroscontrol::getValorparametro('007');
+        // $paginaweb = Parametroscontrol::getValorparametro('008');
+
         return $this->render('view_recibo', [
             'model' => $model,
             'modeldetalles' => $modeldetalles,

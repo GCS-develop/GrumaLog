@@ -216,9 +216,13 @@ class PlanillaembarqueController extends Controller
     public function actionAnular($id)
     {
         $model = $this->findModel($id);
-        // $filasAfectadas = 0;
 
-        if ($model->idEstado == 3) { // si ya se recibio almenos un traspaso no debe dejar anular, revisar esta condicion por que toca añadir la logica de cada traspaso
+        // $filasAfectadas = 0;
+        // var_dump($model->planillaembarquetraspasoanulado);die();
+        if (
+            $model->idEstado == 3
+            // || $model->planillaembarquetraspaso->estado == 
+        ) { // si ya se recibio almenos un traspaso no debe dejar anular, revisar esta condicion por que toca añadir la logica de cada traspaso
             return $this->redirect(['index']);
         }
 
@@ -236,8 +240,11 @@ class PlanillaembarqueController extends Controller
                 return $this->redirect(['index']);
 
             } else {
+                Yii::error('Error de anulacion PlanillaEmbarque. ' . __METHOD__ . ' ' . print_r($model->getErrors(), true), __METHOD__);
 
-                Yii::$app->session->setFlash('error', 'Ups!, ocurrio un problema con : ' . $model);
+                Yii::$app->session->setFlash('error', 'Ups!, ocurrio un problema la planilla de emabarque, no se puede anular por que: ' . json_encode($model->getErrors()));
+
+                return $this->redirect(['index']);
 
             }
         }
@@ -253,6 +260,9 @@ class PlanillaembarqueController extends Controller
 
         $username = Yii::$app->user->identity->username;
         $planillaembarque = Planillaembarque::findOne(['id' => $id]);
+
+        $usernamePlanilla = $planillaembarque->usuario->username;
+
 
         $nombreEmpresa = Parametroscontrol::getValorparametro('001');
         $nitEmpresa = Parametroscontrol::getValorparametro('002');
@@ -276,7 +286,7 @@ class PlanillaembarqueController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams, $id);
 
         $data = $dataProvider->getModels();
-        
+
         $totalGeneral = 0; // Para almacenar el total general
         $totalGeneralUndEmp = 0;
 
@@ -346,82 +356,16 @@ class PlanillaembarqueController extends Controller
 
         // Mostrar el total general
         $htmlTotalGeneral = $this->renderPartial('_total_general', [
+            'username' => $usernamePlanilla,
             'totalGeneral' => $totalGeneral,
             'totalGeneralUndEmp' => $totalGeneralUndEmp,
             'numeroBodegasDestino' => $numeroBodegasDestino
         ]);
         $mpdf->WriteHTML($htmlTotalGeneral);
 
+
         // Generar y mostrar el PDF en una nueva pestaña
         return $mpdf->Output('reporte.pdf', 'I');
-
-        /*$content = $this->renderPartial('print', [
-            'planillaembarque' => $planillaembarque,
-            'dataProvider' => $dataProvider
-        ]);
-
-        $pdf = new Pdf([
-            // set to use UTF8 encode only
-            'mode' => Pdf::MODE_UTF8,
-
-            // A4 paper format
-            'format' => Pdf::FORMAT_A4,
-
-            // portrait orientation
-            'orientation' => Pdf::ORIENT_PORTRAIT,
-
-            'filename' => 'PlanillaEmbarque_' . $planillaembarque->id . '_' . date("YMd") . '.pdf',
-            'content' => $content,
-            'cssFile' => '@vendor/kartik-v/yii2-mpdf/src/assets/kv-mpdf-bootstrap.min.css',
-            // 'cssInline' => '.firma{font-family: Pacifico, cursive; color:red;}',
-            'cssInline' => '
-            #firma{
-                font-family: "Pacifico", cursive !important;
-                font-size:44px !important;
-                // color:#ffff !important,
-            }',
-            'options' => ['title' => 'Krajee Report Title'],
-            'methods' => [
-                'SetTitle' => 'Planilla de Embarque',
-                'SetSubject' => 'Generating PDF : ' . $username,
-                // 'SetHeader' => ['Hoja de vida ||Generado el: ' . date("d M Y")],
-                'SetFooter' => ['|Pagina {PAGENO}|'],
-                'SetAuthor' => $username,
-                'SetCreator' => $username,
-                'SetKeywords' => 'Krajee, Yii2, Export, PDF, MPDF, Output, Privacy, Policy, yii2-mpdf',
-                // 'SetFooter' => [
-                //     '<i style="font-family: Pacifico, cursive;">Firma: ' . $model->primerNombre . '</i>'
-                // ],
-                // 'SetFooter' => ['<i style="text-align:end; font-weight:blod; font-family:"Pacifico"; font-size:25px; font-style: italic;">' . $model->primerNombre . '</i>'],
-
-            ]
-        ]);
-
-        $defaultConfig = (new ConfigVariables())->getDefaults();
-        $fontDirs = $defaultConfig['fontDir'];
-
-        $defaultFontConfig = (new FontVariables())->getDefaults();
-        $fontData = $defaultFontConfig['fontdata'];
-
-        $pdf->options['fontDir'] = array_merge($fontDirs, [
-            Yii::getAlias('@webroot') . '/fonts'
-        ]);
-
-        $pdf->options['fontdata'] = $fontData + [
-            // 'pacifico' => [
-            //     'R' => 'Pacifico.ttf',
-            //     'TTCfontID' => [
-            //         'R' => 1,
-            //     ],
-            // ],
-            'Satisfy' => [
-                'R' => 'Sarabun-Bold.ttf',
-            ]
-        ];
-
-        return $pdf->render();
-        */
-
     }
 
 }

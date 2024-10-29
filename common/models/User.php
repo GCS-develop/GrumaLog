@@ -11,6 +11,7 @@ use yii\web\IdentityInterface;
 use yii\helpers\ArrayHelper;
 
 use frontend\models\Empleado;
+use frontend\models\Bodegas;
 
 /**
  * User model
@@ -229,6 +230,11 @@ class User extends ActiveRecord implements IdentityInterface
 	public function getEmpleado()
     {
         return $this->hasOne(Empleado::class, ['id' => 'idEmpleado']);
+    }
+
+    public function getBodegarecibir()
+    {
+        return $this->hasOne(Bodegas::class, ['id' => 'idBodegaRecibir']);
     }
     
 }

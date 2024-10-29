@@ -33,30 +33,54 @@ $gridColumns = [
     'almacenDestino',
     'tipoDocumento',
     'consecutivoDocumento',
-
     [
         'attribute' => 'fechaTraspaso',
         'contentOptions' => ['data-cellvalue' => 'fechaTraspaso'],
         'value' => function ($model) {
-            return  Yii::$app->formatter->asDate($model->fechaTraspaso, 'php:Y-m-d')  ;
+            return Yii::$app->formatter->asDate($model->fechaTraspaso, 'php:Y-m-d');
         },
     ],
     [
         'attribute' => 'horaTraspaso',
         'contentOptions' => ['data-cellvalue' => 'horaTraspaso'],
         'value' => function ($model) {
-            return  Yii::$app->formatter->asDate($model->fechaTraspaso, 'php:H:i:s')  ;
+            return Yii::$app->formatter->asDate($model->fechaTraspaso, 'php:H:i:s');
         },
     ],
-    'fechaPlanillaembarque',
-    'horaPlanillaembarque',
+
+    // 'fechaPlanillaembarque',
+    // 'horaPlanillaembarque',
+
+    [
+        'label' => 'Fecha.Des',
+        'attribute' => 'created_at',
+        'contentOptions' => ['data-cellvalue' => 'created_at'],
+        'value' => function ($model) {
+            return Yii::$app->formatter->asDate($model->created_at, 'php:Y-m-d');
+        },
+    ],
+    [
+        'label' => 'Hora.Des',
+        'attribute' => 'created_at',
+        'contentOptions' => ['data-cellvalue' => 'created_at'],
+        'value' => function ($model) {
+            return Yii::$app->formatter->asDate($model->created_at, 'php:H:i:s');
+        },
+    ],
     [
         'attribute' => 'unidades',
         'contentOptions' => ['data-cellvalue' => 'unidades',],
         'format' => ['decimal', 0], // Formato decimal con 0 decimales,
         'pageSummary' => true,
     ],
-    'unidadesEmp',
+    // 'unidadesEmp',
+    [
+        'attribute' => 'unidadesEmp',
+        'contentOptions' => ['data-cellvalue' => 'unidadesEmp',],
+        'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+        'pageSummary' => true,
+    ],
+
     'estado',
 
     'fechaRecibido',

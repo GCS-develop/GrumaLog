@@ -169,6 +169,8 @@ class Usertraspaso extends \yii\db\ActiveRecord
         } else {
             $conteo = Usertraspaso::find()->where(['idUser' => $iduser])->one();
             if ($conteo != null) {
+
+                $numRegistrosBorrados = Traspasouserbodega::deleteAll(['idUserTraspaso' => $conteo->id]);
                 $conteo->delete();
                 $resultado = TRUE;
             }

@@ -15,7 +15,7 @@
     </thead>
     <tbody>
         <tr>
-            <td><?= '' ?></td>
+            <td style="text-align: right;"><?= $username ?></td>
             <td style="text-align: right;"><?= $numeroBodegasDestino ?></td>
             <td style="text-align: right;"><?= $totalGeneral ?></td>
             <td style="text-align: right;"><?= $totalGeneralUndEmp ?></td>
