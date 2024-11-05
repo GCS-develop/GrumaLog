@@ -196,8 +196,17 @@ $baseUrl = Url::base(true);
                         ]
                     ],
 
+                    [
+                        'label' => 'Devoluciones',
+                        'icon' => 'reply',
+                        'badge' => '<span class="right badge badge-info">1</span>',
+                        'items' => [
+                            ['label' => 'Importar', 'url' => ['/devolucion/devolucionimportacion/index'], 'iconStyle' => 'far'],
+                        ]
+                    ],
+
                     /*[
-                        'label' => 'Trasporte',
+                        'label' => 'Devoluciones',
                         'icon' => 'car',
                         'badge' => '<span class="right badge badge-info">1</span>',
                         'items' => [
@@ -205,10 +214,8 @@ $baseUrl = Url::base(true);
                                 'label' => 'Config',
                                 'icon' => 'edit',
                                 'items' => [
-                                    // ['label' => 'Bodega', 'url' => ['/catalogos/bodegas/indexcedi', 'cedi' => 1], 'iconStyle' => 'far'],
-                                    // ['label' => 'Usuarios - Planillas', 'url' => ['/despacho/userbodega/index'], 'iconStyle' => 'far'],
-                                    ['label' => 'Vehículos', 'url' => ['/transporte/vehiculo/index'], 'iconStyle' => 'far'],
-                                ]
+                                    ['label' => 'Importar', 'url' => ['/devolucion/vehiculo/index'], 'iconStyle' => 'far'],
+                                ],
                             ],
                         ]
                     ],*/
