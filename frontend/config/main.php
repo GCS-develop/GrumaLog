@@ -47,6 +47,9 @@ return [
         'ordencompra' => [
             'class' => 'frontend\modules\ordencompra\Module',
         ],
+        'devolucion' => [
+            'class' => 'frontend\modules\devolucion\Module',
+        ],
     ],
 	
     'components' => [

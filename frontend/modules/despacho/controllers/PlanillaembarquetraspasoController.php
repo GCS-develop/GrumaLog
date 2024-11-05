@@ -2,6 +2,7 @@
 
 namespace frontend\modules\despacho\controllers;
 
+use frontend\models\Planillaembarque;
 use frontend\models\Planillaembarquetraspaso;
 use frontend\models\search\PlanillaembarquetraspasoSearch;
 use yii\web\Controller;
@@ -42,13 +43,22 @@ class PlanillaembarquetraspasoController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams, $id);
 
         $programa = 'index';
+        $model = '';
+
+        
+
         if ($id != null){
             $programa = 'index_planilla';
+            // var_dump(Planillaembarque::findOne($id));die('hola');
+            $model = Planillaembarque::findOne($id);
+
         }
 
         return $this->render($programa, [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'model' => $model,
+
         ]);
     }
 
@@ -134,6 +144,6 @@ class PlanillaembarquetraspasoController extends Controller
             return $model;
         }
 
-        throw new NotFoundHttpException('The requested page does not exist.');
+        throw new NotFoundHttpException('La página solicitada no existe.');
     }
 }

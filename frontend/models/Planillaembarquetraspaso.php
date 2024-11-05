@@ -43,6 +43,8 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
     public $usuarioRecibido;
     public $fechaTraspaso;
     public $horaTraspaso;
+    public $usuarioCreador;
+    public $usuarioPlanilla;
 
     /**
      * {@inheritdoc}
@@ -101,8 +103,8 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
             'horaPlanillaembarque' => 'Hor.Des',
             'estado' => 'Estado',
             'usuarioRecibido' => 'Usu.Rec',
-            'fechaTraspaso'=> 'Fecha',
-            'horaTraspaso'=> 'Hora',
+            'fechaTraspaso' => 'Fecha',
+            'horaTraspaso' => 'Hora',
         ];
     }
     // Fec.Rec  : fecha en la cuan se recibe el documento en las tiendas después de haberse enviado con planilla de embarque 
@@ -112,7 +114,7 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
     // Fecha recibido transito : es para los documentos TRT o documentos elaborados para traslados entre tiendas ,este sector es para el recibo de estos documentos en transito CEDI , seguido a este se cambia a despachado CEDI ,asi se identifican los docuemtos elaborados para nivelacion de producto entre tiendas .
     // Hora recibido transito  : indica la hora en que los documentos en trasito fueron recibidos en el CEDI por el auxiliar administrativo de transporte. 
     // Planilla transito     : planilla que se elabora para el envío nuevamente desde el CEDI de los documentos TRT o traslados entre tiendas recibidos en trasito CEDI
-    
+
     /**
      * Gets query for [[IdBodegaDestino0]].
      *

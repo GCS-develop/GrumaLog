@@ -13,6 +13,8 @@ use yii\widgets\ActiveForm;
 
 use frontend\models\search\PlanillaembarquetraspasoSearch;
 use frontend\models\Parametroscontrol;
+use frontend\models\Estadodespacho;
+use frontend\models\Estadorecepcion;
 
 use kartik\mpdf\Pdf;
 use Mpdf\Mpdf;
@@ -215,20 +217,26 @@ class PlanillaembarqueController extends Controller
 
     public function actionAnular($id)
     {
+        $modelestadorecepcion = Estadorecepcion::find()->where(['codigo' => '03'])->one();
+        $idestadorecepcion = $modelestadorecepcion->id;
+
+        $modelestadodespacho = Estadodespacho::find()->where(['codigo' => '04'])->one();
+        $idestadodespacho = $modelestadodespacho->id;
+
         $model = $this->findModel($id);
 
-        // $filasAfectadas = 0;
-        // var_dump($model->planillaembarquetraspasoanulado);die();
-        if (
-            $model->idEstado == 3
-            // || $model->planillaembarquetraspaso->estado == 
-        ) { // si ya se recibio almenos un traspaso no debe dejar anular, revisar esta condicion por que toca añadir la logica de cada traspaso
+        $filas = Planillaembarquetraspaso::find()->where([
+                                                'idPlanillaEmbarque' => $id,
+                                                'idEstado' => $idestadorecepcion
+                                            ],)->count();
+        if ($filas > 0){
+            Yii::$app->session->setFlash('error', 'Error: Planilla Tiene Traspasos Recibidos: '. $filas);
             return $this->redirect(['index']);
         }
 
         if ($this->request->isPost) {
 
-            $model->idEstado = 5;
+            $model->idEstado = $idestadodespacho;
 
             if ($model->save()) {
 

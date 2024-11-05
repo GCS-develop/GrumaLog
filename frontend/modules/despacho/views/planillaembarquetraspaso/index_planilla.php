@@ -11,9 +11,14 @@ use kartik\export\ExportMenu;
 /** @var frontend\models\search\PlanillaembarquetraspasoSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Planilla Embarque Traspaso';
+
+$this->title = ' Detalle de planilla ' . $model->id . ' usuario ' . $model->usuario->username;
+
 $this->params['breadcrumbs'][] = ['label' => 'Planilla Embarque', 'url' => ['/despacho/planillaembarque/index']];
 $this->params['breadcrumbs'][] = $this->title;
+
+// $this->title = 'Detalle planilla ' . ' - usuario : ' . $usuarioCreador;
+
 
 $fecha_actual = date("Y-m-d");
 $filename = "Relacion_PlanillaEmbarque_" . $fecha_actual;
@@ -27,6 +32,8 @@ $gridColumns = [
     // 'id',
     // 'idPlanillaEmbarque',
     // 'idTraspaso',
+    // 'usuarioCreador',
+    'usuarioPlanilla',
     'codAlmacenOrigen',
     'almacenOrigen',
     'codAlmacenDestino',
@@ -116,7 +123,13 @@ $gridColumns = [
 
     <div class="row">
 
-        <div class="col-lg-12 centrar"></div>
+        <div class="col-lg-12 centrar">
+
+            <div class="col-lg-12 centrar">
+                <!-- <h3><?php var_dump($model->usuario->username) ?></h3> -->
+            </div>
+
+        </div>
 
         <div class="col-lg-12 centrar">
 

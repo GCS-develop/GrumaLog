@@ -16,6 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 $fecha_actual = date("Y-m-d");
 $filename = "Relacion_PlanillaEmbarque_" . $fecha_actual;
+$usuarioCreador = $dataProvider->getModels()[0]->usuarioCreador ?? 'Desconocido';
 
 ?>
 
@@ -26,6 +27,8 @@ $gridColumns = [
     // 'id',
     // 'idPlanillaEmbarque',
     // 'idTraspaso',
+    'usuarioCreador',
+    'usuarioPlanilla',
     'codAlmacenOrigen',
     'almacenOrigen',
     'codAlmacenDestino',
@@ -115,7 +118,9 @@ $gridColumns = [
 
     <div class="row">
 
-        <div class="col-lg-12 centrar"></div>
+        <!-- <div class="col-lg-12 centrar">
+            <h3><?php var_dump($usuarioCreador )  ?></h3>
+        </div> -->
 
         <div class="col-lg-12 centrar">
 

@@ -73,6 +73,8 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
         $query->join('INNER JOIN', 'tipodocumento td', 'tr.idTipoDocumento = td.id');
         $query->join('INNER JOIN', 'estadodespacho ed', 'ed.id = pet.idEstado');
         $query->join('LEFT JOIN', 'user us', 'pet.idUsuarioRecibido = us.id');
+        $query->join('INNER JOIN', 'user usc', 'usc.id = pe.created_by');
+        $query->join('INNER JOIN', 'user usp', 'usp.id = pet.created_by');
 
 
         $query->select([
@@ -86,6 +88,10 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
 
             'pe.fechaDespacho AS fechaPlanillaembarque',
             'pe.horaDespacho AS horaPlanillaembarque',
+
+            'usp.username AS usuarioPlanilla',
+
+            'usc.username AS usuarioCreador',
 
             'us.username AS usuarioRecibido',
 
