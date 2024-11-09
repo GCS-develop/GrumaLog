@@ -154,9 +154,29 @@ class DevolucionimportacionController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+
+        $filasEliminadas = Devolucionimportaciondetalle::deleteAll([
+            'idInterfase' => $model->id
+        ]);
+
+        $model->delete();
+        Yii::$app->session->setFlash( 'success', 'Registro Eliminado');
+
+        /*if ($model !== null) {
+            try {
+                $model->delete();
+
+                Yii::$app->session->setFlash( 'success', 'Registro Eliminado');
+            } catch (\yii\db\IntegrityException $e) {
+                Yii::$app->session->setFlash('error', 'No se puede eliminar este registro debido a que tiene documentos asociados.');
+            }
+        } else {
+            Yii::$app->session->setFlash('error', 'Registro no encontrado.');
+        }*/
 
         return $this->redirect(['index']);
+
     }
 
     /**

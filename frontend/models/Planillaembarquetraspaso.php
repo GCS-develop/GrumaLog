@@ -45,6 +45,8 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
     public $horaTraspaso;
     public $usuarioCreador;
     public $usuarioPlanilla;
+    public $selloLlegada;
+    public $selloSalida;
 
     /**
      * {@inheritdoc}
@@ -154,4 +156,6 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Traspaso::class, ['id' => 'idTraspaso']);
     }
+
+
 }

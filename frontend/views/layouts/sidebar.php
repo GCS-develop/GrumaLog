@@ -158,6 +158,7 @@ $baseUrl = Url::base(true);
                         'items' => [
                             ['label' => 'Usuarios', 'url' => ['/nomina/usertraspaso/index'], 'iconStyle' => 'far'],
                             ['label' => 'Traspasos', 'url' => ['/traspaso/traspaso/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Detalle traspasos', 'url' => ['/traspaso/traspasodetalle/index'], 'iconStyle' => 'far'],
                             ['label' => 'Bodegas / Usuario', 'url' => ['/traspaso/traspasouserbodega/index'], 'iconStyle' => 'far'],
 
                         ]
@@ -202,6 +203,8 @@ $baseUrl = Url::base(true);
                         'badge' => '<span class="right badge badge-info">1</span>',
                         'items' => [
                             ['label' => 'Importar', 'url' => ['/devolucion/devolucionimportacion/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Registrar Documento', 'url' => ['/devolucion/devoluciondocumento/register'], 'iconStyle' => 'far'],
+                            ['label' => 'Consultar', 'url' => ['/devolucion/devoluciondocumentodetalle/indexall'], 'iconStyle' => 'far'],
                         ]
                     ],
 

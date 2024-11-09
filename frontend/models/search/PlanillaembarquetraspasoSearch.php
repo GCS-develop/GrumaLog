@@ -63,7 +63,8 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
         if ($id == null) {
             $query = Planillaembarquetraspaso::find()->alias('pet');
         } else {
-            $query = Planillaembarquetraspaso::find()->where(['idPlanillaEmbarque' => $id])->alias('pet');
+            $query = Planillaembarquetraspaso::find()->alias('pet') // Define el alias de la tabla principal
+                ->where(['pet.idPlanillaEmbarque' => $id]); // Usa el alias 'pet' para evitar la ambigüedad
         }
 
         $query->join('INNER JOIN', 'planillaembarque pe', 'pet.idPlanillaEmbarque = pe.id'); // planillaembarque
@@ -75,6 +76,9 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
         $query->join('LEFT JOIN', 'user us', 'pet.idUsuarioRecibido = us.id');
         $query->join('INNER JOIN', 'user usc', 'usc.id = pe.created_by');
         $query->join('INNER JOIN', 'user usp', 'usp.id = pet.created_by');
+        $query->join('LEFT JOIN', 'planillaembarquebodega peb', 'peb.idBodegaDestino = bd.id');
+
+
 
 
         $query->select([
@@ -106,6 +110,10 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
 
             'tr.consecutivo AS consecutivoDocumento',
             'tr.created_at AS fechaTraspaso',
+
+            'peb.selloLlegada AS selloLlegada',
+            'peb.selloSalida AS selloSalida',
+
             //'pet.*'
         ]);
 

@@ -176,5 +176,11 @@ class Planillaembarque extends \yii\db\ActiveRecord
     {
         return $this->hasOne(user::class, ['id' => 'created_by']);
     }
+    public function getPlanillaembarquebodega($idBodegaDestino=0)
+    {
+        return $this->hasOne(Planillaembarquebodega::class, ['idPlanillaEmbarque' => 'id'])
+                    ->andOnCondition(['idBodegaDestino' => $idBodegaDestino]);
+    }
+    
 
 }

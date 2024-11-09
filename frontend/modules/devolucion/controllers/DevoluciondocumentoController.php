@@ -1,18 +1,22 @@
 <?php
 
-namespace frontend\modules\despacho\controllers;
+namespace frontend\modules\devolucion\controllers;
 
-use frontend\models\Planillaembarque;
-use frontend\models\Planillaembarquetraspaso;
-use frontend\models\search\PlanillaembarquetraspasoSearch;
+use Yii;
+use frontend\models\DataDocumentoDevolucion;
+use frontend\models\Devoluciondocumento;
+use frontend\models\search\DevoluciondocumentoSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\db\Expression;
 use yii\filters\VerbFilter;
 
+use frontend\models\Bodegas;
+
 /**
- * PlanillaembarquetraspasoController implements the CRUD actions for Planillaembarquetraspaso model.
+ * DevoluciondocumentoController implements the CRUD actions for Devoluciondocumento model.
  */
-class PlanillaembarquetraspasoController extends Controller
+class DevoluciondocumentoController extends Controller
 {
     /**
      * @inheritDoc
@@ -33,36 +37,23 @@ class PlanillaembarquetraspasoController extends Controller
     }
 
     /**
-     * Lists all Planillaembarquetraspaso models.
+     * Lists all Devoluciondocumento models.
      *
      * @return string
      */
-    public function actionIndex($id = null)
+    public function actionIndex()
     {
-        $searchModel = new PlanillaembarquetraspasoSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams, $id);
+        $searchModel = new DevoluciondocumentoSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
 
-        $programa = 'index';
-        $model = '';
-
-        
-
-        if ($id != null){
-            $programa = 'index_planilla';
-            $model = Planillaembarque::findOne($id);
-
-        }
-
-        return $this->render($programa, [
+        return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'model' => $model,
-
         ]);
     }
 
     /**
-     * Displays a single Planillaembarquetraspaso model.
+     * Displays a single Devoluciondocumento model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -75,20 +66,32 @@ class PlanillaembarquetraspasoController extends Controller
     }
 
     /**
-     * Creates a new Planillaembarquetraspaso model.
+     * Creates a new Devoluciondocumento model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new Planillaembarquetraspaso();
+        $model = new DataDocumentoDevolucion();
 
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+        if ($this->request->isPost && $model->load($this->request->post())) {
+
+            $modelbodega = Bodegas::findOne(['id' => $model->idBodega]);
+            
+            $modeldocumento = Devoluciondocumento::find()->where(['codigoBodegaSalida' => $modelbodega->codigo, 'numeroDocumento' => $model->numeroDocumento])->one();
+
+            if ($modeldocumento != null){
+                $modeldocumento->registrada = 1;
+                $modeldocumento->usuarioRegistra = Yii::$app->user->id;
+                $modeldocumento->fechaRegistra = new Expression('GETDATE()');;
+
+                $modeldocumento->save();
+
+                Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
+            }else{
+                Yii::$app->session->setFlash( 'error', 'Número Documento NO EXISTE');
             }
-        } else {
-            $model->loadDefaultValues();
+            return $this->redirect(['register']);
         }
 
         return $this->render('create', [
@@ -96,8 +99,22 @@ class PlanillaembarquetraspasoController extends Controller
         ]);
     }
 
+    public function actionRegister()
+    {
+
+        $registrada = 1;
+
+        $searchModel = new DevoluciondocumentoSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams, $registrada);
+
+        return $this->render('index_registro', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
     /**
-     * Updates an existing Planillaembarquetraspaso model.
+     * Updates an existing Devoluciondocumento model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -117,7 +134,7 @@ class PlanillaembarquetraspasoController extends Controller
     }
 
     /**
-     * Deletes an existing Planillaembarquetraspaso model.
+     * Deletes an existing Devoluciondocumento model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -131,18 +148,18 @@ class PlanillaembarquetraspasoController extends Controller
     }
 
     /**
-     * Finds the Planillaembarquetraspaso model based on its primary key value.
+     * Finds the Devoluciondocumento model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return Planillaembarquetraspaso the loaded model
+     * @return Devoluciondocumento the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Planillaembarquetraspaso::findOne(['id' => $id])) !== null) {
+        if (($model = Devoluciondocumento::findOne(['id' => $id])) !== null) {
             return $model;
         }
 
-        throw new NotFoundHttpException('La página solicitada no existe.');
+        throw new NotFoundHttpException('The requested page does not exist.');
     }
 }

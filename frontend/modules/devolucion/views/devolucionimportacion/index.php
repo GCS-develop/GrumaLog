@@ -55,7 +55,7 @@ Icon::map($this, Icon::FAS);
 /** @var frontend\models\search\DevolucionimportacionSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Devoluciones';
+$this->title = 'Devolución - Importar';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
@@ -76,6 +76,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="devolucionimportacion-index">
 
+    <?= Alert::widget() ?>
+
     <?php $url = Url::to(['upload']); ?>
 
     <div class="row">    
@@ -93,21 +95,94 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         //'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
+        //'showPageSummary' => true,
+        'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
+        'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
+        'options' => [
+            'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
+        ],
 
-            'id',
-            'numeroRegistros',
-            'totalCantidad',
-            'created_at',
-            'created_by',
+        'columns' => [
+            [
+                'class' => 'kartik\grid\SerialColumn'
+            ],
+
+            [
+                'attribute' => 'id', // Nombre del atributo en el modelo
+                'hAlign' => 'center', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+                'format' => ['decimal', 0], // Formato decimal con 0 decimales
+            ],
+
+            [
+                'attribute' => 'numeroRegistros', // Nombre del atributo en el modelo
+                'hAlign' => 'right', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+                'format' => ['decimal', 0], // Formato decimal con 0 decimales
+            ],
+
+            [
+                'attribute' => 'totalCantidad', // Nombre del atributo en el modelo
+                'hAlign' => 'right', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+                'format' => ['decimal', 0], // Formato decimal con 0 decimales
+            ],
+
+            [
+                'attribute' => 'created_at', // Nombre del atributo en el modelo
+                //'format' => ['date', 'php:Y-m-d H:i'],
+                'hAlign' => 'center', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+                'value' => function($model){
+                    return substr($model->created_at,0, 16);
+                }
+            ],
+            [
+                'attribute' => 'created_by', // Nombre del atributo en el modelo
+                'value' => function ($model){
+                    return $model->usuariocrea->username;
+                },
+                'hAlign' => 'center', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+            ],
+
             //'updated_at',
             //'updated_by',
             [
                 'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Devolucionimportacion $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                 }
+                'header'=>'Acción',
+                'headerOptions' => ['width' => '15%'],
+                'template' => '{view} {delete}',
+
+                'buttons' => [
+
+                    'view' => function ($url, $model) {                                
+                        return Html::a('<i class="fa fa-search"></i>',
+                                [   '/devolucion/devolucionimportaciondetalle/index', 'idinterfase' => $model->id, ], 
+                                [
+                                    'title' => 'Ver Detalle Devolución',
+                                    'class' => 'btn btn-default btn_view_detalle',
+                                ]
+                        );
+                    },
+
+
+                    'delete' => function ($url, $model) {                                  
+                        return Html::a('<i class="fa fa-trash"></i>', 
+                                [   'delete', 'id' => $model->id], 
+                                [   'class' => 'btn btn-default',
+                                    'title' => 'Eliminar Intrefase',
+                                    'data' => [
+                                        'confirm' => 'Esta Seguro de Eliminar esta Interfase? ( ' . $model->id . ' - ' . 
+                                                                                        $model->numeroRegistros . ' )',
+                                        'method' => 'post',
+                                    ]
+                                ]
+                        );
+                    }, 
+
+                ],
+
             ],
         ],
     ]); ?>

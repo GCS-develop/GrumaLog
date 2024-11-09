@@ -10,26 +10,26 @@ use yii\db\Expression;
 use common\models\User;
 
 /**
- * This is the model class for table "devolucionimportacion".
+ * This is the model class for table "devoluciondocumento".
  *
  * @property int $id
- * @property int|null $numeroRegistros
- * @property float|null $totalCantidad
+ * @property string $codigoBodegaSalida
+ * @property string $numeroDocumento
+ * @property string $fecha
+ * @property string|null $notasDocumento
  * @property string $created_at
  * @property int $created_by
  * @property string $updated_at
  * @property int $updated_by
- *
- * @property Devolucionimportaciondetalle[] $devolucionimportaciondetalles
  */
-class Devolucionimportacion extends \yii\db\ActiveRecord
+class Devoluciondocumento extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'devolucionimportacion';
+        return 'devoluciondocumento';
     }
 
     public function behaviors()
@@ -58,10 +58,12 @@ class Devolucionimportacion extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['numeroRegistros', 'created_by', 'updated_by'], 'integer'],
-            [['totalCantidad'], 'number'],
-            [['numeroRegistros', 'totalCantidad'], 'required'],
-            [['created_at', 'updated_at'], 'safe'],
+            [['codigoBodegaSalida', 'numeroDocumento', 'fecha', 'idInterfase'], 'required'],
+            [['fecha', 'created_at', 'updated_at', 'fechaRegistra'], 'safe'],
+            [['created_by', 'updated_by', 'registrada', 'usuarioRegistra'], 'integer'],
+            [['codigoBodegaSalida'], 'string', 'max' => 5],
+            [['numeroDocumento'], 'string', 'max' => 20],
+            [['notasDocumento'], 'string', 'max' => 500],
         ];
     }
 
@@ -72,8 +74,11 @@ class Devolucionimportacion extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'numeroRegistros' => 'Numero Registros',
-            'totalCantidad' => 'Total Cantidad',
+            'codigoBodegaSalida' => 'Cod. Bodega Salida',
+            'numeroDocumento' => 'Número Documento',
+            'fecha' => 'Fecha',
+            'notasDocumento' => 'Notas Documento',
+            'idInterfase' => 'ID Interfase',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
@@ -81,18 +86,13 @@ class Devolucionimportacion extends \yii\db\ActiveRecord
         ];
     }
 
-    /**
-     * Gets query for [[Devolucionimportaciondetalles]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getDevolucionimportaciondetalles()
+    public function getBodegasalida()
     {
-        return $this->hasMany(Devolucionimportaciondetalle::class, ['idInterfase' => 'id']);
+        return $this->hasOne(Bodegas::class, ['codigo' => 'codigoBodegaSalida']);
     }
 
-    public function getUsuariocrea()
+    public function getUsuarioregistra()
     {
-        return $this->hasOne(User::class, ['id' => 'created_by']);
+        return $this->hasOne(User::class, ['id' => 'usuarioRegistra']);
     }
 }

@@ -15,6 +15,8 @@ use frontend\models\search\PlanillaembarquetraspasoSearch;
 use frontend\models\Parametroscontrol;
 use frontend\models\Estadodespacho;
 use frontend\models\Estadorecepcion;
+use frontend\models\Transportadora;
+
 
 use kartik\mpdf\Pdf;
 use Mpdf\Mpdf;
@@ -99,6 +101,18 @@ class PlanillaembarqueController extends Controller
     public function actionCreate()
     {
         $model = new Planillaembarque();
+
+        $modelestado = Estadodespacho::find()->where(['codigo' => '01'])->one();
+
+        $model->flotaPropia = 1;
+        $model->idEstado = $modelestado->id;
+        $model->fechaDespacho = date('Y-m-d');
+        $model->horaDespacho = date('H:i');
+
+        $transportadora = Transportadora::find()->
+            where(['nombre' => 'HERPO FLOTA PROPIA'])->one();
+
+        $model->idTransportadora = $transportadora->id;
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -226,11 +240,11 @@ class PlanillaembarqueController extends Controller
         $model = $this->findModel($id);
 
         $filas = Planillaembarquetraspaso::find()->where([
-                                                'idPlanillaEmbarque' => $id,
-                                                'idEstado' => $idestadorecepcion
-                                            ],)->count();
-        if ($filas > 0){
-            Yii::$app->session->setFlash('error', 'Error: Planilla Tiene Traspasos Recibidos: '. $filas);
+            'idPlanillaEmbarque' => $id,
+            'idEstado' => $idestadorecepcion
+        ], )->count();
+        if ($filas > 0) {
+            Yii::$app->session->setFlash('error', 'Error: Planilla Tiene Traspasos Recibidos: ' . $filas);
             return $this->redirect(['index']);
         }
 
@@ -239,11 +253,6 @@ class PlanillaembarqueController extends Controller
             $model->idEstado = $idestadodespacho;
 
             if ($model->save()) {
-
-                // foreach ($model->traspasodetalles as $detalle) {
-                //     $filasAfectadas += $detalle->retornarInventario();
-                //     Yii::$app->session->setFlash('success', 'Items: ' . $filasAfectadas . ' regresaron fueron regresados al inventario');
-                // }
 
                 return $this->redirect(['index']);
 

@@ -101,6 +101,10 @@ $gridColumns = [
 
     ],
 
+
+    'selloLlegada',
+    'selloSalida',
+
     // 'fechaRecibido',// Fecha recibido transito : es para los documentos TRT o documentos elaborados para traslados entre tiendas ,este sector es para el recibo de estos documentos en transito CEDI , seguido a este se cambia a despachado CEDI ,asi se identifican los docuemtos elaborados para nivelacion de producto entre tiendas .
 
     // 'horaRecibido',// Hora recibido transito  : indica la hora en que los documentos en trasito fueron recibidos en el CEDI por el auxiliar administrativo de transporte. 

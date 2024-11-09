@@ -3,9 +3,6 @@
 namespace frontend\models;
 
 use Yii;
-use yii\behaviors\BlameableBehavior;
-use yii\behaviors\TimestampBehavior;
-use yii\db\Expression;
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -56,37 +53,17 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
             'referencia', 'itemResumen', 'unidadMedida', 'cantidad', 'categoria', 'proveedor', 
             'codigoBarras'], 'required'],
             [['idInterfase'], 'integer'],
-            [['fecha'], 'safe'],
+            [['fecha', 'item'], 'safe'],
             [['cantidad'], 'number'],
             [['co', 'codigoBodegaEntrada', 'codigoBodegaSalida'], 'string', 'max' => 5],
             [['bodegaSalida', 'bodegaEntrada', 'proveedor'], 'string', 'max' => 150],
-            [['item', 'talla', 'numeroDocumento'], 'string', 'max' => 20],
+            [['talla', 'numeroDocumento'], 'string', 'max' => 20],
             [['color', 'referencia', 'codigoBarras'], 'string', 'max' => 50],
             [['notasDocumento'], 'string', 'max' => 500],
             [['itemResumen'], 'string', 'max' => 300],
             [['unidadMedida'], 'string', 'max' => 10],
             [['categoria'], 'string', 'max' => 100],
             [['idInterfase'], 'exist', 'skipOnError' => true, 'targetClass' => Devolucionimportacion::class, 'targetAttribute' => ['idInterfase' => 'id']],
-        ];
-    }
-
-    public function behaviors()
-    {
-        return [
-            [
-                'class' => TimestampBehavior::className(),
-                'createdAtAttribute' => 'created_at',
-                'updatedAtAttribute' => 'updated_at',
-                'value' => new Expression('GETDATE()'),
-            ],
-            [
-                'class' => BlameableBehavior::className(),
-                'createdByAttribute' => 'created_by',
-                'updatedByAttribute' => 'updated_by',
-                'value' => function ($event) {
-                    return Yii::$app->user->id;
-                },
-            ],
         ];
     }
 
@@ -98,24 +75,24 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'idInterfase' => 'Id Interfase',
-            'co' => 'Co',
+            'co' => 'C.O.',
             'fecha' => 'Fecha',
             'bodegaSalida' => 'Bodega Salida',
             'item' => 'Item',
             'talla' => 'Talla',
             'color' => 'Color',
-            'numeroDocumento' => 'Numero Documento',
-            'notasDocumento' => 'Notas Documento',
+            'numeroDocumento' => 'Nro Documento',
+            'notasDocumento' => 'Notas dOCTO',
             'bodegaEntrada' => 'Bodega Entrada',
-            'codigoBodegaEntrada' => 'Codigo Bodega Entrada',
-            'codigoBodegaSalida' => 'Codigo Bodega Salida',
+            'codigoBodegaEntrada' => 'Cod. Bodega Entrada',
+            'codigoBodegaSalida' => 'Cod. Bodega Salida',
             'referencia' => 'Referencia',
             'itemResumen' => 'Item Resumen',
-            'unidadMedida' => 'Unidad Medida',
-            'cantidad' => 'Cantidad',
-            'categoria' => 'Categoria',
+            'unidadMedida' => 'UM',
+            'cantidad' => 'Cant. Saldo',
+            'categoria' => 'Categoría',
             'proveedor' => 'Proveedor',
-            'codigoBarras' => 'Codigo Barras',
+            'codigoBarras' => 'Código Barras',
         ];
     }
 
@@ -140,7 +117,9 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
         $model = new Devolucionimportacion();
         $model->numeroRegistros = 0;
         $model->totalCantidad = 0;
-        $model->save();
+        if (!$model->save()){
+            var_dump($model->getErrors()); die("hola");
+        }
         $id = $model->id;
 
         $respuesta = Devolucionimportaciondetalle::extraer_data_archivo ($tempFileName, $model->id);
@@ -175,8 +154,8 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
         $grabar = false;
 
         // Iterar por cada fila
-        for ($fila = 1; $fila <= $totalFilas; $fila++) {
-        
+        for ($fila = 2; $fila <= $totalFilas; $fila++) {
+
 
             $grabar = true;
 
@@ -292,8 +271,40 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
                 $model->proveedor = $valor_celda;
             }
 
-            
             $model->save();
+
+            $modeldocumento = Devoluciondocumento::find()->where(['codigoBodegaSalida' => $model->codigoBodegaSalida, 'numeroDocumento' => $model->numeroDocumento])->one();
+            if ($modeldocumento == null){
+                $modeldocumento = new Devoluciondocumento();
+                $modeldocumento->codigoBodegaSalida = $model->codigoBodegaSalida;
+                $modeldocumento->numeroDocumento = $model->numeroDocumento;
+                $modeldocumento->fecha = $model->fecha;
+                $modeldocumento->notasDocumento = $model->notasDocumento;
+                $modeldocumento->idInterfase = $model->idInterfase;
+                $modeldocumento->save();
+            }
+
+            $detalle = Devoluciondocumentodetalle::find()->where(['idDocumento' => $modeldocumento->id, 'codigoBarras' => $model->codigoBarras])->one();
+            if ($detalle == null){
+                $detalle = new Devoluciondocumentodetalle();
+                $detalle->idDocumento = $modeldocumento->id;
+                $detalle->codigoBarras = $model->codigoBarras;
+                $detalle->cantidadDevolucion = $model->cantidad;
+                $detalle->cantidadRegistrada = 0;
+                $detalle->item = $model->item;
+                $detalle->talla = $model->talla;
+                $detalle->color = $model->color;
+                $detalle->referencia = $model->referencia;
+                $detalle->itemResumen = $model->itemResumen;
+                if (!$detalle->save()){
+                    var_dump($detalle->getErrors()); die("hola");
+                }
+
+
+            }else{
+                $detalle->cantidadDevolucion = $detalle->cantidadDevolucion + $model->cantidad;
+                $detalle->save();
+            }
         }
 
         return $grabar;

@@ -1,18 +1,17 @@
 <?php
 
-namespace frontend\modules\despacho\controllers;
+namespace frontend\modules\devolucion\controllers;
 
-use frontend\models\Planillaembarque;
-use frontend\models\Planillaembarquetraspaso;
-use frontend\models\search\PlanillaembarquetraspasoSearch;
+use frontend\models\Devolucionimportaciondetalle;
+use frontend\models\search\DevolucionimportaciondetalleSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
 /**
- * PlanillaembarquetraspasoController implements the CRUD actions for Planillaembarquetraspaso model.
+ * DevolucionimportaciondetalleController implements the CRUD actions for Devolucionimportaciondetalle model.
  */
-class PlanillaembarquetraspasoController extends Controller
+class DevolucionimportaciondetalleController extends Controller
 {
     /**
      * @inheritDoc
@@ -33,36 +32,23 @@ class PlanillaembarquetraspasoController extends Controller
     }
 
     /**
-     * Lists all Planillaembarquetraspaso models.
+     * Lists all Devolucionimportaciondetalle models.
      *
      * @return string
      */
-    public function actionIndex($id = null)
+    public function actionIndex($idinterfase)
     {
-        $searchModel = new PlanillaembarquetraspasoSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams, $id);
+        $searchModel = new DevolucionimportaciondetalleSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams, $idinterfase);
 
-        $programa = 'index';
-        $model = '';
-
-        
-
-        if ($id != null){
-            $programa = 'index_planilla';
-            $model = Planillaembarque::findOne($id);
-
-        }
-
-        return $this->render($programa, [
+        return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'model' => $model,
-
         ]);
     }
 
     /**
-     * Displays a single Planillaembarquetraspaso model.
+     * Displays a single Devolucionimportaciondetalle model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -75,13 +61,13 @@ class PlanillaembarquetraspasoController extends Controller
     }
 
     /**
-     * Creates a new Planillaembarquetraspaso model.
+     * Creates a new Devolucionimportaciondetalle model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new Planillaembarquetraspaso();
+        $model = new Devolucionimportaciondetalle();
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
@@ -97,7 +83,7 @@ class PlanillaembarquetraspasoController extends Controller
     }
 
     /**
-     * Updates an existing Planillaembarquetraspaso model.
+     * Updates an existing Devolucionimportaciondetalle model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -117,7 +103,7 @@ class PlanillaembarquetraspasoController extends Controller
     }
 
     /**
-     * Deletes an existing Planillaembarquetraspaso model.
+     * Deletes an existing Devolucionimportaciondetalle model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -131,18 +117,18 @@ class PlanillaembarquetraspasoController extends Controller
     }
 
     /**
-     * Finds the Planillaembarquetraspaso model based on its primary key value.
+     * Finds the Devolucionimportaciondetalle model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return Planillaembarquetraspaso the loaded model
+     * @return Devolucionimportaciondetalle the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Planillaembarquetraspaso::findOne(['id' => $id])) !== null) {
+        if (($model = Devolucionimportaciondetalle::findOne(['id' => $id])) !== null) {
             return $model;
         }
 
-        throw new NotFoundHttpException('La página solicitada no existe.');
+        throw new NotFoundHttpException('The requested page does not exist.');
     }
 }
