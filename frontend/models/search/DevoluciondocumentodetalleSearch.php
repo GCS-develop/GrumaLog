@@ -18,7 +18,8 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
     {
         return [
             [['id', 'idDocumento', 'created_by', 'updated_by'], 'integer'],
-            [['codigoBarras', 'item', 'talla', 'color', 'referencia', 'itemResumen', 'created_at', 'updated_at', 'numeroDocumento', 'codigoBodegaSalida'], 'safe'],
+            [['codigoBarras', 'item', 'talla', 'color', 'referencia', 'itemResumen', 'created_at', 'updated_at', 'numeroDocumento', 
+            'codigoBodegaSalida', 'unidadMedida'], 'safe'],
             [['cantidadDevolucion', 'cantidadRegistrada', 'registrada'], 'number'],
         ];
     }
@@ -57,6 +58,7 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             'det.color',
             'det.referencia',
             'det.itemResumen',
+            'det.unidadMedida',
             'det.cantidadDevolucion',
             'det.cantidadRegistrada',
             'det.created_at',
@@ -103,6 +105,7 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             'det.updated_at' => $this->updated_at,
             'det.updated_by' => $this->updated_by,
             'det.registrada' => $this->registrada,
+            'det.unidadMedida' => $this->unidadMedida,
             'dct.numeroDocumento' => $this->numeroDocumento,
             'dct.codigoBodegaSalida' => $this->codigoBodegaSalida
         ]);

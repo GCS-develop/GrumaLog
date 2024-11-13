@@ -49,7 +49,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= Alert::widget() ?>
 
     <p>
-    <div class="col-lg-6 derecha">
+    <div class="col-lg-12 centrar">
                 <?= Html::a('Registrar', ['create'], ['class' => 'btn btn-success btn-lg btn-create', 'id'=>'modalButtonCreateTest']) ?>
      </div>
     </p>
@@ -107,7 +107,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'totalCantidadRegistra', // Nombre del atributo en el modelo
                 'value' => function ($model){
-                    return Devoluciondocumentodetalle::find()->where(['idDocumento' => $model->id, 'registrada' => 1])->sum('cantidadDevolucion');
+                    return Devoluciondocumentodetalle::find()->where(['idDocumento' => $model->id, 'registrada' => 1])->sum('cantidadRegistrada');
                 },
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro

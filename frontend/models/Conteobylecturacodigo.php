@@ -6,6 +6,9 @@ use Yii;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
+use xstreamka\mobiledetect\Device;
+
+use common\models\User;
 
 /**
  * This is the model class for table "conteobylecturacodigo".
@@ -86,23 +89,26 @@ class Conteobylecturacodigo extends \yii\db\ActiveRecord
         ];
     }
 
-    public function getItem()
+    public function getUsercreated()
     {
-        return $this->hasOne(Item::class, ['codigoBarras' => 'codigoBarras']);
+        return $this->hasOne(User::class, ['id' => 'created_by']);
     }
 
-    public function getDestino()
-    {
-        return $this->hasOne(Conteocdscdestino::class, ['id' => 'idConteoDestino']);
-    }
+    public static function grabarRegistro ($modulo, $codigobarras, $unidades, $idfactura, $iddestino, $iddetalle){
+        $isMobile = Device::$isMobile;
 
-    public function getFactura()
-    {
-        return $this->hasOne(Conteocdscdestinofactura::class, ['id' => 'idConteoFactura']);
-    }
+        $modellectura = new Conteobylecturacodigo ();
+        $modellectura->modulo = $modulo;
+        $modellectura->idConteoFactura = $idfactura;
+        $modellectura->idConteoDestino = $iddestino;
+        $modellectura->idConteoDetalle = $iddetalle;
+        $modellectura->codigoBarras = $codigobarras;
+        $modellectura->unidades = $unidades;
+        $modellectura->isMobile = $isMobile ? 1 : 0;
+        if (!$modellectura->save()){
+            var_dump($modellectura->getErrors()); die("Validar Dispositivo");
+        }
 
-    public function getDetalle()
-    {
-        return $this->hasOne(Conteocdscdestinodetalle::class, ['id' => 'idConteoDetalle']);
+        return true;
     }
 }

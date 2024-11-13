@@ -14,6 +14,8 @@ use yii\filters\VerbFilter;
 use yii\db\Expression;
 
 use common\models\User;
+use frontend\models\Conteobylecturacodigo;
+use frontend\models\search\ConteobylecturacodigoSearch;
 
 /**
  * DevoluciondocumentodetalleController implements the CRUD actions for Devoluciondocumentodetalle model.
@@ -115,7 +117,16 @@ class DevoluciondocumentodetalleController extends Controller
                 $modeldetalle->usuarioRegistra = Yii::$app->user->id;
                 $modeldetalle->fechaRegistra = new Expression('GETDATE()');;
 
-                $modeldetalle->save();
+                if ($modeldetalle->save()){
+                    $tipo = 3; // Devoluciones
+                    $ok = Conteobylecturacodigo::grabarRegistro($tipo, 
+                                                                $model->codigobarras, 
+                                                                $model->cantidad,
+                                                                $modeldocumento->idInterfase,
+                                                                $modeldocumento->id,
+                                                                $modeldetalle->id,
+                                                            ); 
+                }
 
                 Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
             }else{
@@ -163,6 +174,43 @@ class DevoluciondocumentodetalleController extends Controller
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    public function actionDeleteconteo($id)
+    {
+        $modelconteo = Conteobylecturacodigo::findOne(['id' => $id]);
+        $iddetalle = $modelconteo->idConteoDetalle;
+        $unidades = $modelconteo->unidades;
+
+        $modelconteo->delete();
+
+        $model = $this->findModel($iddetalle);
+        $model->cantidadRegistrada = $model->cantidadRegistrada - $unidades; 
+        $model->save();
+
+        return $this->redirect(['viewconteo', 'id' => $model->id]);
+    }
+
+    public function actionViewconteo($id)
+    {
+        $model = $this->findModel($id);
+
+        $modeldocumento = Devoluciondocumento::findOne(['id' => $model->idDocumento]);
+
+        $modulo = 3;
+        $idusuario = Yii::$app->user->id;
+        $modeluser = User::findOne(['id' => $idusuario]);
+        
+        $searchModel = new ConteobylecturacodigoSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams, $modulo, $modeldocumento->id, $id);
+
+        return $this->render('index_conteo', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'model' => $model,
+            'modeldocumento' => $modeldocumento,
+            'modeluser' => $modeluser
+        ]);
     }
 
     /**

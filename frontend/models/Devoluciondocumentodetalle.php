@@ -74,6 +74,7 @@ class Devoluciondocumentodetalle extends \yii\db\ActiveRecord
             [['codigoBarras',  'talla'], 'string', 'max' => 20],
             [['color', 'referencia'], 'string', 'max' => 50],
             [['itemResumen'], 'string', 'max' => 300],
+            [['unidadMedida'], 'string', 'max' => 10],
         ];
     }
 
@@ -97,11 +98,21 @@ class Devoluciondocumentodetalle extends \yii\db\ActiveRecord
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
             'updated_by' => 'Updated By',
+            'unidadMedida' => 'UM',
         ];
     }
 
     public function getUsuarioregistra()
     {
         return $this->hasOne(User::class, ['id' => 'usuarioRegistra']);
+    }
+
+    public function getUnidadempaque()
+    {
+        return $this->hasOne(Unidadempaque::class, ['codigo' => 'unidadMedida']);
+    }
+
+    public function getDiferencia (){
+        return $this->cantidadDevolucion - $this->cantidadRegistrada;
     }
 }

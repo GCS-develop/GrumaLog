@@ -1,4 +1,5 @@
 <?php
+use frontend\models\Unidadempaque;
 
 
 $this->registerCss('
@@ -66,8 +67,74 @@ $gridColumns = [
     'color',
     'referencia',
     'itemResumen',
-    'cantidadDevolucion',
-    'cantidadRegistrada',
+
+    'unidadMedida',
+
+    [
+        'attribute' => 'equivalencia', 
+        'label' => 'Eq. UM',
+        'value' => function ($model){
+            $equivalencia = 1;
+
+            if ($model->unidadempaque){
+                $equivalencia = $model->unidadempaque->equivalencia;
+            };
+            return $equivalencia;
+        },
+
+    ],
+
+    [
+        'attribute' => 'cantidadDevolucion', 
+        'label' => 'Cant. Saldo Base',
+    ],
+
+    [
+        'attribute' => 'cantidadRegistrada', 
+        'label' => 'Cant. Conteo Base',
+    ],
+
+    [
+        'attribute' => 'diferencia', 
+        'label' => 'Diferencia Base',
+    ],
+
+    [
+        'attribute' => 'cantidadDevolucion',
+        'value' => function ($model){
+            $equivalencia = 1;
+
+            if ($model->unidadempaque){
+                $equivalencia = $model->unidadempaque->equivalencia;
+            };
+            return $model->cantidadDevolucion * $equivalencia;
+        },
+    ],
+
+    [
+        'attribute' => 'cantidadRegistrada',
+        'value' => function ($model){
+            $equivalencia = 1;
+
+            if ($model->unidadempaque){
+                $equivalencia = $model->unidadempaque->equivalencia;
+            };
+            return $model->cantidadRegistrada * $equivalencia;
+        },
+    ],
+    [
+        'attribute' => 'diferencia',
+        'value' => function ($model){
+            $equivalencia = 1;
+
+            if ($model->unidadempaque){
+                $equivalencia = $model->unidadempaque->equivalencia;
+            };
+            return $model->diferencia * $equivalencia;
+        },
+        'label' => 'Diferencia',
+    ],
+
     'fechaRegistra',
     [
         'attribute' => 'usuarioRegistra', // Nombre del atributo en el modelo
@@ -207,8 +274,52 @@ $gridColumns = [
                 'hAlign' => 'left', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
             ],
+
+            [
+                'attribute' => 'unidadMedida', // Nombre del atributo en el modelo
+                'hAlign' => 'left', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+            ],
+
+            [
+                'attribute' => 'equivalencia', 
+                'label' => 'Eq. UM',
+                'value' => function ($model){
+                    $equivalencia = 1;
+
+                    if ($model->unidadempaque){
+                        $equivalencia = $model->unidadempaque->equivalencia;
+                    };
+                    return $equivalencia;
+                },
+                'hAlign' => 'left', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+            ],
             //'talla',
             //'color',
+
+            [
+                'attribute' => 'cantidadDevolucion', 
+                'label' => 'Cant. Saldo Base',
+                'hAlign' => 'left', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+                'filter' => ''
+            ],
+
+            [
+                'attribute' => 'cantidadRegistrada', 
+                'label' => 'Cant. Conteo Base',
+                'hAlign' => 'left', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+                'filter' => ''
+            ],
+
+            [
+                'attribute' => 'diferencia', 
+                'label' => 'Diferencia Base',
+                'hAlign' => 'left', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+            ],
 
             [
                 'attribute' => 'cantidadDevolucion', // Nombre del atributo en el modelo
@@ -217,6 +328,14 @@ $gridColumns = [
                 'format' => ['decimal', 0], // Formato decimal con 0 decimales
                 'label' => 'Cant. Saldo',
                 'filter' => '',
+                'value' => function ($model){
+                    $equivalencia = 1;
+
+                    if ($model->unidadempaque){
+                        $equivalencia = $model->unidadempaque->equivalencia;
+                    };
+                    return $model->cantidadDevolucion * $equivalencia;
+                },
                 'pageSummary' => true,
             ],
 
@@ -227,7 +346,34 @@ $gridColumns = [
                 'format' => ['decimal', 0], // Formato decimal con 0 decimales
                 'label' => 'Cant. Registrada',
                 'filter' => '',
+                'value' => function ($model){
+                    $equivalencia = 1;
+
+                    if ($model->unidadempaque){
+                        $equivalencia = $model->unidadempaque->equivalencia;
+                    };
+                    return $model->cantidadRegistrada * $equivalencia;
+                },
                 'pageSummary' => true,
+            ],
+
+            [
+                'attribute' => 'diferencia', // Nombre del atributo en el modelo
+                'hAlign' => 'center', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+                'format' => ['decimal', 0], // Formato decimal con 0 decimales
+                'label' => 'Cant. Registrada',
+                'filter' => '',
+                'value' => function ($model){
+                    $equivalencia = 1;
+
+                    if ($model->unidadempaque){
+                        $equivalencia = $model->unidadempaque->equivalencia;
+                    };
+                    return $model->diferencia * $equivalencia;
+                },
+                'pageSummary' => true,
+                'label' => 'Diferencia',
             ],
 
             [

@@ -80,7 +80,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= Alert::widget() ?>
 
     <p>
-    <div class="col-lg-6 derecha">
+    <div class="col-lg-12 centrar">
                 <?= Html::a('Registrar', ['create', 'iddocumento' => $model->id], ['class' => 'btn btn-success btn-lg btn-create', 'id'=>'modalButtonCreateTest']) ?>
     </div>
     </p>
@@ -187,12 +187,30 @@ $this->params['breadcrumbs'][] = $this->title;
                 'vAlign' => 'middle', // Alineación vertical al centro
             ],
 
-            /*[
+            [
                 'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Devoluciondocumentodetalle $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                 }
-            ],*/
+                'header'=>'Acción',
+                //'headerOptions' => ['width' => '15%'],
+                'template' => '{viewconteo}',
+
+                'buttons' => [
+
+                    'viewconteo' => function ($url, $model) {                                
+                        return Html::a('<i class="fa fa-list"></i>',
+                                [   'viewconteo',
+                                    'id' => $model->id
+                                ], 
+                                [
+                                    'title' => 'Ver Registro de Conteo',
+                                    'class' => 'btn btn-default btn_detalle',
+                                ]
+                        );
+                    },
+
+
+                ],
+
+            ],
         ],
     ]); ?>
 

@@ -296,6 +296,7 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
                 $detalle->color = $model->color;
                 $detalle->referencia = $model->referencia;
                 $detalle->itemResumen = $model->itemResumen;
+                $detalle->unidadMedida = $model->unidadMedida;
                 if (!$detalle->save()){
                     var_dump($detalle->getErrors()); die("hola");
                 }

@@ -38,7 +38,8 @@
         "philippfrenzel/yii2fullcalendar": "3.9.0",
         "mike42/escpos-php": "^4.0",
         "diecoding/yii2-barcode-generator": "^1.0",
-        "mpdf/mpdf": "^8.2"
+        "mpdf/mpdf": "^8.2",
+        "xstreamka/yii2-mobile-detect": "*"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",

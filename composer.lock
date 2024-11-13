@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c009458873b4c39d47945940df785416",
+    "content-hash": "d5d8f8da13a4952cad22487de80d3779",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -4457,6 +4457,59 @@
                 }
             ],
             "time": "2023-03-08T08:35:38+00:00"
+        },
+        {
+            "name": "xstreamka/yii2-mobile-detect",
+            "version": "v1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/xstreamka/yii2-mobile-detect.git",
+                "reference": "b86c943237e8b537a6de3f92e58e1b5494544a52"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/xstreamka/yii2-mobile-detect/zipball/b86c943237e8b537a6de3f92e58e1b5494544a52",
+                "reference": "b86c943237e8b537a6de3f92e58e1b5494544a52",
+                "shasum": ""
+            },
+            "require": {
+                "yiisoft/yii2": "~2.0.0"
+            },
+            "type": "yii2-extension",
+            "extra": {
+                "bootstrap": "xstreamka\\mobiledetect\\Bootstrap"
+            },
+            "autoload": {
+                "psr-4": {
+                    "xstreamka\\mobiledetect\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "XStream",
+                    "email": "xstreamka@gmail.com",
+                    "homepage": "https://github.com/xstreamka/yii2-mobile-detect",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Mobile_Detect class for Yii2 with the ability to add new devices.",
+            "keywords": [
+                "Mobile_Detect",
+                "detect",
+                "device",
+                "extension",
+                "mobile detect",
+                "yii2"
+            ],
+            "support": {
+                "issues": "https://github.com/xstreamka/yii2-mobile-detect/issues",
+                "source": "https://github.com/xstreamka/yii2-mobile-detect"
+            },
+            "time": "2024-05-13T07:11:59+00:00"
         },
         {
             "name": "yiisoft/yii2",
