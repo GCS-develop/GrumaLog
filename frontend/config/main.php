@@ -12,12 +12,12 @@ return [
     'bootstrap' => ['log'],
     'controllerNamespace' => 'frontend\controllers',
     'timeZone' => 'America/Bogota',
-    
-	'modules' => [
+
+    'modules' => [
         'agenda' => [
             'class' => 'frontend\modules\agenda\Module',
         ],
-		'siesa' => [
+        'siesa' => [
             'class' => 'frontend\modules\siesa\Module',
         ],
         'catalogos' => [
@@ -38,7 +38,7 @@ return [
         'despacho' => [
             'class' => 'frontend\modules\despacho\Module',
         ],
-		'ventas' => [
+        'ventas' => [
             'class' => 'frontend\modules\ventas\Module',
         ],
         'transporte' => [
@@ -50,9 +50,19 @@ return [
         'devolucion' => [
             'class' => 'frontend\modules\devolucion\Module',
         ],
+
+        'productostiquetesprecio' => [
+            'class' => 'frontend\modules\productostiquetesprecio\Module',
+        ]
+
     ],
-	
+
     'components' => [
+        'formatter' => [
+            'class' => 'yii\i18n\Formatter',
+            'locale' => 'es-CO', // Ajusta a tu localización (español - Colombia)
+            'currencyCode' => 'COP', // Código de moneda (Peso Colombiano)
+        ],
         'request' => [
             'csrfParam' => '_csrf-frontend',
         ],
@@ -77,7 +87,7 @@ return [
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
-        
+
         /*'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
@@ -87,7 +97,7 @@ return [
                 '<controller:\w+>/<action:\w+>' => '<controller>/<action>',
             ],
         ],*/
-        
+
     ],
     'params' => $params,
     'timeZone' => 'America/Bogota',
