@@ -228,6 +228,7 @@ $baseUrl = Url::base(true);
                         'icon' => 'dollar-sign',
                         'badge' => '<span class="right badge badge-info">1</span>',
                         'items' => [
+                            ['label' => 'Impresion de precios', 'url' => ['/productostiquetesprecio/productostiquetesprecio/index'], 'iconStyle' => 'far'],
                             ['label' => 'Consulta', 'url' => ['/ventas/factura/index'], 'iconStyle' => 'far'],
                             ['label' => 'Cotización Precio', 'url' => ['/ventas/cotizacionprecio/index'], 'iconStyle' => 'far'],
                         ]
