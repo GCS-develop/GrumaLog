@@ -118,4 +118,9 @@ class Bodegas extends \yii\db\ActiveRecord
 
         return $listadata;
     }
+    
+    public function getImpresorapaxar()
+    {
+        return $this->hasOne(Impresoraspaxarbodega::class, ['bodega_id' => 'id']);
+    }
 }

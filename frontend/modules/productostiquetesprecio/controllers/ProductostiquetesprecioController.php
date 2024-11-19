@@ -8,6 +8,8 @@ use frontend\models\FileAgendaInput;
 use frontend\models\Productostiquetesprecio;
 use frontend\models\search\ProductostiquetesprecioSearch;
 use common\models\ProcedimientosGenerales;
+use common\models\User;
+
 use Yii;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -142,9 +144,11 @@ class ProductostiquetesprecioController extends Controller
     public function actionPrint($id)
     {
         $modelo = $this->findModel($id);
+        $idusuario = Yii::$app->user->id;
+        $modeluser = User::findOne(['id' => $idusuario]);
+        $impresora = $modeluser->bodegarecibir->impresorapaxar;
 
         Yii::trace('Iniciando la impresion de tiquetes.', __METHOD__);
-
 
         $totalStickers = $modelo->existencia; // Número total de stickers a imprimir.
 
@@ -163,13 +167,17 @@ class ProductostiquetesprecioController extends Controller
         $saltoColumnaStikers = 6; // Número de stickers por "gran columna" (6 stickers).
         $yInicio = $y; // Guardar la posición de inicio para saltar correctamente después de 6 stickers.
         $xInicio = $x;
+        $config = [
+            'tipo' => $impresora->tipo,
+            'ip' => $impresora->ip, // IP de tu impresora
+            'puerto' => $impresora->puerto,       // Puerto (por defecto: 9100)
+            'recurso' => $impresora->recurso,
+        ];
 
         // Iterar según la existencia (cantidad de stickers).
         for ($i = 0; $i < $totalStickers; $i++) {
             // Añadir solo el precio en la etiqueta.
 
-            // $zpl .= "^FO{$x},{$y}^A0N,50,50^FD$" . $modelo->precio . "^FS\n";
-            
             $zpl .= "^FO{$x},{$y}^A0N,50,50^FD$" . number_format($modelo->precio, 0, ',', '.') . "^FS\n";
 
 
@@ -186,7 +194,9 @@ class ProductostiquetesprecioController extends Controller
             if (($i + 1) % $saltoColumnaStikers == 0 || ($i + 1) == $totalStickers) {
                 // Enviar el bloque de stickers impresos hasta este momento.
                 $zpl .= "^XZ"; // Fin de la etiqueta ZPL de esta "gran columna".
-                $envio = $this->enviarImpresora($zpl);
+
+                //    Impresora con ip
+                $envio = $this->enviarImpresora($zpl, $config);
 
                 // Reiniciar el ZPL para la siguiente columna de stickers, si quedan más stickers.
                 if (($i + 1) < $totalStickers) {
@@ -204,31 +214,68 @@ class ProductostiquetesprecioController extends Controller
         return $this->redirect(['index']);
     }
 
-    private function enviarImpresora($zpl)
+
+    private function enviarImpresora($zpl, $config)
     {
-        $ip = '192.168.3.11'; // Cambia a la IP de tu impresora.
-        // $ip = '192.168.1.233'; // Cambia a la IP de tu impresora.
-        $puerto = 9100;
+        $tipo = $config['tipo'];
+        $ip = $config['ip'] ?? null;
+        $puerto = $config['puerto'] ?? 9100;
+        $recurso = $config['recurso'] ?? null;
 
-        // Intentar establecer la conexión.
-        $socket = @fsockopen($ip, $puerto, $errno, $errstr, 10); // El '@' suprime los warnings
-        if (!$socket) {
-            // Log de error en lugar de lanzar la excepción
-            Yii::error("No se pudo conectar a la impresora en $ip:$puerto. Error: $errstr ($errno)", __METHOD__);
+        if ($tipo === 'ip') {
+            $socket = @fsockopen($ip, $puerto, $errno, $errstr, 10);
+            if (!$socket) {
+                Yii::error("Error al conectar a $ip:$puerto: $errstr ($errno)", __METHOD__);
+                return false;
+            }
 
-            // Opcional: Puedes mostrar un mensaje al usuario
-            Yii::$app->session->setFlash('error', 'No se pudo conectar a la impresora. Intenta nuevamente.');
-
-            // O también podrías enviar una notificación de error o registrar un error en un archivo de log
-            return false; // Indicar que no se pudo conectar
+            fwrite($socket, $zpl);
+            fclose($socket);
+            Yii::info("Impresión enviada a $ip:$puerto", __METHOD__);
+            return true;
         }
 
-        // Si la conexión fue exitosa, enviar los datos.
-        fwrite($socket, $zpl);
-        fclose($socket);
+        if ($tipo === 'recurso') {
+            Yii::trace("Inicio de impresión enviada al recurso:  $recurso", __METHOD__);
 
-        return true; // Conexión y envío exitoso
+            // var_dump($ip . '   ' . $recurso);
+            // die('parametros');
+            // Crear el directorio temporal si no existe
+            $tempDir = Yii::getAlias('@frontend') . '/temp';
+            if (!is_dir($tempDir)) {
+                mkdir($tempDir, 0777, true); // Crear con permisos recursivos
+            }
+
+            // Crear el archivo temporal dentro de ./frontend/temp
+            $tempFile = $tempDir . '/zpl_' . uniqid() . '.tmp';
+            file_put_contents($tempFile, $zpl);
+
+            // Construir el comando con la IP primero y luego el recurso compartido
+            $command = sprintf(
+                'print %s /D:%s "%s"',
+                $ip, // La dirección IP (sin escapar, ya es válida)
+                '\\\\' . str_replace('\\', '\\\\', ltrim($recurso, '\\')), // Recurso compartido (doble \\ inicial)
+                $tempFile // El archivo temporal, ahora entre comillas
+            );
+
+            // Ejecutar el comando
+            exec($command, $output, $returnVar);
+
+            unlink($tempFile);
+
+            if ($returnVar !== 0) {
+                Yii::error("Error al imprimir en $recurso: " . implode("\n", $output), __METHOD__);
+                return false;
+            }
+
+            Yii::trace("Impresión enviada a $recurso, correctamente!", __METHOD__);
+            return true;
+        }
+
+        Yii::error("Tipo de impresora no reconocido: $tipo", __METHOD__);
+        return false;
     }
+
 
     public function actionUpload()
     {

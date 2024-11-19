@@ -181,7 +181,7 @@ $baseUrl = Url::base(true);
                             //     //     ['label' => 'planillaembarque', 'url' => ['/despacho/planillaembarque/index'], 'iconStyle' => 'far'],
                             //     // ],
                             // ],
-                            
+            
                             [
                                 // 'label' => 'Catálogos',
                                 'label' => 'Config',
@@ -228,6 +228,7 @@ $baseUrl = Url::base(true);
                         'icon' => 'dollar-sign',
                         'badge' => '<span class="right badge badge-info">1</span>',
                         'items' => [
+                            ['label' => 'Config. Impresoras paxar', 'url' => ['/productostiquetesprecio/impresoraspaxarbodega/index'], 'iconStyle' => 'far'],
                             ['label' => 'Impresion de precios', 'url' => ['/productostiquetesprecio/productostiquetesprecio/index'], 'iconStyle' => 'far'],
                             ['label' => 'Consulta', 'url' => ['/ventas/factura/index'], 'iconStyle' => 'far'],
                             ['label' => 'Cotización Precio', 'url' => ['/ventas/cotizacionprecio/index'], 'iconStyle' => 'far'],

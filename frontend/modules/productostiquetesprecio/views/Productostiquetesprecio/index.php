@@ -73,7 +73,7 @@ Modal::end();
 
     <?= Alert::widget() ?>
 
-    <?= $dataProvider->pagination->pageSize = 100; ?>
+    <!-- <?= $dataProvider->pagination->pageSize = 100; ?> -->
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
