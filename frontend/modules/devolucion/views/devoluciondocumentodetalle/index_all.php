@@ -71,12 +71,12 @@ $gridColumns = [
     'unidadMedida',
 
     [
-        'attribute' => 'equivalencia', 
+        'attribute' => 'equivalencia',
         'label' => 'Eq. UM',
-        'value' => function ($model){
+        'value' => function ($model) {
             $equivalencia = 1;
 
-            if ($model->unidadempaque){
+            if ($model->unidadempaque) {
                 $equivalencia = $model->unidadempaque->equivalencia;
             };
             return $equivalencia;
@@ -85,26 +85,26 @@ $gridColumns = [
     ],
 
     [
-        'attribute' => 'cantidadDevolucion', 
+        'attribute' => 'cantidadDevolucion',
         'label' => 'Cant. Saldo Base',
     ],
 
     [
-        'attribute' => 'cantidadRegistrada', 
+        'attribute' => 'cantidadRegistrada',
         'label' => 'Cant. Conteo Base',
     ],
 
     [
-        'attribute' => 'diferencia', 
+        'attribute' => 'diferencia',
         'label' => 'Diferencia Base',
     ],
 
     [
         'attribute' => 'cantidadDevolucion',
-        'value' => function ($model){
+        'value' => function ($model) {
             $equivalencia = 1;
 
-            if ($model->unidadempaque){
+            if ($model->unidadempaque) {
                 $equivalencia = $model->unidadempaque->equivalencia;
             };
             return $model->cantidadDevolucion * $equivalencia;
@@ -113,10 +113,10 @@ $gridColumns = [
 
     [
         'attribute' => 'cantidadRegistrada',
-        'value' => function ($model){
+        'value' => function ($model) {
             $equivalencia = 1;
 
-            if ($model->unidadempaque){
+            if ($model->unidadempaque) {
                 $equivalencia = $model->unidadempaque->equivalencia;
             };
             return $model->cantidadRegistrada * $equivalencia;
@@ -124,10 +124,10 @@ $gridColumns = [
     ],
     [
         'attribute' => 'diferencia',
-        'value' => function ($model){
+        'value' => function ($model) {
             $equivalencia = 1;
 
-            if ($model->unidadempaque){
+            if ($model->unidadempaque) {
                 $equivalencia = $model->unidadempaque->equivalencia;
             };
             return $model->diferencia * $equivalencia;
@@ -138,14 +138,14 @@ $gridColumns = [
     'fechaRegistra',
     [
         'attribute' => 'usuarioRegistra', // Nombre del atributo en el modelo
-        'value' => function ($model){
+        'value' => function ($model) {
             return $model->usuarioregistra ? $model->usuarioregistra->username : ' - ';
         },
     ],
 
     [
         'attribute' => 'registrada', // Nombre del atributo en el modelo
-        'value' => function ($model){
+        'value' => function ($model) {
             return $model->registrada == 1 ? 'SI' : 'NO';
         },
         'label' => 'Tiene Registro'
@@ -159,7 +159,7 @@ $gridColumns = [
 
         <div class="row">
             <div class="col-12 titulo">
-                <?= Html::encode($modeluser->username) . ' - ' . $modeluser->empleado->nombreEmpleado?>
+                <?= Html::encode($modeluser->username) . ' - ' . $modeluser->empleado->nombreEmpleado ?>
             </div>
         </div>
     </div>
@@ -171,7 +171,7 @@ $gridColumns = [
 
     <div class="row">
 
-        <div class="col-lg-12 centrar">   
+        <div class="col-lg-12 centrar">
             <?php echo ExportMenu::widget(
                 [
                     'dataProvider' => $dataProvider,
@@ -190,7 +190,7 @@ $gridColumns = [
                         ExportMenu::FORMAT_CSV => false,
                         ExportMenu::FORMAT_EXCEL_X => [
                             'label' => 'Excel 2007+',
-                            'icon' => 'file-excel-o' ,
+                            'icon' => 'file-excel-o',
                             'iconOptions' => ['class' => 'text-success'],
                             'linkOptions' => [],
                             'options' => ['title' => 'Microsoft Excel 2007+ (xlsx)'],
@@ -199,13 +199,14 @@ $gridColumns = [
                             'extension' => 'xlsx',
                             'writer' => ExportMenu::FORMAT_EXCEL_X
                         ],
-                        
-                    ]                            
-                ]);
-            ?>        
+
+                    ]
+                ]
+            );
+            ?>
         </div>
 
-    </div>    
+    </div>
 
 
     <?= GridView::widget([
@@ -221,14 +222,14 @@ $gridColumns = [
         'showPageSummary' => true,
 
         'rowOptions' => function ($model) {
-                    $options = [];
-                
-                    if ($model->cantidadDevolucion != $model->cantidadRegistrada){
-                        $options['style'] = 'background-color: #ff4d4d; color:white; font-weight: bold;'; // Puedes cambiar el color aquí
-                    }
-                
-                    return $options;
-                },
+        $options = [];
+
+        if ($model->cantidadDevolucion != $model->cantidadRegistrada) {
+            $options['style'] = 'background-color: #ff4d4d; color:white; font-weight: bold;'; // Puedes cambiar el color aquí
+        }
+
+        return $options;
+    },
 
         'columns' => [
             [
@@ -282,43 +283,46 @@ $gridColumns = [
             ],
 
             [
-                'attribute' => 'equivalencia', 
+                'attribute' => 'equivalencia',
                 'label' => 'Eq. UM',
-                'value' => function ($model){
-                    $equivalencia = 1;
+                'value' => function ($model) {
+            $equivalencia = 1;
 
-                    if ($model->unidadempaque){
-                        $equivalencia = $model->unidadempaque->equivalencia;
-                    };
-                    return $equivalencia;
-                },
+            if ($model->unidadempaque) {
+                $equivalencia = $model->unidadempaque->equivalencia;
+            };
+            return $equivalencia;
+        },
                 'hAlign' => 'left', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
             ],
             //'talla',
             //'color',
-
+    
             [
-                'attribute' => 'cantidadDevolucion', 
+                'attribute' => 'cantidadDevolucion',
                 'label' => 'Cant. Saldo Base',
                 'hAlign' => 'left', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
-                'filter' => ''
+                'filter' => '',
+                'pageSummary' => true,
             ],
 
             [
-                'attribute' => 'cantidadRegistrada', 
+                'attribute' => 'cantidadRegistrada',
                 'label' => 'Cant. Conteo Base',
                 'hAlign' => 'left', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
-                'filter' => ''
+                'filter' => '',
+                'pageSummary' => true,
             ],
 
             [
-                'attribute' => 'diferencia', 
+                'attribute' => 'diferencia',
                 'label' => 'Diferencia Base',
                 'hAlign' => 'left', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
+                'pageSummary' => true,
             ],
 
             [
@@ -328,14 +332,14 @@ $gridColumns = [
                 'format' => ['decimal', 0], // Formato decimal con 0 decimales
                 'label' => 'Cant. Saldo',
                 'filter' => '',
-                'value' => function ($model){
-                    $equivalencia = 1;
+                'value' => function ($model) {
+            $equivalencia = 1;
 
-                    if ($model->unidadempaque){
-                        $equivalencia = $model->unidadempaque->equivalencia;
-                    };
-                    return $model->cantidadDevolucion * $equivalencia;
-                },
+            if ($model->unidadempaque) {
+                $equivalencia = $model->unidadempaque->equivalencia;
+            };
+            return $model->cantidadDevolucion * $equivalencia;
+        },
                 'pageSummary' => true,
             ],
 
@@ -346,14 +350,14 @@ $gridColumns = [
                 'format' => ['decimal', 0], // Formato decimal con 0 decimales
                 'label' => 'Cant. Registrada',
                 'filter' => '',
-                'value' => function ($model){
-                    $equivalencia = 1;
+                'value' => function ($model) {
+            $equivalencia = 1;
 
-                    if ($model->unidadempaque){
-                        $equivalencia = $model->unidadempaque->equivalencia;
-                    };
-                    return $model->cantidadRegistrada * $equivalencia;
-                },
+            if ($model->unidadempaque) {
+                $equivalencia = $model->unidadempaque->equivalencia;
+            };
+            return $model->cantidadRegistrada * $equivalencia;
+        },
                 'pageSummary' => true,
             ],
 
@@ -362,16 +366,16 @@ $gridColumns = [
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
                 'format' => ['decimal', 0], // Formato decimal con 0 decimales
-                'label' => 'Cant. Registrada',
+                // 'label' => 'Cant. Registrada',
                 'filter' => '',
-                'value' => function ($model){
-                    $equivalencia = 1;
+                'value' => function ($model) {
+            $equivalencia = 1;
 
-                    if ($model->unidadempaque){
-                        $equivalencia = $model->unidadempaque->equivalencia;
-                    };
-                    return $model->diferencia * $equivalencia;
-                },
+            if ($model->unidadempaque) {
+                $equivalencia = $model->unidadempaque->equivalencia;
+            };
+            return $model->diferencia * $equivalencia;
+        },
                 'pageSummary' => true,
                 'label' => 'Diferencia',
             ],
@@ -381,20 +385,20 @@ $gridColumns = [
                 //'format' => ['date', 'php:Y-m-d H:i'],
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
-                'value' => function($model){
-                    if ($model->fechaRegistra){
-                        return substr($model->fechaRegistra,0, 16);
-                    }
+                'value' => function ($model) {
+            if ($model->fechaRegistra) {
+                return substr($model->fechaRegistra, 0, 16);
+            }
 
-                    return '-';
-                }
+            return '-';
+        }
             ],
 
             [
                 'attribute' => 'usuarioRegistra', // Nombre del atributo en el modelo
-                'value' => function ($model){
-                    return $model->usuarioregistra ? $model->usuarioregistra->username : ' - ';
-                },
+                'value' => function ($model) {
+            return $model->usuarioregistra ? $model->usuarioregistra->username : ' - ';
+        },
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
             ],
@@ -403,9 +407,9 @@ $gridColumns = [
                 'attribute' => 'registrada', // Nombre del atributo en el modelo
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
-                'value' => function ($model){
-                    return $model->registrada == 1 ? 'SI' : 'NO';
-                },
+                'value' => function ($model) {
+            return $model->registrada == 1 ? 'SI' : 'NO';
+        },
                 'filter' => ['0' => 'NO', '1' => 'SI'],
                 'label' => 'Tiene Registro'
             ],
