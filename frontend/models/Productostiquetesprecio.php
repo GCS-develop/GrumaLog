@@ -9,6 +9,7 @@ use yii\db\Exception;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
+use frontend\models\Bodegas;
 
 use yii\helpers\ArrayHelper;
 
@@ -106,6 +107,11 @@ class Productostiquetesprecio extends \yii\db\ActiveRecord
         ];
     }
 
+    public function getBodeganombre()
+    {
+        return $this->hasOne(Impresoraspaxarbodega::class, ['descBodega' => 'descBodega']);
+
+    }
     public static function getListaDataCategoria()
     {
         $data = Productostiquetesprecio::find()
@@ -136,25 +142,44 @@ class Productostiquetesprecio extends \yii\db\ActiveRecord
     {
         $file = $archivo;
 
+        // Define la ruta temporal
         $tempPath = Yii::getAlias('@app/temp/');
+
+        // Crea el directorio si no existe
+        if (!is_dir($tempPath)) {
+            mkdir($tempPath, 0777, true); // Crear directorio con permisos adecuados
+        }
+
         $tempFileName = $tempPath . $file->baseName . '.' . $file->extension;
 
+        // Guardar el archivo en la ruta temporal
         if (!$file->saveAs($tempFileName)) {
+            Yii::error("Error al guardar el archivo temporal: $tempFileName", __METHOD__);
             return false; // Error al guardar el archivo
         }
 
+        // Procesar el archivo
         $respuesta = self::extraer_data_archivo($tempFileName);
 
-        // Elimina el archivo temporal después de procesarlo
-        unlink($tempFileName);
+        // Verificar si el archivo existe antes de eliminarlo
+        if (file_exists($tempFileName)) {
+            unlink($tempFileName); // Eliminar archivo temporal
+        } else {
+            Yii::warning("El archivo temporal $tempFileName no existe o ya fue eliminado.", __METHOD__);
+        }
 
         return $respuesta;
     }
 
+
     public static function extraer_data_archivo($archivoExcel)
     {
-        ini_set('memory_limit', '2048M'); // Aumentar el límite de memoria
-        ini_set('max_execution_time', '3500'); // Tiempo de ejecución
+        Yii::trace("Inicio de la extracion de datos con 51200M y 36000 /tiempo", __METHOD__);
+
+        // ini_set('memory_limit', '51200M'); // Aumentar el límite de memoria
+        // ini_set('max_execution_time', '36000'); // Tiempo de ejecución
+        ini_set('memory_limit', '91200M'); // Aumentar el límite de memoria
+        ini_set('max_execution_time', '56000'); // Tiempo de ejecución
 
         // Cargar el archivo de Excel
         $spreadsheet = IOFactory::load($archivoExcel);
@@ -164,8 +189,13 @@ class Productostiquetesprecio extends \yii\db\ActiveRecord
 
         // Obtener el número total de filas
         $totalFilas = $sheet->getHighestRow();
-
-        $grabar = false;
+        $contadorInsert = 0; //contar cuantos inserto
+        $grabar = [
+            'estado' => false,
+            'rows' => $totalFilas, // cantidad de insets esperados
+            'insert' => $contadorInsert,
+            'errores' => '',
+        ];
         $data = []; // Arreglo para almacenar los registros que se insertarán
 
         // Iterar por cada fila
@@ -173,11 +203,29 @@ class Productostiquetesprecio extends \yii\db\ActiveRecord
             // Obtener y asignar los valores de cada celda
             $descBodega = $sheet->getCell('A' . $fila)->getValue();
             if (!$descBodega) {
+                Yii::error("Bodega en blanco en la fila $fila. Detalles: ");
                 continue;
             } // Si no hay descripción de bodega, saltar la fila
 
             $codigoBarra = $sheet->getCell('B' . $fila)->getValue();
             $item = $sheet->getCell('C' . $fila)->getValue();
+
+            if (!$item) {
+                Yii::error("item en blanco en la fila $fila. Detalles: ");
+                continue; // Si no hay item, saltar la fila
+            }
+
+            // Buscar si ya existe el producto en la base de datos
+            $modeldocumento = Productostiquetesprecio::find()
+                ->where(['descBodega' => $descBodega, 'item' => $item])
+                ->andWhere(['or', ['codigoBarra' => $codigoBarra], ['codigoBarra' => null]])
+                ->one();
+
+            // Si el producto ya existe, saltar la iteración
+            if ($modeldocumento !== null) {
+                continue; // Salta esta iteración y pasa a la siguiente fila
+            }
+
             $descItem = $sheet->getCell('D' . $fila)->getValue();
             $detalleExt1 = $sheet->getCell('E' . $fila)->getValue();
             $detalleExt2 = $sheet->getCell('F' . $fila)->getValue();
@@ -189,12 +237,8 @@ class Productostiquetesprecio extends \yii\db\ActiveRecord
             $subcategoria = $sheet->getCell('L' . $fila)->getValue();
             $precio = (int) $sheet->getCell('M' . $fila)->getValue(); // Asegurarse de que sea un número entero
 
-            if (!$item) {
-                continue; // Si no hay item, saltar la fila
-            }
             // Preparar los datos para la inserción
             $data[] = [
-                // 'id' => $id,
                 'descBodega' => $descBodega,
                 'codigoBarra' => $codigoBarra,
                 'item' => $item,
@@ -208,61 +252,51 @@ class Productostiquetesprecio extends \yii\db\ActiveRecord
                 'categoria' => $categoria,
                 'subcategoria' => $subcategoria,
                 'precio' => $precio,
-                // 'created_at' => date('Y-m-d H:i:s'),
-                // 'created_by' => Yii::$app->user->id,
             ];
-
 
             if ($data) {
                 // Realizar inserción masiva de los datos
                 try {
-                    // Yii::$app->db->createCommand()->batchInsert(
-                    //     self::tableName(),
-                    //     ['descBodega', 'codigoBarra', 'item', 'descItem', 'detalleExt1', 'detalleExt2', 'existencia', 'proveedor', 'marca', 'referencia', 'categoria', 'subcategoria', 'precio'],
-                    //     $data
-                    // )->execute();
+                    // $modeldocumento = Productostiquetesprecio::find()->where(['descBodega' => $descBodega, 'codigoBarra' => $codigoBarra, 'item' => $item])->one();
 
-
-                    try {
-                        $modeldocumento = Productostiquetesprecio::find()->where(['codigoBarra' => $codigoBarra, 'item' => $item])->one();
-
-                        if ($modeldocumento === null) {
-                            $modeldocumento = new Productostiquetesprecio();
-                            $modeldocumento->descBodega = $descBodega;
-                            $modeldocumento->codigoBarra = $codigoBarra;
-                            $modeldocumento->item = $item;
-                            $modeldocumento->descItem = $descItem;
-                            $modeldocumento->detalleExt1 = $detalleExt1;
-                            $modeldocumento->detalleExt2 = $detalleExt2;
-                            $modeldocumento->existencia = $existencia;
-                            $modeldocumento->proveedor = $proveedor;
-                            $modeldocumento->marca = $marca;
-                            $modeldocumento->referencia = $referencia;
-                            $modeldocumento->categoria = $categoria;
-                            $modeldocumento->subcategoria = $subcategoria;
-                            $modeldocumento->precio = $precio;
-
-                            if (!$modeldocumento->save()) {
-                                // Capturar errores en una cadena
-                                $errores = implode(', ', array_map(function ($error) {
-                                    return implode(', ', $error);
-                                }, $modeldocumento->getErrors()));
-
-                                // Lanzar una excepción con los detalles del error
-                                throw new Exception("Error al guardar el producto: $errores");
-                            }
-
-                            $grabar = true;
-                        }
-                    } catch (Exception $e) {
-                        // Mostrar un mensaje amigable al usuario
-                        Yii::$app->session->setFlash('error', $e->getMessage());
+                    if (empty($descBodega) || empty($item)) {
+                        throw new \InvalidArgumentException('descBodega e item son obligatorios.');
                     }
 
+                    if ($modeldocumento === null) {
+                        $modeldocumento = new Productostiquetesprecio();
+                        $modeldocumento->descBodega = $descBodega;
+                        $modeldocumento->codigoBarra = $codigoBarra;
+                        $modeldocumento->item = $item;
+                        $modeldocumento->descItem = $descItem;
+                        $modeldocumento->detalleExt1 = $detalleExt1;
+                        $modeldocumento->detalleExt2 = $detalleExt2;
+                        $modeldocumento->existencia = $existencia;
+                        $modeldocumento->proveedor = $proveedor;
+                        $modeldocumento->marca = $marca;
+                        $modeldocumento->referencia = $referencia;
+                        $modeldocumento->categoria = $categoria;
+                        $modeldocumento->subcategoria = $subcategoria;
+                        $modeldocumento->precio = $precio;
 
+                        if (!$modeldocumento->save()) {
+                            // Capturar errores en una cadena
+                            $errores = implode(', ', array_map(function ($error) {
+                                return implode(', ', $error);
+                            }, $modeldocumento->getErrors()));
 
+                            // Concatenar errores con el número de fila
+                            $grabar['errores'] .= "Fila: $fila --> $errores; ";  // Agregar la fila a los errores
+
+                            // Lanzar una excepción con los detalles del error
+                            throw new Exception("Error al guardar el producto en la fila $fila: $errores");
+                        }
+
+                        $contadorInsert++;
+                        $grabar['estado'] = true;
+                    }
                 } catch (Exception $e) {
-                    if (strpos($e->getMessage(), 'Integrity constraint violation') !== false) {
+                    if (strpos($e->getMessage(), 'Violación de la restricción de integridad') !== false) {
                         // Aquí se maneja el error específico de violación de integridad
                         Yii::error('Violación de integridad en la base de datos: ' . $e->getMessage());
                     } else {
@@ -271,7 +305,7 @@ class Productostiquetesprecio extends \yii\db\ActiveRecord
                 }
             }
         }
-
+        $grabar['insert'] = $contadorInsert;
         return $grabar;
     }
 

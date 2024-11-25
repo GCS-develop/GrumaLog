@@ -1,16 +1,15 @@
 <?php
 
 namespace frontend\modules\productostiquetesprecio\controllers;
-use yii\db\Exception;
 
 // use Exception;
+use common\models\ProcedimientosGenerales;
+use common\models\User;
 use frontend\models\FileAgendaInput;
 use frontend\models\Productostiquetesprecio;
 use frontend\models\search\ProductostiquetesprecioSearch;
-use common\models\ProcedimientosGenerales;
-use common\models\User;
-
 use Yii;
+use yii\db\Exception;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -47,8 +46,14 @@ class ProductostiquetesprecioController extends Controller
      */
     public function actionIndex()
     {
+        $idusuario = Yii::$app->user->id;
+        $modeluser = User::findOne(['id' => $idusuario]);
+        $bodega = $modeluser->bodegarecibir->nombre;
+        $modeluser->bodegarecibir->cedi == 1 && $bodega = null;
+
+
         $searchModel = new ProductostiquetesprecioSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider = $searchModel->search($this->request->queryParams, $bodega ?? null);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -74,23 +79,56 @@ class ProductostiquetesprecioController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
+    // public function actionCreate()
+    // {
+    //     $model = new Productostiquetesprecio();
+
+    //     if ($this->request->isPost) {
+    //         if ($model->load($this->request->post()) && $model->save()) {
+    //             return $this->redirect(['view', 'id' => $model->id]);
+    //         }
+    //     } else {
+    //         $model->loadDefaultValues();
+    //     }
+
+    //     return $this->render('create', [
+    //         'model' => $model,
+    //     ]);
+    // }
     public function actionCreate()
     {
         $model = new Productostiquetesprecio();
 
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }
+
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->load($this->request->post())) {
+                $id = null;
+                if ($model->validate()) {
+                    $id = $model->save();
+                }
+
+                if ($id != null) {
+                    Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                } else {
+                    Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
+                }
+
+                return $this->redirect(['index']);
             }
         } else {
             $model->loadDefaultValues();
         }
 
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+        if (Yii::$app->request->isAjax) {
+            return $this->renderAjax('create', [
+                'model' => $model,
+            ]);
+        }
     }
-
     /**
      * Updates an existing Productostiquetesprecio model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -98,19 +136,50 @@ class ProductostiquetesprecioController extends Controller
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
+    // public function actionUpdate($id)
+    // {
+    //     $model = $this->findModel($id);
+
+    //     if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+    //         return $this->redirect(['view', 'id' => $model->id]);
+    //     }
+
+    //     return $this->render('update', [
+    //         'model' => $model,
+    //     ]);
+    // }
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
-    }
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                $id = null;
+                if ($model->validate()) {
+                    $id = $model->save();
+                }
 
+                if ($id != null) {
+                    Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                } else {
+                    Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
+                }
+
+                return $this->redirect(['index']);
+            }
+        }
+
+        if (Yii::$app->request->isAjax) {
+            return $this->renderAjax('update', [
+                'model' => $model,
+            ]);
+        }
+    }
     /**
      * Deletes an existing Productostiquetesprecio model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
@@ -143,12 +212,42 @@ class ProductostiquetesprecioController extends Controller
 
     public function actionPrint($id)
     {
+        Yii::trace('Iniciando la impresion de tiquetes.', __METHOD__);
+
         $modelo = $this->findModel($id);
         $idusuario = Yii::$app->user->id;
         $modeluser = User::findOne(['id' => $idusuario]);
+
+        if (!$modeluser) {
+            Yii::$app->session->setFlash('error', 'Usuario no encontrado.');
+            return $this->redirect(['index']);
+        }
+
+        // Verificar si bodegarecibir está definido
+        if (!$modeluser->bodegarecibir) {
+            Yii::$app->session->setFlash('error', 'No se encontró una bodega asociada al usuario.');
+            return $this->redirect(['index']);
+        }
+
+
         $impresora = $modeluser->bodegarecibir->impresorapaxar;
 
-        Yii::trace('Iniciando la impresion de tiquetes.', __METHOD__);
+        if ($modeluser && $modeluser->bodegarecibir) {
+            $impresora = $modeluser->bodegarecibir->impresorapaxar;
+
+            // Verificar si la impresora está definida
+            if ($impresora) {
+                $epl = $impresora->tipo === 'epl';
+            } else {
+                Yii::$app->session->setFlash('error', 'No se encontró una impresora asociada.');
+                Yii::error('No se encontró una impresora asociada.', __METHOD__);
+                return $this->redirect(['index']);
+            }
+        } else {
+            Yii::$app->session->setFlash('error', 'No se encontró la configuración de la impresora.');
+            Yii::error('No se encontró la configuración de la impresora.', __METHOD__);
+            return $this->redirect(['index']);
+        }
 
         $totalStickers = $modelo->existencia; // Número total de stickers a imprimir.
 
@@ -167,6 +266,8 @@ class ProductostiquetesprecioController extends Controller
         $saltoColumnaStikers = 6; // Número de stickers por "gran columna" (6 stickers).
         $yInicio = $y; // Guardar la posición de inicio para saltar correctamente después de 6 stickers.
         $xInicio = $x;
+        $envio = false;
+        $contenido = ''; // Contenido a enviar a la impresora.
         $config = [
             'tipo' => $impresora->tipo,
             'ip' => $impresora->ip, // IP de tu impresora
@@ -177,39 +278,63 @@ class ProductostiquetesprecioController extends Controller
         // Iterar según la existencia (cantidad de stickers).
         for ($i = 0; $i < $totalStickers; $i++) {
             // Añadir solo el precio en la etiqueta.
+            if ($epl) {
+                // Generar etiqueta en formato EPL.
+                $contenido .= "A{$x},{$y},0,7,1,1,N,\"" . number_format($modelo->precio ?? 0, 0, ',', '.') . "\"\n";
+                // Ajustar posición.
+                $y += $incrementoY;
 
-            $zpl .= "^FO{$x},{$y}^A0N,50,50^FD$" . number_format($modelo->precio, 0, ',', '.') . "^FS\n";
-
-
-            // Desplazar hacia abajo para el siguiente sticker.
-            $y += $incrementoY;
-
-            // Si hemos llegado al final de la columna (3 stickers), reiniciamos $y y movemos a la siguiente columna.
-            if (($i + 1) % $lineasPorColumna == 0) {
-                $y = $yInicio; // Reiniciar la posición vertical para la siguiente columna.
-                $x += $incrementoX; // Mover a la siguiente columna.
-            }
-
-            // Si hemos alcanzado el salto después de 6 stickers, enviar a la impresora y mover a la siguiente "gran columna".
-            if (($i + 1) % $saltoColumnaStikers == 0 || ($i + 1) == $totalStickers) {
-                // Enviar el bloque de stickers impresos hasta este momento.
-                $zpl .= "^XZ"; // Fin de la etiqueta ZPL de esta "gran columna".
-
-                //    Impresora con ip
-                $envio = $this->enviarImpresora($zpl, $config);
-
-                // Reiniciar el ZPL para la siguiente columna de stickers, si quedan más stickers.
-                if (($i + 1) < $totalStickers) {
-                    $zpl = "^XA\n"; // Reiniciar la impresión ZPL.
+                // Si hemos llegado al final de la columna, movernos a la siguiente columna.
+                if (($i + 1) % $lineasPorColumna == 0) {
+                    $y = $yInicio; // Reiniciar la posición vertical.
+                    $x += $incrementoX; // Mover a la siguiente columna.
                 }
 
-                // Restablecer las posiciones para el siguiente bloque de 9 stickers.
-                $x = $xInicio; // Reiniciar la posición horizontal.
-                $y = $yInicio; // Restablecer la posición vertical a la columna inicial.
+                // Enviar a la impresora después de cada gran bloque o al final.
+                if (($i + 1) % $saltoColumnaStikers == 0 || ($i + 1) == $totalStickers) {
+                    $contenido = "N\n" . $contenido . "P1\n"; // Iniciar nuevo bloque y enviar.
+                    $config['tipo'] = 'recurso';
+                    $envio = $this->enviarImpresora($contenido, $config); // Enviar a la impresora.
+                    $contenido = ''; // Reiniciar el contenido para el siguiente bloque.
+                    $x = $xInicio; // Reiniciar la posición horizontal.
+                    $y = $yInicio; // Reiniciar la posición vertical.
+                }
+            } else {
+                $zpl .= "^FO{$x},{$y}^A0N,50,50^FD$" . number_format($modelo->precio ?? 0, 0, ',', '.') . "^FS\n";
+
+                // Desplazar hacia abajo para el siguiente sticker.
+                $y += $incrementoY;
+
+                // Si hemos llegado al final de la columna (3 stickers), reiniciamos $y y movemos a la siguiente columna.
+                if (($i + 1) % $lineasPorColumna == 0) {
+                    $y = $yInicio; // Reiniciar la posición vertical para la siguiente columna.
+                    $x += $incrementoX; // Mover a la siguiente columna.
+                }
+
+                // Si hemos alcanzado el salto después de 6 stickers, enviar a la impresora y mover a la siguiente "gran columna".
+                if (($i + 1) % $saltoColumnaStikers == 0 || ($i + 1) == $totalStickers) {
+                    // Enviar el bloque de stickers impresos hasta este momento.
+                    $zpl .= "^XZ"; // Fin de la etiqueta ZPL de esta "gran columna".
+
+                    //    Impresora con ip
+
+                    $envio = $this->enviarImpresora($zpl, $config);
+
+                    // Reiniciar el ZPL para la siguiente columna de stickers, si quedan más stickers.
+                    if (($i + 1) < $totalStickers) {
+                        $zpl = "^XA\n"; // Reiniciar la impresión ZPL.
+                    }
+                    // Restablecer las posiciones para el siguiente bloque de 9 stickers.
+                    $x = $xInicio; // Reiniciar la posición horizontal.
+                    $y = $yInicio; // Restablecer la posición vertical a la columna inicial.
+                }
             }
         }
         if ($envio) {
-            Yii::$app->session->setFlash('success', 'Imprimiendo... : ' . $modelo->existencia . ' del codigo: ' . $modelo->codigoBarra);
+            Yii::$app->session->setFlash('success', 'Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
+                ' en la tienda: ' . $impresora->bodega->nombre . ' tipo: ' . $impresora->tipo);
+            Yii::trace('Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
+                ' en la tienda: ' . $impresora->bodega->nombre . ' tipo: ' . $impresora->tipo);
         }
         return $this->redirect(['index']);
     }
@@ -222,24 +347,25 @@ class ProductostiquetesprecioController extends Controller
         $puerto = $config['puerto'] ?? 9100;
         $recurso = $config['recurso'] ?? null;
 
-        if ($tipo === 'ip') {
+        if ($tipo == 'ip') {
             $socket = @fsockopen($ip, $puerto, $errno, $errstr, 10);
             if (!$socket) {
                 Yii::error("Error al conectar a $ip:$puerto: $errstr ($errno)", __METHOD__);
+                Yii::$app->session->setFlash('error', "No se pudo conectar a la impresora, revisar que este conectada por favor!, Ip: $ip:$puerto Error: $errstr ($errno)");
                 return false;
             }
 
             fwrite($socket, $zpl);
             fclose($socket);
             Yii::info("Impresión enviada a $ip:$puerto", __METHOD__);
+            Yii::$app->session->setFlash('success', "Impresión enviada correctamente a $ip:$puerto.");
+
             return true;
         }
 
         if ($tipo === 'recurso') {
             Yii::trace("Inicio de impresión enviada al recurso:  $recurso", __METHOD__);
 
-            // var_dump($ip . '   ' . $recurso);
-            // die('parametros');
             // Crear el directorio temporal si no existe
             $tempDir = Yii::getAlias('@frontend') . '/temp';
             if (!is_dir($tempDir)) {
@@ -257,7 +383,7 @@ class ProductostiquetesprecioController extends Controller
                 '\\\\' . str_replace('\\', '\\\\', ltrim($recurso, '\\')), // Recurso compartido (doble \\ inicial)
                 $tempFile // El archivo temporal, ahora entre comillas
             );
-
+            // var_dump($command );die('hola');
             // Ejecutar el comando
             exec($command, $output, $returnVar);
 
@@ -291,15 +417,34 @@ class ProductostiquetesprecioController extends Controller
             // $userId = Yii::$app->user->id;
             $model->archivo = UploadedFile::getInstance($model, 'archivo');
 
-            $respuesta = Productostiquetesprecio::upload($model->archivo);
+            $nombreArchivoSinExtension = $model->archivo->baseName;
 
-            if ($respuesta) {
+            try {
+                // Llamada al método de carga del archivo
+                $respuesta = Productostiquetesprecio::upload($model->archivo);
 
-                Yii::$app->session->setFlash('success', 'El Archivo se ha cargado correctamente. ');
-                return $this->redirect(['index']);
-            } else {
-                $errorString = ProcedimientosGenerales::erroresModelo($model->getErrors());
-                Yii::$app->session->setFlash('error', 'Ocurrió un error al cargar los archivos: ' . $errorString);
+                if ($respuesta['estado']) {
+
+                    Yii::$app->session->setFlash('success', "El Archivo se ha cargado el archivo $nombreArchivoSinExtension  correctamente, con "
+                        . $respuesta['rows'] . " filas esperadas y" . $respuesta['insert'] . "insertadas");
+
+                    return $this->redirect(['index']);
+
+                } else {
+
+                    $errorString = ProcedimientosGenerales::erroresModelo($model->getErrors());
+
+                    Yii::$app->session->setFlash('error', "Ocurrió un error al cargar el archivo:  $nombreArchivoSinExtension  con: " .
+                        $respuesta['rows'] . " filas." . $errorString . $respuesta['insert'] . ' insert');
+
+                    Yii::error("Ocurrió un error al cargar el archivo:  $nombreArchivoSinExtension  con: " .
+                        $respuesta['rows'] . " filas." . $errorString . $respuesta['insert'] . ' insert');
+
+                }
+            } catch (\Exception $e) {
+                // Capturar cualquier error inesperado durante la carga del archivo
+                Yii::$app->session->setFlash('error', "Ocurrió un error al intentar cargar el archivo: $nombreArchivoSinExtension. Detalles: " . $e->getMessage());
+                Yii::error("Error inesperado al cargar el archivo $nombreArchivoSinExtension. Detalles: " . $e->getMessage() . $respuesta['insert'] . ' insert');
             }
 
             return $this->redirect(['index']);

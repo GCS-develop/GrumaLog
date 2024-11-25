@@ -14,7 +14,7 @@ use yii\bootstrap4\Modal;
 /** @var frontend\models\search\ProductostiquetesprecioSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Productos tiquetes precios';
+$this->title = 'Imprimir solo precios';
 $this->params['breadcrumbs'][] = $this->title;
 
 $this->registerJsFile(
@@ -59,7 +59,7 @@ Modal::end();
 
     <?php $url = Url::to(['upload']); ?>
 
-    <div class="row">
+    <!-- <div class="row">
         <div class="col-lg-12 centrar">
             <?= Html::button(
                 'Importar Datos',
@@ -67,7 +67,7 @@ Modal::end();
             )
                 ?>
         </div>
-    </div>
+    </div> -->
 
     <?php echo $this->render('_search', ['model' => $searchModel]); ?>
 

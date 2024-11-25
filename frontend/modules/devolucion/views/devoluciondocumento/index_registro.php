@@ -58,7 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        //'filterModel' => $searchModel,
+        'filterModel' => $searchModel,
 
         'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
         'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],

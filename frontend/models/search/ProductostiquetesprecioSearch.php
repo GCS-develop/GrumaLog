@@ -38,9 +38,14 @@ class ProductostiquetesprecioSearch extends Productostiquetesprecio
      *
      * @return ActiveDataProvider
      */
-    public function search($params)
+    public function search($params, $descBodega=null)
     {
-        $query = Productostiquetesprecio::find();
+
+        if ($descBodega == null) {
+            $query = Productostiquetesprecio::find();
+        } else {
+            $query = Productostiquetesprecio::find()->where(['descBodega' => $descBodega]); 
+        }
 
         // add conditions that should always apply here
 

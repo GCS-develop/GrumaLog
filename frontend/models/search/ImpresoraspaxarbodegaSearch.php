@@ -46,7 +46,12 @@ class ImpresoraspaxarbodegaSearch extends Impresoraspaxarbodega
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'pagination' => [
+                'pageSize' => '50',
+            ],
         ]);
+
+        $query->orderBy(['bodega_id' => SORT_ASC]);
 
         $this->load($params);
 

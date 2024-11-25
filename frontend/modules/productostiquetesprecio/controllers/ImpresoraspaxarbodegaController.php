@@ -4,9 +4,11 @@ namespace frontend\modules\productostiquetesprecio\controllers;
 
 use frontend\models\Impresoraspaxarbodega;
 use frontend\models\search\ImpresoraspaxarbodegaSearch;
+use Yii;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\widgets\ActiveForm;
 
 /**
  * ImpresoraspaxarbodegaController implements the CRUD actions for Impresoraspaxarbodega model.
@@ -64,24 +66,57 @@ class ImpresoraspaxarbodegaController extends Controller
      * Creates a new Impresoraspaxarbodega model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
-     */
+    //  */
+    // public function actionCreate()
+    // {
+    //     $model = new Impresoraspaxarbodega();
+
+    //     if ($this->request->isPost) {
+    //         if ($model->load($this->request->post()) && $model->save()) {
+    //             return $this->redirect(['view', 'id' => $model->id]);
+    //         }
+    //     } else {
+    //         $model->loadDefaultValues();
+    //     }
+
+    //     return $this->render('create', [
+    //         'model' => $model,
+    //     ]);
+    // }
     public function actionCreate()
     {
         $model = new Impresoraspaxarbodega();
 
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }
+
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->load($this->request->post())) {
+                $id = null;
+                if ($model->validate()) {
+                    $id = $model->save();
+                }
+
+                if ($id != null) {
+                    Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                } else {
+                    Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
+                }
+
+                return $this->redirect(['index']);
             }
         } else {
             $model->loadDefaultValues();
         }
 
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+        if (Yii::$app->request->isAjax) {
+            return $this->renderAjax('create', [
+                'model' => $model,
+            ]);
+        }
     }
-
     /**
      * Updates an existing Impresoraspaxarbodega model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -93,13 +128,34 @@ class ImpresoraspaxarbodegaController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+                $id = null;
+                if ($model->validate()) {
+                    $id = $model->save();
+                }
+
+                if ($id != null) {
+                    Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                } else {
+                    Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
+                }
+
+                return $this->redirect(['index']);
+            }
+        }
+
+        if (Yii::$app->request->isAjax) {
+            return $this->renderAjax('update', [
+                'model' => $model,
+            ]);
+        }
     }
 
     /**

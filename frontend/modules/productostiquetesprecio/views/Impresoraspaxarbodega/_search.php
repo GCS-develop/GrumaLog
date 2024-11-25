@@ -25,7 +25,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'puerto') ?>
 
-    <?php // echo $form->field($model, 'recurso') ?>
+    <?php echo $form->field($model, 'recurso') ?>
 
     <?php // echo $form->field($model, 'created_at') ?>
 
