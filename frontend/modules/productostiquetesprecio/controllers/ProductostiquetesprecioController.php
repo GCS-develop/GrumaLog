@@ -53,7 +53,8 @@ class ProductostiquetesprecioController extends Controller
 
 
         $searchModel = new ProductostiquetesprecioSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams, $bodega ?? null);
+        $dataProvider = $searchModel->search($this->request->queryParams, $bodega);
+        // var_dump($this->request->queryParams);die();
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -330,7 +331,7 @@ class ProductostiquetesprecioController extends Controller
                 }
             }
         }
-        if ($envio) {
+        if ($envio['status'] == 'success') {
             Yii::$app->session->setFlash('success', 'Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
                 ' en la tienda: ' . $impresora->bodega->nombre . ' tipo: ' . $impresora->tipo);
             Yii::trace('Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
@@ -339,6 +340,135 @@ class ProductostiquetesprecioController extends Controller
         return $this->redirect(['index']);
     }
 
+    public function imprimirEtiquetas($inputValue, $modelo)
+    {
+        // Obtener el usuario actual
+        $idusuario = Yii::$app->user->id;
+        $modeluser = User::findOne(['id' => $idusuario]);
+
+        if (!$modeluser) {
+            // Yii::$app->session->setFlash('error', 'Usuario no encontrado.');
+            return $this->asJson(['status' => 'error', 'message' => 'Usuario no encontrado.']);
+            // return $this->redirect(['index']);
+        }
+
+        // Verificar si bodegarecibir está definido
+        if (!$modeluser->bodegarecibir) {
+            // Yii::$app->session->setFlash('error', 'No se encontró una bodega asociada al usuario.');
+            return $this->asJson(['status' => 'error', 'message' => 'No se encontró una bodega asociada al usuario.']);
+            // return $this->redirect(['index']);
+        }
+
+        $impresora = $modeluser->bodegarecibir->impresorapaxar;
+
+        if (!$impresora) {
+            // Yii::$app->session->setFlash('error', 'No se encontró una impresora asociada.');
+            Yii::error('No se encontró una impresora asociada.', __METHOD__);
+            return $this->asJson(['status' => 'error', 'message' => 'No se encontró una impresora asociada.']);
+            // return $this->redirect(['index']);
+        }
+
+        // Verificar tipo de impresora es epl
+        $epl = ($impresora->tipo === 'epl');
+
+        // Configuración de impresora
+        $config = [
+            'tipo' => $impresora->tipo,
+            'ip' => $impresora->ip,
+            'puerto' => $impresora->puerto,
+            'recurso' => $impresora->recurso,
+        ];
+
+        // Variables de posición de etiquetas
+        $x = 20;
+        $y = 30;
+        $incrementoX = 270;
+        $incrementoY = 100;
+        $lineasPorColumna = 2;
+        $saltoColumnaStikers = 6;
+        $yInicio = $y;
+        $xInicio = $x;
+        $envio = false;
+        $contenido = '';
+        $zpl = "^XA\n";
+
+        // Imprimir etiquetas
+        for ($i = 0; $i < $inputValue; $i++) {
+            if ($epl) {
+                // Generar etiqueta en formato EPL
+                $contenido .= "A{$x},{$y},0,7,1,1,N,\"" . number_format($modelo->precio ?? 0, 0, ',', '.') . "\"\n";
+                $y += $incrementoY;
+
+                if (($i + 1) % $lineasPorColumna == 0) {
+                    $y = $yInicio;
+                    $x += $incrementoX;
+                }
+
+                if (($i + 1) % $saltoColumnaStikers == 0 || ($i + 1) == $inputValue) {
+                    $contenido = "N\n" . $contenido . "P1\n";
+                    $config['tipo'] = 'recurso';
+                    $envio = $this->enviarImpresora($contenido, $config);
+                    $contenido = '';
+                    $x = $xInicio;
+                    $y = $yInicio;
+                }
+            } else {
+                // Generar etiqueta en formato ZPL
+                $zpl .= "^FO{$x},{$y}^A0N,50,50^FD" . number_format($modelo->precio ?? 0, 0, ',', '.') . "^FS\n";
+                $y += $incrementoY;
+
+                if (($i + 1) % $lineasPorColumna == 0) {
+                    $y = $yInicio;
+                    $x += $incrementoX;
+                }
+
+                if (($i + 1) % $saltoColumnaStikers == 0 || ($i + 1) == $inputValue) {
+                    $zpl .= "^XZ";
+                    $envio = $this->enviarImpresora($zpl, $config);
+                    if (($i + 1) < $inputValue) {
+                        $zpl = "^XA\n";
+                    }
+                    $x = $xInicio;
+                    $y = $yInicio;
+                }
+            }
+        }
+
+        if ($envio['status'] == 'success') {
+            // var_dump($envio['message']);
+            // die('?-');
+            // Yii::$app->session->setFlash('success', 'Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' tipo: ' . $impresora->tipo);
+            Yii::trace('Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' tipo: ' . $impresora->tipo);
+            return $this->asJson(['status' => 'success', 'message' => 'Imprecisión exitosa!.']);
+        } else {
+            Yii::error('Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' tipo: ' . $impresora->tipo);
+            return $this->asJson(['status' => 'error', 'message' => $envio['message']]);
+        }
+    }
+
+    public function actionPrintajax()
+    {
+        $request = Yii::$app->request;
+
+        if ($request->isPost) {
+            Yii::trace('Iniciando la impresion de tiquetes.', __METHOD__);
+            $id = $request->post('id');
+            $inputValue = $request->post('input');
+
+            if (!is_numeric($inputValue) || $inputValue <= 0) {
+                // Yii::$app->session->setFlash('error', 'Cantidad inválida para imprimir.');
+                return $this->asJson(['status' => 'error', 'message' => 'Cantidad inválida para imprimir.']);
+            }
+
+            $modelo = $this->findModel($id);
+
+            $this->imprimirEtiquetas($inputValue, $modelo);
+
+        }
+        // return $this->redirect(['index']);
+    }
+
+
 
     private function enviarImpresora($zpl, $config)
     {
@@ -346,21 +476,24 @@ class ProductostiquetesprecioController extends Controller
         $ip = $config['ip'] ?? null;
         $puerto = $config['puerto'] ?? 9100;
         $recurso = $config['recurso'] ?? null;
+        Yii::$app->session->removeAllFlashes();
 
         if ($tipo == 'ip') {
             $socket = @fsockopen($ip, $puerto, $errno, $errstr, 10);
             if (!$socket) {
+
                 Yii::error("Error al conectar a $ip:$puerto: $errstr ($errno)", __METHOD__);
                 Yii::$app->session->setFlash('error', "No se pudo conectar a la impresora, revisar que este conectada por favor!, Ip: $ip:$puerto Error: $errstr ($errno)");
-                return false;
+
+                return ['status' => 'error', 'message' => "No se pudo conectar a la impresora, revisar que este conectada por favor!, Ip: $ip:$puerto Error: $errstr ($errno)"];
             }
 
             fwrite($socket, $zpl);
             fclose($socket);
+
             Yii::info("Impresión enviada a $ip:$puerto", __METHOD__);
             Yii::$app->session->setFlash('success', "Impresión enviada correctamente a $ip:$puerto.");
-
-            return true;
+            return ['status' => 'success', 'message' => "Impresión enviada correctamente a $ip:$puerto."];
         }
 
         if ($tipo === 'recurso') {
@@ -383,23 +516,31 @@ class ProductostiquetesprecioController extends Controller
                 '\\\\' . str_replace('\\', '\\\\', ltrim($recurso, '\\')), // Recurso compartido (doble \\ inicial)
                 $tempFile // El archivo temporal, ahora entre comillas
             );
-            // var_dump($command );die('hola');
+
             // Ejecutar el comando
             exec($command, $output, $returnVar);
 
             unlink($tempFile);
 
             if ($returnVar !== 0) {
+                $errorMessage = "Error al imprimir en $recurso: " . implode("\n", $output);
+                Yii::error($errorMessage, __METHOD__);
                 Yii::error("Error al imprimir en $recurso: " . implode("\n", $output), __METHOD__);
-                return false;
+                // Notificar al usuario del error
+                Yii::$app->session->setFlash('error', $errorMessage);
+                // return false;
+                return ['status' => 'error', 'message' => $errorMessage];
             }
 
             Yii::trace("Impresión enviada a $recurso, correctamente!", __METHOD__);
-            return true;
+
+            // return true;
+            return ['status' => 'success', 'message' => "Impresión enviada a $recurso, correctamente!"];
         }
 
         Yii::error("Tipo de impresora no reconocido: $tipo", __METHOD__);
-        return false;
+        // return false;
+        return ['status' => 'error', 'message' => 'error!'];
     }
 
 

@@ -26,6 +26,7 @@ $this->registerJsFile(
 ?>
 
 <link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="<?= Yii::$app->request->baseUrl ?>/css/swal.css">
 
 <?php
 Modal::begin([
@@ -116,23 +117,49 @@ Modal::end();
             [
                 'class' => ActionColumn::className(),
                 'header' => 'Acción',
-                'headerOptions' => ['width' => '15%'],
+                'headerOptions' => ['width' => '7%'],
                 // 'template' => '{view}  {print} ',
-                'template' => '  {print} ',
+                'template' => '  {print} {printajax} ',
 
 
                 'buttons' => [
 
                     'print' => function ($url, $model) {
             return Html::a(
-                '<i class="fa fa-print"></i>',
+                '<i class="fa fa-print text-danger"></i>',
                 ['productostiquetesprecio/print', 'id' => $model->id],
+                // [
+                //     'title' => 'Imprimir TODAS las existencias',
+                //     'class' => 'btn btn-default',
+                // ]
+        
                 [
-                    'title' => 'Imprimir',
                     'class' => 'btn btn-default',
+                    'title' => 'Imprimir TODAS las existencias',
+                    'data' => [
+                        'confirm' => 'Esta seguro de Imprimir todas las existencias?  cantidad: ' . $model->existencia
+                            . ' codigo: ' . $model->codigoBarra,
+                        'method' => 'post',
+                    ]
                 ]
             );
         },
+
+
+                    'printajax' => function ($url, $model) {
+            $printUrl = Url::to(['productostiquetesprecio/printajax']);
+            return Html::a(
+                '<i class="fa fa-print text-success"></i>',
+                '#',
+                [
+                    'class' => 'btn btn-default',
+                    'title' => 'Imprimir',
+                    'onclick' => "openPrintModal('{$model->id}', '{$printUrl}')",
+                ]
+            );
+        },
+
+
 
 
                     //             'view' => function ($url, $model) {
@@ -147,6 +174,12 @@ Modal::end();
                     // },
     
                 ],
+                //         'visibleButtons' => [
+                //             'printajax' => function ($model, $key, $index) {
+                //     return Yii::$app->user->id == 17; // Condición para mostrar el botón
+                // },
+                //         ],
+    
 
 
             ],
@@ -158,3 +191,65 @@ Modal::end();
 
 
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+
+    function openPrintModal(id, url) {
+        Swal.fire({
+            title: 'Cuantos precios desea imprimir?',
+            text: 'Por favor, ingrese un valor antes de continuar:',
+            input: 'text',
+            inputPlaceholder: 'Escribe aquí...',
+            showCancelButton: true, buttonsStyling: false,
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar',
+            inputAttributes: {
+                step: '1',
+                min: '1'
+            },
+            input: 'number',
+            inputAttributes: {
+                min: 1
+            },
+
+            inputValidator: (value) => {
+                if (!value) {
+                    return '¡Debes ingresar un valor!';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Muestra el indicador de carga
+                Swal.fire({
+                    title: 'Imprimiendo...',
+                    text: 'Por favor espere mientras se procesa la solicitud.',
+                    allowOutsideClick: false,  // Desactiva hacer clic fuera de la alerta
+                    didOpen: () => {
+                        Swal.showLoading();  // Muestra el cargador
+                    }
+                });
+                // Enviar el valor y el ID al controlador mediante POST
+                $.post(url, { id: id, input: result.value })
+                    .done(function (response) {
+                        if (response.status === 'success') {
+                            Swal.fire('¡Éxito!', response.message, 'success');
+                        } else {
+                            Swal.fire('¡Error!', response.message, 'error');
+                        }
+                    })
+                    .fail(function () {
+                        Swal.close();  // Cierra la alerta de carga
+                        Swal.fire('¡Error!', 'Hubo un problema con la conexión.', 'error');
+                    })
+
+                // .always(function () {
+                //     // Este bloque siempre se ejecuta, sin importar si la solicitud fue exitosa o fallida
+                //     // Se cierra la alerta de carga
+                //     Swal.close(); // Cierra la alerta de carga
+                // });
+            }
+        });
+    }
+
+</script>

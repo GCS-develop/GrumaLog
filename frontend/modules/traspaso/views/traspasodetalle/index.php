@@ -51,8 +51,8 @@ $this->params['breadcrumbs'][] = $this->title;
         'idTraspaso',
         [
             'label' => 'Traspaso',
-            'value' => function($model){
-                return  $model->traspaso->tipodocumento->codigo . '-' . $model->traspaso->consecutivo ;
+            'value' => function ($model) {
+                return $model->traspaso->tipodocumento->codigo . '-' . $model->traspaso->consecutivo;
             },
         ],
         [
@@ -193,7 +193,8 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             $gridColumns,
         ),
-    ]); ?>
+    ]);
+    ?>
 
 
 </div>

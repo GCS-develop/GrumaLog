@@ -18,7 +18,7 @@ use yii\widgets\ActiveForm;
     <!-- <?= $form->field($model, 'id') ?> -->
 
     <div class="row mt-3">
-        <div class="col-3">
+        <div class="col-2">
             <!-- <?= $form->field($model, 'descBodega') ?> -->
             <?php
             echo $form->field($model, 'descBodega')->label('Bodega')->dropDownList(
@@ -29,7 +29,7 @@ use yii\widgets\ActiveForm;
                 ]
             );
             ?>
-            
+
         </div>
 
         <div class="col-2">
@@ -49,17 +49,40 @@ use yii\widgets\ActiveForm;
             <?= $form->field($model, 'item') ?>
         </div>
 
-        <div class="col-5">
+        <div class="col-3">
             <?= $form->field($model, 'codigoBarra') ?>
         </div>
+        <div class="col-3">
+            <?= $form->field($model, 'descItem') ?>
+        </div>
+    </div>
 
+    <div class="row mt-1">
+
+        <div class="col-2">
+            <?php echo $form->field($model, 'detalleExt1') ?>
+        </div>
+
+        <div class="col-2">
+            <?php echo $form->field($model, 'detalleExt2') ?>
+        </div>
+
+        <div class="col-2">
+            <?php echo $form->field($model, 'existencia') ?>
+        </div>
+
+        <div class="col-2">
+            <?php echo $form->field($model, 'precio') ?>
+        </div>
+
+        <div class="col-4">
+            <?php echo $form->field($model, 'proveedor') ?>
+        </div>
 
     </div>
 
 
-    <!-- <?= $form->field($model, 'descItem') ?> -->
 
-    <?php // echo $form->field($model, 'detalleExt1') ?>
 
     <?php // echo $form->field($model, 'detalleExt2') ?>
 

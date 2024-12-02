@@ -115,7 +115,8 @@ class User extends ActiveRecord implements IdentityInterface
      * @param string $token verify email token
      * @return static|null
      */
-    public static function findByVerificationToken($token) {
+    public static function findByVerificationToken($token)
+    {
         return static::findOne([
             'verification_token' => $token,
             'status' => self::STATUS_INACTIVE
@@ -216,18 +217,19 @@ class User extends ActiveRecord implements IdentityInterface
         $this->password_reset_token = null;
     }
 
-    public static  function  getListaDataNoConteo(){
+    public static function getListaDataNoConteo()
+    {
         $data = User::find()
-                        ->select(['us.id', "(us.username + ' - ' + us.email) AS nombre"])
-                        ->alias('us')
-                        ->join('LEFT JOIN', 'userconteo usc', 'us.id = usc.idUser')
-                        ->where('usc.id IS NULL')
-                        ->orderBy('us.username')->asArray()->all();
-    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
-    	return $listadata;
+            ->select(['us.id', "(us.username + ' - ' + us.email) AS nombre"])
+            ->alias('us')
+            ->join('LEFT JOIN', 'userconteo usc', 'us.id = usc.idUser')
+            ->where('usc.id IS NULL')
+            ->orderBy('us.username')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
     }
-	
-	public function getEmpleado()
+
+    public function getEmpleado()
     {
         return $this->hasOne(Empleado::class, ['id' => 'idEmpleado']);
     }
@@ -236,5 +238,9 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return $this->hasOne(Bodegas::class, ['id' => 'idBodegaRecibir']);
     }
-    
+    public function getNombreBodegaRecibir()
+    {
+        return $this->bodegarecibir ? $this->bodegarecibir->nombre : '-';
+    }
+
 }

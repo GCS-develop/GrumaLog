@@ -47,3 +47,4 @@ phpunit.phar
 /frontend/temp
 /frontend/web/archivos
 /comprimidos
+!vendor/mdmsoft/

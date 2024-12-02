@@ -100,10 +100,15 @@ use yii\helpers\Url;
 <div class="detalle-info">
     <span><strong>Fecha:</strong> <?= $planillaembarque->fechaDespacho . ' ' . $planillaembarque->horaDespacho ?></span>
     <span><strong>Conductor:</strong>
-        <?= $planillaembarque->conductor->empleado->identificacion . ' ' . $planillaembarque->nombreConductor ?></span>
-    <!-- <span><strong>Conductor:</strong> <?= $planillaembarque->idConductor . ' ' . $planillaembarque->nombreConductor ?></span> -->
-    <span><strong>Vehículo:</strong> <?= $planillaembarque->placa ?></span>
-    <span><strong>Sello:</strong> <?= $planillaembarque->sello ?></span>
+
+        <?php if ($planillaembarque->conductor && $planillaembarque->conductor->empleado): ?>
+            <?= $planillaembarque->conductor->empleado->identificacion . ' ' . $planillaembarque->nombreConductor ?>
+        <?php else: ?>
+            <?= $planillaembarque->transportadora->nombre ?>
+        <?php endif; ?>
+
+        <span><strong>Vehículo:</strong> <?= $planillaembarque->placa ?></span>
+        <span><strong>Sello:</strong> <?= $planillaembarque->sello ?></span>
 </div>
 
 <table border="1" cellpadding="5" cellspacing="0" width="100%">

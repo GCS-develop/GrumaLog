@@ -471,6 +471,7 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
         $numero = $destino->factura->numeroEntrada;
         $codigoalmacenlegaliza = $destino->factura->centroOperacionLegaliza->codigo;
         $nombrealmacenlegaliza = $destino->factura->centroOperacionLegaliza->nombre;
+        // var_dump($destino->factura->fechaTraspaso);die();
         $fechatraspaso = date("d/m/Y", strtotime($destino->factura->fechaTraspaso));
 
         $content = '<h2>TRASPASO MERCANCIA</h2>' ;

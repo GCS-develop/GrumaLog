@@ -38,14 +38,16 @@ class ProductostiquetesprecioSearch extends Productostiquetesprecio
      *
      * @return ActiveDataProvider
      */
-    public function search($params, $descBodega=null)
+    public function search($params, $descBodega = null)
     {
 
         if ($descBodega == null) {
             $query = Productostiquetesprecio::find();
         } else {
-            $query = Productostiquetesprecio::find()->where(['descBodega' => $descBodega]); 
+            $query = Productostiquetesprecio::find()->where(['descBodega' => $descBodega]);
         }
+
+
 
         // add conditions that should always apply here
 
@@ -71,10 +73,11 @@ class ProductostiquetesprecioSearch extends Productostiquetesprecio
             'created_by' => $this->created_by,
             'updated_at' => $this->updated_at,
             'updated_by' => $this->updated_by,
+            'codigoBarra' => $this->codigoBarra,
         ]);
 
         $query->andFilterWhere(['like', 'descBodega', $this->descBodega])
-            ->andFilterWhere(['like', 'codigoBarra', $this->codigoBarra])
+            // ->andFilterWhere(['like', 'codigoBarra', $this->codigoBarra])
             ->andFilterWhere(['like', 'descItem', $this->descItem])
             ->andFilterWhere(['like', 'detalleExt1', $this->detalleExt1])
             ->andFilterWhere(['like', 'detalleExt2', $this->detalleExt2])
