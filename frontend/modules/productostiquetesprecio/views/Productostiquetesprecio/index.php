@@ -191,7 +191,10 @@ Modal::end();
 
 
 </div>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
+<script src="<?= Yii::$app->request->baseUrl ?>/js/sweetalert2@11.js"></script>
+
+
 
 <script>
 
@@ -202,8 +205,8 @@ Modal::end();
             input: 'text',
             inputPlaceholder: 'Escribe aquí...',
             showCancelButton: true, buttonsStyling: false,
-            confirmButtonText: 'Aceptar',
             cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Aceptar',
             inputAttributes: {
                 step: '1',
                 min: '1'
@@ -227,6 +230,8 @@ Modal::end();
                     allowOutsideClick: false,  // Desactiva hacer clic fuera de la alerta
                     didOpen: () => {
                         Swal.showLoading();  // Muestra el cargador
+                    }, willClose: () => {
+                        // Esto se asegura de que el modal de carga no se cierre hasta que termine la operación
                     }
                 });
                 // Enviar el valor y el ID al controlador mediante POST
