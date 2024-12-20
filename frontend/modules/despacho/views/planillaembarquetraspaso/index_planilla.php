@@ -12,7 +12,8 @@ use kartik\export\ExportMenu;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 
-$this->title = ' Detalle de planilla ' . $model->id . ' usuario ' . $model->usuario->username;
+$this->title = ' Detalle de planilla: ' . $model->id . ' | usuario: ' . $model->usuario->username . ' | Sello inicial: ' . $model->sello
+. ' |  ' . $model->estado->nombre;
 
 $this->params['breadcrumbs'][] = ['label' => 'Planilla Embarque', 'url' => ['/despacho/planillaembarque/index']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -87,7 +88,7 @@ $gridColumns = [
         'format' => ['decimal', 0], // Formato decimal con 0 decimales,
         'pageSummary' => true,
     ],
-
+    'conductor',
     'estado',
 
     'fechaRecibido',
@@ -101,7 +102,7 @@ $gridColumns = [
 
     ],
 
-
+    'orden',
     'selloLlegada',
     'selloSalida',
 

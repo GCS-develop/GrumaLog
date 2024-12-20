@@ -1,4 +1,5 @@
 <?php
+use yii\helpers\ArrayHelper;
 
 // Definir el estilo CSS directamente en la vista
 $this->registerCss('
@@ -59,6 +60,7 @@ $fecha_actual = date("Y-m-d");
 $filename = "Relacion_PlanillaEmbarque_" . $fecha_actual;
 
 $gridColumns = [
+    'id',
     'fechaDespacho',
     'horaDespacho',
     [
@@ -67,6 +69,13 @@ $gridColumns = [
         'contentOptions' => ['data-cellvalue' => 'serie'],
         'value' => function ($model) {
             return $model->transportadora->nombre;
+        },
+    ],
+    [
+        'label' => 'Tiendas destino',
+        // 'filter' => Vehiculo::getListaData(),
+        'value' => function ($model) {
+            return $model->Listabodegasdestino;
         },
     ],
     [
@@ -197,7 +206,7 @@ Modal::end();
 
     'columns' => [
         ['class' => 'kartik\grid\SerialColumn'],
-        // 'id',
+
         'fechaDespacho',
         'horaDespacho',
         // 'idTransportadora',
@@ -206,109 +215,129 @@ Modal::end();
             'filter' => Transportadora::getListaData(),
             'contentOptions' => ['data-cellvalue' => 'serie'],
             'value' => function ($model) {
-                    return $model->transportadora->nombre;
+    return $model->transportadora->nombre;
+},
+
+        ],
+
+
+        [
+            'label' => 'Bodega destino',
+            'value' => function ($model) {
+                $bodegas = $model->listabodegasdestino;
+                $nombresBodegas = [];
+                foreach ($bodegas as $bodega) {
+                    $nombresBodegas[] = $bodega->bodegaDestino->nombre;  // Accede a cada nombre de bodega
+                }
+                return implode(', ', $nombresBodegas);  // Devuelve los nombres separados por coma
             },
         ],
+        
+
+
+
+
         // 'idVehiculo',
         [
             'attribute' => 'idVehiculo',
             'filter' => Vehiculo::getListaData(),
             'contentOptions' => ['data-cellvalue' => 'serie'],
             'value' => function ($model) {
-                    return $model->vehiculo ? $model->vehiculo->descripcion : ' Sin seleccionar ';
-            },
+    return $model->vehiculo ? $model->vehiculo->descripcion : ' Sin seleccionar ';
+},
         ],
         'placa',
         // 'idConductor',
         'nombreConductor',
         'sello',
+        'id',
         // 'idEstado',
         [
             'attribute' => 'idEstado',
             'filter' => Estadodespacho::getListaData(),
             'contentOptions' => ['data-cellvalue' => 'serie'],
             'value' => function ($model) {
-                    return $model->estado->nombre;
-            },
+    return $model->estado->nombre;
+},
         ],
 
         [
             'class' => ActionColumn::className(),
-            'header'=>'Acción',
+            'header' => 'Acción',
             'headerOptions' => ['width' => '15%'],
             'template' => '{view} {update} {print} {anular}',
 
             'buttons' => [
 
-                'update' => function ($url, $model) {                                
-                    $t = Url::to([
-                        'update',
-                        'id' => $model->id
-                    ]);
+                'update' => function ($url, $model) {
+        $t = Url::to([
+            'update',
+            'id' => $model->id
+        ]);
 
-                    return Html::button('<i class="fa fa-edit"></i>', [
-                        'value' => $t,
-                        'title' => 'Actualizar',
-                        'class' => 'btn btn-default btn_update',
-                    ]);
-                },
+        return Html::button('<i class="fa fa-edit"></i>', [
+            'value' => $t,
+            'title' => 'Actualizar',
+            'class' => 'btn btn-default btn_update',
+        ]);
+    },
 
                 'view' => function ($url, $model) {
-                    return Html::a(
-                        '<i class="fa fa-eye"></i>',
-                        ['/despacho/planillaembarquetraspaso/index', 'id' => $model->id],
-                        [
-                            'title' => 'Ver',
-                            'class' => 'btn btn-default btn-view',
-                        ]
-                    );
-                },
+        return Html::a(
+            '<i class="fa fa-eye"></i>',
+            ['/despacho/planillaembarquetraspaso/index', 'id' => $model->id],
+            [
+                'title' => 'Ver',
+                'class' => 'btn btn-default btn-view',
+            ]
+        );
+    },
 
                 'anular' => function ($url, $model) {
-                    return Html::a(
-                        '<i class="fa fa-ban"></i>',
-                        ['anular', 'id' => $model->id],
-                        [
-                            'class' => 'btn btn-default',
-                            'title' => 'Anular este registro',
-                            'data' => [
-                                'confirm' => 'Esta seguro de anular este registro? ( Fecha: '
-                                    . $model->fechaDespacho . ', Placa: '
-                                    . $model->placa . ', Transportadora: '
-                                    . $model->transportadora->nombre . ' )',
-                                'method' => 'post',
-                            ]
-                        ]
-                    );
-                },
+        return Html::a(
+            '<i class="fa fa-ban"></i>',
+            ['anular', 'id' => $model->id],
+            [
+                'class' => 'btn btn-default',
+                'title' => 'Anular este registro',
+                'data' => [
+                    'confirm' => 'Esta seguro de anular este registro? ( Fecha: '
+                        . $model->fechaDespacho . ', Placa: '
+                        . $model->placa . ', Transportadora: '
+                        . $model->transportadora->nombre . ' )',
+                    'method' => 'post',
+                ]
+            ]
+        );
+    },
 
                 'print' => function ($url, $model) {
-                    return Html::a(
-                        '<i class="fa fa-print"></i>',
-                        ['generatepdf', 'id' => $model->id],
-                        [
-                            'title' => 'Imprimir Planilla Embarque',
-                            'target' => '_blank',
-                            'class' => 'btn btn-default btn-print',
-                        ]
-                    );
-                },
+        return Html::a(
+            '<i class="fa fa-print"></i>',
+            ['generatepdf', 'id' => $model->id],
+            [
+                'title' => 'Imprimir Planilla Embarque',
+                'target' => '_blank',
+                'class' => 'btn btn-default btn-print',
+            ]
+        );
+    },
             ],
 
             'visibleButtons' => [
                 'update' => function ($model, $key, $index) {
-                    return $model->idEstado == 1; // Condición para mostrar el botón
-                },
+        return $model->idEstado == 1; // Condición para mostrar el botón
+    },
                 'anular' => function ($model, $key, $index) {
-                    return $model->idEstado != 5; // Condición para mostrar el botón
-                },
+        return $model->idEstado != 5; // Condición para mostrar el botón
+    },
             ],
         ],
         //'created_at',
         //'created_by',
         //'updated_at',
         //'updated_by',
-        
+
     ],
 ]); ?>
 

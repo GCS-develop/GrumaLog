@@ -29,6 +29,7 @@ use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use kartik\grid\GridView;
 use kartik\export\ExportMenu;
+use common\widgets\Alert;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\ConteocdscdestinofacturaSearch $searchModel */
@@ -178,6 +179,7 @@ $gridColumns = [
 <div class="conteocdscdestinofactura-index">
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+    <?= Alert::widget() ?>
 
     <div class="row">
         <div class="col-lg-6 derecha">

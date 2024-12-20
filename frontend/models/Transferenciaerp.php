@@ -112,6 +112,28 @@ class Transferenciaerp extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Conectoresdinamicos::class, ['id' => 'idConectorDinamico']);
     }
+
+    public static function crearRegistro ($iddocumento, $descripcion, $documento, $notas, $origen=null){
+
+        $modelconector = Conectoresdinamicos::find(['idDocumento' => $iddocumento])->one();
+    
+        $model = new Transferenciaerp();
+        $model->descripcion = $descripcion;
+        $model->documento = $documento;
+        $model->numeroRegistros = 0;
+        $model->enviadoWS = 0;
+        $model->idConectorDinamico = $modelconector->id;
+        $model->notas = $notas;
+		
+		if ($origen != null){
+			$model->origen = $origen;
+		}
+
+        $model->save();
+
+        return $model;
+
+    }
     
     public static function transferenciaSalidaWS ($id){
 
@@ -285,7 +307,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
         return $response->content;
 	}
 
-    public static function errortransferenciaWS ($id, $CO, $tipoDocumento, $fechaDocumento = null, $consecutivo = null, $respuesta = null){
+    public static function errortransferenciaWS_Back ($id, $CO, $tipoDocumento, $fechaDocumento = null, $consecutivo = null, $respuesta = null){
         $data = json_decode($respuesta, true); // Convertir JSON a array asociativo
 
         if (isset($data['errors']['conniKey']) || isset($data['errors']['conniToken'])){
@@ -475,6 +497,102 @@ class Transferenciaerp extends \yii\db\ActiveRecord
         $json = substr(Json::encode(array_values($documentosJsonArray)), 1, -1);
 
         return $json;
+    }
+
+    public static function errortransferenciaWS ($id, $CO, $tipoDocumento, $respuesta, $fechaDocumento = null, $consecutivo = null, $numero = null){
+        $data = json_decode($respuesta, true); // Convertir JSON a array asociativo
+
+        if (isset($data['errors']['conniKey']) || isset($data['errors']['conniToken'])){
+            $model = new Transferenciaerperror();
+            $model->idTransferenciaerp = $id;
+            $model->centroOperacionDocumento = $CO;
+            $model->tipoDocumento = $tipoDocumento;
+            $model->fechaDocumento = $fechaDocumento;
+            $model->consecutivo = $consecutivo;
+            $model->numero = $numero;
+            $model->detalle = 'The conniKey field is required / The conniToken field is required';
+
+            $model->save();
+
+            return 1;
+        }
+
+        if (!isset($data['codigo'])){
+            $model = new Transferenciaerperror();
+            $model->idTransferenciaerp = $id;
+            $model->centroOperacionDocumento = $CO;
+            $model->tipoDocumento = $tipoDocumento;
+            $model->fechaDocumento = $fechaDocumento;
+            $model->consecutivo = $consecutivo;
+            $model->numero = $numero;
+            $model->detalle = 'No Existe Comunicación Con WS SIESA';
+
+            $model->save();
+
+            return 1;
+        }
+
+        //var_dump($data); die(' ' . $CO . ' - ' . $tipoDocumento);
+
+        $codigo = $data['codigo'];
+        //$mensaje = $data['mensaje'];
+        //$f_detalle = '';
+
+        if ($codigo != 0){
+            $error = 1;
+
+            if (isset($data['detalle']) && is_array($data['detalle'])) {
+                // Recorrer y extraer datos si 'detalle' es un array
+                foreach ($data['detalle'] as $detalle) {
+
+                    $model = new Transferenciaerperror();
+                    $model->idTransferenciaerp = $id;
+                    $model->centroOperacionDocumento = $CO;
+                    $model->tipoDocumento = $tipoDocumento;
+                    $model->fechaDocumento = $fechaDocumento;
+                    $model->consecutivo = $consecutivo;
+                    $model->numeroLinea = $detalle['f_nro_linea'];
+                    $model->tipoRegistro = $detalle['f_tipo_reg'];
+                    $model->subTipoRegistro = $detalle['f_subtipo_reg'];
+                    $model->version = $detalle['f_version'];
+                    $model->nivel = $detalle['f_nivel'];
+                    $model->valor = $detalle['f_valor'];
+                    $model->detalle = $detalle['f_detalle'];
+                    $model->numero = $numero;
+
+                    $model->save();
+                }
+            } elseif (isset($data['detalle']) && is_string($data['detalle'])) {
+                // Imprimir el detalle si 'detalle' es una cadena de texto
+                $model = new Transferenciaerperror();
+                $model->idTransferenciaerp = $id;
+                $model->centroOperacionDocumento = $CO;
+                $model->tipoDocumento = $tipoDocumento;
+                $model->fechaDocumento = $fechaDocumento;
+                $model->consecutivo = $consecutivo;
+                $model->numero = $numero;
+                $model->detalle = $data['detalle'];
+
+                $model->save();
+                //var_dump($data);echo("-------");var_dump($model->getErrors());die("hola");
+            }
+
+            if (isset($data['mensaje']) && (!isset($data['detalle']))){
+                $model = new Transferenciaerperror();
+                $model->idTransferenciaerp = $id;
+                $model->centroOperacionDocumento = $CO;
+                $model->tipoDocumento = $tipoDocumento;
+                $model->fechaDocumento = $fechaDocumento;
+                $model->consecutivo = $consecutivo;
+                $model->numero = $numero;
+                $model->detalle = $data['mensaje'];
+
+                $model->save();
+                //var_dump($data);echo("2.-------");var_dump($model->getErrors());die("hola");
+            }
+        }
+
+        return $codigo;
     }
 
     public static function entradaAlmacenInteWS ($id){

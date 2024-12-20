@@ -75,6 +75,14 @@ class PlanillaembarqueSearch extends Planillaembarque
             ->andFilterWhere(['like', 'nombreConductor', $this->nombreConductor])
             ->andFilterWhere(['like', 'sello', $this->sello]);
 
+
+        $query->orderBy([
+
+            'id' => SORT_DESC,
+            
+
+        ]);
+
         return $dataProvider;
     }
 }

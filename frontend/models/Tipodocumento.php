@@ -108,4 +108,12 @@ class Tipodocumento extends \yii\db\ActiveRecord
     	return $listadata;
     }
 
+    public static  function  getListaDataCodigo2(){
+        $data = Tipodocumento::find()
+                        ->select(['codigo', 'codigo AS nombre'])
+                        ->orderBy('codigo')->asArray()->all();
+    	$listadata = ArrayHelper::map($data, 'codigo', 'nombre');
+    	return $listadata;
+    }
+
 }

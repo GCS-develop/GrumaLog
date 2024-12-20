@@ -110,7 +110,7 @@ class FileAgendaInput extends Model
             $subcategoria = null;
             $valor_celda = $sheet->getCell('B' . $fila)->getValue();
             if ($valor_celda){
-                $subcategoria = $valor_celda;
+                $subcategoria = trim($valor_celda);
             }
 
             if ($subcategoria == null){

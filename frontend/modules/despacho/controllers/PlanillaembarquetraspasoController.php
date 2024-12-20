@@ -53,6 +53,7 @@ class PlanillaembarquetraspasoController extends Controller
 
         }
 
+
         return $this->render($programa, [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,

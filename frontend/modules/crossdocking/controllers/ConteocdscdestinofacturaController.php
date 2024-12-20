@@ -11,6 +11,7 @@ use yii\filters\VerbFilter;
 use yii\widgets\ActiveForm;
 use kartik\mpdf\Pdf;
 use yii\data\ActiveDataProvider;
+use yii\db\Expression;
 
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\PrintConnectors\FilePrintConnector;
@@ -153,6 +154,11 @@ class ConteocdscdestinofacturaController extends Controller
     {
         $modelfactura = $this->findModel($idconteofactura);
 
+        if ($modelfactura->idEstado == 2){
+            Yii::$app->session->setFlash( 'error', 'Factura Ya se Encuentra Finalizada');
+            return $this->redirect(['/crossdocking/conteocdscdestinofactura/index']);
+        }
+
         $searchModel = new ConteocdscdestinoSearch();
         $dataProvider = $searchModel->search($this->request->queryParams, $idconteofactura);
 
@@ -246,6 +252,11 @@ class ConteocdscdestinofacturaController extends Controller
     {
         $idconteofactura = $id;
         $model = $this->findModel($idconteofactura);
+
+        if ($model->idEstado == 2){
+            Yii::$app->session->setFlash( 'error', 'Factura Ya se Encuentra Finalizada');
+            return $this->redirect(['/crossdocking/conteocdscdestinofactura/index']);
+        }
 
         $modeldestinos = $model->conteocdscdestinos;
         foreach ($modeldestinos as $destinos) {
@@ -383,7 +394,7 @@ class ConteocdscdestinofacturaController extends Controller
                     $modelfactura->idEstadoEntrada = 2; // Generada
                     $modelfactura->idEstadoTraspaso = 2; // Autorizada
 
-                    $modelfactura->fechaEntrada = date('Y-m-d h:i');
+                    $modelfactura->fechaEntrada = new Expression('GETDATE()');
                     $modelfactura->idUserEntrada = Yii::$app->user->identity->id;
 
                     $respuesta = $modelfactura->save();
@@ -567,10 +578,30 @@ class ConteocdscdestinofacturaController extends Controller
     public function actionEnd($id)
     {
         $model = $this->findModel($id);
+
+        if ($model->idEstado == 2){
+            Yii::$app->session->setFlash( 'error', 'Factura Ya se Encuentra Finalizada');
+            return $this->redirect(['/crossdocking/conteocdscdestinofactura/index']);
+        }
+
         $model->idEstado = 2;
         $model->save();
 
+        $result = Conteocdscusuario::updateAll(['idEstado' => 0], ['idConteocdscdestinofactura' => $id]);
+
         return $this->redirect(['index']);
+    }
+
+    public function actionTransferencia($idconteofactura)
+    {
+
+        $model = $this->findModel($idconteofactura);
+
+        $respuesta = Conteocdscdestinodetalle::generarTransferenciaWS($model);
+
+        Yii::$app->session->setFlash( $respuesta['codigoError'] == 1 ? 'success' : 'error', $respuesta['mensaje']);
+
+        return $this->redirect(['indextraspaso']);
     }
 
     /**

@@ -254,6 +254,8 @@ class PlanillaembarqueController extends Controller
 
             if ($model->save()) {
 
+                $model->anularplanillatraspaso;
+
                 return $this->redirect(['index']);
 
             } else {

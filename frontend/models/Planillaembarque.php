@@ -13,7 +13,7 @@ use frontend\models\Estadodespacho;
 use frontend\models\Transportadora;
 use frontend\models\Vehiculo;
 use frontend\models\Conductor;
-
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "planillaembarque".
@@ -112,7 +112,7 @@ class Planillaembarque extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => 'ID',
+            'id' => 'Numero de planilla',
             'fechaDespacho' => 'Fecha',
             'horaDespacho' => 'Hora',
             'idTransportadora' => 'Transportadora',
@@ -156,6 +156,15 @@ class Planillaembarque extends \yii\db\ActiveRecord
             ->andWhere(['idEstado' => '5']);
     }
 
+    public function getAnularplanillatraspaso()
+    {
+        // Realiza la actualización masiva utilizando updateAll
+        return Planillaembarquetraspaso::updateAll(
+            ['idEstado' => 5], // Campos a actualizar
+            ['idPlanillaEmbarque' => $this->id] // Condiciones
+        );
+    }
+
     public function getTotalUnidades()
     {
         // Obtiene la relación de Conteoentregamercancias y suma la cantidad de cada uno
@@ -176,11 +185,21 @@ class Planillaembarque extends \yii\db\ActiveRecord
     {
         return $this->hasOne(user::class, ['id' => 'created_by']);
     }
-    public function getPlanillaembarquebodega($idBodegaDestino=0)
+    public function getPlanillaembarquebodega($idBodegaDestino = 0)
     {
         return $this->hasOne(Planillaembarquebodega::class, ['idPlanillaEmbarque' => 'id'])
-                    ->andOnCondition(['idBodegaDestino' => $idBodegaDestino]);
+            ->andOnCondition(['idBodegaDestino' => $idBodegaDestino]);
     }
-    
+    public function getListabodegasdestino()
+    {
+        return $this->hasMany(Planillaembarquetraspaso::class, ['idPlanillaEmbarque' => 'id'])
+            ->joinWith('bodegaDestino')
+            ->distinct()  // Aplica distinct a los resultados de la consulta
+            ->select(['idBodegaDestino', 'bodegas.nombre AS bodega_nombre'])
+            ->orderBy('idBodegaDestino');
+    }
+
+
+
 
 }

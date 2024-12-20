@@ -51,10 +51,10 @@ class ProductostiquetesprecioController extends Controller
         $bodega = $modeluser->bodegarecibir->nombre;
         $modeluser->bodegarecibir->cedi == 1 && $bodega = null;
 
-
         $searchModel = new ProductostiquetesprecioSearch();
         $dataProvider = $searchModel->search($this->request->queryParams, $bodega);
-        // var_dump($this->request->queryParams);die();
+        // var_dump($this->request->queryParams);
+        // die();
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -259,7 +259,7 @@ class ProductostiquetesprecioController extends Controller
 
         // Construir el código ZPL dinámico.
         $zpl = "^XA\n";
-        $x = 20; // Posición inicial horizontal (en la primera columna).
+        $x = 1; // Posición inicial horizontal (en la primera columna).
         $y = 30; // Posición inicial vertical (en la primera fila).
         $incrementoX = 270; // Separación horizontal entre stickers (movemos hacia la siguiente columna).
         $incrementoY = 100; // Separación vertical entre stickers (bajamos por la columna).
@@ -301,7 +301,70 @@ class ProductostiquetesprecioController extends Controller
                     $y = $yInicio; // Reiniciar la posición vertical.
                 }
             } else {
-                $zpl .= "^FO{$x},{$y}^A0N,50,50^FD$" . number_format($modelo->precio ?? 0, 0, ',', '.') . "^FS\n";
+                // $zpl .= "^FO{$x},{$y}^A0N,50,50^FD$" . number_format($modelo->precio ?? 0, 0, ',', '.') . "^FS\n";
+                // $y1 = $y + 20;
+                // // Tamaño de la etiqueta
+
+                // // Margen inicial
+                // $xMargen = 1;
+
+                // // Código de barras
+                // $codigoBarra = "9931404602310"; // Código de ejemplo
+                // $alturaCodigoBarra = 50;
+                // $anchoModulo = 2;
+                // $anchoMaximoCodigo = 200;
+
+                // // Ajustar ancho del módulo para que no exceda el espacio disponible
+                // $longitudCodigo = strlen($codigoBarra);
+                // $anchoCodigo = $longitudCodigo * $anchoModulo;
+
+                // if ($anchoCodigo > $anchoMaximoCodigo) {
+                //     // Calcular el nuevo ancho del módulo para que no exceda el máximo
+                //     $anchoModulo = $anchoMaximoCodigo / $longitudCodigo;
+                // }
+
+                // // Código de barras con altura uniforme
+                // // $zpl .= "^FO0,30^ BY3 ^BCN,50 ,,,, ^FD^FS\n";
+                // $zpl .= "^FO0,0^BY1,3,55^FT20,100^BCN,,Y,N,,A ,^FD{$codigoBarra}^FS\n";
+
+                // $y += $alturaCodigoBarra + 10;
+
+
+                // // Texto debajo del código de barras
+                // // $zpl .= "^FO{$xMargen},{$y}^A0N,25,25^FD{$codigoBarra}^FS\n";
+                // $y += 35;
+
+                // // Texto del producto
+                // $zpl .= "^FO{$xMargen},{$y}^A0N,10,20^FDSHORT HOMBRE KAKI^FS\n";
+                // $y += 15;
+                // $zpl .= "^FO{$xMargen},{$y}^A0N,10,30^FD242407^FS\n";
+                // $y += 10;
+                // $zpl .= "^FO{$xMargen},{$y}^A0N,10,30^FD314046^FS\n";
+                // $y += 10;
+                // $zpl .= "^FO{$xMargen},{$y}^A0N,10,30^FDSURTIDO^FS\n";
+                // $y += 15;
+
+                // // Texto "Unidad a $49.900"
+                // $zpl .= "^FO{$xMargen},{$y}^A0N,25,25^FDUnidad   a $49900^FS\n";
+                // $y += 15;
+
+                // // Talla y precio grande
+                // $talla = "30";
+                // $precio = "$49.900";
+                // $zpl .= "^FO{$xMargen},{$y}^A0N,60,60^FD{$talla}^FS\n";
+                // $zpl .= "^FO100,{$y}^A0N,60,60^FD{$precio}^FS\n";
+
+                // // Texto vertical "HERPO"
+                // $zpl .= "^FO200,25^A0N,30,30^FDH^FS\n";
+                // $zpl .= "^FO200,50^A0N,30,30^FDE^FS\n";
+                // $zpl .= "^FO200,80^A0N,30,30^FDR^FS\n";
+                // $zpl .= "^FO200,110^A0N,30,30^FDP^FS\n";
+                // $zpl .= "^FO200,140^A0N,30,30^FDO^FS\n";
+
+
+
+                $zpl .= "^FO{$x},{$y}^A0N,50,50^FD" . number_format($modelo->precio ?? 0, 0, ',', '.') . "^FS\n";
+                // $zpl .= "^FO{$x},{$y1}^B7N,N, 10, 5, 5, hola^FD" . (int)($modelo->codigoBarra ?? 0) . "^FS\n";
 
                 // Desplazar hacia abajo para el siguiente sticker.
                 $y += $incrementoY;
@@ -333,9 +396,14 @@ class ProductostiquetesprecioController extends Controller
         }
         if ($envio['status'] == 'success') {
             Yii::$app->session->setFlash('success', 'Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
-                ' en la tienda: ' . $impresora->bodega->nombre . ' tipo: ' . $impresora->tipo);
+                ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso . ' tipo:  ' . $impresora->tipo);
             Yii::trace('Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
-                ' en la tienda: ' . $impresora->bodega->nombre . ' tipo: ' . $impresora->tipo);
+                ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso . ' tipo:' . $impresora->tipo);
+        } else {
+            Yii::$app->session->setFlash('error', 'Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
+                ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso . ' tipo: ' . $impresora->tipo);
+            Yii::error('Error Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
+                ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso . ' tipo ' . $impresora->tipo);
         }
         return $this->redirect(['index']);
     }
@@ -414,7 +482,9 @@ class ProductostiquetesprecioController extends Controller
                 }
             } else {
                 // Generar etiqueta en formato ZPL
-                $zpl .= "^FO{$x},{$y}^A0N,50,50^FD" . number_format($modelo->precio ?? 0, 0, ',', '.') . "^FS\n";
+                $y1 = $y + 20;
+                // $zpl .= "^FO{$x},{$y}^A0N,50,50^FD" . number_format($modelo->precio ?? 0, 0, ',', '.') . "^FS\n";
+                $zpl .= "^FO{$x},{$y1}B3N,N,100,Y,N^FD" . (int) ($modelo->codigoBarra ?? 0) . "^FS\n";
                 $y += $incrementoY;
 
                 if (($i + 1) % $lineasPorColumna == 0) {
@@ -438,10 +508,16 @@ class ProductostiquetesprecioController extends Controller
             // var_dump($envio['message']);
             // die('?-');
             // Yii::$app->session->setFlash('success', 'Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' tipo: ' . $impresora->tipo);
-            Yii::trace('Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' tipo: ' . $impresora->tipo);
-            return $this->asJson(['status' => 'success', 'message' => 'Imprecisión exitosa!.']);
+            Yii::trace('Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso
+                . ' tipo: ' . $impresora->tipo);
+            return $this->asJson([
+                'status' => 'success',
+                'message' => 'Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso
+                    . ' tipo: ' . $impresora->tipo
+            ]);
         } else {
-            Yii::error('Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' tipo: ' . $impresora->tipo);
+            Yii::error('Error Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso
+                . ' tipo: ' . $impresora->tipo);
             return $this->asJson(['status' => 'error', 'message' => $envio['message']]);
         }
     }
@@ -478,8 +554,51 @@ class ProductostiquetesprecioController extends Controller
         $recurso = $config['recurso'] ?? null;
         Yii::$app->session->removeAllFlashes();
 
+        Yii::trace("-----------Impresión enviada a $ip: con codigo:  $zpl", __METHOD__);
+        // var_dump($zpl);
+        // die();
         if ($tipo == 'ip') {
+
+            $zpl = " 
+^XA
+
+^FO0,0
+^BY1.4,2.8,50
+^FT5,75
+^A0,50,50
+^B3N,N,50,Y,N
+^FD9931404602310^FS
+
+^FO210,25^A0N,15,15^FDH^FS 
+^FO210,45^A0N,15,15^FDE^FS 
+^FO210,65^A0N,15,15^FDR^FS 
+^FO210,85^A0N,15,15^FDP^FS 
+^FO210,105^A0N,15,15^FDO^FS 
+
+^FO5,95^A0N,20,20
+^FDSHORT HOMBRE KAKI^FS 
+^FO5,117^A0N,20,20^FD080^FS 
+^FO130,120^A0N,20,20^FDvinotinto^FS 
+
+^FO2,140^A0N,25,20^FD314046^FS 
+^FO95,145^A0N,17,15^FDUnidad a $49900^FS 
+
+
+^FO30,170^A0N,28,28^FD36^FS 
+^FO80,168^A0N,35,35^FD33.900^FS 
+
+
+
+
+
+^XZ
+             ";
+
+            //  https://labelary.com/viewer.html
+
             $socket = @fsockopen($ip, $puerto, $errno, $errstr, 10);
+            // var_dump($socket);die($zpl);
+
             if (!$socket) {
 
                 Yii::error("Error al conectar a $ip:$puerto: $errstr ($errno)", __METHOD__);
@@ -489,6 +608,8 @@ class ProductostiquetesprecioController extends Controller
             }
 
             fwrite($socket, $zpl);
+
+            // var_dump($zpl);die();
             fclose($socket);
 
             Yii::info("Impresión enviada a $ip:$puerto", __METHOD__);
@@ -516,7 +637,6 @@ class ProductostiquetesprecioController extends Controller
                 '\\\\' . str_replace('\\', '\\\\', ltrim($recurso, '\\')), // Recurso compartido (doble \\ inicial)
                 $tempFile // El archivo temporal, ahora entre comillas
             );
-
             // Ejecutar el comando
             exec($command, $output, $returnVar);
 
@@ -601,3 +721,24 @@ class ProductostiquetesprecioController extends Controller
 
 }
 
+
+
+// ^FO100,0^BY2,3,50
+// ^FT260,70^BCN,,Y,N,,A,
+// ^FD9931404602310^FS 
+
+// ^FO10,10^BY2,3,50
+// ^FT520,70^BCN,,Y,N,,A,
+// ^FD9931404602310^FS 
+
+
+
+// ----
+
+
+// ^FO0,0
+// ^BY1.2,2.5,40
+// ^FT5,50
+// ^A0,20,20
+// ^BCN,,Y,N,,A,
+// ^FD9931404602310^FS

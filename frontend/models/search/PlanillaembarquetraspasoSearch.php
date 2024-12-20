@@ -76,7 +76,8 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
         $query->join('LEFT JOIN', 'user us', 'pet.idUsuarioRecibido = us.id');
         $query->join('INNER JOIN', 'user usc', 'usc.id = pe.created_by');
         $query->join('INNER JOIN', 'user usp', 'usp.id = pet.created_by');
-        $query->join('LEFT JOIN', 'planillaembarquebodega peb', 'peb.idBodegaDestino = bd.id');
+        // $query->join('LEFT JOIN', 'planillaembarquebodega peb', 'peb.idBodegaDestino = bd.id');
+        $query->join('LEFT JOIN', 'planillaembarquebodega peb', 'peb.idBodegaDestino = bd.id AND peb.selloLlegada IS NOT NULL');
 
 
 
@@ -114,6 +115,9 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             'peb.selloLlegada AS selloLlegada',
             'peb.selloSalida AS selloSalida',
 
+            'peb.orden AS orden',
+            'pe.nombreConductor AS conductor',
+
             //'pet.*'
         ]);
 
@@ -124,6 +128,12 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             'query' => $query,
             'pagination' => [
                 'pageSize' => 100,  // Define la cantidad de registros por página
+            ],
+            'sort' => [
+                'defaultOrder' => [
+                    //  'idPlanillaEmbarque' => SORT_DESC,
+                    // Asegúrate de no incluir 'idPlanillaEmbarque' en otro lugar
+                ]
             ],
         ]);
 
@@ -156,10 +166,10 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             'bo.codigo' => $this->codAlmacenOrigen,
             'bd.codigo' => $this->codAlmacenDestino,
 
-            'us.username' => $this->usuarioRecibido,
+            // 'us.username' => $this->usuarioRecibido,
             'ed.nombre' => $this->estado,
             'td.codigo' => $this->tipoDocumento,
-            'tr.consecutivo' => $this->consecutivoDocumento,
+            // 'tr.consecutivo' => $this->consecutivoDocumento,
             'pe.fechaDespacho' => $this->fechaPlanillaembarque,
             'pe.horaDespacho' => $this->horaPlanillaembarque,
             'tr.created_at' => $this->fechaTraspaso,
@@ -167,7 +177,6 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
 
         $query->andFilterWhere(['like', 'bo.nombre', $this->almacenOrigen])
             ->andFilterWhere(['like', 'bd.nombre', $this->almacenDestino])
-
             ->andFilterWhere(['like', 'tr.created_at', $this->fechaTraspaso])
             ->andFilterWhere(['like', 'us.username', $this->usuarioRecibido])
             ->andFilterWhere(['like', 'ed.nombre', $this->estado])
@@ -176,7 +185,15 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             ->andFilterWhere(['like', 'pe.fechaDespacho', $this->fechaPlanillaembarque])
             ->andFilterWhere(['like', 'pe.horaDespacho', $this->horaPlanillaembarque]);
 
-        $query->orderBy(['pet.idPlanillaEmbarque' => SORT_DESC, 'bo.codigo' => SORT_ASC, 'bd.codigo' => SORT_ASC]);
+        $query->orderBy([
+
+            'pet.idPlanillaEmbarque' => SORT_DESC,
+            'orden' => SORT_ASC,
+            'bo.codigo' => SORT_ASC,
+            'bd.codigo' => SORT_ASC,
+            'pet.fechaRecibido' => SORT_ASC,
+
+        ]);
 
         return $dataProvider;
     }

@@ -559,7 +559,8 @@ $this->params['breadcrumbs'][] = 'Datos Cita';
                                 'showMeridian' => false,
                             ],
                             'options' => [
-                                'required' => true
+                                'required' => true,
+                                'value' => '00:00',//para que la horacita sea 0 por defecto
                             ]
                         ]);
                     ?>

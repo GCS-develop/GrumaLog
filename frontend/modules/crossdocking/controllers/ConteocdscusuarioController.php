@@ -44,6 +44,11 @@ class ConteocdscusuarioController extends Controller
     {
         $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
 
+        if ($modelfactura->idEstado == 2){
+            Yii::$app->session->setFlash( 'error', 'Factura Ya se Encuentra Finalizada');
+            return $this->redirect(['/crossdocking/conteocdscdestinofactura/index']);
+        }
+
         $searchModel = new ConteocdscusuarioSearch();
         $dataProvider = $searchModel->search($this->request->queryParams, $idconteofactura);
 
@@ -120,6 +125,7 @@ class ConteocdscusuarioController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $idconteofactura = $model->idConteocdscdestinofactura;
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;

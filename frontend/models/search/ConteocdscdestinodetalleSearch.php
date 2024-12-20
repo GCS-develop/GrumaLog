@@ -5,6 +5,7 @@ namespace frontend\models\search;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use frontend\models\Conteocdscdestinodetalle;
+use yii\db\Expression;
 
 /**
  * ConteocdscdestinodetalleSearch represents the model behind the search form of `frontend\models\Conteocdscdestinodetalle`.
@@ -76,6 +77,57 @@ class ConteocdscdestinodetalleSearch extends Conteocdscdestinodetalle
         ]);
 
         $query->andFilterWhere(['like', 'codigoBarras', $this->codigoBarras]);
+
+        return $dataProvider;
+    }
+
+    public function searchSIESA($idconteofactura){
+        $query = Conteocdscdestinodetalle::find()->alias('det');
+        $query->join('LEFT JOIN', 'conteocdscdestino dest', 'det.idConteocdscdestino = dest.id');
+        $query->join('LEFT JOIN', 'conteocdscdestinofactura fac', 'dest.idConteocdscdestinofactura = fac.id');
+        $query->join('LEFT JOIN', 'ordendecompra oc', 'fac.idOrdenCompra = oc.id');
+        $query->join('LEFT JOIN', 'tipodocumento td', 'oc.idTipoDocumento = td.id');
+        $query->join('LEFT JOIN', 'proveedor prv', 'oc.idProveedor = prv.id');
+        $query->join('LEFT JOIN', 'bodegas bo', 'dest.idCentroOperacion = bo.id');
+        $query->join('LEFT JOIN', 'item it', 'det.idItem = it.id');
+        $query->join('LEFT JOIN', 'color col', 'it.idColor = col.id');
+        $query->join('LEFT JOIN', 'talla tal', 'it.idTalla = tal.id');
+        $query->join('LEFT JOIN', 'bodegas bom', 'fac.idBodegaMovimiento = bom.id');
+        $query->join('LEFT JOIN', 'tipodocumento tdm', 'fac.idTipoDocumentoMovimiento = tdm.id');
+        $query->join('LEFT JOIN', 'centrooperacion com', 'fac.idBodegaMovimiento = com.id');
+        
+        $query->join('LEFT JOIN', 'unidadempaque ue', "ISNULL(it.unidadEmpaque,'UND') = ue.codigo");
+
+        $query->select([
+            "fac.id",
+            "com.codigo AS centroOperacionDocumento", 
+            "tdm.codigo AS tipoDocumento", 
+            "FORMAT(fac.updated_at, 'yyyyMMdd') AS fechaDocumento",
+            "bom.codigo AS bodegaSalidaDocumento",
+            "bo.codigo AS bodegaEntradaDocumento",
+            "com.codigo AS centroOperacion",
+            "tdm.codigo AS tipoDocumentoMovimiento",
+            "bom.codigo AS bodegaSalidaMovimiento",
+            "com.codigo AS centroOperacionMovimiento",
+            "ISNULL(it.unidadEmpaque,'UND') AS unidadSalida", 
+            "det.totalUnidades AS cantidadBase",
+            new Expression('0 AS costoPromedioUnitario'),
+            "it.item",
+            "col.nombre AS color",
+            "tal.nombre AS talla",
+            "ue.equivalencia"
+        ]);
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+            'pagination' => false, // Deshabilita la paginación
+        ]);
+
+        $query = $query->andFilterWhere(['fac.id1' => $idconteofactura]);
+
+        //echo $query->createCommand()->getRawSql(); die("hola");
+ 
+        // add conditions that should always apply here
 
         return $dataProvider;
     }

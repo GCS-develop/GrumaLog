@@ -25,7 +25,8 @@ $usuarioCreador = $dataProvider->getModels()[0]->usuarioCreador ?? 'Desconocido'
 <?php
 $gridColumns = [
     // 'id',
-    // 'idPlanillaEmbarque',
+    'idPlanillaEmbarque',
+    'orden',
     // 'idTraspaso',
     'usuarioCreador',
     'usuarioPlanilla',
@@ -82,7 +83,7 @@ $gridColumns = [
         'format' => ['decimal', 0], // Formato decimal con 0 decimales,
         'pageSummary' => true,
     ],
-
+    'conductor',
     'estado',
 
     'fechaRecibido',
@@ -99,7 +100,6 @@ $gridColumns = [
     'selloLlegada',
     'selloSalida',
 
-    
     // 'fechaRecibido',// Fecha recibido transito : es para los documentos TRT o documentos elaborados para traslados entre tiendas ,este sector es para el recibo de estos documentos en transito CEDI , seguido a este se cambia a despachado CEDI ,asi se identifican los docuemtos elaborados para nivelacion de producto entre tiendas .
 
     // 'horaRecibido',// Hora recibido transito  : indica la hora en que los documentos en trasito fueron recibidos en el CEDI por el auxiliar administrativo de transporte. 
@@ -123,7 +123,7 @@ $gridColumns = [
     <div class="row">
 
         <!-- <div class="col-lg-12 centrar">
-            <h3><?php var_dump($usuarioCreador )  ?></h3>
+            <h3><?php var_dump($usuarioCreador) ?></h3>
         </div> -->
 
         <div class="col-lg-12 centrar">
@@ -186,5 +186,12 @@ $gridColumns = [
     ]); ?>
 
 
-
 </div>
+<!-- 
+$socket = New-Object System.Net.Sockets.TcpClient("192.168.3.11", 9100)
+$stream = $socket.GetStream()
+$writer = New-Object System.IO.StreamWriter($stream)
+$writer.WriteLine("XA ^FO1,30^A0N,50,50^FD81.900^FS ^FO1,130^A0N,50,50^FD81.900^FS ^FO271,30^A0N,50,50^FD81.900^FS ^XZ")
+$writer.Flush()
+$writer.Close()
+$socket.Close() -->

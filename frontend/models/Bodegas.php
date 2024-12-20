@@ -87,22 +87,31 @@ class Bodegas extends \yii\db\ActiveRecord
             'cedi' => 'Es CEDI',
         ];
     }
-
-    public static  function  getListaData(){
+    public static function getListaDataCodigo()
+    {
         $data = Bodegas::find()
-                        ->select(['id', "(codigo + ' - ' + nombre) AS nombre"])
-                        ->orderBy('nombre')->asArray()->all();
-    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
-    	return $listadata;
+            ->select(['codigo', "(codigo + ' - ' + nombre) AS nombre"])
+            ->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'codigo' , 'nombre');
+        return $listadata;
+    }
+    public static function getListaData()
+    {
+        $data = Bodegas::find()
+            ->select(['id', "(codigo + ' - ' + nombre) AS nombre"])
+            ->orderBy('nombre')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
     }
 
-    public static  function  getListaDataCEDI(){
+    public static function getListaDataCEDI()
+    {
         $data = Bodegas::find()
-                        ->select(['id', 'nombre'])
-                        ->orderBy('nombre')->asArray()->all()
-                        ->where(['cedi' => 1]);
-    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
-    	return $listadata;
+            ->select(['id', 'nombre'])
+            ->orderBy('nombre')->asArray()->all()
+            ->where(['cedi' => 1]);
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
     }
 
     public static function getListaDataId($allowedCodes = [])
@@ -118,7 +127,7 @@ class Bodegas extends \yii\db\ActiveRecord
 
         return $listadata;
     }
-    
+
     public function getImpresorapaxar()
     {
         return $this->hasOne(Impresoraspaxarbodega::class, ['bodega_id' => 'id']);

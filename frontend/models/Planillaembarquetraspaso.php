@@ -47,7 +47,8 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
     public $usuarioPlanilla;
     public $selloLlegada;
     public $selloSalida;
-
+    public $conductor;
+    public $orden;
     /**
      * {@inheritdoc}
      */
@@ -80,7 +81,7 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'idPlanillaEmbarque' => 'Id Planilla Embarque',
+            'idPlanillaEmbarque' => 'Numero Planilla',
             'idTraspaso' => 'Id Traspaso',
             'idBodegaOrigen' => 'Id Bodega Origen',
             'idBodegaDestino' => 'Id Bodega Destino',
@@ -107,6 +108,7 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
             'usuarioRecibido' => 'Usu.Rec',
             'fechaTraspaso' => 'Fecha',
             'horaTraspaso' => 'Hora',
+            'orden' => 'Orden llegada'
         ];
     }
     // Fec.Rec  : fecha en la cuan se recibe el documento en las tiendas después de haberse enviado con planilla de embarque 
@@ -156,6 +158,5 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Traspaso::class, ['id' => 'idTraspaso']);
     }
-
-
+    
 }
