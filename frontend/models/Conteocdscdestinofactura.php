@@ -285,7 +285,7 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
         return $filas;
     }
 
-    public static function printTraspaso ($idconteofactura, $idcentrooperacion = null){
+    /*public static function printTraspaso ($idconteofactura, $idcentrooperacion = null){
 
         $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
 
@@ -457,7 +457,7 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
         }
 
         return $contentAll;
-    }
+    }*/
 
     public static function generarTraspasoEncabezado (
                                                     $nombreEmpresa,

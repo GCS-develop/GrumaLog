@@ -46,10 +46,12 @@ class ConteocdscdestinoSearch extends Conteocdscdestino
         $query = Conteocdscdestino::find()
                                     ->alias('dest')
                                     ->join('INNER JOIN', 'conteocdscdestinofactura fact', 'dest.idConteocdscdestinofactura = fact.id')
-                                    ->join('INNER JOIN', 'centrooperacion co', 'dest.idCentroOperacion = co.id')
+                                    //->join('INNER JOIN', 'centrooperacion co', 'dest.idCentroOperacion = co.id')
+                                    ->join('INNER JOIN', 'bodegas co', 'dest.idCentroOperacion = co.id')
                                     ->join('INNER JOIN', 'userconteocdsc usc', 'dest.idUserConteo = usc.id')
-                                    ->join('INNER JOIN', 'empleadologistica empl' , 'usc.idEmpleadoLogistica = empl.id')
-                                    ->join('INNER JOIN', 'empleado emp', 'empl.idEmpleado = emp.id')
+                                    //->join('INNER JOIN', 'empleadologistica empl' , 'usc.idEmpleadoLogistica = empl.id')
+                                    ->join('INNER JOIN', 'user us' , 'usc.idUser = us.id')
+                                    ->join('INNER JOIN', 'empleado emp', 'us.idEmpleado = emp.id')
                                     ->join('INNER JOIN', 'proveedor prv', 'fact.idProveedor = prv.id')
                                     ->join('LEFT JOIN', 'bodegas bod', 'fact.idCentroOperacionLegaliza = bod.id');
 
@@ -78,6 +80,7 @@ class ConteocdscdestinoSearch extends Conteocdscdestino
             'co.nombre AS almacen',
             'co.codigo AS codigoAlmacen',
             'emp.nombreEmpleado',
+            'emp.identificacion',
             'prv.razonSocial',
             'prv.nit',
             'prv.idProveedor AS codigoProveedor',

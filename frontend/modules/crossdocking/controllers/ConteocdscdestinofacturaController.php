@@ -9,12 +9,14 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\widgets\ActiveForm;
+use Mpdf\Mpdf;
 use kartik\mpdf\Pdf;
 use yii\data\ActiveDataProvider;
 use yii\db\Expression;
 
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\PrintConnectors\FilePrintConnector;
+use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
 
 use frontend\models\search\ConteocdscdestinoSearch;
 use frontend\models\LegalizaConteoCDSCForm;
@@ -28,6 +30,7 @@ use frontend\models\Conteobylecturacodigo;
 use frontend\models\Conteocdscdestinodetalle;
 
 use frontend\models\Parametroscontrol;
+use frontend\models\Impresora;
 
 /**
  * ConteocdscdestinofacturaController implements the CRUD actions for Conteocdscdestinofactura model.
@@ -154,15 +157,20 @@ class ConteocdscdestinofacturaController extends Controller
     {
         $modelfactura = $this->findModel($idconteofactura);
 
-        if ($modelfactura->idEstado == 2){
+        /*if ($modelfactura->idEstado == 2){
             Yii::$app->session->setFlash( 'error', 'Factura Ya se Encuentra Finalizada');
             return $this->redirect(['/crossdocking/conteocdscdestinofactura/index']);
+        }*/
+
+        $programa = 'index_almacen';
+        if ($origen == 'traspaso'){
+            $programa = 'index_almacen_imprimir';
         }
 
         $searchModel = new ConteocdscdestinoSearch();
         $dataProvider = $searchModel->search($this->request->queryParams, $idconteofactura);
 
-        return $this->render('index_almacen', [
+        return $this->render($programa, [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'origen' => $origen,
@@ -480,6 +488,177 @@ class ConteocdscdestinofacturaController extends Controller
         }
     }
 
+    public function actionPrintbox ($idconteofactura, $idcentrooperacion = null){
+
+        $model = new TraspasoFacturaCDSCForm();
+
+        //$model->idEmpresora = Impresora::find()->where(['nombre' => 'Packing'])->one();
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post())) {
+
+                if ($model->validate()) {
+
+                    $result = $this->generarEtiquetasCaja($idconteofactura, $idcentrooperacion);
+
+                    if ($result) {
+                        Yii::$app->session->setFlash('success', 'Las etiquetas han sido generadas correctamente.');
+                    } else {
+                        Yii::$app->session->setFlash('error', 'Error Generando las etiquetas');
+                    }
+
+                }
+
+                return $this->redirect(['indexalmacen', 'idconteofactura' => $idconteofactura, 'origen' => 'traspaso']);
+            }
+        }
+
+        if (Yii::$app->request->isAjax) {
+            return $this->renderAjax('select_print_traspaso', [
+                'model' => $model,
+            ]);
+        }
+
+    }
+
+    function generarEtiquetasCaja($idconteofactura, $idcentrooperacion)
+    {
+        $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
+
+        $dataProviderDestino = $modelfactura->getConteocdscdestinos()
+                        ->andFilterWhere([
+                            'idConteocdscdestinofactura' => $idconteofactura,
+                            'idCentroOperacion' => $idcentrooperacion,
+                        ])->all();
+
+        if ($dataProviderDestino === null) {
+            throw new \Exception("No se encontró datos de impresión pra la factura con ID: $modelfactura->id");
+        }
+
+        $printerURL = '192.168.5.84';
+        $puerto = '9100';
+
+        try{
+            $connector = new NetworkPrintConnector($printerURL, $puerto);
+            $printer = new Printer($connector);
+
+            foreach ($dataProviderDestino as $destino) {
+                for ($i = 1; $i <= $destino->numeroCajas; $i++) {
+                    // Renderizar la vista con los datos necesarios
+
+                    $dataProviderDetalle = $destino->getConteocdscdestinodetalles()
+                            ->andFilterWhere([
+                                'idConteocdscdestino' => $destino->id,
+                            ])->all();
+
+                    $totalunidadempaque = 0;
+
+                    foreach($dataProviderDetalle as $detalle){
+                        if (!$detalle->item->unidadempaque){
+                            $equivalencia = 1;
+                        }else {
+                            $equivalencia = $detalle->item->unidadempaque->equivalencia;
+                        }
+                        $unidadempaque = $detalle->totalUnidades / $equivalencia;
+                        $totalunidadempaque = $totalunidadempaque + $unidadempaque;
+                    }
+
+                    $printer->setTextSize(2, 2); // Tamaño normal
+                    $printer->setEmphasis(true); // Negrita
+                    $printer->text("CONTEO CDSC No:");
+                    $printer->setEmphasis(false);
+                    $printer->text($idconteofactura . "\n");
+
+                    $printer->setEmphasis(true);
+                    $printer->text("CAJA ");
+                    $printer->setEmphasis(false);
+                    $printer->text("$i DE {$destino->numeroCajas}\n");
+
+                    $printer->setEmphasis(true);
+                    $printer->text("PROVEEDOR:\n");
+                    $printer->setEmphasis(false);
+
+                    $printer->setTextSize(1, 1); // Tamaño pequeño
+
+                    $printer->text("{$destino->factura->proveedor->nit} - {$destino->factura->proveedor->razonSocial}\n");
+
+                    $printer->setTextSize(2, 2); // Tamaño normal
+
+                    
+                    $printer->setEmphasis(true);
+                    $printer->text("FACTURA:");
+                    $printer->setEmphasis(false);
+                    $printer->text("{$destino->factura->numeroFactura}\n");
+
+                    $printer->setEmphasis(true);
+                    $printer->text("ALM. DESTINO:\n");
+                    $printer->setEmphasis(false);
+
+                    $printer->setTextSize(1, 1); // Tamaño pequeño
+
+                    $printer->text("{$destino->centrooperacion->codigo} - {$destino->centrooperacion->nombre}\n");
+
+                    $printer->setTextSize(2, 2); // Tamaño normal
+
+                    $printer->setEmphasis(true);
+                    $printer->text("UND. EMPAQUE:");
+                    $printer->setEmphasis(false);
+                    $printer->text(round($totalunidadempaque, 0) . "\n");
+
+                    $printer->setEmphasis(true);
+                    $printer->text("TOTAL UNDS:");
+                    $printer->setEmphasis(false);
+                    $printer->text("{$destino->total}\n");
+
+                    $printer->setEmphasis(true);
+                    $printer->text("USUARIO:\n");
+                    $printer->setEmphasis(false);
+
+                    $printer->setTextSize(1, 1); // Tamaño pequeño
+
+                    $printer->text("{$destino->usuarioconteo->user->empleado->nombreEmpleado}\n");
+
+                    /*$etiqueta = Yii::$app->controller->renderPartial('etiqueta_cajas_pdf', [
+                        'conteoid' => $idconteofactura,
+                        'numerofactura' => $destino->factura->numeroFactura,
+                        'codigoalmacen' => $destino->centrooperacion->codigo,
+                        'almacen' => $destino->centrooperacion->nombre,
+                        'numeroCaja' => $i,
+                        'totalCajas' => $destino->numeroCajas,
+                        'totalunidades' => $totalunidadempaque,
+                        'total' => $destino->total,
+                        'nitproveedor' => $destino->factura->proveedor->nit,
+                        'proveedor' => $destino->factura->proveedor->razonSocial,
+                        'usuarioconteo' => $destino->usuarioconteo->user->empleado->nombreEmpleado
+                    ]);
+                    */
+
+                    // Separador
+                    // $printer->text("-------------------------\n");
+
+                    // Cortar papel después de cada etiqueta
+                    $printer->cut();
+                }
+            }
+
+            // Cerrar conexión con la impresora
+            $printer->close();
+            return true;
+
+        } catch (\Exception $e) {
+            echo "Error al imprimir: " . $e->getMessage();
+        }
+
+        return false;
+
+        //$mpdf->Output("etiquetas_factura_{$modelfactura->numeroFactura}.pdf", \Mpdf\Output\Destination::INLINE);
+    }
+
     public function actionImprimirtraspasos($idconteofactura, $idcentrooperacion = null)
     {
         // Datos de ejemplo para el recibo (puedes reemplazarlos con tus propios datos)
@@ -594,7 +773,6 @@ class ConteocdscdestinofacturaController extends Controller
 
     public function actionTransferencia($idconteofactura)
     {
-
         $model = $this->findModel($idconteofactura);
 
         $respuesta = Conteocdscdestinodetalle::generarTransferenciaWS($model);

@@ -52,12 +52,12 @@ class TraspasodetalleController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams, $idtraspaso);
 
         $traspaso = Traspaso::findOne($idtraspaso);
-        
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'idtraspaso' => $idtraspaso,
-            'traspaso' => $traspaso, 
+            'traspaso' => $traspaso,
         ]);
     }
 
@@ -676,7 +676,7 @@ class TraspasodetalleController extends Controller
 
         $connector = new NetworkPrintConnector($impresora->ip, "9100");
         $printer = new Printer($connector);
-        Yii::error('llego hasta 665.', __METHOD__);
+        Yii::error('No es error, impresora :   ' . $impresora->ip, __METHOD__);
 
         try {
             //conectarse a la impresora
@@ -765,6 +765,11 @@ class TraspasodetalleController extends Controller
             $printer->barcode("{A" . $numero_serie, Printer::BARCODE_CODE128);
             $printer->feed();
 
+            return $this->asJson([
+                'success' => true,
+                'message' => 'Impresión ejecutada correctamente en la impresora: ' . $impresora->ip,
+            ]);
+
         } catch (Exception $e) {
             // Captura de errores específicos como ErrorException
             if (strpos($e->getMessage(), 'trim(): Passing null to parameter #1') !== false) {
@@ -787,7 +792,7 @@ class TraspasodetalleController extends Controller
 
         } finally {
 
-            Yii::trace('Impresion finalizada ');
+            Yii::trace('Impresion finalizada ' . $impresora->ip);
 
             $printer->cut();
             $printer->close();

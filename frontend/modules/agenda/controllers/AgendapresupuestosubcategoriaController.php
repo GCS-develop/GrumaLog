@@ -169,7 +169,7 @@ class AgendapresupuestosubcategoriaController extends Controller
                     'modelAgenda' => $modelAgenda,
                 ]);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $transaction->rollBack();
             throw $e;
         }  

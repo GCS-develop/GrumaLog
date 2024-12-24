@@ -42,6 +42,7 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
     public $radicado;
     public $fecha;
     public $nombreEmpleado;
+    public $identificacion;
     public $fechaDesde;
     public $fechaHasta;
     public $codigoAlmacenLegaliza;
@@ -65,7 +66,7 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
             [['idConteocdscdestinofactura', 'idCentroOperacion', 'numeroCajas', 'idUserConteo', 'idItemUltimoConteo', 'total', 'idEstado', 'idLegalizado', 'created_by', 'updated_by'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
             [['idUserConteo'], 'exist', 'skipOnError' => true, 'targetClass' => Userconteocdsc::class, 'targetAttribute' => ['idUserConteo' => 'id']],
-            [['idCentroOperacion'], 'exist', 'skipOnError' => true, 'targetClass' => Centrooperacion::class, 'targetAttribute' => ['idCentroOperacion' => 'id']],
+            [['idCentroOperacion'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idCentroOperacion' => 'id']],
             [['idConteocdscdestinofactura'], 'exist', 'skipOnError' => true, 'targetClass' => Conteocdscdestinofactura::class, 'targetAttribute' => ['idConteocdscdestinofactura' => 'id']],
         ];
     }
@@ -79,7 +80,7 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
             'id' => 'No. Conteo',
             'idConteocdscdestinofactura' => 'Id Conteocdscdestinofactura',
             'idCentroOperacion' => 'Id Centro Operacion',
-            'numeroCajas' => 'Numero Cajas',
+            'numeroCajas' => 'No. Cajas',
             'idUserConteo' => 'Id User Conteo',
             'idItemUltimoConteo' => 'Id Item Ultimo Conteo',
             'total' => 'Total',
@@ -101,6 +102,7 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
             'idEstadoTraspaso' => 'Traspaso',
 
             'nombreEmpleado' => 'Usuario Conteo',
+            'identificacion' => 'Identificación',
             'codigoAlmacen' => 'Código Almacén',
             'almacen' => 'Almacén',
 
@@ -129,7 +131,7 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
      */
     public function getCentrooperacion()
     {
-        return $this->hasOne(Centrooperacion::class, ['id' => 'idCentroOperacion']);
+        return $this->hasOne(Bodegas::class, ['id' => 'idCentroOperacion']);
     }
 
     /**
@@ -147,7 +149,7 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getIdUserConteo0()
+    public function getUsuarioconteo()
     {
         return $this->hasOne(Userconteocdsc::class, ['id' => 'idUserConteo']);
     }

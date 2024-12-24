@@ -15,6 +15,10 @@ $this->registerCss('
     }
 ');
 
+$this->registerJsFile(Yii::$app->request->baseUrl.'/js/mainDataModal.js',
+['depends' => [\yii\web\JqueryAsset::className()]]
+);
+
 use frontend\models\Conteocdscdestino;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -22,6 +26,7 @@ use yii\grid\ActionColumn;
 use kartik\grid\GridView;
 use kartik\detail\DetailView;
 use common\widgets\Alert;
+use yii\bootstrap4\Modal;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\ConteocdscdestinoSearch $searchModel */
@@ -49,6 +54,22 @@ switch ($origen){
 }
 
 $this->params['breadcrumbs'][] = $this->title;
+?>
+
+
+<?php
+    Modal::begin([                
+        'title'=>'<h4>Registro datos para impresión</h4>',
+        'id'=>'modaldata',
+        'size'=>'modal-lg',
+        'options' => [
+            'tabindex' => false  // Importante para que funcione el Select
+        ]
+    ]);
+        
+    echo "<div id='modalContentData'></div>";
+        
+    Modal::end(); 
 ?>
 
 <?php
@@ -161,6 +182,7 @@ $attributes = [
 
             [
                 'attribute' => 'numeroCajas', // Nombre del atributo en el modelo
+                'label' => 'Total Cajas', // Etiqueta de la columna
                 'hAlign' => 'right', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
                 'format' => ['decimal', 0], // Formato decimal con 0 decimales,
@@ -178,35 +200,40 @@ $attributes = [
         
             ],
 
-            /*[
+            [
                 'class' => ActionColumn::className(),
                 'header'=>'Acción',
                 //'headerOptions' => ['width' => '15%'],
-                'template' => '{codigobarras} {print}',
+                'template' => '{print} {codigobarras}',
 
                 'buttons' => [
+
+                    'print' => function ($url, $model) {                                
+                        $t = Url::to([  'printbox', 
+                                        'id' => $model->id,
+                                        'idconteofactura' => $model->idConteocdscdestinofactura, 
+                                        'idcentrooperacion' => $model->idCentroOperacion
+                                    ]);
+
+                        return Html::button('<i class="fa fa-box"></i>',[
+                                    'value'=> $t,
+                                    'title' => 'Imprimir Cajas',
+                                    'class' => 'btn btn-default btn_update',
+                        ]);
+                    },
 
                     'codigobarras' => function ($url, $model) use ($origen) {                                  
                         return Html::a('<i class="fa fa-barcode"></i>', 
                                 [   '/crossdocking/conteocdscdestinodetalle/index', 'idconteodestino' => $model->id, 'origen' => $origen], 
                                 [   'class' => 'btn btn-default',
-                                    'title' => 'Visualizar Items',
-                                ]
-                        );
-                    },
-
-                    'print' => function ($url, $model) {                                  
-                        return Html::a('<i class="fa fa-print"></i>', 
-                                [   'imprimirtraspasos', 'idconteofactura' => $model->idConteocdscdestinofactura, 'idcentrooperacion' => $model->idCentroOperacion], 
-                                [   'class' => 'btn btn-default',
-                                    'title' => 'Imprimir Traspaso Mercancia',
+                                    'title' => 'Imprimir Tirilla Items',
                                 ]
                         );
                     },
 
                 ],
 
-            ],*/
+            ],
 
         ],
     ]); ?>

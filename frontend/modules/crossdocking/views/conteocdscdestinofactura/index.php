@@ -374,7 +374,7 @@ $gridColumns = [
                 'class' => ActionColumn::className(),
                 'header'=>'Acción',
                 //'headerOptions' => ['width' => '15%'],
-                'template' => '{assignuser} {indexalmacen} {end} {print} {delete}',
+                'template' => '{assignuser} {indexalmacen} {end} {delete}',
 
                 'buttons' => [
 
@@ -408,15 +408,6 @@ $gridColumns = [
                                                                                         ' - Proveedor: ' . $model->proveedor->razonSocial . ' )',
                                         'method' => 'post',
                                     ]
-                                ]
-                        );
-                    },
-
-                    'print' => function ($url, $model) {                                  
-                        return Html::a('<i class="fa fa-print"></i>', 
-                                [   'imprimirtraspasos', 'idconteofactura' => $model->id], 
-                                [   'class' => 'btn btn-default',
-                                    'title' => 'Imprimir Traspaso Mercancia',
                                 ]
                         );
                     },

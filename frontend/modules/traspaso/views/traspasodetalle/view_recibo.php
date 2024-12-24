@@ -26,9 +26,11 @@ $this->registerJs("
                     idTraspaso: idTraspaso,
                 },
                 success: function(response) {
-
-                    alert('Impresión ejecutada correctamente');
-
+                    if (response.success) {
+                        alert('Impresión ejecutada correctamente' + response.message); // Mensaje dinámico desde el servidor
+                } else {
+                        alert('Error: ' + response.message); // Mensaje de error dinámico
+                    }
                 },
                 error: function(xhr, status, error) {
 
@@ -109,7 +111,7 @@ $this->registerJsFile('@web/js/JsBarcode.all.min.js', ['depends' => [\yii\web\Jq
         margin-left: 10px;
     }
 
-    
+
     .anulado {
         margin-top: 290px;
         margin-left: 100px;
