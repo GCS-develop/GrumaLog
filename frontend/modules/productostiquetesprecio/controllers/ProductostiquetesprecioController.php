@@ -395,15 +395,23 @@ class ProductostiquetesprecioController extends Controller
             }
         }
         if ($envio['status'] == 'success') {
-            Yii::$app->session->setFlash('success', 'Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
-                ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso . ' tipo:  ' . $impresora->tipo);
+            Yii::$app->session->setFlash(
+                'success',
+                'Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
+                ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso . ' tipo:  ' . $impresora->tipo
+                // . $zpl
+            );
+
             Yii::trace('Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
                 ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso . ' tipo:' . $impresora->tipo);
+
         } else {
             Yii::$app->session->setFlash('error', 'Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
                 ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso . ' tipo: ' . $impresora->tipo);
+
             Yii::error('Error Imprimiendo : ' . $modelo->existencia . ' codigos del ean: ' . $modelo->codigoBarra .
                 ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso . ' tipo ' . $impresora->tipo);
+
         }
         return $this->redirect(['index']);
     }
@@ -483,8 +491,8 @@ class ProductostiquetesprecioController extends Controller
             } else {
                 // Generar etiqueta en formato ZPL
                 $y1 = $y + 20;
-                // $zpl .= "^FO{$x},{$y}^A0N,50,50^FD" . number_format($modelo->precio ?? 0, 0, ',', '.') . "^FS\n";
-                $zpl .= "^FO{$x},{$y1}B3N,N,100,Y,N^FD" . (int) ($modelo->codigoBarra ?? 0) . "^FS\n";
+                $zpl .= "^FO{$x},{$y}^A0N,50,50^FD" . number_format($modelo->precio ?? 0, 0, ',', '.') . "^FS\n";
+                // $zpl .= "^FO{$x},{$y1}B3N,N,100,Y,N^FD" . (int) ($modelo->codigoBarra ?? 0) . "^FS\n"; 
                 $y += $incrementoY;
 
                 if (($i + 1) % $lineasPorColumna == 0) {
@@ -510,15 +518,19 @@ class ProductostiquetesprecioController extends Controller
             // Yii::$app->session->setFlash('success', 'Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' tipo: ' . $impresora->tipo);
             Yii::trace('Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso
                 . ' tipo: ' . $impresora->tipo);
+
             return $this->asJson([
                 'status' => 'success',
                 'message' => 'Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso
                     . ' tipo: ' . $impresora->tipo
             ]);
+
         } else {
             Yii::error('Error Imprimiendo : ' . $inputValue . ' codigos del ean: ' . $modelo->codigoBarra . ' en la tienda: ' . $impresora->bodega->nombre . ' recurso: ' . $impresora->recurso
                 . ' tipo: ' . $impresora->tipo);
+
             return $this->asJson(['status' => 'error', 'message' => $envio['message']]);
+
         }
     }
 
@@ -554,45 +566,46 @@ class ProductostiquetesprecioController extends Controller
         $recurso = $config['recurso'] ?? null;
         Yii::$app->session->removeAllFlashes();
 
+
         Yii::trace("-----------Impresión enviada a $ip: con codigo:  $zpl", __METHOD__);
         // var_dump($zpl);
         // die();
         if ($tipo == 'ip') {
 
-            $zpl = " 
-^XA
+            //             $zpl = " 
+// ^XA
 
-^FO0,0
-^BY1.4,2.8,50
-^FT5,75
-^A0,50,50
-^B3N,N,50,Y,N
-^FD9931404602310^FS
+            // ^FO0,0
+// ^BY1.4,2.8,50
+// ^FT5,75
+// ^A0,50,50
+// ^B3N,N,50,Y,N
+// ^FD9931404602310^FS
 
-^FO210,25^A0N,15,15^FDH^FS 
-^FO210,45^A0N,15,15^FDE^FS 
-^FO210,65^A0N,15,15^FDR^FS 
-^FO210,85^A0N,15,15^FDP^FS 
-^FO210,105^A0N,15,15^FDO^FS 
+            // ^FO210,25^A0N,15,15^FDH^FS 
+// ^FO210,45^A0N,15,15^FDE^FS 
+// ^FO210,65^A0N,15,15^FDR^FS 
+// ^FO210,85^A0N,15,15^FDP^FS 
+// ^FO210,105^A0N,15,15^FDO^FS 
 
-^FO5,95^A0N,20,20
-^FDSHORT HOMBRE KAKI^FS 
-^FO5,117^A0N,20,20^FD080^FS 
-^FO130,120^A0N,20,20^FDvinotinto^FS 
+            // ^FO5,95^A0N,20,20
+// ^FDSHORT HOMBRE KAKI^FS 
+// ^FO5,117^A0N,20,20^FD080^FS 
+// ^FO130,120^A0N,20,20^FDvinotinto^FS 
 
-^FO2,140^A0N,25,20^FD314046^FS 
-^FO95,145^A0N,17,15^FDUnidad a $49900^FS 
-
-
-^FO30,170^A0N,28,28^FD36^FS 
-^FO80,168^A0N,35,35^FD33.900^FS 
+            // ^FO2,140^A0N,25,20^FD314046^FS 
+// ^FO95,145^A0N,17,15^FDUnidad a $49900^FS 
 
 
+            // ^FO30,170^A0N,28,28^FD36^FS 
+// ^FO80,168^A0N,35,35^FD33.900^FS 
 
 
 
-^XZ
-             ";
+
+
+            // ^XZ
+//              ";
 
             //  https://labelary.com/viewer.html
 

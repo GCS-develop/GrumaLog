@@ -256,4 +256,159 @@ class Ordendecompradetalle extends \yii\db\ActiveRecord
         return '-';
     }
 
+    public static function insertarDetalleOC($idordencompra, $datos){
+
+        $numeroitems = 0;
+
+        $totalCantidadPedida = 0;
+        $totalCantidadEntrada = 0;
+        $totalCantidadPendiente = 0;
+        $totalPaquetes = 0;
+        $fechaentrega = null;
+
+        $numRegistrosBorrados = Ordendecompradetalle::deleteAll(['idOrdenCompra' => $idordencompra]);
+
+        foreach ($datos as $registro) {
+
+            $modelitem = Ordendecompradetalle::actualizarItemOC ($registro);
+            if ($modelitem){
+
+                $unidadPaquete = 'UND';
+                $cantidadPendiente = $registro['cantidadPendiente'];
+
+                if ($modelitem->unidadEmpaque){
+                    $unidadPaquete = $modelitem->unidadEmpaque;
+                    $nroPaquetes = $cantidadPendiente / 
+                                    $modelitem->unidadempaque->equivalencia;
+                }else{
+                    $nroPaquetes = $cantidadPendiente;
+                }
+
+                if (fmod($nroPaquetes, 1) != 0){
+                    $numeroitems = -1;
+                    break;
+                }
+
+                $modeldetalle = new Ordendecompradetalle();
+                $modeldetalle->idOrdenCompra = $idordencompra;
+                $modeldetalle->idItem = $modelitem->id;
+                $modeldetalle->idCategoria = $modelitem->idCategoria;
+                $modeldetalle->idSubcategoria = $modelitem->idSubcategoria;
+                $modeldetalle->fechaEntrega = $registro['fechaEntrega'];
+                $fechaentrega = $registro['fechaEntrega'];
+
+                $modeldetalle->unidadPaquete = $unidadPaquete;
+                // $modeldetalle->nroPaquetes = (int) $nroPaquetes;
+                $modeldetalle->nroPaquetes = $nroPaquetes;
+
+                $modeldetalle->cantidadPedida = $registro['cantidadPedida'];
+                $modeldetalle->cantidadEntrada = $registro['cantidadEntrada'];
+                $modeldetalle->cantidadPendiente = $registro['cantidadPendiente'];
+
+                $totalCantidadPedida = $totalCantidadPedida + $registro['cantidadPedida'];
+                $totalCantidadEntrada = $totalCantidadEntrada + $registro['cantidadEntrada'];
+                $totalCantidadPendiente = $totalCantidadPendiente + $registro['cantidadPendiente'];
+                $totalPaquetes = $totalPaquetes + $modeldetalle->nroPaquetes;
+
+                $numeroitems++;
+
+                if (!$modeldetalle->save()){
+                    echo $nroPaquetes;
+                    var_dump($modeldetalle->getErrors()); die("hola");
+                }
+            }
+
+            $modelordencompra = Ordendecompra::findOne(['id' => $idordencompra]);
+            if ($modelordencompra){
+                $modelordencompra->totalCantidadPedida = $totalCantidadPedida;
+                $modelordencompra->totalCantidadEntrada = $totalCantidadEntrada;
+                $modelordencompra->totalCantidadPendiente = $totalCantidadPendiente;
+                $modelordencompra->nroPaquetes = $totalPaquetes;
+                $modelordencompra->fechaEntrega = $fechaentrega;
+
+                $modelordencompra->save();
+            }
+
+        }
+
+        return $numeroitems;
+
+    }
+
+    public static function actualizarItemOC ($fila) {
+
+        $codigobarras = $fila['codigoBarras'];
+        $item = $fila['item'];
+
+        $codigo = $fila['idTalla'];
+		$nombre = $fila['talla'];
+        $idtalla = Talla::actualizarRegistro ($codigo, $nombre);
+
+		$codigo = $fila['idColor'];
+		$nombre = $fila['color'];
+		$idcolor = Color::actualizarRegistro ($codigo, $nombre);
+
+        if ($codigobarras){
+            $model = Item::findOne(['codigoBarras' => $codigobarras]);
+            if ($model == null){
+                $model = new Item();
+                $model->codigoBarras = $codigobarras;
+            }
+        }else{
+            $model = Item::findOne([
+                                            'item' => $item,
+                                            'idTalla' => $idtalla,
+                                            'idColor' => $idcolor
+                                        ]);
+
+            if ($model == null){
+                $model = new Item();
+                $model->codigoBarras = null;
+            }
+        }
+
+        $modelaux = new Categoria ();
+        $modelaux->codigoERP = $fila['idCategoria'];
+        $modelaux->nombre = $fila['categoria'];
+		$idcategoria = Categoria::actualizarRegistro ($modelaux);
+
+        $modelaux = new Subcategoria ();
+        $modelaux->codigoERP = $fila['idSubcategoria'];
+        $modelaux->nombre = $fila['subcategoria'];
+        $modelaux->idCategoria = $idcategoria;
+		$idsubcategoria = Subcategoria::actualizarRegistro ($modelaux);
+
+        $modelaux = new Marca();
+		$modelaux->codigo = $fila['idMarca'];
+        $modelaux->nombre = $fila['marca'];
+        $idmarca = Marca::actualizarRegistro($modelaux);
+
+        $modelaux = new Producto();
+		$modelaux->codigo = $fila['idProducto'];
+        $modelaux->nombre = $fila['producto'];
+        $idproducto = Producto::actualizarRegistro($modelaux);
+
+        $model->item = $item;
+        $model->referencia = $fila['referencia'];
+		$model->descripcion = $fila['descripcion'];
+        $model->idCategoria = $idcategoria;
+        $model->idSubcategoria = $idsubcategoria;
+        $model->idColor = $idcolor;
+        $model->idTalla = $idtalla;
+        $model->idMarca = $idmarca;
+        $model->idProducto = $idproducto;
+        $model->codigoProveedor = $fila['idProveedor'];
+		$model->nombreProveedor = $fila['proveedor'];
+
+        $model->unidadEmpaque = $fila['unidadEmpaque'];
+		$model->unidadOrden = $fila['unidadOrden'];
+        $model->idEstado = $fila['estadoItem'];
+
+        if ($model->save()){
+            return $model;
+        } 
+
+        return null;
+    }
+
 }

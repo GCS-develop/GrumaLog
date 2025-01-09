@@ -3,6 +3,8 @@
 namespace frontend\models;
 
 use Yii;
+use Mike42\Escpos\Printer;
+use diecoding\barcode\generator\Barcode;
 
 /**
  * This is the model class for table "conteocdscdestino".
@@ -152,5 +154,279 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
     public function getUsuarioconteo()
     {
         return $this->hasOne(Userconteocdsc::class, ['id' => 'idUserConteo']);
+    }
+
+    public static function imprimirEtiquetas($idconteofactura, $printer, $dataProviderDestino){
+
+        foreach ($dataProviderDestino as $destino) {
+            for ($i = 1; $i <= $destino->numeroCajas; $i++) {
+                // Renderizar la vista con los datos necesarios
+
+                $dataProviderDetalle = $destino->getConteocdscdestinodetalles()
+                        ->andFilterWhere([
+                            'idConteocdscdestino' => $destino->id,
+                        ])->all();
+
+                $totalunidadempaque = 0;
+
+                foreach($dataProviderDetalle as $detalle){
+                    if (!$detalle->item->unidadempaque){
+                        $equivalencia = 1;
+                    }else {
+                        $equivalencia = $detalle->item->unidadempaque->equivalencia;
+                    }
+                    $unidadempaque = $detalle->totalUnidades / $equivalencia;
+                    $totalunidadempaque = $totalunidadempaque + $unidadempaque;
+                }
+
+                $printer->setTextSize(2, 2); // Tamaño grande para el título
+                $printer->setEmphasis(true); // Negrita
+                $printer->text("CONTEO CDSC No:");
+
+                $printer->setEmphasis(false);
+                $printer->text($idconteofactura . "\n");
+
+                $printer->setEmphasis(true);
+                $printer->text("CAJA ");
+                $printer->setEmphasis(false);
+                $printer->text("$i DE {$destino->numeroCajas}\n");
+
+                $printer->setEmphasis(true);
+                $printer->text("PROVEEDOR:\n");
+                $printer->setEmphasis(false);
+
+                $printer->setTextSize(2, 2); // Tamaño Normal
+                $printer->text("{$destino->factura->proveedor->nit} - {$destino->factura->proveedor->razonSocial}\n");
+
+                $printer->setTextSize(2, 2); // Tamaño grande
+                $printer->setEmphasis(true);
+                $printer->text("FACTURA:");
+                $printer->setEmphasis(false);
+                $printer->text("{$destino->factura->numeroFactura}\n");
+
+                $printer->setEmphasis(true);
+                $printer->text("ALM. DESTINO:\n");
+                $printer->setEmphasis(false);
+
+                $printer->setTextSize(2, 2); // Tamaño normal
+                $printer->text("{$destino->centrooperacion->codigo} - {$destino->centrooperacion->nombre}\n");
+
+                $printer->setTextSize(2, 2); // Tamaño grande
+
+                $printer->setEmphasis(true);
+                $printer->text("UND. EMPAQUE:");
+                $printer->setEmphasis(false);
+                $printer->text(round($totalunidadempaque, 0) . "\n");
+
+                $printer->setEmphasis(true);
+                $printer->text("TOTAL UNDS:");
+                $printer->setEmphasis(false);
+                $printer->text("{$destino->total}\n");
+
+                $printer->setEmphasis(true);
+                $printer->text("USUARIO:\n");
+                $printer->setEmphasis(false);
+
+                $printer->setTextSize(2, 2); // Tamaño normal
+
+                $printer->text("{$destino->usuarioconteo->user->empleado->nombreEmpleado}\n");
+
+                // Separador
+                // $printer->text("-------------------------\n");
+
+                // Cortar papel después de cada etiqueta
+                $printer->cut();
+            }
+        }
+    }
+
+    public static function generarTraspasoEncabezado ($parametros, $destino, $printer){
+        // var_dump($destino);die('csc');
+
+        $nombreEmpresa = $parametros['nombreEmpresa'];
+        $nitEmpresa = $parametros['nitEmpresa'];
+        $direccionEmpresa = $parametros['direccionEmpresa'];
+        $telefonoEmpresa = $parametros['telefonoEmpresa'];
+
+        $serie = $destino->factura->tipodocumento->codigo;
+        $numero = $destino->factura->numeroEntrada;
+        $codigoalmacenlegaliza = $destino->factura->centroOperacionLegaliza->codigo;
+        $nombrealmacenlegaliza = $destino->factura->centroOperacionLegaliza->nombre;
+        //var_dump($destino->factura->fechaEntrada);die();
+        $fechatraspaso = date("d/m/Y", strtotime($destino->factura->fechaEntrada));
+
+        $printer->setTextSize(2, 2); // Tamaño grande para el título
+        $printer->setEmphasis(true); // Negrita
+        $printer->text("TRASPASO MERCANCIA\n");
+
+        $printer->setTextSize(1, 1);
+        $printer->setEmphasis(false);
+        $printer->text($nombreEmpresa . "\n");
+        $printer->text($nitEmpresa . "\n");
+        $printer->text($direccionEmpresa . "  Tel: " . $telefonoEmpresa . "\n");
+
+        // Línea de separación
+        $printer->text("\n");
+        $printer->text(str_repeat('-', 40) . "\n");
+
+        $printer->text(
+            "SERIE: " . str_pad($serie, 5) .
+            "NUMERO: " . str_pad($numero, 10) .
+            "CAJA: KPM\n"
+        );
+
+        $printer->text("ALMACEN ORIGEN: " . $codigoalmacenlegaliza . "\n");
+        $printer->text($nombrealmacenlegaliza . "\n");
+
+        $printer->text("ALMACEN DESTINO: " . $destino->centrooperacion->codigo . "\n");
+        $printer->text($destino->centrooperacion->nombre . "\n");
+
+        $printer->text("FECHA TRASPASO: " . $fechatraspaso . "\n");
+
+        $printer->text(str_repeat('-', 40) . "\n");
+
+        /*
+        // Ancho de las columnas (ajústar según el ancho de la impresora)
+        $columna1 = 10; // REF
+        $columna2 = 20; // DESCRIPCION
+        $columna3 = 10; // UNDS
+
+        // Encabezado de la tabla
+        $printer->setEmphasis(true); // Negrita para el encabezado
+        $printer->text(
+            str_pad("REF", $columna1) .
+            str_pad("DESCRIPCION", $columna2) .
+            str_pad("UNDS", $columna3, ' ', STR_PAD_LEFT) . "\n"
+        );
+        $printer->setEmphasis(false); // Sin negrita para el contenido
+
+        // Línea divisoria
+        $printer->text(str_repeat("-", $columna1 + $columna2 + $columna3) . "\n");
+
+        $printer->text(str_repeat('-', 40) . "\n");
+        */
+    }
+
+    public static function generarTraspasoDetalle ($dataProviderDetalle, $printer){
+
+        // Configuración del ancho de las columnas
+        $columna1 = 8; // Ancho para "REF"
+        $columna2 = 10; // Ancho para "Color"
+        $columna3 = 10; // Ancho para "Talla"
+        $columna4 = 4;  // Ancho para "PAQ"
+        $columna5 = 4;  // Ancho para "UM"
+        $columna6 = 5;  // Ancho para "Total"
+
+        $totalpaquetes = 0;
+        $totalunidades = 0;
+
+        // Encabezado
+        $printer->setEmphasis(true);
+        $printer->text(str_pad("REF", $columna1) .
+                       str_pad("COLOR", $columna2) .
+                       str_pad("TALLA", $columna3) .
+                       str_pad("PAQ", $columna4) .
+                       str_pad("UM", $columna5) .
+                       str_pad("TOTAL", $columna6, ' ', STR_PAD_LEFT) . "\n");
+        $printer->text(str_repeat("-", $columna1 + $columna2 + $columna3 + $columna4) . "\n");
+        $printer->setEmphasis(false);
+
+        foreach($dataProviderDetalle as $referencia){
+
+            $unidadempaque = 'UND';
+            $equivalencia = 1;
+            if ($referencia->item->unidadEmpaque){
+                $unidadempaque = $referencia->item->unidadEmpaque;
+                $equivalencia = $referencia->item->unidadempaque->equivalencia;
+            }
+
+            $total = $referencia->totalUnidades * $equivalencia;
+
+            $totalpaquetes += $referencia->totalUnidades;
+            $totalunidades += $total;
+
+            // Primera línea con REF, COLOR, TALLA y UNDS
+            $printer->text(
+                str_pad($referencia->item->item, $columna1) .
+                str_pad($referencia->item->color->codigo, $columna2) .
+                str_pad($referencia->item->talla->codigo, $columna3) .
+                str_pad($referencia->totalUnidades, $columna4) .
+                str_pad($unidadempaque, $columna5) .
+                str_pad($total, $columna6, ' ', STR_PAD_LEFT) . "\n"
+            );
+
+            // Segunda línea con descripción
+            $descripcion = $referencia->item->descripcion;
+            $printer->text(str_pad($descripcion, $columna1 + $columna2 + $columna3 + $columna4) . "\n");
+
+            // Línea divisoria para cada entrada
+            $printer->text(str_repeat("-", $columna1 + $columna2 + $columna3 + $columna4) . "\n");
+
+        }
+
+        return [
+            'totalunidades' => $totalunidades,
+            'totalpaquetes' => $totalpaquetes
+        ];
+        
+    }
+
+    public static function generarTraspasoPiePagina ($destino, $totales, $printer){
+
+        $serie = $destino->factura->tipodocumento->codigo;
+        $numero = $destino->factura->numeroEntrada;
+
+        // Simular tabla con bordes
+        $printer->text("+----------------------------+----+----+\n");
+        $printer->text("| TOTAL UNIDADES             | " . str_pad($totales['totalpaquetes'],4) . "    " . str_pad($totales['totalunidades'],4)   .  " |\n");
+        $printer->text("+----------------------------+----+----+\n");
+
+        $printer->text("1. SERIE DOCUMENTO" . "\n");
+
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->barcode($serie, Printer::BARCODE_CODE39);
+        $printer->text($serie);
+
+        // Línea vacía para separación
+        $printer->text("\n");
+
+        $printer->setJustification(Printer::JUSTIFY_LEFT);
+        $printer->text("2. NUMERO DOCUMENTO" . "\n");
+
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->barcode($numero, Printer::BARCODE_CODE39);
+        $printer->text($numero);
+
+        $printer->text("\n\n");
+
+        $printer->setEmphasis(true);
+        $printer->setJustification(Printer::JUSTIFY_LEFT);
+        $printer->text("Alm destino: " . $destino->centrooperacion->codigo . "\n");
+        $printer->text($destino->centrooperacion->nombre . "\n");
+        $printer->setEmphasis(false);
+
+        $printer->text("\n");
+
+        $printer->text("USUARIO CAPTURA:\n");
+        $printer->text("{$destino->usuarioconteo->user->empleado->nombreEmpleado}\n");
+
+        /* Yii::$app->user->identity->id */
+        $printer->text("USUARIO IMPRIME:\n");
+        $printer->text(Yii::$app->user->identity->username);
+
+        $printer->text("\n\n");
+
+        // Espacio para columnas vacías
+        $espacioVacio = str_repeat(' ', 25);
+
+        // Texto para "FIRMA SELLO"
+        $firmaSello = "FIRMA SELLO:";
+
+        // Impresión simulada de tabla
+        $printer->text($espacioVacio . $firmaSello . "\n");
+        $printer->text(str_repeat("-", 40) . "\n"); // Línea divisoria o separadora
+
+        // Línea vacía para separación adicional
+        $printer->text("\n");
     }
 }

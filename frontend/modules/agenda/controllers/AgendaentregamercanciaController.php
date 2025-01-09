@@ -2,6 +2,7 @@
 
 namespace frontend\modules\agenda\controllers;
 
+use frontend\models\Tipodocumento;
 use Yii;
 use frontend\models\Agendaentregamercancia;
 use frontend\models\search\AgendaentregamercanciaSearch;
@@ -24,6 +25,7 @@ use frontend\models\Ordendecompradetalle;
 use frontend\models\search\OrdendecompradetalleSearch;
 
 use common\models\OrdenesCompraWs;
+use common\models\OrdendecompraSIESA;
 
 use frontend\models\FileAgendaInput;
 
@@ -237,10 +239,10 @@ class AgendaentregamercanciaController extends Controller
                         if ($respuesta){
                             Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
                         }else{
-                            Yii::$app->session->setFlash( 'error', 'No se Puede Agendar Orden de Compra');
+                            Yii::$app->session->setFlash( 'error', 'NO se Puede Agendar Orden de Compra');
                         }
                     }else{
-                        Yii::$app->session->setFlash( 'error', 'No se Puede Agendar Orden de Compra');
+                        Yii::$app->session->setFlash( 'error', 'Error: No se Puede Agendar Orden de Compra.');
                     }
                 }
 
@@ -600,8 +602,74 @@ class AgendaentregamercanciaController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
-
     public function actionObtenerDatosOrden($idCentroOperacion, $idTipoDocumento, $numeroOrdenCompra)
+    {
+
+        $registrosInsertados = 0;
+
+        $model = Centrooperacion::findOne(['id' => $idCentroOperacion]);
+        $codigoCO = $model->codigo;
+
+        $model = Tipodocumento::findOne(['id' => $idTipoDocumento]);
+        $codigoTipoDocumento = $model->codigo;
+        $idCia = 7;
+        $consecutivo = $numeroOrdenCompra;
+        $ordenCompra = null;
+        $error = 0;
+            
+        $datos = OrdendecompraSIESA::obtenerDatosPorConsecutivo ($idCia, $codigoCO, $codigoTipoDocumento, $consecutivo);
+        if (!empty($datos)) {
+            // Inserta los datos en el modelo 2
+            $registrosInsertados =Ordendecompra::insertarDatosOC($datos);
+            if ($registrosInsertados > 0){
+
+                // Buscar la orden de compra en la base de datos
+                $ordenCompra = Ordendecompra::find()->where(['idCO' => $idCentroOperacion,
+                        'idTipoDocumento' => $idTipoDocumento,
+                        'consecutivo' => $numeroOrdenCompra
+                ])->one();
+            }else{
+                $error = $registrosInsertados;
+            }
+        }
+
+        if ($ordenCompra){
+
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            
+            return [
+                'id' => $ordenCompra->id,
+                'fechaOrden' => $ordenCompra->fecha,
+                'totalCantidadPedida' => $ordenCompra->totalCantidadPedida,
+                'totalCantidadEntrada' => $ordenCompra->totalCantidadEntrada,
+                'totalCantidadPendiente' => $ordenCompra->totalCantidadPendiente,
+                'nitProveedor' => $ordenCompra->proveedor->nit,
+                'razonSocial' => $ordenCompra->proveedor->razonSocial,
+                'dataProveedor' => $ordenCompra->proveedor->nit . '- ' . $ordenCompra->proveedor->razonSocial,
+                'encontrada' => true,
+            ];
+
+        } else {
+            // La orden de compra no fue encontrada, devolver un mensaje de error en formato JSON
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            $msg = 'La orden de compra no fue encontrada.';
+            if ($error < 0){
+                $msg = 'Error: Unidad de Medida de Item No Corresponde a su Equivalencia.';
+            }
+
+            return [
+                'error' => 'La orden de compra no fue encontrada.',
+                'encontrada' => false,
+                'fechaOrden' => '',
+                'id' => ''
+            ];
+        }
+        
+    }
+
+
+    public function actionObtenerDatosOrdenWS($idCentroOperacion, $idTipoDocumento, $numeroOrdenCompra)
     {
         
     

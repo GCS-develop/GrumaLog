@@ -265,8 +265,10 @@ class ProductosWs extends Model
         return $respuesta;
     }
 
-	public static function sincronizarERPDesdeOC ($codigoBarras, $item, $referencia, $descripcion,
-												$ext_1, $descirpcion_ext_1, $ext_2, $descripcion_ext_2,
+	public static function sincronizarERPDesdeOC ($codigoBarras, 
+												$item, $referencia, $descripcion,
+												$ext_1, $descripcion_ext_1, $ext_2, 
+												$descripcion_ext_2
 												){
 
 		$model = Item::findOne(['codigoBarras' => $codigoBarras]);

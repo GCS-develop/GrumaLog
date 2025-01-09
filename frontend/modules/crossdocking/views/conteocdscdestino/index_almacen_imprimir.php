@@ -33,29 +33,9 @@ use yii\bootstrap4\Modal;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'Conteo por Destino';
-
-switch ($origen){
-    case 'legaliza':
-        $this->params['breadcrumbs'][] = ['label' => 'Legalizar Factura CDSC', 'url' => ['indexlegaliza']]; 
-        break;
-    case 'entrada':
-        $this->params['breadcrumbs'][] = ['label' => 'Entrada Factura CDSC', 'url' => ['indexentrada']]; 
-        break;
-    case 'traspaso':
-        $this->params['breadcrumbs'][] = ['label' => 'Traspaso Factura CDSC', 'url' => ['indextraspaso']]; 
-        break;
-    case 'exportar':
-        $this->params['breadcrumbs'][] = ['label' => 'Exportar Factura CDSC', 'url' => ['index']]; 
-        break;
-    default :
-        $this->params['breadcrumbs'][] = ['label' => 'Factura CDSC', 'url' => ['index']]; 
-        break;
-
-}
-
+$this->params['breadcrumbs'][] = ['label' => 'Traspaso Factura CDSC', 'url' => ['/crossdocking/conteocdscdestinofactura/indextraspaso']]; 
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-
 
 <?php
     Modal::begin([                
@@ -143,12 +123,26 @@ $attributes = [
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-lg-12 centrar">
+            <?php $url = Url::to(['printitems', 
+                                        'idconteofactura' => $modelfactura->id
+                                    ]); 
+            ?>
+
+            <p>
+            <?= Html::button('Imprimir Todas Tirillas', 
+                        ['value'=>  $url, 'class' => 'btn btn-success btn-lg btn-create', 'id'=>'modalButtonCreate']) 
+            ?>
+            </p>
+        </div>
+    </div>  
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         //'filterModel' => $searchModel,
 
-        'summary' => '<h3 style="background-color: #f0f0f0; padding: 10px; text-align: center; margin-bottom: 20px;">DESTINOS</h3>',
+        //'summary' => '<h3 style="background-color: #f0f0f0; padding: 10px; text-align: center; margin-bottom: 20px;">DESTINOS</h3>',
         //'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
 		'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
 		'options' => [
@@ -204,11 +198,11 @@ $attributes = [
                 'class' => ActionColumn::className(),
                 'header'=>'Acción',
                 //'headerOptions' => ['width' => '15%'],
-                'template' => '{print} {codigobarras}',
+                'template' => '{printbox} {printitems}',
 
                 'buttons' => [
 
-                    'print' => function ($url, $model) {                                
+                    'printbox' => function ($url, $model) {                                
                         $t = Url::to([  'printbox', 
                                         'idconteofactura' => $model->idConteocdscdestinofactura, 
                                         'idcentrooperacion' => $model->idCentroOperacion
@@ -216,18 +210,22 @@ $attributes = [
 
                         return Html::button('<i class="fa fa-box"></i>',[
                                     'value'=> $t,
-                                    'title' => 'Imprimir Cajas',
+                                    'title' => 'Imprimir Etiqueta de Cajas',
                                     'class' => 'btn btn-default btn_update',
                         ]);
                     },
 
-                    'codigobarras' => function ($url, $model) use ($origen) {                                  
-                        return Html::a('<i class="fa fa-barcode"></i>', 
-                                [   '/crossdocking/conteocdscdestinodetalle/index', 'idconteodestino' => $model->id, 'origen' => $origen], 
-                                [   'class' => 'btn btn-default',
-                                    'title' => 'Imprimir Tirilla Items',
-                                ]
-                        );
+                    'printitems' => function ($url, $model) {                                
+                        $t = Url::to([  'printitems', 
+                                        'idconteofactura' => $model->idConteocdscdestinofactura, 
+                                        'idcentrooperacion' => $model->idCentroOperacion
+                                    ]);
+
+                        return Html::button('<i class="fa fa-barcode"></i>',[
+                                    'value'=> $t,
+                                    'title' => 'Imprimir Tirilla con Items',
+                                    'class' => 'btn btn-default btn_update',
+                        ]);
                     },
 
                 ],

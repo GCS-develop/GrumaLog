@@ -125,4 +125,44 @@ class Proveedor extends \yii\db\ActiveRecord
     	$listadata = ArrayHelper::map($data, 'id', 'nombre');
     	return $listadata;
     }
+
+    public static function actualizarRegistroSIESA ($proveedor){
+
+        $nit = $proveedor['nit'];
+        $sucursal = $proveedor['sucursal'];
+
+		$model = Proveedor::findOne(['nit' => $nit, 'sucursal' => $sucursal]);
+
+		if ($model == null){
+			$model = new Proveedor();
+			$model->nit = $nit;
+            $model->sucursal = $sucursal;
+		}
+
+        $model->idProveedor = $nit;
+		$model->razonSocial = $proveedor['razonSocial'];
+		$model->tipoIdentificacion = $proveedor['idTipoIdentificacion'];
+
+		$model->descripcionSucursal = $proveedor['descripcionSucursal'];
+
+		$model->contacto = $proveedor['contactoProveedor'];
+		$model->direccion = $proveedor['direccionProveedor'];
+		$model->pais = $proveedor['paisProveedor'];
+		$model->ciudad = $proveedor['ciudadProveedor'];
+		$model->departamento = $proveedor['deptoProveedor'];
+		$model->telefono = $proveedor['telefonoProveedor'];
+		$model->email = $proveedor['emailProveedor'];
+		$model->celular = $proveedor['celularProveedor'];
+
+		$model->criterioMercancia = $proveedor['mercancia'];
+		$model->criterioModeloLogistico = $proveedor['modelo'];
+
+		$respuesta = $model->save(); 
+
+		if (!$respuesta){
+			return false;
+		}
+
+        return $model->id;
+    }
 }

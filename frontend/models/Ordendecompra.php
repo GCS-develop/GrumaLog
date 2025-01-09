@@ -7,6 +7,8 @@ use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 
+use common\models\OrdendecompraSIESA;
+
 /**
  * This is the model class for table "ordendecompra".
  *
@@ -147,11 +149,78 @@ class Ordendecompra extends \yii\db\ActiveRecord
     }
 
     public function getValidacionItemsOC()
-{
-    if ($this->validarItemsOC()) {
-        return 'Sí'; // O cualquier otro texto que desees mostrar
-    } else {
-        return 'No'; // O cualquier otro texto que desees mostrar
+    {
+        if ($this->validarItemsOC()) {
+            return 'Sí'; // O cualquier otro texto que desees mostrar
+        } else {
+            return 'No'; // O cualquier otro texto que desees mostrar
+        }
     }
-}
+
+    public static function insertarDatosOC($datos){
+
+        $contador = 0;
+
+        foreach ($datos as $fila) {
+            $modelCO = new Centrooperacion ();
+            $modelCO->codigo = $fila['idCO'];
+            $modelCO->nombre = $fila['CO'];
+            $idCO = Centrooperacion::actualizarRegistro($modelCO);
+        
+            $modelTD = new Tipodocumento();
+            $modelTD->codigo = $fila['idTipoDocumento'];
+            $modelTD->nombre = $fila['tipoDocumento'];
+            $idTipoDocumento = Tipodocumento::actualizarRegistro($modelTD);
+
+            $consecutivo = $fila['consecutivo'];
+
+            $idProveedor = Proveedor::actualizarRegistroSIESA($fila);
+
+            $model = Ordendecompra::findOne(['idCO' => $idCO,
+                                                'idTipoDocumento' => $idTipoDocumento,
+                                                'consecutivo' => $consecutivo
+                                            ]);
+            if ($model == null){
+                $model = new Ordendecompra();
+                $model->idCO = $idCO;
+                $model->idTipoDocumento = $idTipoDocumento;
+                $model->consecutivo =$consecutivo;
+            }
+
+            $modelEO = new Estadoordencompra();
+            $modelEO->nombre = $fila['estadoDcto'];
+            $idEstado = Estadoordencompra::actualizarRegistro($modelEO);
+
+            $model->fecha = $fila['fecha'];
+            $model->idProveedor = $idProveedor;
+            $model->idEstado = $idEstado;
+
+            if (!$model->save()){
+                continue;
+            }
+
+            $idCia = $fila['idCia'];
+            $id = $fila['id'];
+            $detalle = OrdendecompraSIESA::obtenerDatosDetalleOC($idCia, $id);
+
+            $registrosInsertados = 0;
+            if (!empty($detalle)) {
+                // Inserta los datos en el modelo 2
+                //var_dump($detalle); die("hola");
+                $registrosInsertados = Ordendecompradetalle::insertarDetalleOC($model->id, $detalle);
+            }
+
+            if ($registrosInsertados <= 0){
+                $contador = $registrosInsertados;
+                $numRegistrosBorrados = Ordendecompradetalle::deleteAll(['idOrdenCompra' => $model->id]);
+                $numRegistrosBorrados = Ordendecompra::deleteAll(['id' => $model->id]);
+                break;
+            }
+
+            $contador++;
+        }
+
+        return $contador;
+
+    }
 }

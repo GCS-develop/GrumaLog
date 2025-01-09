@@ -164,14 +164,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 'buttons' => [
 
-                    'indexalmacen' => function ($url, $model) {                                  
+                    /*'indexalmacen' => function ($url, $model) {                                  
                         return Html::a('<i class="fa fa-store"></i>', 
                                 [   'indexalmacen', 'idconteofactura' => $model->id, 'origen' => 'traspaso'], 
                                 [   'class' => 'btn btn-default',
                                     'title' => 'Visualizar Conteo por Almacén',
                                 ]
                         );
-                    },
+                    },*/
 
                     'traspasofactura' => function ($url, $model) {                                  
                         return Html::a('<i class="fa fa-check"></i>', 
@@ -188,15 +188,18 @@ $this->params['breadcrumbs'][] = $this->title;
                         );
                     },
 
-                    'printetiquetacaja' => function ($url, $model) {                                  
+                    'indexalmacen' => function ($url, $model) {                                  
                         return Html::a('<i class="fa fa-print"></i>', 
-                                [   '/crossdocking/conteocdscdestino/indexfactura', 'idconteofactura' => $model->id], 
+                                [   '/crossdocking/conteocdscdestino/indexalmacen', 
+                                            'idconteofactura' => $model->id,
+                                            'origen' => 'traspaso'
+                                    ], 
                                 [   'class' => 'btn btn-default',
-                                    'title' => 'Imprimir Etiqueta Caja',
-                                    'data' => [
+                                    'title' => 'Imprimir Etiqueta de Cajas y Tirilla de Items',
+                                    /*'data' => [
                                         'confirm' => 'Esta Seguro de Imprimir Etiqueta de la Caja? ( ' . $model->razonSocial . ' - ' . $model->numeroFactura  .' )',
                                         'method' => 'post',
-                                    ]
+                                    ]*/
                                 ]
                         );
                     },

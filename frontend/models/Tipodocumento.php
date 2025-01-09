@@ -79,10 +79,11 @@ class Tipodocumento extends \yii\db\ActiveRecord
         ];
     }
 
-    public static function actualizarRegistro ($modelTD){
+    public static function actualizarRegistro($modelTD)
+    {
 
         $model = Tipodocumento::findOne(['codigo' => $modelTD->codigo]);
-        if ($model == null){
+        if ($model == null) {
             $model = new Tipodocumento();
             $model->codigo = $modelTD->codigo;
             $model->nombre = $modelTD->nombre;
@@ -92,28 +93,41 @@ class Tipodocumento extends \yii\db\ActiveRecord
         return $model->id;
     }
 
-    public static  function  getListaData(){
+    public static function getListaData()
+    {
         $data = Tipodocumento::find()
-                        ->select(['id', 'nombre'])
-                        ->orderBy('nombre')->asArray()->all();
-    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
-    	return $listadata;
+            ->select(['id', 'nombre'])
+            ->orderBy('nombre')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
     }
 
-    public static  function  getListaDataCodigo(){
+    public static function getListaDataCodigo()
+    {
         $data = Tipodocumento::find()
-                        ->select(['id', 'codigo AS nombre'])
-                        ->orderBy('codigo')->asArray()->all();
-    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
-    	return $listadata;
+            ->select(['id', 'codigo AS nombre'])
+            ->orderBy('codigo')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
     }
 
-    public static  function  getListaDataCodigo2(){
+    public static function getListaDataCodigoAgendamiento()
+    {
         $data = Tipodocumento::find()
-                        ->select(['codigo', 'codigo AS nombre'])
-                        ->orderBy('codigo')->asArray()->all();
-    	$listadata = ArrayHelper::map($data, 'codigo', 'nombre');
-    	return $listadata;
+            ->select(['id', 'codigo AS nombre'])
+            ->where(['codigo' => ['2CA', '2CM', '2EA', '2EE']])
+            ->orderBy('codigo')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
+    }
+
+    public static function getListaDataCodigo2()
+    {
+        $data = Tipodocumento::find()
+            ->select(['codigo', 'codigo AS nombre'])
+            ->orderBy('codigo')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'codigo', 'nombre');
+        return $listadata;
     }
 
 }

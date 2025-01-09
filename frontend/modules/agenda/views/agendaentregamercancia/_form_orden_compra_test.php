@@ -78,7 +78,7 @@ use frontend\models\Transportadora;
 
         <div class="col-lg-4">
             <?= $form->field($model, 'idTipoDocumento')->widget(Select2::classname(), [
-                    'data' => Tipodocumento::getListaDataCodigo(),
+                    'data' => Tipodocumento::getListaDataCodigoAgendamiento(),
                     'options' => [
                         'placeholder' => 'Tipo Documento ...', 
                         'multiple' => false,
