@@ -40,9 +40,53 @@ class OrdendecompradetalleSearch extends Ordendecompradetalle
      *
      * @return ActiveDataProvider
      */
-    public function search($params)
+    public function search($params, $idordencompra = null)
     {
-        $query = Ordendecompradetalle::find();
+        $query = Ordendecompradetalle::find()
+                    ->select([  
+                                'det.idOrdenCompra', 
+                                'det.idItem',
+                                'oc.consecutivo',
+                                'oc.fecha AS fecha_activacion',
+                                'it.item',
+                                'it.referencia',
+                                'it.descripcion',
+                                'it.codigoBarras AS codigoEAN',
+                                "ISNULL(it.unidadEmpaque,'UND') AS unidadEmpaque",
+                                'mar.nombre AS marca',
+                                'tal.nombre AS talla',
+                                'col.nombre AS color',
+                                'cat.nombre AS categoria', 
+                                'sub.nombre AS subcategoria', 
+                                'SUM(det.cantidadPendiente) AS cantidad'
+                            ])
+                    ->alias('det')
+                    ->join('INNER JOIN', 'ordendecompra oc','det.idOrdenCompra = oc.id')
+                    ->join('INNER JOIN', 'item it','det.idItem = it.id')
+                    ->join('INNER JOIN', 'categoria cat','it.idCategoria = cat.id')
+                    ->join('INNER JOIN', 'subcategoria sub','it.idSubcategoria = sub.id')
+                    ->join('LEFT JOIN', 'marca mar','it.idMarca = mar.id')
+                    ->join('LEFT JOIN', 'talla tal','it.idTalla = tal.id')
+                    ->join('LEFT JOIN', 'color col','it.idColor = col.id')
+                    ->groupBy(['det.idOrdenCompra', 
+                                'det.idItem',
+                                'oc.consecutivo',
+                                'oc.fecha',
+                                'it.item',
+                                'it.referencia',
+                                'it.descripcion',
+                                'it.codigoBarras',
+                                "ISNULL(it.unidadEmpaque,'UND')",
+                                'mar.nombre',
+                                'tal.nombre',
+                                'col.nombre',
+                                'cat.nombre', 
+                                'sub.nombre'
+        ]   );
+
+        if ($idordencompra){
+            $query = $query->andFilterWhere(['det.idOrdenCompra' => $idordencompra]);
+        }
 
         // add conditions that should always apply here
 

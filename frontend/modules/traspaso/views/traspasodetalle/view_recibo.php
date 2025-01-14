@@ -185,14 +185,14 @@ $this->registerJsFile('@web/js/JsBarcode.all.min.js', ['depends' => [\yii\web\Jq
                 <h6 class="d-flex flex-row" style="margin-right:50px;">
                     Serie:
                     <div id="tipodocumento_traspaso">
-                        <?= $model->bodegaOrigen->tipodocumento->tipodocumento->codigo ?>
+                        <?= $model->tipodocumento->codigo ?>
                     </div>
                 </h6>
 
                 <h6 class="d-flex flex-row">
                     NUMERO:
                     <div id="consecutivo">
-                        <?= $model->consecutivo ?>
+                        <?= $model->codigoerp ? $model->codigoerp->f350_consec_docto : $model->consecutivo ?>
                     </div>
                 </h6>
 
@@ -283,7 +283,7 @@ $this->registerJsFile('@web/js/JsBarcode.all.min.js', ['depends' => [\yii\web\Jq
 
         <?=
             Barcode::widget([
-                'value' => $model->bodegaOrigen->tipodocumento->tipodocumento->codigo,
+                'value' => $model->tipodocumento->codigo,
                 'options' => [
                     'style' => "width: 4cm; height: 1cm;",
                 ],
@@ -318,7 +318,7 @@ $this->registerJsFile('@web/js/JsBarcode.all.min.js', ['depends' => [\yii\web\Jq
         <?=
 
             Barcode::widget([
-                'value' => $model->consecutivo,
+                'value' => $model->codigoerp ? $model->codigoerp->f350_consec_docto : $model->consecutivo,
                 'options' => [
                     'style' => "width: 4cm; height: 1cm;",
                 ],

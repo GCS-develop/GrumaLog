@@ -416,7 +416,9 @@ class Agendaentregamercancia extends \yii\db\ActiveRecord
         $modelestado = Estadoagenda::findOne(['codigo' => 0]);
 
         $categorias = Ordendecompradetalle::listarCategoriasOrdenCompra ($model->idOrdenCompra);
+
         foreach($categorias as $categoria){
+            
             $respuesta = false;
             $modelagendaoc = new Agendaentregamercancia();
             $modelagendaoc->idAgenda = $model->idAgenda;

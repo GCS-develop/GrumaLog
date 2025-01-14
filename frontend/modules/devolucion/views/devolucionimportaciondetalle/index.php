@@ -11,7 +11,7 @@ use frontend\models\Devolucionimportaciondetalle;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
-use yii\grid\GridView;
+use kartik\grid\GridView;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\DevolucionimportaciondetalleSearch $searchModel */
@@ -24,7 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="devolucionimportaciondetalle-index">
 
 
-    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+    <?php echo $this->render('_search', ['model' => $searchModel, 'idinterfase' => $idinterfase]); ?>
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,

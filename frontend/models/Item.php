@@ -8,6 +8,7 @@ use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 
 use yii\helpers\ArrayHelper;
+use common\models\OrdendecompraSIESA;
 
 /**
  * This is the model class for table "item".
@@ -241,7 +242,6 @@ class Item extends \yii\db\ActiveRecord
         return $model->id;
     }
 
-
     public static  function  getListaData(){
         $data = Item::find()
                     ->select([  
@@ -256,5 +256,39 @@ class Item extends \yii\db\ActiveRecord
 
     	$listadata = ArrayHelper::map($data, 'id', 'nombre');
     	return $listadata;
+    }
+
+    public static function obtenerPrecioVenta ($codigoEAN, $fecha_activacion){
+
+        $resultado = OrdendecompraSIESA::obtenerDatosPrecioVenta($codigoEAN, $fecha_activacion,'001');
+        if (!empty($resultado)) {
+            foreach ($resultado as $dato) {
+                return $dato['f126_precio'];
+            }
+        }
+
+        return 0;
+    } 
+
+    public static function generarContenidoSticker($registro, $precio, $x, $y){
+
+        $lineax1 = $x + 5;
+        $lineay1 = $y + 95;
+        $lineax2 = 1; 
+        $stickerContent = "
+            ^XA
+
+            ^FO{$x},{$y}
+            ^BY1.4,2.8,50
+            ^FT5,75
+            ^A0,50,50
+            ^B3N,N,50,Y,N
+            ^FD {$registro->codigoBarras} ^FS
+
+
+            ^XZ
+        ";
+
+        return $stickerContent;
     }
 }

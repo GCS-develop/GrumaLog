@@ -23,7 +23,7 @@ use yii\widgets\ActiveForm;
 <div class="devolucionimportaciondetalle-search">
 
     <?php $form = ActiveForm::begin([
-        'action' => ['index'],
+        'action' => ['index', 'idinterfase' => $idinterfase],
         'method' => 'get',
     ]); ?>
 

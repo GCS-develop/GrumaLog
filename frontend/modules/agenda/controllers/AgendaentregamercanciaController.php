@@ -210,6 +210,7 @@ class AgendaentregamercanciaController extends Controller
         $model->idAgenda = $idagenda;
         $model->desde = $modelagenda->desde;
         $model->hasta = $modelagenda->hasta;
+        $idCia = 7;
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
@@ -217,33 +218,61 @@ class AgendaentregamercanciaController extends Controller
                 $mensajeError = 'Error Actualizando Registro';
 
                 if ($model->validate()){
+                    $OK = Ordendecompra::insertarDatosOC ($idCia, 
+                                                            $model->idCentroOperacion, 
+                                                            $model->idTipoDocumento, 
+                                                            $model->numeroOrdenCompra);
 
-                    $ordencompraok = true;
-                    $modelagenda = Agendaentregamercancia::find()->where(['idOrdenCompra' => $model->idOrdenCompra])->all();
 
-                    foreach($modelagenda as $agenda){
-                        switch($agenda->estado->codigo){
-                            case 1:
-                            case 2:
-                            case 0: $ordencompraok = false; break;
+                    if ($OK > 0){
+
+                        $modeloc = Ordendecompra::find()->where(['idCO' => $model->idCentroOperacion,
+                                                            'idTipoDocumento' => $model->idTipoDocumento,
+                                                            'consecutivo' => $model->numeroOrdenCompra])->one();
+
+                        //die("Hola : " .$modeloc->id);
+
+                        $ordencompraok = true;
+                        $modelagenda = Agendaentregamercancia::find()->where(['idOrdenCompra' => $modeloc->id])->all();
+
+                        foreach($modelagenda as $agenda){
+
+                            switch($agenda->estado->codigo){
+                                case 1:
+                                case 2:
+                                case 0: $ordencompraok = false; break;
+                            }
+
+                            if ($ordencompraok == false){
+                                break;
+                            }
                         }
 
-                        if ($ordencompraok == false){
-                            break;
-                        }
-                    }
 
-                    if ($ordencompraok){
-                        $respuesta = Agendaentregamercancia::grabarOrdenCompraCategoria($model);
-                        
-                        if ($respuesta){
-                            Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
+                        if ($ordencompraok){
+                            $model->idOrdenCompra = $modeloc->id;
+                            $respuesta = Agendaentregamercancia::grabarOrdenCompraCategoria($model);
+
+                            if ($respuesta){
+                                Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
+                            }else{
+                                Yii::$app->session->setFlash( 'error', 'No se Puede Agendar Orden de Compra');
+                            }
                         }else{
-                            Yii::$app->session->setFlash( 'error', 'NO se Puede Agendar Orden de Compra');
+                            Yii::$app->session->setFlash( 'error', 'Error: Orden de Compra YA fue agendada. ' . $agenda->fechaCita." ".$agenda->horaCita. " " . $agenda->usuariocrea->username);
                         }
                     }else{
-                        Yii::$app->session->setFlash( 'error', 'Error: No se Puede Agendar Orden de Compra.');
+                        switch($OK){
+                            case - 1:
+                                Yii::$app->session->setFlash( 'error', 'OC. Tiene Inconsistencias. No Unidades de Item No Son Equivalentes a la Unidad de Medida');
+                                break;
+                            case 0: 
+                                Yii::$app->session->setFlash( 'error', 'Número Orden de Compra NO Existe');
+                                break;
+                        }
+
                     }
+
                 }
 
                 return $this->redirect(['index', 'id' => $model->idAgenda]);
@@ -602,11 +631,9 @@ class AgendaentregamercanciaController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
+    /*
     public function actionObtenerDatosOrden($idCentroOperacion, $idTipoDocumento, $numeroOrdenCompra)
     {
-
-        $registrosInsertados = 0;
-
         $model = Centrooperacion::findOne(['id' => $idCentroOperacion]);
         $codigoCO = $model->codigo;
 
@@ -614,50 +641,35 @@ class AgendaentregamercanciaController extends Controller
         $codigoTipoDocumento = $model->codigo;
         $idCia = 7;
         $consecutivo = $numeroOrdenCompra;
-        $ordenCompra = null;
-        $error = 0;
-            
+        
         $datos = OrdendecompraSIESA::obtenerDatosPorConsecutivo ($idCia, $codigoCO, $codigoTipoDocumento, $consecutivo);
         if (!empty($datos)) {
             // Inserta los datos en el modelo 2
             $registrosInsertados =Ordendecompra::insertarDatosOC($datos);
-            if ($registrosInsertados > 0){
 
-                // Buscar la orden de compra en la base de datos
-                $ordenCompra = Ordendecompra::find()->where(['idCO' => $idCentroOperacion,
+            if ($registrosInsertados > 0){
+                $ordenCompra = Ordendecompra::find()->where([
+                        'idCO' => $idCentroOperacion,
                         'idTipoDocumento' => $idTipoDocumento,
                         'consecutivo' => $numeroOrdenCompra
-                ])->one();
-            }else{
-                $error = $registrosInsertados;
+                    ])->one();
+                
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                    
+                return [
+                    'id' => $ordenCompra->id,
+                    'fechaOrden' => $ordenCompra->fecha,
+                    'totalCantidadPedida' => $ordenCompra->totalCantidadPedida,
+                    'totalCantidadEntrada' => $ordenCompra->totalCantidadEntrada,
+                    'totalCantidadPendiente' => $ordenCompra->totalCantidadPendiente,
+                    'nitProveedor' => $ordenCompra->proveedor->nit,
+                    'razonSocial' => $ordenCompra->proveedor->razonSocial,
+                    'dataProveedor' => $ordenCompra->proveedor->nit . '- ' . $ordenCompra->proveedor->razonSocial,
+                    'encontrada' => true,
+                ];
             }
-        }
-
-        if ($ordenCompra){
-
+        }else{
             Yii::$app->response->format = Response::FORMAT_JSON;
-            
-            return [
-                'id' => $ordenCompra->id,
-                'fechaOrden' => $ordenCompra->fecha,
-                'totalCantidadPedida' => $ordenCompra->totalCantidadPedida,
-                'totalCantidadEntrada' => $ordenCompra->totalCantidadEntrada,
-                'totalCantidadPendiente' => $ordenCompra->totalCantidadPendiente,
-                'nitProveedor' => $ordenCompra->proveedor->nit,
-                'razonSocial' => $ordenCompra->proveedor->razonSocial,
-                'dataProveedor' => $ordenCompra->proveedor->nit . '- ' . $ordenCompra->proveedor->razonSocial,
-                'encontrada' => true,
-            ];
-
-        } else {
-            // La orden de compra no fue encontrada, devolver un mensaje de error en formato JSON
-            Yii::$app->response->format = Response::FORMAT_JSON;
-
-            $msg = 'La orden de compra no fue encontrada.';
-            if ($error < 0){
-                $msg = 'Error: Unidad de Medida de Item No Corresponde a su Equivalencia.';
-            }
-
             return [
                 'error' => 'La orden de compra no fue encontrada.',
                 'encontrada' => false,
@@ -665,52 +677,56 @@ class AgendaentregamercanciaController extends Controller
                 'id' => ''
             ];
         }
-        
+
     }
 
-
-    public function actionObtenerDatosOrdenWS($idCentroOperacion, $idTipoDocumento, $numeroOrdenCompra)
+    public function actionObtenerDatosOrdenBAK($idCentroOperacion, $idTipoDocumento, $numeroOrdenCompra)
     {
-        
-    
         // Buscar la orden de compra en la base de datos
-        /*$model = Ordendecompra::find()->where(['idCO' => $idCentroOperacion,
+        $ordenCompra = Ordendecompra::find()->where(['idCO' => $idCentroOperacion,
                                                 'idTipoDocumento' => $idTipoDocumento,
                                                 'consecutivo' => $numeroOrdenCompra
-                                            ])->one();*/
+                                            ])->one();
 
-        
-        /*if ($ordenCompra) {
+        $registrosInsertados = 0;
+
+        if ($ordenCompra == null) {
+            $model = Centrooperacion::findOne(['id' => $idCentroOperacion]);
+            $codigoCO = $model->codigo;
+
+            $model = Tipodocumento::findOne(['id' => $idTipoDocumento]);
+            $codigoTipoDocumento = $model->codigo;
+            $idCia = 7;
+            $consecutivo = $numeroOrdenCompra;
             
-            $filasEliminadas = Ordendecompradetalle::deleteAll([
-                'idOrdenCompra' => $ordenCompra->id
-            ]);
+            $datos = OrdendecompraSIESA::obtenerDatosPorConsecutivo ($idCia, $codigoCO, $codigoTipoDocumento, $consecutivo);
+            if (!empty($datos)) {
+                // Inserta los datos en el modelo 2
+                $registrosInsertados =Ordendecompra::insertarDatosOC($datos);
 
-            $filasEliminadas = Ordendecompra::deleteAll([
-                                                'id' => $ordenCompra->id
-                                            ]);
+                if ($registrosInsertados > 0){
+
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    
+                    return [
+                        'id' => $ordenCompra->id,
+                        'fechaOrden' => $ordenCompra->fecha,
+                        'totalCantidadPedida' => $ordenCompra->totalCantidadPedida,
+                        'totalCantidadEntrada' => $ordenCompra->totalCantidadEntrada,
+                        'totalCantidadPendiente' => $ordenCompra->totalCantidadPendiente,
+                        'nitProveedor' => $ordenCompra->proveedor->nit,
+                        'razonSocial' => $ordenCompra->proveedor->razonSocial,
+                        'dataProveedor' => $ordenCompra->proveedor->nit . '- ' . $ordenCompra->proveedor->razonSocial,
+                        'encontrada' => true,
+                    ];
+                }
+            }
+        }else{
+            $registrosInsertados = 1;
         }
-        */
 
-        //if ($model == null) {
-            $model = new Ordendecompra();
-            $model->idCO = $idCentroOperacion;
-            $model->idTipoDocumento = $idTipoDocumento;
+        if ($registrosInsertados > 0){
 
-        //    $idordencompra = OrdenesCompraWs::sincronizarERPAgenda ($model->cO->codigo, $model->tipoDocumento->codigo, $numeroOrdenCompra);
-        // }else{
-        //    $idordencompra = $model->id;
-        //}
-
-        $modelordencompra = OrdenesCompraWs::sincronizarERPAgenda ($model->cO->codigo, $model->tipoDocumento->codigo, $numeroOrdenCompra);
-
-        $ordenCompra = Ordendecompra::findOne(['id' => $modelordencompra->id]);
-        
-        //$ordenCompra = OrdenesCompraWs::sincronizarERPAgenda ('002', '2CA', 64035);
-        //var_dump($idordencompra); die("HOLA 6");
-
-        if ($ordenCompra !== null) {
-            // La orden de compra fue encontrada, devolver los datos en formato JSON
             Yii::$app->response->format = Response::FORMAT_JSON;
             
             return [
@@ -724,8 +740,8 @@ class AgendaentregamercanciaController extends Controller
                 'dataProveedor' => $ordenCompra->proveedor->nit . '- ' . $ordenCompra->proveedor->razonSocial,
                 'encontrada' => true,
             ];
-        } else {
 
+        } else {
             // La orden de compra no fue encontrada, devolver un mensaje de error en formato JSON
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
@@ -735,7 +751,10 @@ class AgendaentregamercanciaController extends Controller
                 'id' => ''
             ];
         }
+        
     }
+
+    */
 
     public function actionSchedule($idagenda)
     {

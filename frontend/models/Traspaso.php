@@ -158,6 +158,11 @@ class Traspaso extends \yii\db\ActiveRecord
         return $this->hasOne(Tipodocumento::className(), ['id' => 'idTipoDocumento']);
     }
 
+    public function getCodigoerp()
+    {
+        return $this->hasOne(Documentosiesa::class, ['idGruma' => 'id']);
+    }
+
     public function enviarTraspasosPorPost()
     {
         // Obtener todos los traspasos

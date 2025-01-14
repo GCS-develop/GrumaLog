@@ -41,7 +41,7 @@ $gridColumns = [
         'attribute' => 'consecutivo',
         'contentOptions' => ['data-cellvalue' => 'consecutivo'],
         'value' => function ($model) {
-            return $model->consecutivo;
+            return $model->codigoerp ? $model->codigoerp->f350_consec_docto : $model->consecutivo;
         },
     ],
     [
@@ -264,12 +264,12 @@ Modal::end();
     return $model->tipodocumento ? $model->tipodocumento->codigo : 'Sin serie';
 },
         ],
-        // 'consecutivo',
+    
         [
             'attribute' => 'consecutivo',
             'contentOptions' => ['data-cellvalue' => 'consecutivo'],
             'value' => function ($model) {
-    return $model->consecutivo;
+    return $model->codigoerp ? $model->codigoerp->f350_consec_docto : $model->consecutivo;
 },
         ],
         // 'idCentroOperacion',

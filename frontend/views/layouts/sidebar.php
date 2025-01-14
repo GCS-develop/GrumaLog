@@ -85,7 +85,7 @@ $baseUrl = Url::base(true);
                                 'icon' => 'book',
                                 'badge' => '<span class="right badge badge-info">1</span>',
                                 'items' => [
-                                    ['label' => 'Registrar', 'url' => ['/ordencompra/ordendecompratemporal/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Gestionar', 'url' => ['/ordencompra/ordendecompra/index'], 'iconStyle' => 'far'],
                                 ],
                             ],
                             [

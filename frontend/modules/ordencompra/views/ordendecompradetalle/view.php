@@ -4,14 +4,14 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
-/** @var frontend\models\Traspaso $model */
+/** @var frontend\models\Ordendecompradetalle $model */
 
 $this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Traspasos', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Ordendecompradetalles', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="traspaso-view">
+<div class="ordendecompradetalle-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
@@ -30,21 +30,18 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model,
         'attributes' => [
             'id',
-            'idCentroOperacion',
-            'idBodegaOrigen',
-            'idBodegaDestino',
-            'numeroCajas',
-            'idTipoDocumento',
-            // 'consecutivo',
-            [
-                'attribute' => 'consecutivo',
-                'contentOptions' => ['data-cellvalue' => 'consecutivo'],
-                'value' => function ($model) {
-                return $model->codigoerp ? $model->codigoerp->f350_consec_docto : $model->consecutivo;
-            },
-            ],
-            'idEstado',
-            'idUltimoItem',
+            'idOrdenCompra',
+            'idItem',
+            'idCategoria',
+            'idSubcategoria',
+            'cantidadPedida',
+            'cantidadEntrada',
+            'cantidadPendiente',
+            'fechaEntrega',
+            'unidadPaquete',
+            'nroPaquetes',
+            'bodega',
+            'codigointernomovto',
             'created_at',
             'created_by',
             'updated_at',

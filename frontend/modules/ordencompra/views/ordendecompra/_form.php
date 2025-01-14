@@ -1,62 +1,22 @@
 <?php
 
-$this->registerCss('
-
-    .btn-create {
-        width: 300px;
-    }
-
-    .centrar {
-        text-align: center;
-    }
-
-    /* styles.css */
-
-    /* Cambiar el tamaño de la letra para todo el formulario */
-    form {
-        font-size: 12px; /* Cambia el tamaño de la letra a 16px */
-    }
-    
-    /* Cambiar el tamaño de la letra para etiquetas de campo */
-    label {
-        font-size: 12px; /* Cambia el tamaño de la letra a 14px */
-    }
-    
-    /* Cambiar el tamaño de la letra para los inputs de texto */
-    input[type="text"] {
-        font-size: 12px; /* Cambia el tamaño de la letra a 12px */
-    }
-    
-    /* Cambiar el tamaño de la letra para los botones */
-    button {
-        font-size: 12px; /* Cambia el tamaño de la letra a 16px */
-    }
-    
-');
-
-/*$this->registerJsFile(Yii::$app->request->baseUrl.'/js/dataOrdenCompra.js',
-['depends' => [\yii\web\JqueryAsset::className()]]
-);*/
-
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
-use kartik\datetime\DateTimePicker;
 
 use frontend\models\Centrooperacion;
 use frontend\models\Tipodocumento;
-use frontend\models\Transportadora;
+
 
 /** @var yii\web\View $this */
-/** @var frontend\models\Agendaentregamercancia $model */
+/** @var frontend\models\Ordendecompra $model */
 /** @var yii\widgets\ActiveForm $form */
-
 ?>
 
-<div class="agendaentregamercancia-form">
+<div class="ordendecompra-form">
 
-    <?php $form = ActiveForm::begin([
-                    'id' => 'modal-form-agendaentregamercancia',
+<?php $form = ActiveForm::begin([
+                    'id' => 'modal-form-ordendecompra',
                     'enableAjaxValidation' => false,
                 ]); ?>
 

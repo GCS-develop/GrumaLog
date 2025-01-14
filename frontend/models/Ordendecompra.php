@@ -81,12 +81,16 @@ class Ordendecompra extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'idCO' => 'Id Co',
-            'idTipoDocumento' => 'Id Tipo Documento',
+            'idCO' => 'CO',
+            'idTipoDocumento' => 'Tipo Documento',
             'consecutivo' => 'Consecutivo',
             'fecha' => 'Fecha',
-            'idProveedor' => 'Id Proveedor',
-            'idEstado' => 'Id Estado',
+            'idProveedor' => 'Proveedor',
+            'idEstado' => 'Estado',
+            'totalCantidadPedida' => 'Cantidad Pedida',
+            'totalCantidadEntrada' => 'Cantidad Entrada',
+            'totalCantidadPendiente' => 'Cantidad Pendiente',
+            'nroPaquetes' => 'Nro Paquetes',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
@@ -114,6 +118,17 @@ class Ordendecompra extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Proveedor::class, ['id' => 'idProveedor']);
     }
+
+        /**
+     * Gets query for [[Estadoordencompra]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getEstadoordencompra()
+    {
+        return $this->hasOne(Estadoordencompra::class, ['id' => 'idEstado']);
+    }
+
 
     /**
      * Gets query for [[TipoDocumento]].
@@ -157,9 +172,19 @@ class Ordendecompra extends \yii\db\ActiveRecord
         }
     }
 
-    public static function insertarDatosOC($datos){
+    public static function insertarDatosOC($idCia, $idco, $idtipodocumento, $consecutivo){
 
         $contador = 0;
+        $model = Centrooperacion::findOne(['id' => $idco]);
+        $codigoCO = $model->codigo;
+
+        $model = Tipodocumento::findOne(['id' => $idtipodocumento]);
+        $codigoTipoDocumento = $model->codigo;
+
+        $datos = OrdendecompraSIESA::obtenerDatosPorConsecutivo ($idCia, 
+                                                        $codigoCO, 
+                                                        $codigoTipoDocumento, 
+                                                        $consecutivo);
 
         foreach ($datos as $fila) {
             $modelCO = new Centrooperacion ();

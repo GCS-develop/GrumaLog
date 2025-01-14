@@ -96,6 +96,34 @@ use frontend\models\Transportadora;
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-lg-3">
+            <?= $form->field($model, 'fechaOrden')->textInput(['readonly' => true, 'id' => 'fecha-orden']) ?>
+        </div>
+
+        <div class="col-lg-3">
+            <?= $form->field($model, 'totalCantidadPedida')->textInput(['readonly' => true, 'type' => 'number', 'id' => 'total-cantidad-pedida']) ?>
+        </div>
+
+        <div class="col-lg-3">
+            <?= $form->field($model, 'totalCantidadEntrada')->textInput(['readonly' => true, 'type' => 'number', 'id' => 'total-cantidad-entrada']) ?>
+        </div>
+
+        <div class="col-lg-3">
+            <?= $form->field($model, 'totalCantidadPendiente')->textInput(['readonly' => true, 'type' => 'number', 'id' => 'total-cantidad-pendiente']) ?>
+        </div>
+    </div>
+        
+    <div class="row">
+        <div class="col-lg-9">
+            <?= $form->field($model, 'dataProveedor')->textInput(['readonly' => true, 'id' => 'data-proveedor']) ?>
+        </div>
+
+        <div class="col-lg-3">
+            <?= $form->field($model, 'idOrdenCompra')->textInput(['readonly' => true, 'id' => 'id-orden-compra']) ?>
+        </div>
+    </div>
+
     <div class="form-group centrar">
         <?= Html::submitButton('Registrar', ['class' => 'btn btn-success btn-lg btn-create']) ?>
     </div>

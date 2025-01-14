@@ -24,6 +24,7 @@ use yii\db\Expression;
  */
 class Ordendecompradetalle extends \yii\db\ActiveRecord
 {
+    public $fecha_activacion;
     public $categoria;
     public $subcategoria;
     public $cantidad;
@@ -37,6 +38,7 @@ class Ordendecompradetalle extends \yii\db\ActiveRecord
     public $color;
     public $unidadEmpaque;
     public $codigoBarras;
+    public $codigoEAN;
 
     /**
      * {@inheritdoc}
@@ -298,8 +300,7 @@ class Ordendecompradetalle extends \yii\db\ActiveRecord
                 $fechaentrega = $registro['fechaEntrega'];
 
                 $modeldetalle->unidadPaquete = $unidadPaquete;
-                // $modeldetalle->nroPaquetes = (int) $nroPaquetes;
-                $modeldetalle->nroPaquetes = $nroPaquetes;
+                $modeldetalle->nroPaquetes = (int) $nroPaquetes;
 
                 $modeldetalle->cantidadPedida = $registro['cantidadPedida'];
                 $modeldetalle->cantidadEntrada = $registro['cantidadEntrada'];

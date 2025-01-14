@@ -9,6 +9,8 @@ use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 
+use yii\helpers\ArrayHelper;
+
 /**
  * This is the model class for table "impresoraspaxarbodega".
  *
@@ -116,5 +118,64 @@ class Impresoraspaxarbodega extends \yii\db\ActiveRecord
     {
         return $this->hasOne(User::class, ['id' => 'created_by']);
     }
-    
+
+    public static  function  getListaData(){
+        $data = Impresoraspaxarbodega::find()
+            ->select([
+                'imp.id', // ID del registro Usertraspaso
+                "CONCAT(bod.nombre, ' - ', imp.recurso, ' - ', imp.tipo) AS nombre"
+            ])
+            ->alias('imp')
+            ->innerJoin('bodegas bod', 'imp.bodega_id = bod.id')
+            ->orderBy('bod.nombre')
+            ->asArray()
+            ->all();
+
+        // Mapear los resultados para crear un array usable en formularios
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
+    }
+
+    public static function imprimirxip ($impresora, $contenido){
+        $socket = fsockopen($impresora->ip, $impresora->puerto, $error_code, $error_message, 10);
+        if ($socket) {
+            fwrite($socket, $contenido);
+            fclose($socket);
+
+            return ['mensaje' => 'Operación exitosa', 'error_code' => 0, 'error_message' => '', 'ok' => true];
+        } else {
+            return ['mensaje' => 'Operación Con Error', 'error_code' => $error_code, 'error_message' => $error_message, 'ok' => false];
+        }
+    }
+
+    public static function imprimirxrecurso ($impresora, $contenido){
+
+        $tempDir = Yii::getAlias('@frontend') . '/temp';
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true); // Crear con permisos recursivos
+        }
+
+        // Crear el archivo temporal dentro de ./frontend/temp
+        $tempFile = $tempDir . '/zpl_' . uniqid() . '.tmp';
+        file_put_contents($tempFile, $contenido);
+
+            // Construir el comando con la IP primero y luego el recurso compartido
+        $command = sprintf(
+                'print %s /D:%s "%s"',
+                $impresora->ip, // La dirección IP (sin escapar, ya es válida)
+                '\\\\' . str_replace('\\', '\\\\', ltrim($impresora->recurso, '\\')), // Recurso compartido (doble \\ inicial)
+                $tempFile // El archivo temporal, ahora entre comillas
+        );
+        // Ejecutar el comando
+        exec($command, $output, $returnVar);
+
+        unlink($tempFile);
+
+        if ($returnVar !== 0) {
+            $errorMessage = "Error al imprimir en $impresora->recurso: " . implode("\n", $output);
+            return ['mensaje' => 'Operación Con Error', 'error_code' => $returnVar, 'error_message' => $errorMessage, 'ok' => false];
+        }else{
+            return ['mensaje' => "Impresión enviada a $impresora->recurso, correctamente!", 'error_code' => 0, 'error_message' => '', 'ok' => true];
+        }
+    }
 }

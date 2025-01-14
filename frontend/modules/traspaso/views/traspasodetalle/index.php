@@ -19,7 +19,11 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <h1>
         <?php if ($traspaso): ?>
-            <?= Html::encode($traspaso->tipodocumento->codigo . '-' . $traspaso->consecutivo . '  Estado: ' . $traspaso->estado->nombre) ?>
+            <?= Html::encode(
+                $traspaso->tipodocumento->codigo . '-' .
+                ($traspaso->codigoerp ? $traspaso->codigoerp->f350_consec_docto : $traspaso->consecutivo) .
+                '  Estado: ' . $traspaso->estado->nombre
+            ) ?>
         <?php else: ?>
             <?= Html::encode('Todos los traspasos') ?>
         <?php endif; ?>
@@ -52,7 +56,12 @@ $this->params['breadcrumbs'][] = $this->title;
         [
             'label' => 'Traspaso',
             'value' => function ($model) {
-                return $model->traspaso->tipodocumento->codigo . '-' . $model->traspaso->consecutivo;
+                // Verifica si el modelo y las relaciones existen
+                $codigoErp = $model->traspaso->codigoerp->f350_consec_docto ?? null;
+                if ($codigoErp) {
+                    return $model->traspaso->tipodocumento->codigo . '-' . $codigoErp;
+                }
+                return $model->traspaso->tipodocumento->codigo . '-' . $model->traspaso->consecutivo ?? 'N/A';
             },
         ],
         [

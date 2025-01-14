@@ -316,4 +316,50 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             ->queryAll();
     }
 
+    public static function obtenerDatosPrecioVenta ($codigobarras, $fechaactivacion, $codigolistaprecios){
+        $sql = "
+            SELECT TOP 1 ipre.f126_rowid, ipre.f126_id_cia, f126_rowid_item, FORMAT(ipre.f126_fecha_activacion, 'yyyy-MM-dd') AS fecha_activacion, ipre.f126_precio
+                FROM t126_mc_items_precios ipre
+                INNER JOIN t120_mc_items  it ON ipre.f126_rowid_item = it.f120_rowid
+                INNER JOIN t121_mc_items_extensiones itx ON itx.f121_rowid_item = it.f120_rowid
+                LEFT JOIN t131_mc_items_barras bar ON itx.f121_id_barras_principal = bar.f131_id
+                WHERE ipre.f126_id_lista_precio = :codigolistaprecios AND itx.f121_id_barras_principal IN (:codigobarras) 
+                AND FORMAT(ipre.f126_fecha_activacion, 'yyyy-MM-dd') <= :fechaactivacion
+                ORDER BY ipre.f126_fecha_activacion DESC     
+        ";
+        
+        return self::getDb()->createCommand($sql)
+            ->bindValue('codigolistaprecios', $codigolistaprecios)
+            ->bindValue(':codigobarras', $codigobarras)
+            ->bindValue(':fechaactivacion', $fechaactivacion)
+            ->queryAll();
+    }
+
+    public static function obtenerDatosDocumento ($tipodocumento, $numerodocumento){
+        $sql = "
+            SELECT TOP 1 
+            f350_rowid, 
+            f350_id_cia, 
+            f350_id_co, 
+            f350_id_tipo_docto, 
+            f350_consec_docto, 
+            LEFT(SUBSTRING(f350_notas, CHARINDEX(:tipodocumento, f350_notas), LEN(f350_notas)), 3) AS tipoDocumento, 
+            SUBSTRING(
+                SUBSTRING(f350_notas, CHARINDEX(:tipodocumento, f350_notas), LEN(f350_notas)),
+                4, 
+                CHARINDEX(' ', SUBSTRING(f350_notas, CHARINDEX(:tipodocumento, f350_notas), LEN(f350_notas)) + ' ') - 4
+            ) AS numeroDocumento
+            FROM
+            t350_co_docto_contable
+            WHERE f350_id_tipo_docto = :tipodocumento
+            AND f350_notas LIKE '%' + :tipodocumento + :numerodocumento + '%' 
+            AND f350_ind_estado = 1;
+        ";
+
+        return self::getDb()->createCommand($sql)
+            ->bindValue('tipodocumento', $tipodocumento)
+            ->bindValue(':numerodocumento', $numerodocumento)
+            ->queryAll();
+    }
+
 }
