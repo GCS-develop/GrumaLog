@@ -47,6 +47,9 @@ $this->registerJs("
         }
     });
 ");
+$this->title = 'Traspaso detalle: ' . $model->id . ' | Estado: ' . $model->estado->nombre . ' | ' .
+    $model->tipodocumento->codigo . '-' .
+    ($model->codigoerp ? $model->codigoerp->f350_consec_docto : $model->consecutivo);
 ?>
 
 <?php
@@ -140,7 +143,11 @@ $this->registerJsFile('@web/js/JsBarcode.all.min.js', ['depends' => [\yii\web\Jq
 
 <div>
 
-    <?php $form = ActiveForm::begin(['action' => ['traspasodetalle/impresion',], 'method' => 'post']); ?>
+    <?php $form = ActiveForm::begin([
+        'action' => ['traspasodetalle/impresion',],
+        'method' => 'post'
+    ]); ?>
+
     <div class="contenedorTraspasos">
 
         <div class="d-flex flex-column ">

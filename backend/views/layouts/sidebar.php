@@ -78,6 +78,7 @@ $baseUrl = Url::base(true);
                             ['label' => 'Categoría', 'url' => ['/catalogos/categoria/index'], 'iconStyle' => 'far'],
                             ['label' => 'Condición de Pago', 'url' => ['/catalogos/condicionpago/index'], 'iconStyle' => 'far'],                            
                             ['label' => 'Estados Agenda', 'url' => ['/catalogos/estadoagenda/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Impresoras', 'url' => ['/catalogos/impresora'], 'iconStyle' => 'far'],
                             ['label' => 'Subcategoría', 'url' => ['/catalogos/subcategoria/index'], 'iconStyle' => 'far'],
                             ['label' => 'Transportadora', 'url' => ['/catalogos/transportadora/index'], 'iconStyle' => 'far'],
                             //['label' => 'Usuarios Logistica', 'url' => ['/nomina/empleadologistica/index'], 'iconStyle' => 'far'],

@@ -684,8 +684,8 @@ class TraspasodetalleController extends Controller
             //variables para factura
             $totalGeneral = 0;
             $totalPaquetes = 0;
-            $serie = $model->bodegaOrigen->tipodocumento->tipodocumento->codigo;
-            $numero_serie = $model->consecutivo;
+            $serie = $model->tipodocumento->codigo;
+            $numero_serie = $model->codigoerp ? $model->codigoerp->f350_consec_docto : $model->consecutivo;
             $categoria = '';
             $descipcion = '';
             $isMobile = $isMobile ? 'PKM' : 'PC';
@@ -693,8 +693,7 @@ class TraspasodetalleController extends Controller
             $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_DOUBLE_WIDTH);
             $printer->text(Yii::$app->params['tituloTraspaso'] . "\n \n");
             $printer->selectPrintMode();
-            $heights = array(1, 2, 4, 8, 16, 32);
-            $widths = array(1, 2, 3, 4, 5, 6, 7, 8);
+
             $printer->text(Yii::$app->params['grupo'] . "\n");
             $printer->text("NIT: " . Yii::$app->params['nit'] . " \n");
             $printer->text("Direccion: " . Yii::$app->params['direccion'] . ' ' . "TEL: " . Yii::$app->params['tel'] . "\n");
@@ -747,14 +746,12 @@ class TraspasodetalleController extends Controller
             $printer->feed();
 
             //Info en medio de los codigos de barras
-
             $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_DOUBLE_WIDTH);
-            $printer->text("NUMEROCAJAS:" . $model->numeroCajas . "\n");
-            $printer->text("ORIGEN:" . trim($model->bodegaOrigen->codigo) . ' ' . $model->bodegaOrigen->nombre . "\n");
-            $printer->text("DESTINO:" . trim($model->bodegaDestino->codigo) . ' ' . $model->bodegaDestino->nombre . "\n");
+            $printer->text("NUMERO CAJAS:" . $model->numeroCajas . "\n");
+            $printer->text("ORIGEN:" . trim($model->bodegaOrigen->codigo) . '-' . $model->bodegaOrigen->nombre . "\n");
+            $printer->text("DESTINO:" . trim($model->bodegaDestino->codigo) . '-' . $model->bodegaDestino->nombre . "\n");
             $printer->selectPrintMode();
-            $heights = array(1, 2, 4, 8, 16, 32);
-            $widths = array(1, 2, 3, 4, 5, 6, 7, 8);
+
             $printer->text("USUARIO:" . $model->usuario->username . "\n\n");
 
 

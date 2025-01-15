@@ -3,16 +3,14 @@
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var frontend\models\Traspasodetalle $model */
+/** @var common\models\Impresora $model */
 
-$this->title = 'Actualizar Traspaso detalle: ' . $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Traspasodetalles', 'url' => ['index']];
+$this->title = 'Update Impresora: ' . $model->id;
+$this->params['breadcrumbs'][] = ['label' => 'Impresoras', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
-<div class="traspasodetalle-update">
-
-    <h1><?= Html::encode($this->title) ?></h1>
+<div class="impresora-update">
 
     <?= $this->render('_form', [
         'model' => $model,
