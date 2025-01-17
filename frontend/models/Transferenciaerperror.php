@@ -38,7 +38,7 @@ class Transferenciaerperror extends \yii\db\ActiveRecord
     {
         return [
             [['idTransferenciaerp'], 'required'],
-            [['idTransferenciaerp', 'consecutivo'], 'integer'],
+            [['idTransferenciaerp'], 'integer'],
             [['detalle'], 'string'],
             //[['centroOperacionDocumento', 'tipoDocumento'], 'string', 'max' => 5],
             //[['numeroLinea', 'tipoRegistro', 'subTipoRegistro', 'version', 'nivel', 'valor'], 'string', 'max' => 10],

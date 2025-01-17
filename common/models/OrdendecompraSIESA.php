@@ -56,7 +56,9 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
                 cont.f015_celular AS celularProveedor,
                 cont.f015_email AS emailProveedor,
                 (TRIM(prvcm.f220_id) + ' - ' + prvcm.f220_descripcion) AS mercancia,
-                (TRIM(prvcm1.f220_id) + ' - ' + prvcm1.f220_descripcion) AS modelo
+                (TRIM(prvcm1.f220_id) + ' - ' + prvcm1.f220_descripcion) AS modelo,
+                comp.f200_nit AS nitcomprador,
+                comp.f200_razon_social AS comprador
             FROM t420_cm_oc_docto dct 
             INNER JOIN t285_co_centro_op cop 
                 ON dct.f420_id_cia = cop.f285_id_cia AND dct.f420_id_co = cop.f285_id 
@@ -71,7 +73,9 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             INNER JOIN t200_mm_terceros ter 
                 ON prv.f202_rowid_tercero = ter.f200_rowid
             LEFT JOIN t015_mm_contactos cont 
-                ON ter.f200_rowid_contacto = cont.f015_rowid
+                ON ter.f200_rowid_contacto = cont.f015_rowid 
+            LEFT JOIN t200_mm_terceros comp 
+                ON dct.f420_rowid_tercero_sol_comp = comp.f200_rowid 
             LEFT JOIN t013_mm_ciudades ci 
                 ON cont.f015_id_ciudad = ci.f013_id 
                 AND cont.f015_id_depto = ci.f013_id_depto 
@@ -159,7 +163,9 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
                 cont.f015_celular AS celularProveedor,
                 cont.f015_email AS emailProveedor,
                 (TRIM(prvcm.f220_id) + ' - ' + prvcm.f220_descripcion) AS mercancia,
-                (TRIM(prvcm1.f220_id) + ' - ' + prvcm1.f220_descripcion) AS modelo
+                (TRIM(prvcm1.f220_id) + ' - ' + prvcm1.f220_descripcion) AS modelo,
+                comp.f200_nit AS nitcomprador,
+                comp.f200_razon_social AS comprador
             FROM t420_cm_oc_docto dct 
             INNER JOIN t285_co_centro_op cop 
                 ON dct.f420_id_cia = cop.f285_id_cia AND dct.f420_id_co = cop.f285_id 
@@ -175,6 +181,10 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
                 ON prv.f202_rowid_tercero = ter.f200_rowid
             LEFT JOIN t015_mm_contactos cont 
                 ON ter.f200_rowid_contacto = cont.f015_rowid
+
+            LEFT JOIN t200_mm_terceros comp 
+                ON dct.f420_rowid_tercero_sol_comp = comp.f200_rowid
+
             LEFT JOIN t013_mm_ciudades ci 
                 ON cont.f015_id_ciudad = ci.f013_id 
                 AND cont.f015_id_depto = ci.f013_id_depto 
@@ -265,6 +275,8 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
                 , (mvt.f421_cant_pedida - mvt.f421_cant_entrada) AS cantidadPendiente
                 , CAST(mvt.f421_fecha AS DATE) AS fecha
                 , CAST(mvt.f421_fecha_entrega AS DATE) AS fechaEntrega
+                , bod.f150_id AS bodega
+                , mvt.f421_rowid AS codigointernomovto
                 FROM t421_cm_oc_movto mvt
                 INNER JOIN t420_cm_oc_docto dct 
                 ON mvt.f421_id_cia = dct.f420_id_cia AND  mvt.f421_rowid_oc_docto = dct.f420_rowid
@@ -306,6 +318,7 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
                 ON itc_proveedor.f125_id_plan = itcm4.f106_id_plan AND itc_proveedor.f125_id_criterio_mayor = itcm4.f106_id
 
                 LEFT JOIN t131_mc_items_barras bar ON itx.f121_id_barras_principal = bar.f131_id
+                LEFT JOIN t150_mc_bodegas bod ON mvt.f421_id_cia = bod.f150_id_cia AND mvt.f421_rowid_bodega = bod.f150_rowid  
 
                 WHERE dct.f420_id_cia = :idCia AND dct.f420_rowid = :idDocumento
         ";

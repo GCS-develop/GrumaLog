@@ -726,6 +726,7 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
         $transferenciaerp = Transferenciaerp::findOne(['idOrdenCompra' => $agenda->idOrdenCompra]);
 
         if ($transferenciaerp) {
+            $numRegistrosBorrados = Transferenciaerperror::deleteAll((['idTransferenciaerp' => $transferenciaerp->id]));
             $numRegistrosBorrados = Transferenciaerp::deleteAll(['id' => $transferenciaerp->id]);
             $numRegistrosBorrados = Transferenciaordencompraexcel::deleteAll(['idTransferenciaerp' => $transferenciaerp->id]);
         }

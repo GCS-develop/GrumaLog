@@ -55,7 +55,8 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
                     'fechaHasta',
                     'nombreEstado',
                     'radicado',
-                    'serie'
+                    'serie',
+                    'numeroFactura'
                 ],
                 'safe'
             ],
@@ -250,6 +251,7 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
             'co.codigo AS codigoCentroOperacion',
             'tr.nombre AS nombreTransportadora',
             'cat.nombre AS nombreCategoria',
+            'oc.comprador'
 
         ]);
 
@@ -336,6 +338,7 @@ class AgendaentregamercanciaSearch extends Agendaentregamercancia
             'oc.consecutivo' => $this->numeroOrdenCompra,
             'det.idEstado' => $this->idEstado,
             'det.idEstadoConteo' => $this->idEstadoConteo,
+            'det.numeroFactura' => $this->numeroFactura
         ]);
 
         if ($this->fechaDesde && $this->fechaHasta) {

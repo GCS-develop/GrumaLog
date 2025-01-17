@@ -160,11 +160,13 @@ $gridColumns = [
 
     <?= Alert::widget() ?>
 
-    <?= Html::tag('hr', '', ['class' => 'horizontal-line']) ?>
+    <?php echo $this->render('_search_legalizacion', ['model' => $searchModel]); ?>
 
+    <?= Html::tag('hr', '', ['class' => 'horizontal-line']) ?>
+    
     <div class="row">
 
-        <div class="col-lg-6 derecha">   
+        <div class="col-lg-12 centrar">   
             <?php echo ExportMenu::widget(
                 [
                     'dataProvider' => $dataProvider,
@@ -198,6 +200,7 @@ $gridColumns = [
             ?>        
         </div>
 
+        <!--
         <div class="col-lg-6 izquierda">
             <?php 
                 $url = Url::to(
@@ -211,6 +214,7 @@ $gridColumns = [
             ?>
             </p>
         </div>
+        -->
 
     </div>    
 
@@ -393,6 +397,13 @@ $gridColumns = [
                 'value' => function ($model){
                     return $model->estadoconteo->nombre;
                 }
+            ],
+
+            [
+                'attribute' => 'comprador', // Nombre del atributo en el modelo
+                'label' => 'Comprador', // Etiqueta de la columna
+                'hAlign' => 'left', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
             ],
 
             [

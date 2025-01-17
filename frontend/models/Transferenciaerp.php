@@ -561,6 +561,8 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                     $model->numero = $numero;
 
                     $model->save();
+                    //echo("consecutivo: " . $consecutivo);
+                    //var_dump($model->getErrors()); die("stop");
                 }
             } elseif (isset($data['detalle']) && is_string($data['detalle'])) {
                 // Imprimir el detalle si 'detalle' es una cadena de texto
@@ -719,7 +721,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
             $codigo = Transferenciaerp::errortransferenciaWS ($id, 
                                                     $registro->centroOperacionOrdenCompra,
                                                     $registro->tipoDocumentoOrdenCompra, 
-                                                    null,
+                                                    $respuesta,
                                                     $registro->consecutivoOrdenCompra,
                                                     $respuesta);
 

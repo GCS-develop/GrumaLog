@@ -88,6 +88,7 @@ class Agendaentregamercancia extends \yii\db\ActiveRecord
     public $maxFechaConteo;
     public $usuariosConteo;
     public $numeroItemsOC;
+    public $comprador;
 
     /**
      * {@inheritdoc}

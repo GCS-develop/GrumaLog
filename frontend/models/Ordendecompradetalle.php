@@ -306,9 +306,14 @@ class Ordendecompradetalle extends \yii\db\ActiveRecord
                 $modeldetalle->cantidadEntrada = $registro['cantidadEntrada'];
                 $modeldetalle->cantidadPendiente = $registro['cantidadPendiente'];
 
+                $modeldetalle->bodega = $registro['bodega'];
+                $modeldetalle->codigointernomovto = $registro['codigointernomovto'];
+
                 $totalCantidadPedida = $totalCantidadPedida + $registro['cantidadPedida'];
                 $totalCantidadEntrada = $totalCantidadEntrada + $registro['cantidadEntrada'];
                 $totalCantidadPendiente = $totalCantidadPendiente + $registro['cantidadPendiente'];
+
+
                 $totalPaquetes = $totalPaquetes + $modeldetalle->nroPaquetes;
 
                 $numeroitems++;

@@ -220,6 +220,10 @@ class Ordendecompra extends \yii\db\ActiveRecord
             $model->idProveedor = $idProveedor;
             $model->idEstado = $idEstado;
 
+            $model->comprador = $fila['comprador'];
+            $model->nitcomprador = $fila['nitcomprador'];
+            $model->sucursalProveedor = $fila['sucursal'];
+
             if (!$model->save()){
                 continue;
             }
