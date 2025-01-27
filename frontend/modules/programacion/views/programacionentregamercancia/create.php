@@ -19,6 +19,7 @@ if ($oneuser == 1){
 
     <?= $this->render($programa, [
         'model' => $model,
+        // 'oneuser' =>
     ]) ?>
 
 </div>

@@ -481,7 +481,7 @@ class ProgramacionentregamercanciaController extends Controller
                     case 4:
                         $model->motivoDevolucion = $model->motivo;
                         $model->idUserDevolucion = Yii::$app->user->identity->id;
-                        $model->fechaDevolucion = date('Y-m-d H:i:s');
+                        $model->fechaDevolucion = new Expression('GETDATE()');
                         break;
                 }
 

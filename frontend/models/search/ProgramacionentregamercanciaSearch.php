@@ -127,10 +127,12 @@ class ProgramacionentregamercanciaSearch extends Programacionentregamercancia
                     ->join('INNER JOIN', 'tipodocumento td','oc.idTipoDocumento = td.id')
                     ->join('INNER JOIN', 'centrooperacion co','oc.idCO = co.id')
                     ->join('INNER JOIN', 'categoria cat','ag.idCategoria = cat.id')
-                    ->join('INNER JOIN', 'userconteo usc', 'det.idUserConteo = usc.id')
-                    ->join('INNER JOIN', 'user us', 'usc.idUser = us.id')
-                    ->join('INNER JOIN', 'empleadologistica empl', 'det.idEmpleadoLogistica = empl.id')
-                    ->join('INNER JOIN', 'empleado emp', 'empl.idEmpleado = emp.id')
+                        
+                    ->join('LEFT JOIN', 'userconteo usc', 'det.idUserConteo = usc.id')
+                    ->join('LEFT JOIN', 'user us', 'usc.idUser = us.id')
+                    ->join('LEFT JOIN', 'empleadologistica empl', 'det.idEmpleadoLogistica = empl.id')
+                    ->join('LEFT JOIN', 'empleado emp', 'empl.idEmpleado = emp.id')
+
                     ->join('INNER JOIN', 'estadoconteo estc', 'ag.idEstadoConteo = estc.id')
                     ->join('INNER JOIN', 'estadoprogramacion estp', 'det.idEstado = estp.id');
 

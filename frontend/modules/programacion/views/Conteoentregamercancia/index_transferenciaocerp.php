@@ -40,20 +40,25 @@ use kartik\grid\GridView;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'Transferencia SIESA';
+$this->params['breadcrumbs'][] = ['label' => 'Legalización Conteo', 'url' => ['/programacion/conteoentregamercancia/indexlegalizacion']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="transferenciaordencompraexcel-index">
 
     <div class="row">
-        <div class="col-lg-12 centrar"> 
-            <?= Html::a('Ejecutar Transferencia', [   '/siesa/transferenciaerp/transferencia', 
-                                                'id' => $idtransferenciaerp,
-                                                'origen' => 'Conteo'
-                                            ], 
-                                            [
-                                                'class' => 'btn btn-success btn-lg btn-create',
-                                            ]) ?>
-                                            
+        <div class="col-lg-12 centrar">
+            <?= Html::a(
+                'Ejecutar Transferencia',
+                [
+                    '/siesa/transferenciaerp/transferencia',
+                    'id' => $idtransferenciaerp,
+                    'origen' => 'Conteo'
+                ],
+                [
+                    'class' => 'btn btn-success btn-lg btn-create',
+                ]
+            ) ?>
+
         </div>
     </div>
 
@@ -62,18 +67,18 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         //'filterModel' => $searchModel,
-
+    
         'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
-		'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
-		'options' => [
-			'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
-		],
+        'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
+        'options' => [
+            'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
+        ],
 
         'showPageSummary' => true,
 
         'columns' => [
             //['class' => 'yii\grid\SerialColumn'],
-
+    
             //'id',
             //'idTransferenciaerp',
             'centroOperacionDocumento',
@@ -95,7 +100,10 @@ $this->params['breadcrumbs'][] = $this->title;
             'bodegaMovimiento',
             'unidadMovimiento',
             'fechaEntregaMovimiento',
-            'cantidadBase',
+            [
+                'attribute' => 'cantidadBase',
+                'pageSummary' => true,
+            ],
             'item',
             'color',
             'talla',

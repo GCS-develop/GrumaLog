@@ -301,7 +301,7 @@ $attributes = [
                 'vAlign' => 'middle', // Alineación vertical al centro
             ],
 
-            //'id',
+            'id',
             [
                 'attribute' => 'item', // Nombre del atributo en el modelo
                 'label' => 'Item', // Etiqueta de la columna

@@ -121,6 +121,10 @@ class ConteoentregamercanciaSearch extends Conteoentregamercancia
         $query = $query->andFilterWhere(['det.item' => $item]);
         $query = $query->andFilterWhere(['pe.idUserConteo' => $iduserconteo]);
 
+        $query->orderBy(['det.idProgramacionEntregaMercancia' => SORT_ASC,
+                        'det.item' => SORT_ASC,
+                        'ta.orden' => SORT_ASC]);
+
         // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
@@ -198,7 +202,7 @@ class ConteoentregamercanciaSearch extends Conteoentregamercancia
 
         $query = $query->andFilterWhere(['pem.idAgendaEntregaMercancia' => $idagenda]);
 
-        //echo $query->createCommand()->getRawSql(); die("hola");
+        // echo $query->createCommand()->getRawSql(); die("hola");
  
         // add conditions that should always apply here
 

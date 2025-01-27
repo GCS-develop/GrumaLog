@@ -233,7 +233,8 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
                 GROUP BY fact.id, dest.id, fact.numeroFactura, fact.idProveedor, 
                         prv.razonSocial, prv.nit,it.item, it.idColor, it.descripcion, 
                         col.codigo, tal.codigo 
-                ORDER BY it.item, col.codigo";
+                ORDER BY it.item, tal.orden";
+                // ORDER BY it.item, col.codigo";
 
         $data = self::getDb()->createCommand($sql, [
                                                         ':radicado' => $radicado,

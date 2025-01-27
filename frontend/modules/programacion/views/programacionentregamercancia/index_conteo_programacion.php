@@ -82,6 +82,7 @@ $estadofinal = $modelestado->id;
 
         'columns' => [
             //['class' => 'yii\grid\SerialColumn'],
+            // 'id',
 
             [
                 'attribute' => 'idAgenda', // Nombre del atributo en el modelo

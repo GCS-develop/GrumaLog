@@ -90,6 +90,15 @@ class TransferenciaerpController extends Controller
             if ($model->load($this->request->post())) {
 
                 if ($model->save() != null){
+
+                    $documentoNotas = 'Crossdocking certificado => ' . $model->id . '-' .$model->documento . ' ' . $model->notas;
+                    $documentoDescripcion = 'Crossdocking certificado => ' . $model->id . '-' .$model->documento . ' ' . $model->descripcion;
+                    
+                    $modeltransferencia = $this->findModel($model->id);
+                    $modeltransferencia->notas = $documentoNotas;
+                    $modeltransferencia->descripcion = $documentoDescripcion;
+                    $modeltransferencia->save();
+
                     Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
                 }else{
                     Yii::$app->session->setFlash( 'error', 'Error Actualizando Registro');

@@ -10,6 +10,7 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
 use DateTime;
 
 use common\models\ProcedimientosGenerales;
+use common\models\ProductosWs;
 
 class FileTransferenciaInput extends Model
 {
@@ -222,8 +223,19 @@ class FileTransferenciaInput extends Model
 
             if (!$ok){
                 var_dump($model->getErrors()); die("hola");
-            }
+            }else{
+                $modelcolor = Color::find()->where(['codigo' => $color])->one(); 
+                $modeltalla = Talla::find()->where(['codigo' => $talla])->one();
+                $modelitem = Item::find()->where([
+                                                    'item' => $item,
+                                                    'idColor' => $modelcolor->id,
+                                                    'idTalla' => $modeltalla->id            
+                                                ])->one();
 
+                if (!$modelitem){
+                    $respuesta = ProductosWs::sincronizarERP ($item);
+                }
+            }
         }
 
         if ($ok){

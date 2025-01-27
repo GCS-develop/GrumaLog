@@ -263,7 +263,7 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
             INNER JOIN categoria cat ON aem.idCategoria = cat.id 
             LEFT JOIN proveedor prv ON oc.idProveedor = prv.id 
             WHERE aem.idOrdenCompra = :idordencompra AND aem.idCategoria = :idcategoria
-            ORDER BY it.item, col.codigo;
+            ORDER BY it.item, tal.orden;
         ";
 
         $data = self::getDb()->createCommand($sql, [
@@ -301,7 +301,7 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
             $sql = $sql . " AND pem.idUserConteo = :iduserconteo";
         }
 
-        $sql = $sql . " ORDER BY it.item, col.codigo;";
+        $sql = $sql . " ORDER BY it.item, tal.orden;";
 
         if ($iduserconteo) {
             $data = self::getDb()->createCommand($sql, [
@@ -337,7 +337,8 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
             LEFT JOIN proveedor prv ON oc.idProveedor = prv.id 
             WHERE pem.id = :idprogramacion ";
 
-        $sql = $sql . " ORDER BY it.item, col.codigo;";
+        // $sql = $sql . " ORDER BY it.item, col.codigo;";
+        $sql = $sql . " ORDER BY it.item, tal.orden;";
 
         $data = self::getDb()->createCommand($sql, [
             ':idprogramacion' => $idprogramacion
@@ -451,6 +452,7 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
         // Obtener los encabezados dinámicamente del primer elemento del array
 
         $data = $dataByItem;
+        //var_dump($data); die("Paso 1");
 
         $programacion = Programacionentregamercancia::find()
             ->where(['idAgendaEntregaMercancia' => $idagenda])
@@ -526,6 +528,10 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
                 }
             }
         }
+
+        $tallasEncontradas = self::ordenarTallas($tallasEncontradas);
+
+        //var_dump($tallasEncontradas); die("hola");
         
         // Añadir todas las tallas encontradas a la estructura
         foreach ($tallasEncontradas as $talla) {
@@ -815,6 +821,7 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
 
             if (!$model->save()) {
                 $ok = false;
+                //var_dump($registro);
                 //var_dump($model->getErrors()); die("hola");
                 continue;
             }
@@ -823,6 +830,41 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
 
         return $ok;
 
+    }
+
+    public static function ordenarTallas ($data){
+
+        $ordenTallas = Talla::find()
+            ->select(['codigo', 'orden'])
+            ->orderBy(['orden' => SORT_ASC])
+            ->asArray()
+            ->all();
+
+        $tallasOrdenadas = [];
+        foreach ($ordenTallas as $fila) {
+            $tallasOrdenadas[$fila['codigo']] = (int) $fila['orden'];
+        }
+
+        // 2️⃣ Convertimos $data en un array indexado para ordenarlo
+        $dataIndexado = [];
+        foreach ($data as $key => $value) {
+            $dataIndexado[] = ['codigo' => $key, 'datos' => $value];
+        }
+
+        // 3️⃣ Ordenamos los datos según la base de datos
+        usort($dataIndexado, function($a, $b) use ($tallasOrdenadas) {
+            $posA = isset($tallasOrdenadas[$a['codigo']]) ? $tallasOrdenadas[$a['codigo']] : PHP_INT_MAX;
+            $posB = isset($tallasOrdenadas[$b['codigo']]) ? $tallasOrdenadas[$b['codigo']] : PHP_INT_MAX;
+            return $posA - $posB;
+        });
+
+        // 4️⃣ Reconstruimos $data en su formato original pero ahora ordenado
+        $dataOrdenado = [];
+        foreach ($dataIndexado as $item) {
+            $dataOrdenado[$item['codigo']] = $item['datos'];
+        }
+
+        return $dataOrdenado;
     }
 
 }

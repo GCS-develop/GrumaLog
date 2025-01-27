@@ -195,6 +195,7 @@ $gridColumns = [
         'showPageSummary' => true,
 
         'columns' => [
+
             [
                 'class' => 'kartik\grid\SerialColumn',
                 'hAlign' => 'center', // Alineación horizontal al centro
