@@ -53,6 +53,7 @@ class Transferenciatransitoexcel extends \yii\db\ActiveRecord
             //[['fechaDocumento', 'unidadSalida'], 'string', 'max' => 10],
             [['color'], 'string', 'max' => 50],
             [['numero'], 'string', 'max' => 50],
+            [['notas'], 'safe'],
             [['idTransferenciaerp'], 'exist', 'skipOnError' => true, 'targetClass' => Transferenciaerp::class, 'targetAttribute' => ['idTransferenciaerp' => 'id']],
         ];
     }

@@ -171,6 +171,13 @@ class TraspasoController extends Controller
         return $this->redirect(['index']);
     }
 
+    public function actionSincronizar ($id){
+
+        Traspaso::sincronizarTraspaso ($id);
+
+        return $this->redirect(['index']);
+    }
+
     /**
      * Finds the Traspaso model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

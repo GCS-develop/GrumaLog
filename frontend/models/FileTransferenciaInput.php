@@ -231,10 +231,6 @@ class FileTransferenciaInput extends Model
                                                     'idColor' => $modelcolor->id,
                                                     'idTalla' => $modeltalla->id            
                                                 ])->one();
-
-                if (!$modelitem){
-                    $respuesta = ProductosWs::sincronizarERP ($item);
-                }
             }
         }
 

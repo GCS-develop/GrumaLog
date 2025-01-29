@@ -291,4 +291,101 @@ class Item extends \yii\db\ActiveRecord
 
         return $stickerContent;
     }
+
+    public static function grabarDataDesdeSIESA($item, $color, $talla){
+
+        $resultado = OrdendecompraSIESA::obtenerDatosItem($item, $color, $talla);
+        if (!empty($resultado)) {
+            foreach ($resultado as $dato) {
+
+                $modelCategoria = new Categoria();
+                $modelCategoria->codigoERP = $dato['idCategoria'];
+                $modelCategoria->nombre = $dato['categoria'];
+                $idcategoria = Categoria::actualizarRegistro($modelCategoria);
+
+                $modelSubcategoria = new Subcategoria();
+                $modelSubcategoria->codigoERP = $dato['idSubcategoria'];
+                $modelSubcategoria->nombre = $dato['subcategoria'];
+                $modelSubcategoria->idCategoria = $idcategoria;
+                $idsubcategoria = Subcategoria::actualizarRegistro($modelSubcategoria);
+
+                $codigo = $dato['idTalla'];
+                $nombre = $dato['talla'];
+                $idtalla = Talla::actualizarRegistro($codigo, $nombre);
+
+                $codigo = $dato['idColor'];
+                $nombre = $dato['color'];
+                $idcolor = Color::actualizarRegistro($codigo, $nombre);
+
+                $modelProducto = new Producto();
+                $modelProducto->codigo = $dato['idProducto'];
+                $modelProducto->nombre = $dato['producto'];
+                $idproducto = Producto::actualizarRegistro($modelProducto);
+
+                $modelMarca = new Marca();
+                $modelMarca->codigo = $dato['idMarca'];
+                $modelMarca->nombre = $dato['marca'];
+                $idmarca = Marca::actualizarRegistro($modelMarca);
+
+                $codigobarras = $dato['codigoBarras'];
+                $descripcion = $dato['descripcion'];
+                $referencia = $dato['referencia'];
+                $codigoproveedor = $dato['idProveedor'];
+                $nombreproveedor = $dato['proveedor'];
+
+                $estado = $dato['estadoItem'];
+                $unidadempaque = $dato['unidadEmpaque'];
+                $unidadorden = $dato['unidadOrden'];
+
+                if ($codigobarras) {
+                    $model = Item::findOne(['codigoBarras' => $codigobarras]);
+                    if ($model == null) {
+                        $model = new Item();
+                        $model->codigoBarras = $codigobarras;
+                    }
+                    $model->item = $item;
+                    $model->idTalla = $idtalla;
+                    $model->idColor = $idcolor;
+                } else {
+                    $model = Item::findOne([
+                        'item' => $item,
+                        'idTalla' => $idtalla,
+                        'idColor' => $idcolor
+                    ]);
+        
+                    if ($model == null) {
+                        $model = new Item();
+                        $model->item = $item;
+                        $model->idTalla = $idtalla;
+                        $model->idColor = $idcolor;
+                    }
+                }
+        
+                $model->referencia = $referencia;
+                $model->descripcion = $descripcion;
+                $model->idCategoria = $idcategoria;
+                $model->idSubcategoria = $idsubcategoria;
+                $model->idProducto = $idproducto;
+                $model->idMarca = $idmarca;
+                $model->codigoProveedor = $codigoproveedor;
+                $model->nombreProveedor = $nombreproveedor;
+                $model->idEstado = $estado;
+                $model->unidadEmpaque = $unidadempaque;
+                $model->unidadOrden = $unidadorden;
+        
+                if (!$model->save()) {
+                    var_dump($model->getErrors());
+                    die("hola ITEM: " . $model->item);
+                }
+
+                $id = $model->id;
+
+                if ($dato['codigoBarras'] == $dato['codigoBarrasPrincipal']){
+                    $idprincipal = $model->id;
+                }
+            }
+        }
+
+        return $idprincipal ? $idprincipal : $id;
+    }
 }

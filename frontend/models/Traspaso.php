@@ -12,6 +12,8 @@ use yii\httpclient\Client;
 use common\models\User;
 use yii\db\Query;
 
+use common\models\OrdendecompraSIESA;
+
 
 /**
  * This is the model class for table "traspaso".
@@ -25,6 +27,7 @@ use yii\db\Query;
  * @property string|null $serie
  * @property int|null $und_traspaso
  * @property int|null $und_empaque
+  * @property int|null $tipoMovimiento
 
  * @property tipoDocumento $tipoDocumento
  * @property Bodegas $bodegaDestino
@@ -74,7 +77,7 @@ class Traspaso extends \yii\db\ActiveRecord
     {
         return [
             [['idBodegaOrigen', 'idBodegaDestino'], 'required'],
-            [['idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado', 'idUltimoItem', 'created_by', 'updated_by'], 'integer'],
+            [['idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado', 'idUltimoItem', 'created_by', 'updated_by', 'tipoMovimiento'], 'integer'],
             [['consecutivo', 'und_traspaso', 'und_empaque'], 'number'],
             [['serie',], 'string', 'max' => 5],
             [['updated_at', 'created_at', 'fechaDesde', 'fechaHasta',], 'safe'],
@@ -108,6 +111,7 @@ class Traspaso extends \yii\db\ActiveRecord
             'fechaUltimoRegistro' => 'Fecha ultimo registro',
             'horaUltimoRegistro' => 'Hora ultimo registro',
             'impresora' => 'impresora',
+            'tipoMovimiento' => 'Tipo de movimiento',
 
         ];
     }
@@ -265,5 +269,114 @@ class Traspaso extends \yii\db\ActiveRecord
         ->where(['td.idTraspaso' => $this->id])
         ->scalar();
     
+    }
+
+    public static function generarTraspasoDesdeTransferencia ($idtransferenciaerp){
+
+        $sql = "SELECT 1 AS idCentroOperacion, bs.id AS idBodegaOrigen, tte.bodegaSalidaDocumento, 
+                    be.id AS idBodegaDestino, tte.bodegaEntradaDocumento,
+                    1 AS numeroCajas, td.id AS idTipoDocumento, tte.idTransferenciaerp AS consecutivo,
+                    3 AS idEstado, NULL AS idUltimoItem, 1 AS transferenciaerp, 2 AS tipoMovimiento
+                FROM transferenciatransitoexcel tte
+                INNER JOIN bodegas bs ON tte.bodegaSalidaDocumento = bs.codigo
+                INNER JOIN bodegas be ON tte.bodegaEntradaDocumento = be.codigo
+                INNER JOIN tipodocumento td ON tte.tipoDocumento = td.codigo
+                WHERE tte.idTransferenciaerp = :idTransferenciaErp
+                GROUP BY tte.idTransferenciaerp, bs.id, tte.bodegaSalidaDocumento, be.id, tte.bodegaEntradaDocumento, td.id";
+
+        $command = Yii::$app->db->createCommand($sql);
+        $command->bindValue(':idTransferenciaErp', $idtransferenciaerp);
+        $resultados = $command->queryAll();
+
+        foreach ($resultados as $resultado) {
+
+            $traspaso = new Traspaso();
+            $traspaso->idCentroOperacion = $resultado['idCentroOperacion'];
+            $traspaso->idBodegaOrigen = $resultado['idBodegaOrigen'];
+            $traspaso->idBodegaDestino = $resultado['idBodegaDestino'];
+            $traspaso->numeroCajas = $resultado['numeroCajas'];
+            $traspaso->idTipoDocumento = $resultado['idTipoDocumento'];
+            $traspaso->consecutivo = $resultado['consecutivo'];
+            $traspaso->idEstado = $resultado['idEstado'];
+            $traspaso->idUltimoItem = $resultado['idUltimoItem'];
+            $traspaso->transferenciaerp = $resultado['transferenciaerp'];
+            $traspaso->tipoMovimiento = $resultado['tipoMovimiento'];
+            
+            if ($traspaso->save()) {
+
+                $id = $traspaso->id;
+                $model = Traspaso::findOne(['id' => $id]);
+                $model->consecutivo = $id;
+                $model->save();
+
+                $bodegasalida = $resultado['bodegaSalidaDocumento'];
+                $bodegaentrada = $resultado['bodegaEntradaDocumento'];
+
+                self::generarTraspasoDetalle($idtransferenciaerp, $traspaso->id, $bodegasalida, $bodegaentrada);
+            }else{
+                break;
+            }
+        }
+    }
+
+    public static function generarTraspasoDetalle($idtransferenciaerp, $idtraspaso, $bodegasalida, $bodegaentrada)
+    {
+        $sqlDetalle = "
+              SELECT tte.id, tte.item, tte.color, tte.talla, tte.cantidadBase AS cantidad
+                FROM transferenciatransitoexcel tte
+                INNER JOIN bodegas bs ON tte.bodegaSalidaDocumento = bs.codigo
+                INNER JOIN bodegas be ON tte.bodegaEntradaDocumento = be.codigo
+                WHERE tte.idTransferenciaerp = :idtransferenciaerp AND tte.bodegaSalidaDocumento = :bodegasalida 
+                and tte.bodegaEntradaDocumento = :bodegaentrada 
+                ORDER BY tte.item 
+        ";
+
+        $commandDetalle = Yii::$app->db->createCommand($sqlDetalle);
+
+        $commandDetalle
+            ->bindValue(':idtransferenciaerp', $idtransferenciaerp)
+            ->bindValue(':bodegasalida', $bodegasalida)
+            ->bindValue(':bodegaentrada', $bodegaentrada);
+
+        $detalles = $commandDetalle->queryAll();
+
+        foreach ($detalles as $detalle) {
+
+            $item = $detalle['item'];
+            $color = $detalle['color'];
+            $talla = $detalle['talla'];
+
+            $iditem = Item::grabarDataDesdeSIESA($item, $color, $talla);
+            $modelitem = Item::findOne(['id' => $iditem]);
+
+            $traspasoDetalle = new Traspasodetalle();
+            $traspasoDetalle->idTraspaso = $idtraspaso;
+            $traspasoDetalle->idItem = $iditem;
+            $traspasoDetalle->codigoitem = $modelitem->codigoBarras;
+            $traspasoDetalle->cantidad = $detalle['cantidad'];
+            if (!$traspasoDetalle->save()) {
+                var_dump($traspasoDetalle->getErrors());die("hola");
+            }
+
+            $transferencia = Transferenciatransitoexcel::findOne(['id' => $detalle['id']]);
+            $numero = $transferencia->tipoDocumento . $idtraspaso;
+            $transferencia->numero = $numero;
+            $transferencia->notas = 'Crossdocking certificado => ' . $numero;
+            $transferencia->codigoBarras = $modelitem->codigoBarras;
+            $transferencia->save();
+        }
+    }
+
+    public static function sincronizarTraspaso($id){
+
+        $model = Traspaso::findOne(['id' => $id]);
+        $tipodocumento = $model->tipodocumento->codigo;
+        $idgruma = $id;
+
+        $traspasoSiesa = OrdendecompraSIESA::obtenerDatosDocumento($tipodocumento, $idgruma);
+        Yii::trace('Buscar traspaso en siesa', __METHOD__);
+
+        $guardoDatos = Documentosiesa::grabarDatos($traspasoSiesa, $idgruma);
+
     }
 }

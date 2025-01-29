@@ -94,7 +94,7 @@ use frontend\models\Usertraspaso;
                 $form->field($model, 'fechaDesde')->widget(DatePicker::className(), [
                     'name' => 'fechadesde',
                     'language' => 'es',
-                    'options' => ['placeholder' => 'Fecha Cita Desde ...' , 'disabled' => false],
+                    'options' => ['placeholder' => 'Fecha Cita Desde ...', 'disabled' => false],
                     'pluginOptions' => [
                         'autoclose' => true,
                         'format' => 'yyyy-mm-dd',
@@ -143,6 +143,22 @@ use frontend\models\Usertraspaso;
                     'id' => 'updated_by',
                 ]
             );
+            ?>
+        </div>
+
+        <div class="col-lg-3">
+            <?php
+            echo $form->field($model, 'tipoMovimiento')->label('Tipo de movimiento')->dropDownList(
+                [
+                    '1' => 'Traspaso',
+                    '2' => 'Entradas',
+                ],
+                [
+                    'prompt' => 'Seleccionar tipo de movimiento...',
+                    'id' => 'tipoMovimiento',
+                ]
+            );
+
             ?>
         </div>
 

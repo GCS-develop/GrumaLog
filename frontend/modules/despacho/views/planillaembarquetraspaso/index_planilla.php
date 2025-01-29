@@ -13,7 +13,7 @@ use kartik\export\ExportMenu;
 
 
 $this->title = ' Detalle de planilla: ' . $model->id . ' | usuario: ' . $model->usuario->username . ' | Sello inicial: ' . $model->sello
-. ' |  ' . $model->estado->nombre;
+    . ' |  ' . $model->estado->nombre;
 
 $this->params['breadcrumbs'][] = ['label' => 'Planilla Embarque', 'url' => ['/despacho/planillaembarque/index']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -39,8 +39,20 @@ $gridColumns = [
     'almacenOrigen',
     'codAlmacenDestino',
     'almacenDestino',
-    'tipoDocumento',
-    'consecutivoDocumento',
+    [
+        'attribute' => 'tipoDocumento',
+        'contentOptions' => ['data-cellvalue' => 'tipoDocumento'],
+        'value' => function ($model) {
+            return $model->tipoDocumento ? $model->tipoDocumento : $model->tipoDocumentoInterno;
+        },
+    ],
+    [
+        'attribute' => 'consecutivoDocumento',
+        'contentOptions' => ['data-cellvalue' => 'consecutivoDocumento'],
+        'value' => function ($model) {
+            return $model->consecutivoDocumento ? $model->consecutivoDocumento : $model->consecutivoInterno;
+        },
+    ],
     [
         'attribute' => 'fechaTraspaso',
         'contentOptions' => ['data-cellvalue' => 'fechaTraspaso'],
@@ -97,7 +109,11 @@ $gridColumns = [
     [
         'label' => 'Planilla',
         'value' => function ($model) {
-            return TRIM($model->codAlmacenOrigen) . '-' . $model->consecutivoDocumento;
+            return ($model->codAlmacenOrigen)
+                // ($model->tipoDocumento ? $model->tipoDocumento : $model->tipoDocumentoInterno)
+                . '-' .
+                ($model->consecutivoDocumento ? $model->consecutivoDocumento : $model->consecutivoInterno)
+            ;
         },
 
     ],

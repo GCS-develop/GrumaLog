@@ -2,9 +2,12 @@
 
 namespace frontend\models\search;
 
+use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use frontend\models\Planillaembarquetraspaso;
+use yii\data\SqlDataProvider;
+
 
 /**
  * PlanillaembarquetraspasoSearch represents the model behind the search form of `frontend\models\Planillaembarquetraspaso`.
@@ -73,11 +76,17 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
         $query->join('INNER JOIN', 'bodegas bd', 'pet.idBodegaDestino = bd.id');
         $query->join('INNER JOIN', 'tipodocumento td', 'tr.idTipoDocumento = td.id');
         $query->join('INNER JOIN', 'estadodespacho ed', 'ed.id = pet.idEstado');
+        $query->join('LEFT JOIN', 'documentosiesa ds', 'tr.id = ds.idGruma');
         $query->join('LEFT JOIN', 'user us', 'pet.idUsuarioRecibido = us.id');
+
+        // $query->join('LEFT JOIN', 'user us', 'pet.idUsuarioRecibido = us.id');
+
         $query->join('INNER JOIN', 'user usc', 'usc.id = pe.created_by');
         $query->join('INNER JOIN', 'user usp', 'usp.id = pet.created_by');
         // $query->join('LEFT JOIN', 'planillaembarquebodega peb', 'peb.idBodegaDestino = bd.id');
-        $query->join('LEFT JOIN', 'planillaembarquebodega peb', 'peb.idBodegaDestino = bd.id AND peb.selloLlegada IS NOT NULL');
+        $query->join('LEFT JOIN', 'planillaembarquebodega peb', 'peb.idBodegaDestino = bd.id AND peb.idPlanillaEmbarque = pe.id
+        
+        AND peb.selloLlegada IS NOT NULL');
 
 
 
@@ -107,9 +116,15 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             'bd.codigo AS codAlmacenDestino',
             'bd.nombre AS almacenDestino',
 
-            'td.codigo AS tipoDocumento',
 
-            'tr.consecutivo AS consecutivoDocumento',
+            'ds.f350_consec_docto AS consecutivoDocumento',
+            'ds.f350_id_tipo_docto AS tipoDocumento',
+
+
+            'td.codigo AS tipoDocumentoInterno',
+
+            'tr.consecutivo AS consecutivoInterno',
+
             'tr.created_at AS fechaTraspaso',
 
             'peb.selloLlegada AS selloLlegada',

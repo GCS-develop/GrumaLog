@@ -13,6 +13,7 @@ use yii\httpclient\Request;
 
 
 use common\models\User;
+use common\models\OrdendecompraSIESA;
 
 /**
  * This is the model class for table "transferenciaerp".
@@ -186,6 +187,9 @@ class Transferenciaerp extends \yii\db\ActiveRecord
             $error = Transferenciaerp::transferenciasalidaxtipodocumento ($id, 
                                                                         $tiposdocumentos,
                                                                         $modelconector);
+
+            self::obtenerConsecutivoSIESA ($id);
+
         }
 
         return $error;
@@ -432,6 +436,11 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                             
             $nroregistro = $nroregistro + 1;
 
+            $notas = $registro->notas;
+            if ($registro->codigoBarras){
+                $notas .= ' - ' . $registro->codigoBarras;
+            }
+
             $movimiento = [
                 'f470_id_co' => $registro->centroOperacion,
                 'f470_id_tipo_docto' => $registro->tipoDocumentoMovimiento,
@@ -443,7 +452,8 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'f470_id_unidad_medida' => $registro->unidadSalida,
                 'f470_cant_base' => $registro->cantidadBase,
                 'f470_costo_prom_uni' => $registro->costoPromedioUnitario,
-                'f470_notas' => $registro->transferenciaerp->notas,
+                //'f470_notas' => $registro->transferenciaerp->notas,
+                'f470_notas' => $notas,
                 'f470_id_item' => $registro->item,
                 'f470_id_ext1_detalle' => $registro->color,
                 'f470_id_ext2_detalle' => $registro->talla,
@@ -459,7 +469,8 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                         'f350_consec_docto' => $registro->transferenciaerp->documento,
                         'f350_fecha' => $registro->fechaDocumento,
                         'f350_id_tercero' => '',
-                        'f350_notas' => $registro->transferenciaerp->descripcion,
+                        //'f350_notas' => $registro->transferenciaerp->descripcion,
+                        'f350_notas' => $registro->notas,
                         'f450_id_bodega_salida' => $registro->bodegaSalidaDocumento,
                         'f450_id_bodega_entrada' => $registro->bodegaEntradaDocumento,
                     ],
@@ -474,7 +485,8 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'f350_consec_docto' => $registro->transferenciaerp->documento,
                 'f350_fecha' => $registro->fechaDocumento,
                 'f350_id_tercero' => '',
-                'f350_notas' => $registro->transferenciaerp->descripcion,
+                //'f350_notas' => $registro->transferenciaerp->descripcion,
+                'f350_notas' => $registro->notas,
                 'f450_id_bodega_salida' => $registro->bodegaSalidaDocumento,
                 'f450_id_bodega_entrada' => $registro->bodegaEntradaDocumento,
             ];
@@ -953,5 +965,31 @@ class Transferenciaerp extends \yii\db\ActiveRecord
         $json = substr(Json::encode(array_values($documentosJsonArray)), 1, -1);
 
         return $json;
+    }
+
+    public static function obtenerConsecutivoSIESA ($id){
+        $traspasos = Transferenciatransitoexcel::find()
+            ->select([
+                'tipoDocumento',
+                'numero',
+                'notas'
+                ])
+            ->distinct()
+            ->where(['idTransferenciaerp' => $id])
+            ->orderBy([
+                'tipoDocumento' => SORT_ASC,
+                'numero' => SORT_ASC,
+            ])->all();
+
+        foreach($traspasos as $registro){
+
+            $tipodocumento = $registro['tipoDocumento'];
+            $idgruma = str_ireplace("3TB", "", $registro['numero']);
+
+            $traspasoSiesa = OrdendecompraSIESA::obtenerDatosDocumento($tipodocumento, $idgruma);
+            Yii::trace('Buscar traspaso en siesa', __METHOD__);
+
+            $guardoDatos = Documentosiesa::grabarDatos($traspasoSiesa, $idgruma);
+        }
     }
 }

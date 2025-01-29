@@ -17,6 +17,7 @@ use frontend\models\Transferenciaordencompraexcel;
 use frontend\models\Transferenciaerperror;
 use frontend\models\Transferencialogws;
 use frontend\models\Transferenciatransitoexcel;
+use frontend\models\Traspaso;
 
 /**
  * TransferenciaerpController implements the CRUD actions for Transferenciaerp model.
@@ -222,6 +223,9 @@ class TransferenciaerpController extends Controller
             $model->archivo = UploadedFile::getInstance($model, 'archivo');
 
             if ($model->importTransferencia($id)) {
+
+                Traspaso::generarTraspasoDesdeTransferencia ($id);
+
                 Yii::$app->session->setFlash('success', 'El Archivo se ha cargado correctamente. ');
             }else{
                 $errorString = ProcedimientosGenerales::erroresModelo ($model->getErrors());

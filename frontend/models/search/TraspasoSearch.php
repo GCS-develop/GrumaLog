@@ -25,7 +25,7 @@ class TraspasoSearch extends Traspaso
     public function rules()
     {
         return [
-            [['id', 'idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado'], 'integer'],
+            [['id', 'idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado', 'tipoMovimiento'], 'integer'],
             [['updated_at', 'created_by', 'updated_by', 'fechaDesde', 'fechaHasta',], 'safe'],
             [['consecutivo',], 'number'],
             [['serie'], 'string', 'max' => 5],
@@ -83,6 +83,7 @@ class TraspasoSearch extends Traspaso
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
             'created_at' => $this->created_at,
+            'tipoMovimiento' => $this->tipoMovimiento,
             // 'fechaDesde' => $this->fechaDesde,
             // 'fechaHasta' => $this->fechaHasta,
 

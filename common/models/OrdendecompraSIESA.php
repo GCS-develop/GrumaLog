@@ -4,6 +4,9 @@ namespace common\models;
 
 use Yii;
 use yii\db\Query;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use yii\db\Expression;
 
 class OrdendecompraSIESA extends \yii\db\ActiveRecord
 {
@@ -15,6 +18,26 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
     public static function getDb()
     {
         return Yii::$app->dbSiesa; // Usa la conexión definida como dbsiesa
+    }
+
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => 'updated_at',
+                'value' => new Expression('GETDATE()'),
+            ],
+            [
+                'class' => BlameableBehavior::className(),
+                'createdByAttribute' => 'created_by',
+                'updatedByAttribute' => 'updated_by',
+                'value' => function ($event) {
+                    return Yii::$app->user->id;
+                },
+            ],
+        ];
     }
 
     public static function obtenerDatosPorConsecutivo($idCia, $idCO, $idTipoDocumento, $consecutivo)
@@ -349,6 +372,9 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
     }
 
     public static function obtenerDatosDocumento ($tipodocumento, $numerodocumento){
+
+        $pattern = $tipodocumento . $numerodocumento;
+
         $sql = "
             SELECT TOP 1 
             f350_rowid, 
@@ -356,22 +382,101 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             f350_id_co, 
             f350_id_tipo_docto, 
             f350_consec_docto, 
-            LEFT(SUBSTRING(f350_notas, CHARINDEX(:tipodocumento, f350_notas), LEN(f350_notas)), 3) AS tipoDocumento, 
-            SUBSTRING(
-                SUBSTRING(f350_notas, CHARINDEX(:tipodocumento, f350_notas), LEN(f350_notas)),
-                4, 
-                CHARINDEX(' ', SUBSTRING(f350_notas, CHARINDEX(:tipodocumento, f350_notas), LEN(f350_notas)) + ' ') - 4
-            ) AS numeroDocumento
+            :tipodocumento AS tipoDocumento,
+            :numerodocumento AS numeroDocumento
             FROM
             t350_co_docto_contable
             WHERE f350_id_tipo_docto = :tipodocumento
-            AND f350_notas LIKE '%' + :tipodocumento + :numerodocumento + '%' 
-            AND f350_ind_estado = 1;
+            AND f350_notas LIKE CAST('%" . $pattern . "%' AS NVARCHAR) " .    
+            "AND f350_ind_estado = 1;
         ";
 
         return self::getDb()->createCommand($sql)
-            ->bindValue('tipodocumento', $tipodocumento)
-            ->bindValue(':numerodocumento', $numerodocumento)
+        ->bindValue('tipodocumento', $tipodocumento)
+        ->bindValue(':numerodocumento', $numerodocumento)
+        ->queryAll();
+        
+    }
+
+    public static function obtenerDatosItem ($item, $color, $talla){
+        $sql = "
+            SELECT 
+                bar.f131_id AS codigoBarras
+                , itx.f121_id_barras_principal AS codigoBarrasPrincipal
+                , it.f120_id_cia, it.f120_id AS item
+                , it.f120_referencia AS referencia
+                , it.f120_descripcion AS descripcion
+                , it.f120_descripcion_corta AS descripcionCorta
+                , it.f120_id_unidad_inventario
+                , it.f120_id_unidad_empaque AS unidadEmpaque
+                , it.f120_id_unidad_orden AS unidadOrden
+                , itx.f121_id_ext1_detalle AS idColor
+                , col.f117_descripcion AS color
+                , itx.f121_id_ext2_detalle AS idTalla
+                , tl.f119_descripcion AS talla
+                , TRIM(itcm.f106_id) AS idCategoria
+                , TRIM(itcm.f106_descripcion) AS categoria
+                , TRIM(itcm1.f106_id) AS idSubcategoria
+                , TRIM(itcm1.f106_descripcion) AS subcategoria
+                , TRIM(itcm2.f106_id) AS idProducto
+                , TRIM(itcm2.f106_descripcion) AS producto
+                , TRIM(itcm3.f106_id) AS idMarca
+                , TRIM(itcm3.f106_descripcion) AS marca
+                , TRIM(itcm4.f106_id) AS idProveedor
+                , TRIM(itcm4.f106_descripcion) AS proveedor
+                , itx.f121_ind_estado AS idEstadoItem
+                ,
+                CASE 
+                WHEN itx.f121_ind_estado = 1 THEN 'ACTIVO'
+                WHEN itx.f121_ind_estado = 0 THEN 'INACTIVO'
+                WHEN itx.f121_ind_estado = 2 THEN 'BLOQUEADO'
+                ELSE 'DESCONOCIDO' -- Opcional, por si el campo tiene otros valores inesperados
+                END AS estadoItem
+                FROM t120_mc_items  it                 
+                INNER JOIN t121_mc_items_extensiones itx ON itx.f121_rowid_item = it.f120_rowid
+                LEFT JOIN t131_mc_items_barras bar ON itx.f121_rowid = bar.f131_rowid_item_ext
+                -- itx.f121_id_barras_principal = bar.f131_id
+
+                LEFT JOIN t117_mc_extensiones1_detalle col 
+                ON it.f120_id_cia = col.f117_id_cia AND itx.f121_id_extension1 = col.f117_id_extension1 AND 
+                itx.f121_id_ext1_detalle = col.f117_id
+
+                LEFT JOIN t119_mc_extensiones2_detalle tl 
+                ON it.f120_id_cia = tl.f119_id_cia AND itx.f121_id_extension2 = tl.f119_id_extension2 
+                AND itx.f121_id_ext2_detalle = tl.f119_id
+
+                LEFT JOIN t125_mc_items_criterios itc_categoria 
+                ON it.f120_rowid = itc_categoria.f125_rowid_item AND itc_categoria.f125_id_plan = '001'
+                LEFT JOIN t106_mc_criterios_item_mayores itcm 
+                ON itc_categoria.f125_id_plan = itcm.f106_id_plan AND itc_categoria.f125_id_criterio_mayor = itcm.f106_id
+
+                LEFT JOIN t125_mc_items_criterios itc_subcategoria 
+                ON it.f120_rowid = itc_subcategoria.f125_rowid_item AND itc_subcategoria.f125_id_plan = '002'
+                LEFT JOIN t106_mc_criterios_item_mayores itcm1 
+                ON itc_subcategoria.f125_id_plan = itcm1.f106_id_plan AND itc_subcategoria.f125_id_criterio_mayor = itcm1.f106_id
+
+                LEFT JOIN t125_mc_items_criterios itc_producto 
+                ON it.f120_rowid = itc_producto.f125_rowid_item AND itc_producto.f125_id_plan = '005'
+                LEFT JOIN t106_mc_criterios_item_mayores itcm2 
+                ON itc_producto.f125_id_plan = itcm2.f106_id_plan AND itc_producto.f125_id_criterio_mayor = itcm2.f106_id
+
+                LEFT JOIN t125_mc_items_criterios itc_marca 
+                ON it.f120_rowid = itc_marca.f125_rowid_item AND itc_marca.f125_id_plan = '014'
+                LEFT JOIN t106_mc_criterios_item_mayores itcm3 
+                ON itc_marca.f125_id_plan = itcm3.f106_id_plan AND itc_marca.f125_id_criterio_mayor = itcm3.f106_id
+
+                LEFT JOIN t125_mc_items_criterios itc_proveedor
+                ON it.f120_rowid = itc_proveedor.f125_rowid_item AND itc_proveedor.f125_id_plan = '015'
+                LEFT JOIN t106_mc_criterios_item_mayores itcm4 
+                ON itc_proveedor.f125_id_plan = itcm4.f106_id_plan AND itc_proveedor.f125_id_criterio_mayor = itcm4.f106_id
+
+                WHERE it.f120_id = :item AND itx.f121_id_ext1_detalle = :color AND itx.f121_id_ext2_detalle = :talla;
+        ";
+
+        return self::getDb()->createCommand($sql)
+            ->bindValue('item', $item)
+            ->bindValue('color', $color)
+            ->bindValue('talla', $talla)
             ->queryAll();
     }
 

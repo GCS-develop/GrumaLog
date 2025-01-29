@@ -254,7 +254,7 @@ Modal::end();
 
     'columns' => [
         ['class' => 'kartik\grid\SerialColumn'],
-        'id',
+        //'id',
         // 'idTipoDocumento',
         [
             'attribute' => 'idTipoDocumento',
@@ -264,12 +264,16 @@ Modal::end();
     return $model->tipodocumento ? $model->tipodocumento->codigo : 'Sin serie';
 },
         ],
-    
+
         [
             'attribute' => 'consecutivo',
-            'contentOptions' => ['data-cellvalue' => 'consecutivo'],
+            'label' => 'No Interno',
+        ],
+        [
+            'attribute' => 'consecutivo',
+            'label' => 'No. ERP',
             'value' => function ($model) {
-    return $model->codigoerp ? $model->codigoerp->f350_consec_docto : $model->consecutivo;
+    return $model->codigoerp ? $model->codigoerp->f350_consec_docto : '-';
 },
         ],
         // 'idCentroOperacion',
@@ -327,7 +331,13 @@ Modal::end();
             'contentOptions' => ['data-cellvalue' => 'idEstado',],
         ],
         // 'idUltimoItem',
-        'created_at',
+        [
+            'attribute' => 'created_at',
+            'label' => 'Fecha Crea',
+            'value' => function ($model) {
+    return substr($model->created_at, 0, 16);
+},
+        ],
         [
             'attribute' => 'created_by',
             'label' => 'Creador',
@@ -337,8 +347,13 @@ Modal::end();
 },
         ],
 
-
-        'updated_at',
+        [
+            'attribute' => 'updated_at',
+            'label' => 'Fecha Act.',
+            'value' => function ($model) {
+    return substr($model->updated_at, 0, 16);
+},
+        ],
         [
             'attribute' => 'updated_by',
             'label' => 'Ultimo usuario',
@@ -348,10 +363,16 @@ Modal::end();
 },
         ],
         [
+            'attribute' => 'tipoMovimiento',
+            'value' => function ($model) {
+    return $model->tipoMovimiento == 1 ? 'Traspaso' : 'Entradas';
+},
+        ],
+        [
             'class' => ActionColumn::className(),
             'header' => 'Acción',
             'headerOptions' => ['width' => '10%'],
-            'template' => ' {view} {update} {anular} {factura}  ',
+            'template' => ' {view} {update} {anular} {factura} {siesa}',
             'buttons' => [
 
                 'view' => function ($url, $model) {
@@ -401,6 +422,23 @@ Modal::end();
                         . $model->bodegaOrigen->nombre . ', Destino: '
                         . $model->bodegaDestino->nombre . ', Numero de cajas: '
                         . $model->numeroCajas . ' )',
+                    'method' => 'post',
+                ]
+            ]
+        );
+    },
+
+                'siesa' => function ($url, $model) {
+        return Html::a(
+            '<i class="fa fa-sync"></i>',
+            ['sincronizar', 'id' => $model->id],
+            [
+                'class' => 'btn btn-default',
+                'title' => 'Sincronizar Documento ERP',
+                'data' => [
+                    'confirm' => 'Esta seguro de Sincronizar Este Documento? ( Origen: '
+                        . $model->bodegaOrigen->nombre . ', Destino: '
+                        . $model->bodegaDestino->nombre . ', No. Traspaso: ' . $model->id . ' )',
                     'method' => 'post',
                 ]
             ]

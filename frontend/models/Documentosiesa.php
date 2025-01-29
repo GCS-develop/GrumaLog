@@ -4,6 +4,7 @@ namespace frontend\models;
 
 use Yii;
 
+
 /**
  * This is the model class for table "documentosiesa".
  *
@@ -65,31 +66,44 @@ class Documentosiesa extends \yii\db\ActiveRecord
         ];
     }
 
-    public static function grabarDatos ($data, $idgruma){
+    public static function grabarDatos($resultado, $idgruma)
+    {
 
-        $numerodocumento = $data['numeroDocumento'];
-        $tipodocumento = $data['tipoDocumento'];
+        if (!empty($resultado)) {
+            foreach ($resultado as $data) {
+                $numerodocumento = $data['numeroDocumento'];
+                $tipodocumento = $data['tipoDocumento'];
 
-        $model = Documentosiesa::find()->where(['tipoDocumento' > $tipodocumento,
-                                                'numeroDocumento' => $numerodocumento])
-                                                ->one();
+                $model = Documentosiesa::find()->where([
+                    'tipoDocumento' => $tipodocumento,
+                    'numeroDocumento' => $numerodocumento
+                ])
+                    ->one();
 
-        if (!$model){
-            $model = new Documentosiesa();
-            $model->tipoDocumento = $tipodocumento;
-            $model->numeroDocumento = $numerodocumento;
+                if (!$model) {
+                    $model = new Documentosiesa();
+                    $model->tipoDocumento = $tipodocumento;
+                    $model->numeroDocumento = $numerodocumento;
+                }
+
+                $model->idGruma = $idgruma;
+                $model->f350_id_tipo_docto = $data['f350_id_tipo_docto'];
+                $model->f350_rowid = $data['f350_rowid'];
+                $model->f350_id_cia = $data['f350_id_cia'];
+                $model->f350_id_co = $data['f350_id_co'];
+                $model->f350_consec_docto = $data['f350_consec_docto'];
+
+                return $model->save();
+
+            }
         }
 
-        $model->idGruma = $idgruma;
-        $model->f350_id_tipo_docto = $data['f350_id_tipo_docto'];
-        $model->f350_rowid = $data['f350_rowid'];
-        $model->f350_id_cia = $data['f350_id_cia'];
-        $model->f350_id_co = $data['f350_id_co'];
+        return false;
 
-        $model->save();
     }
 
-    public function getCodigoerp (){
+    public function getCodigoerp()
+    {
         return $this->f350_id_tipo_docto . '-' . $this->f350_consec_docto;
     }
 }

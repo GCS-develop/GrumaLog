@@ -37,6 +37,8 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
     public $almacenDestino;
     public $tipoDocumento;
     public $consecutivoDocumento;
+    public $consecutivoInterno;
+    public $tipoDocumentoInterno;
     public $fechaPlanillaembarque;
     public $horaPlanillaembarque;
     public $estado;

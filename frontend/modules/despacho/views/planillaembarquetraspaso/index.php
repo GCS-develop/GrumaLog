@@ -34,8 +34,20 @@ $gridColumns = [
     'almacenOrigen',
     'codAlmacenDestino',
     'almacenDestino',
-    'tipoDocumento',
-    'consecutivoDocumento',
+    [
+        'attribute' => 'tipoDocumento',
+        'contentOptions' => ['data-cellvalue' => 'tipoDocumento'],
+        'value' => function ($model) {
+            return $model->tipoDocumento ? $model->tipoDocumento : $model->tipoDocumentoInterno;
+        },
+    ],
+    [
+        'attribute' => 'consecutivoDocumento',
+        'contentOptions' => ['data-cellvalue' => 'consecutivoDocumento'],
+        'value' => function ($model) {
+            return $model->consecutivoDocumento ? $model->consecutivoDocumento : $model->consecutivoInterno;
+        },
+    ],
     [
         'attribute' => 'fechaTraspaso',
         'contentOptions' => ['data-cellvalue' => 'fechaTraspaso'],
@@ -92,7 +104,11 @@ $gridColumns = [
     [
         'label' => 'Planilla',
         'value' => function ($model) {
-            return TRIM($model->codAlmacenOrigen) . '-' . $model->consecutivoDocumento;
+            return ($model->codAlmacenOrigen)
+            // ($model->tipoDocumento ? $model->tipoDocumento : $model->tipoDocumentoInterno)
+                . '-' .
+                ($model->consecutivoDocumento ? $model->consecutivoDocumento : $model->consecutivoInterno)
+            ;
         },
 
     ],
