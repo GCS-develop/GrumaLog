@@ -1,6 +1,7 @@
 <?php
 
 use frontend\models\Traspaso;
+use frontend\models\Usertraspaso;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
@@ -13,6 +14,10 @@ use kartik\export\ExportMenu;
 
 use common\widgets\Alert;
 use yii\bootstrap4\Modal;
+
+use yii\widgets\ActiveForm;
+use yii\widgets\Pjax;
+
 
 /** @var yii\web\View $this */
 /** @var frontend\models\searchTraspasoSearch $searchModel */
@@ -28,6 +33,8 @@ $this->registerJsFile(
 
 $fecha_actual = date("Y-m-d");
 $filename = "Relacion_Traspaso_" . $fecha_actual;
+
+
 
 $gridColumns = [
     [
@@ -84,7 +91,12 @@ $gridColumns = [
         'attribute' => 'idEstado',
         'filter' => Estadotraspaso::getListaData(),
         'value' => function ($model) {
-            return $model->estado ? $model->estado->nombre : null;
+            // Obtiene el nombre del estado de la planilla y el estado general
+            $estado = $model->planillaembarquetraspaso ? $model->planillaembarquetraspaso->estadoPlanilla->nombre : '';
+            $estadoPlanilla = $model->estado ? $model->estado->nombre : '';
+
+            // Concatenar los dos estados (si ambos existen)
+            return $estadoPlanilla && $estado ? $estadoPlanilla . ' / ' . $estado : $estadoPlanilla . $estado;
         },
         'contentOptions' => ['data-cellvalue' => 'idEstado',],
     ],
@@ -162,9 +174,59 @@ $gridColumns = [
         },
         'contentOptions' => ['data-cellvalue' => 'Usuario',],
     ],
+    'anula_at',
+    'anula_by',
 ];
 
 ?>
+<?php
+
+$this->registerJs("
+    $(document).ready(function() {
+        
+        $('#cambiarEstadoBtn').on('click', function() {
+            if (confirm('¿Estás seguro de que deseas enviar a muelle los registros seleccionados?')) {
+                var ids = [];
+                $('input[name=\"selection[]\"]:checked').each(function() {
+                    ids.push($(this).val());
+                });
+
+                if (ids.length === 0) {
+                    alert('Debes seleccionar al menos un registro.');
+                    return;
+                }
+
+                $.ajax({
+                    url: '" . \yii\helpers\Url::to(['/traspaso/traspaso/cambiar-estado']) . "',
+                    type: 'POST',
+                    data: { ids: ids },
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Estado actualizado con éxito: ' + response.message);
+                            // $.pjax.reload({container: '#my-container'});
+                            $.pjax.reload({container: '#alert-pjax-container'});
+
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Hubo un error al actualizar el estado.';
+                        alert(errorMsg);
+                        // console.log(xhr.responseText);
+                    }
+                });
+            } else {
+                console.log('Cambio de estado cancelado.');
+            }
+        });
+
+    });
+", \yii\web\View::POS_READY);
+
+
+?>
+
 
 <link rel="stylesheet" href="css/shared.css">
 
@@ -190,7 +252,7 @@ Modal::end();
     <?= Alert::widget() ?>
 
     <div class="row">
-        <div class="col-lg-6 derecha">
+        <!-- <div class="col-lg-6 derecha">
 
             <?php $url = Url::to(['create']); ?>
 
@@ -201,6 +263,21 @@ Modal::end();
                 )
                     ?>
             </p>
+
+        </div> -->
+        <div class="col-lg-6 derecha">
+
+            <!-- <?php if (Yii::$app->user->identity->username == 'victor.burbano'): ?> -->
+
+                <!-- Botón para cambiar el estado de los registros -->
+                <?= Html::button('Muelle masivo', [
+                    'class' => 'btn btn-info btn-create btn-lg',
+                    'id' => 'cambiarEstadoBtn',
+                ]) ?>
+
+
+
+                <!-- <?php endif; ?> -->
 
         </div>
 
@@ -242,6 +319,8 @@ Modal::end();
 
 </div>
 
+<?php Pjax::begin(['id' => 'alert-pjax-container']); ?>
+
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
     // 'filterModel' => $searchModel,
@@ -254,10 +333,25 @@ Modal::end();
 
     'columns' => [
         ['class' => 'kartik\grid\SerialColumn'],
+
+        [
+            'class' => 'kartik\grid\CheckboxColumn',
+            'checkboxOptions' => function ($model, $key, $index, $column) {
+    return ($model->estado->nombre === 'terminado')
+        ? ['value' => $model->id, 'name' => 'seleccionar[]']
+        : ['style' => 'display:none']; // Oculta el checkbox si el estado no es 'Terminado'
+},
+            'visible' => function ($model, $key, $index, $column) {
+    return $model->estado->nombre === 'terminado'; // Oculta completamente la columna si no hay registros en estado 'Terminado'
+},
+        ],
+
+
         'id',
         // 'idTipoDocumento',
         [
             'attribute' => 'idTipoDocumento',
+            'label' => 'Tipo Dcto.',
             'filter' => TipoDocumento::getListaDataCodigo(),
             'contentOptions' => ['data-cellvalue' => 'serie'],
             'value' => function ($model) {
@@ -324,11 +418,16 @@ Modal::end();
         // 'idEstado',
         [
             'attribute' => 'idEstado',
+            'contentOptions' => ['data-cellvalue' => 'idEstado',],
             'filter' => Estadotraspaso::getListaData(),
             'value' => function ($model) {
-    return $model->estado ? $model->estado->nombre : null;
+    // Obtiene el nombre del estado de la planilla y el estado general
+    $estado = $model->planillaembarquetraspaso ? $model->planillaembarquetraspaso->estadoPlanilla->nombre : '';
+    $estadoPlanilla = $model->estado ? $model->estado->nombre : '';
+
+    // Concatenar los dos estados (si ambos existen)
+    return $estadoPlanilla && $estado ? $estadoPlanilla . ' / ' . $estado : $estadoPlanilla . $estado;
 },
-            'contentOptions' => ['data-cellvalue' => 'idEstado',],
         ],
         // 'idUltimoItem',
         [
@@ -341,6 +440,7 @@ Modal::end();
         [
             'attribute' => 'created_by',
             'label' => 'Creador',
+            'filter' => Usertraspaso::getListaData(),
             'contentOptions' => ['data-cellvalue' => 'Usuario'],
             'value' => function ($model) {
     return $model->created_by . ' - ' . ($model->createdByUser ? $model->createdByUser->username : '(sin usuario)');
@@ -368,6 +468,8 @@ Modal::end();
     return $model->tipoMovimiento == 1 ? 'Traspaso' : 'Entradas';
 },
         ],
+        'anula_at',
+        'anula_by',
         [
             'class' => ActionColumn::className(),
             'header' => 'Acción',
@@ -455,12 +557,13 @@ Modal::end();
     },
 
                 'anular' => function ($model, $key, $index) {
-        return $model->idEstado == 1; // Condición para mostrar el botón
+        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
     },
             ],
 
         ],
     ],
 ]); ?>
+<?php Pjax::end(); ?>
 
 </div>

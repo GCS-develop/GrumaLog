@@ -13,6 +13,7 @@ use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
 use Mike42\Escpos\Printer;
 use xstreamka\mobiledetect\Device;
 use Yii;
+use yii\web\BadRequestHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -27,6 +28,7 @@ class TraspasodetalleController extends Controller
     /**
      * @inheritDoc
      */
+
     public function behaviors()
     {
         return array_merge(
@@ -36,6 +38,8 @@ class TraspasodetalleController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'cambiar-estado' => ['POST'], // Asegúrate de permitir POST aquí
+
                     ],
                 ],
             ]
@@ -848,5 +852,53 @@ class TraspasodetalleController extends Controller
 
         return $this->redirect(['traspaso/index']);
     }
+
+    public function actionCambiarEstado()
+    {
+        Yii::info('Acción Cambiar Estado ejecutada para mandar a muelle de forma masiva los 207 (VMI)', __METHOD__);
+
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $ids = Yii::$app->request->post('ids');
+
+        // Tu lógica aquí para cambiar el estado
+        // Esto es solo un ejemplo
+        // Yii::$app->session->setFlash('success', '¡Estado cambiado!');
+
+        // return $this->redirect(['index']);  // o cualquier redirección que uses
+
+        if (Yii::$app->request->isAjax && Yii::$app->request->post()) {
+
+            
+
+            // Para depurar y ver los ids
+            Yii::debug($ids, 'ajax');  // Registra en los logs
+            // O usar var_dump para verlos en el navegador
+            return ['success' => true, 'message' =>  $ids];
+
+            // return json_encode(['success' => true, 'message' => 'Registros ' . $ids]);
+
+            // if ($ids) {
+            //     // Cambiar el estado de los registros seleccionados
+            //     $traspasoDetalles = Traspasodetalle::findAll($ids);
+            //     foreach ($traspasoDetalles as $traspasoDetalle) {
+            //         // Cambia el estado del traspasoDetalle según tu lógica
+            //         // $traspasoDetalle->idEstado = <nuevo_estado>;  // Establece el nuevo estado aquí
+            //         if (!$traspasoDetalle->save()) {
+            //             return json_encode(['success' => false, 'message' => 'Error al actualizar algunos registros']);
+            //         }
+            //     }
+
+            //     return json_encode(['success' => true, 'message' => 'Registros actualizados correctamente']);
+            // } else {
+            //     return json_encode(['success' => false, 'message' => 'No se seleccionaron registros']);
+            // }
+        }
+
+
+
+    }
+
+
 
 }
