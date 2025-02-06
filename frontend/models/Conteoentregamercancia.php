@@ -194,10 +194,14 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
 
     }
 
-    public static function generarDataConteoCurvas($idagenda, $idordencompra, $idcategoria, $iduserconteo, $idprogramacion = null)
+    public static function generarDataConteoCurvas($idagenda, $idordencompra, $idcategoria, $iduserconteo, $idprogramacion = null, $idfactura = null)
     {
 
-        //var_dump($idordencompra . ' - ' .$idagenda . ' - ' . $idprogramacion);die("hola");
+        //var_dump($idfactura . ' - ' . $idordencompra . ' - ' .$idagenda . ' - ' . $idprogramacion);die("hola");
+
+        if ($idfactura) {
+            $arrayresultado = self::procesoFactura($idfactura, $iduserconteo);
+        }
 
         if ($idordencompra) {
             $arrayresultado = self::procesoOrdenCompra($idordencompra, $idcategoria);
@@ -238,6 +242,16 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
     {
 
         $informaciondataconteo = self::generarQueryOC($idordencompra, $idcategoria);
+
+        $arrayresultado = self::generarArregloCurvas($informaciondataconteo);
+
+        return $arrayresultado;
+    }
+
+    public static function procesoFactura($idfactura, $iduserconteo)
+    {
+
+        $informaciondataconteo = self::generarQueryFactura($idfactura, $iduserconteo);
 
         $arrayresultado = self::generarArregloCurvas($informaciondataconteo);
 
@@ -311,6 +325,50 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
         } else {
             $data = self::getDb()->createCommand($sql, [':idagenda' => $idagenda])->queryAll();
         }
+
+        return $data;
+    }
+
+    public static function generarQueryFactura($idfactura, $iduserconteo)
+    {
+        $sql = "
+            SELECT aem.id AS radicado, pem.id AS numProgramacion, aem.idOrdenCompra,
+            (td.codigo + '-' +  CAST(oc.consecutivo AS nvarchar(50))) AS numeroOrden,
+            cat.nombre AS categoria, prv.razonSocial,
+            it.item, it.idColor, 
+            (it.descripcion + ' - ' + ISNULL(it.unidadEmpaque, 'UND')) AS descripcion,
+            col.codigo AS color, tal.codigo AS talla, 
+            pem.unidadesAsignadas AS unidadesAsignadasUser,
+            cem.unidadesAsignadas, cem.unidadesConteo
+            FROM conteoentregamercancia cem 
+            INNER JOIN programacionentregamercancia pem ON cem.idProgramacionEntregaMercancia = pem.id
+            INNER JOIN facturaentregamercancia fem ON pem.idFacturaEntregaMercancia = fem.id
+            INNER JOIN agendaentregamercancia aem ON pem.idAgendaEntregaMercancia = aem.id 
+            INNER JOIN ordendecompra oc ON aem.idOrdenCompra = oc.id 
+            INNER JOIN tipodocumento td ON oc.idTipoDocumento = td.id 
+            INNER JOIN item it ON cem.idItem = it.id
+            INNER JOIN talla tal ON it.idTalla = tal.id
+            INNER JOIN color col ON it.idColor = col.id
+            INNER JOIN categoria cat ON aem.idCategoria = cat.id 
+            LEFT JOIN proveedor prv ON oc.idProveedor = prv.id 
+            WHERE fem.id = :idfactura ";
+
+        if ($iduserconteo) {
+            $sql = $sql . " AND pem.idUserConteo = :iduserconteo";
+        }
+
+        $sql = $sql . " ORDER BY it.item, tal.orden;";
+
+        if ($iduserconteo) {
+            $data = self::getDb()->createCommand($sql, [
+                ':idfactura' => $idfactura,
+                ':iduserconteo' => $iduserconteo
+            ])->queryAll();
+        } else {
+            $data = self::getDb()->createCommand($sql, [':idfactura' => $idfactura])->queryAll();
+        }
+
+        //echo $data->query->createCommand()->getRawSql();die("hola");
 
         return $data;
     }
@@ -394,23 +452,28 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
         return $filas;
     }
 
-    public static function totalCantidadConteo($idprogramacion, $item, $iduserconteo, $idagenda = null)
+    public static function totalCantidadConteo($idprogramacion, $item, $iduserconteo, $idagenda = null, $idfactura = null)
     {
 
         $total = Conteoentregamercancia::find()
             ->alias('det')
             ->select(['SUM(det.unidadesConteo) AS total'])
             ->join('INNER JOIN', 'programacionentregamercancia pem', 'det.idProgramacionEntregaMercancia = pem.id')
+            ->join('INNER JOIN', 'facturaentregamercancia fem', 'pem.idFacturaEntregaMercancia = fem.id')
             ->andFilterWhere(['det.idProgramacionEntregaMercancia' => $idprogramacion])
             ->andFilterWhere(['det.item' => $item])
             ->andFilterWhere(['pem.idUserConteo' => $iduserconteo])
             ->andFilterWhere(['pem.idAgendaEntregaMercancia' => $idagenda])
+            ->andFilterWhere(['pem.idFacturaEntregaMercancia' => $idfactura])
             ->scalar();
         return $total;
     }
 
-    public static function generarExcelConteoCurvas($idagenda)
+    public static function generarExcelConteoCurvas($idfactura)
     {
+
+        $modelfactura = Facturaentregamercancia::findOne(['id' => $idfactura]);
+        $idagenda = $modelfactura->idAgendaEntregaMercancia;
 
         $modelagenda = Agendaentregamercancia::findOne(['id' => $idagenda]);
 
@@ -420,7 +483,7 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
         $iduserconteo = null;
 
         $searchModel = new ConteoentregamercanciaSearch();
-        $dataProviderBD = $searchModel->search($params, $idprogramacion, $item, $idagenda, $iduserconteo);
+        $dataProviderBD = $searchModel->search($params, $idprogramacion, $item, $idagenda, $iduserconteo, $idfactura);
 
         $idordencompra = null;
         $idcategoria = null;
@@ -468,15 +531,21 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
             }
 
             if ($nombreempleado == null) {
-                $nombreempleado = $registro->empleadoLogistica->empleado->nombreEmpleado;
-            }
-            if ($numerousuarios == 0) {
-                $usuariosconteo = $nombreempleado;
-            } else {
-                if (!str_contains($usuariosconteo, $nombreempleado)) {
-                    $usuariosconteo = $nombreempleado . " , " . $usuariosconteo;
+                if ($registro->idEmpleadoLogistica){
+                    $nombreempleado = $registro->empleadoLogistica->empleado->nombreEmpleado;
                 }
             }
+
+            if ($nombreempleado){
+                if ($numerousuarios == 0) {
+                    $usuariosconteo = $nombreempleado;
+                } else {
+                    if (!str_contains($usuariosconteo, $nombreempleado)) {
+                        $usuariosconteo = $nombreempleado . " , " . $usuariosconteo;
+                    }
+                }
+            }
+
             $numerousuarios = $numerousuarios + 1;
         }
 
@@ -723,9 +792,10 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
         return $rutaGuardado;
     }
 
-    public static function crearRegistroTransferencia($idagenda, $dataProviderBD)
+    public static function crearRegistroTransferencia($idagenda, $idfactura, $dataProviderBD)
     {
 
+        $factura = Facturaentregamercancia::findOne(['id' => $idfactura]);
         $agenda = Agendaentregamercancia::findOne(['id' => $idagenda]);
         $ordencompra = Ordendecompra::findOne(['id' => $agenda->idOrdenCompra]);
 
@@ -737,7 +807,7 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
             $numRegistrosBorrados = Transferenciaordencompraexcel::deleteAll(['idTransferenciaerp' => $transferenciaerp->id]);
         }
 
-        $idtransferenciaerp = Conteoentregamercancia::cabeceraTransferencia($agenda, $ordencompra);
+        $idtransferenciaerp = Conteoentregamercancia::cabeceraTransferencia($agenda, $ordencompra, $factura);
 
         $respuesta = Conteoentregamercancia::detalleTransferencia($idtransferenciaerp, $dataProviderBD);
 
@@ -751,7 +821,7 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
         return $idtransferenciaerp;
     }
 
-    public static function cabeceraTransferencia($agenda, $ordencompra)
+    public static function cabeceraTransferencia($agenda, $ordencompra, $factura)
     {
 
         $conector = Conectoresdinamicos::find()->where(['idDocumento' => '165604'])->one();
@@ -760,12 +830,12 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
             $ordencompra->proveedor->razonSocial . ' ' .
             $ordencompra->tipoDocumento->codigo . '-' .
             $ordencompra->consecutivo . ' - ' .
-            'No. Factura: ' . $agenda->numeroFactura;
+            'No. Factura: ' . $factura->numeroFacturaLegaliza;
 
         $notas = 'Fecha Documento: ' .
-            $ordencompra->fechaDocumentoEntrada . ' ' .
-            'Documento Entrada: ' . $ordencompra->tipoDocumentoentrada->codigo . '-' .
-            $ordencompra->consecutivoDocumentoEntrada;
+            $factura->fechaDocumentoEntrada . ' ' .
+            'Documento Entrada: ' . $factura->tipoDocumentoentrada->codigo . '-' .
+            $factura->consecutivoDocumentoEntrada;
 
         $model = new Transferenciaerp();
         $model->descripcion = $descripcion;
@@ -826,7 +896,6 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
                 continue;
             }
         }
-
 
         return $ok;
 

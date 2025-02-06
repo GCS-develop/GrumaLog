@@ -254,7 +254,7 @@ Modal::end();
 
     'columns' => [
         ['class' => 'kartik\grid\SerialColumn'],
-        //'id',
+        'id',
         // 'idTipoDocumento',
         [
             'attribute' => 'idTipoDocumento',

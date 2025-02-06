@@ -44,7 +44,7 @@ use frontend\models\Programacionentregamercancia;
 use frontend\models\Conteoentregamercancia;
 
 $this->title = 'Conteo - Curva de Tallas y Colores';
-$this->params['breadcrumbs'][] = ['label' => 'Programación', 'url' => ['/programacion/programacionentregamercancia/indexconteoprogramacion', 'idagenda' => $modelprogramacion->idAgendaEntregaMercancia]];
+$this->params['breadcrumbs'][] = ['label' => 'Programación', 'url' => ['/programacion/facturaentregamercancia/indexconteoprogramacion', 'idfactura' => $modelprogramacion->idFacturaEntregaMercancia]];
 $this->params['breadcrumbs'][] = $this->title;
 
 $fecha_actual = date("Y-m-d");
@@ -359,15 +359,15 @@ foreach ($dataProvider as $fila) {
                 [
                     'finalizarconteo',
                     'id' => $modelprogramacion->id,
-                    'origen' => 'programacion'
+                    'origen' => 'programacion',
+                    'idfactura' => $modelprogramacion->idFacturaEntregaMercancia
                 ],
                 [
                     'class' => 'btn btn-success btn-lg btn-create',
                     'data' => [
                         'confirm' => 'Esta Seguro de FinalizarEste Conteo Este Registro? ( OC:' . $modelprogramacion->agendaEntregaMercancia->ordenCompra->tipoDocumento->codigo . '-' .
                             $modelprogramacion->agendaEntregaMercancia->ordenCompra->cO->codigo . '-' .
-                            $modelprogramacion->agendaEntregaMercancia->ordenCompra->consecutivo . ' - Usuario Conteo:' .
-                            $modelprogramacion->userConteo->empleadoLogistica->empleado->nombreEmpleado . ' )',
+                            $modelprogramacion->agendaEntregaMercancia->ordenCompra->consecutivo . ' )',
                         'method' => 'post',
                     ]
                 ]
@@ -419,8 +419,7 @@ foreach ($dataProvider as $fila) {
     <?php
     echo '<div class="mi-titulo-black">OC:' . $modelprogramacion->agendaEntregaMercancia->ordenCompra->tipoDocumento->codigo . '-' .
         $modelprogramacion->agendaEntregaMercancia->ordenCompra->cO->codigo . '-' .
-        $modelprogramacion->agendaEntregaMercancia->ordenCompra->consecutivo . ' - Usuario Conteo:' .
-        $modelprogramacion->userConteo->empleadoLogistica->empleado->nombreEmpleado . '</div>';
+        $modelprogramacion->agendaEntregaMercancia->ordenCompra->consecutivo . '</div>';
     ?>
 
     <div class="row">

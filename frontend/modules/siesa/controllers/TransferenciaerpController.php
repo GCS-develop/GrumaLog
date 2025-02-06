@@ -180,7 +180,7 @@ class TransferenciaerpController extends Controller
         $model->save();
 
         if ($origen == 'Conteo'){
-            return $this->redirect(['/programacion/conteoentregamercancia/indexlegalizacion']);    
+            return $this->redirect(['/programacion/facturaentregamercancia/indexlegalizaconteo']);    
         }
         return $this->redirect(['index']);
     }

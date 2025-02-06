@@ -44,7 +44,8 @@ use frontend\models\Programacionentregamercancia;
 use frontend\models\Conteoentregamercancia;
 
 $this->title = 'Conteo - Curva de Tallas y Colores';
-$this->params['breadcrumbs'][] = ['label' => 'Conteo Recepción Mercancía', 'url' => ['/programacion/programacionentregamercancia/indexconteoagenda']];
+//$this->params['breadcrumbs'][] = ['label' => 'Conteo Recepción Mercancía', 'url' => ['/programacion/programacionentregamercancia/indexconteoagenda']];
+$this->params['breadcrumbs'][] = ['label' => 'Programación Recepción Mercancía', 'url' => ['/programacion/facturaentregamercancia/indexprogramacion']];
 $this->params['breadcrumbs'][] = $this->title;
 
 $fecha_actual = date("Y-m-d");
@@ -283,7 +284,8 @@ foreach ($dataProvider as $fila) {
         <div class="col-lg-4 centrar"> 
             <?= Html::a('Finalizar Conteo', [   'finalizarconteo', 
                                                 'id' => $modelagenda->id,
-                                                'origen' => 'ordencompra'
+                                                'origen' => 'ordencompra',
+                                                'idfactura' => $modelfactura->id
                                             ], 
                                             [
                                                 'class' => 'btn btn-success btn-lg btn-create',
@@ -338,7 +340,11 @@ foreach ($dataProvider as $fila) {
     </div>
 
     <?php 
-        echo '<div class="mi-titulo-black">OC:' . $modelagenda->ordenCompra->tipoDocumento->codigo . '-' . 
+        echo '<div class="mi-titulo-black">Nro. Factura: ' . $modelfactura->numeroFactura . '</div>';
+    ?>
+
+    <?php 
+        echo '<div class="mi-titulo-black">OC: ' . $modelagenda->ordenCompra->tipoDocumento->codigo . '-' . 
         $modelagenda->ordenCompra->consecutivo . '</div>';
     ?>
 

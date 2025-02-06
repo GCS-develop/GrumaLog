@@ -54,4 +54,11 @@ class Estadorecepcion extends \yii\db\ActiveRecord
             'updated_by' => 'Updated By',
         ];
     }
+
+    public function getNombre()
+    {
+        return 'o';
+        // return $this->hasOne(Estadorecepcion::class, ['id' => 'idEstado']);
+    }
+
 }

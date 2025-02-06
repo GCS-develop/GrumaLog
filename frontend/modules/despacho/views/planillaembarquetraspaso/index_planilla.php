@@ -84,7 +84,8 @@ $gridColumns = [
         'attribute' => 'created_at',
         'contentOptions' => ['data-cellvalue' => 'created_at'],
         'value' => function ($model) {
-            return Yii::$app->formatter->asDate($model->created_at, 'php:H:i:s');
+            return Yii::$app->formatter->asDatetime(strtotime($model->created_at), 'php:H:i:s');
+
         },
     ],
     [
@@ -109,11 +110,7 @@ $gridColumns = [
     [
         'label' => 'Planilla',
         'value' => function ($model) {
-            return ($model->codAlmacenOrigen)
-                // ($model->tipoDocumento ? $model->tipoDocumento : $model->tipoDocumentoInterno)
-                . '-' .
-                ($model->consecutivoDocumento ? $model->consecutivoDocumento : $model->consecutivoInterno)
-            ;
+            return ($model->codAlmacenOrigen) . '-' . ($model->planillaEmbarque->id);
         },
 
     ],

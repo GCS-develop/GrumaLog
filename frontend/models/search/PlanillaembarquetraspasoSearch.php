@@ -160,6 +160,8 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             return $dataProvider;
         }
 
+        // var_dump($this->fechaRecibido);die();
+
         // grid filtering conditions
         $query->andFilterWhere([
             'pet.id' => $this->id,
@@ -170,7 +172,7 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             'pet.unidades' => $this->unidades,
             'pet.unidadesEmp' => $this->unidadesEmp,
             'pet.sello' => $this->sello,
-            'pet.fechaRecibido' => $this->fechaRecibido,
+            // 'pet.fechaRecibido' => $this->fechaRecibido,
             'pet.idUsuarioRecibido' => $this->idUsuarioRecibido,
             'pet.idEstado' => $this->idEstado,
             'pet.created_at' => $this->created_at,
@@ -189,6 +191,12 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             'pe.horaDespacho' => $this->horaPlanillaembarque,
             'tr.created_at' => $this->fechaTraspaso,
         ]);
+
+        if ($this->fechaRecibido) {
+            $fechaInicio = date('Y-m-d', strtotime($this->fechaRecibido));
+
+            $query->andWhere(['=', new \yii\db\Expression('CAST(pet.fechaRecibido AS DATE)'), $fechaInicio]);
+        }
 
         $query->andFilterWhere(['like', 'bo.nombre', $this->almacenOrigen])
             ->andFilterWhere(['like', 'bd.nombre', $this->almacenDestino])

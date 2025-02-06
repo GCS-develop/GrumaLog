@@ -117,6 +117,11 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
         return $this->hasOne(Agendaentregamercancia::class, ['id' => 'idAgendaEntregaMercancia']);
     }
 
+    public function getUnidadEmpaque()
+    {
+        return $this->hasOne(unidadempaque::class, ['id' => 'unidadxPaquete']);
+    }
+
     public function getEmpleadoLogistica()
     {
         return $this->hasOne(Empleadologistica::class, ['id' => 'idEmpleadoLogistica']);
@@ -132,7 +137,7 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
         return $this->hasOne(Userconteo::class, ['id' => 'idUserConteo']);
     }
 
-    public static function registrarItemsOC ($idagenda, $idordencompra, $idcategoria){
+    public static function registrarItemsOC ($idagenda, $idordencompra, $idcategoria, $idfactura = null){
 
         $codigo = 0;
         $modelestado = Estadoprogramacion::findOne(['codigo' => $codigo]);
@@ -142,12 +147,14 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
         foreach($listaitems as $item){
             $model = Programacionentregamercancia::findOne([
                                                     'idAgendaEntregaMercancia' => $idagenda,
+                                                    'idFacturaEntregaMercancia' => $idfactura,
                                                     'item' => $item['item']
                                         ]);
             if ($model == null){
                 $model = new Programacionentregamercancia ();
 
                 $model->idAgendaEntregaMercancia = $idagenda;
+                $model->idFacturaEntregaMercancia = $idfactura;
                 $model->item = $item['item'];
                 $model->referencia = $item['referencia'];
                 $model->descripcion = $item['descripcion'];
@@ -173,13 +180,16 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
         }
     }
 
-    public static function asignarUserConteo ($idagenda, $iduser, $idempleadologistica)
+    public static function asignarUserConteo ($idagenda, $iduser, $idempleadologistica, $idfactura = null)
     {
         $numRegistrosActualizados = 0;
         $modelestado = Estadoprogramacion::findOne(['codigo' => 1]);
 
         $models = Programacionentregamercancia::find()
-                                ->where(['idAgendaEntregaMercancia' => $idagenda])
+                                ->where([
+                                                        'idAgendaEntregaMercancia' => $idagenda, 
+                                                        'idFacturaEntregaMercancia' => $idfactura
+                                                    ])
                                 ->andWhere(['OR', ['idUserConteo' => null], ['idUserConteo' => '']])
                                 ->all();
 

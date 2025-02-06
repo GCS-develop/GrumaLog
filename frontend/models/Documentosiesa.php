@@ -75,6 +75,15 @@ class Documentosiesa extends \yii\db\ActiveRecord
                 $tipodocumento = $data['tipoDocumento'];
 
                 $model = Documentosiesa::find()->where([
+                    'idGruma' => $idgruma
+                ])->one();
+
+                if (!$model) {
+                    $model = new Documentosiesa();
+                    $model->idGruma = $idgruma;
+                }
+
+                /*$model = Documentosiesa::find()->where([
                     'tipoDocumento' => $tipodocumento,
                     'numeroDocumento' => $numerodocumento
                 ])
@@ -84,9 +93,10 @@ class Documentosiesa extends \yii\db\ActiveRecord
                     $model = new Documentosiesa();
                     $model->tipoDocumento = $tipodocumento;
                     $model->numeroDocumento = $numerodocumento;
-                }
+                }*/
 
-                $model->idGruma = $idgruma;
+                $model->tipoDocumento = $tipodocumento;
+                $model->numeroDocumento = $numerodocumento;
                 $model->f350_id_tipo_docto = $data['f350_id_tipo_docto'];
                 $model->f350_rowid = $data['f350_rowid'];
                 $model->f350_id_cia = $data['f350_id_cia'];

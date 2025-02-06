@@ -138,48 +138,6 @@ class ProgramacionentregamercanciaSearch extends Programacionentregamercancia
 
         $query = $query->andFilterWhere(['det.idAgendaEntregaMercancia' => $idagenda]);
         
-        /*$query = Programacionentregamercancia::find()
-                    ->select([  
-                                //'det.id AS idProgramacion',
-                                'ag.id AS idAgenda',
-                                'ag.idOrdenCompra', 
-                                'ag.fechaCita',
-                                'co.codigo AS codigoCentroOperacion',
-                                'td.codigo AS codigoTipoDocumento',
-                                'oc.consecutivo AS numeroOrdenCompra',
-                                'cat.nombre AS nombreCategoria',
-                                'det.idUserConteo',
-                                'emp.nombreEmpleado AS nombreUsuario', 
-                                'SUM(det.unidadesAsignadas) AS unidadesEmpaque',
-                                //'det.item AS articulo'
-                            ])
-                    ->alias('det')
-                    ->join('INNER JOIN', 'Agendaentregamercancia ag','det.idAgendaEntregaMercancia = ag.id')
-                    ->join('INNER JOIN', 'ordendecompra oc','ag.idOrdenCompra = oc.id')
-                    ->join('INNER JOIN', 'tipodocumento td','oc.idTipoDocumento = td.id')
-                    ->join('INNER JOIN', 'centrooperacion co','oc.idCO = co.id')
-                    ->join('INNER JOIN', 'categoria cat','ag.idCategoria = cat.id')
-                    ->join('INNER JOIN', 'userconteo usc', 'det.idUserConteo = usc.id')
-                    ->join('INNER JOIN', 'user us', 'usc.idUser = us.id')
-                    ->join('INNER JOIN', 'empleadologistica empl', 'det.idEmpleadoLogistica = empl.id')
-                    ->join('INNER JOIN', 'empleado emp', 'empl.idEmpleado = emp.id')
-                    ->groupBy([
-                                //'det.id',
-                                'ag.id',
-                                'ag.idOrdenCompra', 
-                                'ag.fechaCita',
-                                'co.codigo',
-                                'td.codigo',
-                                'oc.consecutivo',
-                                'cat.nombre',
-                                'det.idUserConteo',
-                                'emp.nombreEmpleado'
-                                //'det.unidadesAsignadas',
-                                //'det.item'
-                            ])
-                    ->andFilterWhere(['ag.idEstadoConteo' => $idestadoconteo])
-                    ->andFilterWhere(['det.idEstado' => $idestadoprogramacion]);*/
-
         $query->orderBy(['det.created_at' => SORT_DESC, 'ag.idOrdenCompra' => SORT_ASC]);
         // add conditions that should always apply here
 
@@ -210,6 +168,54 @@ class ProgramacionentregamercanciaSearch extends Programacionentregamercancia
             // Aplicar filtro de rango de fechas
             $query->andFilterWhere(['between', 'CONVERT(VARCHAR(10), det.created_at, 23)', $fechaInicio, $fechaFin]);
         }
+
+        return $dataProvider;
+    }
+
+    public function searchxFactura($params, $idfactura)
+    {
+
+        $query = Programacionentregamercancia::find()
+                            ->alias('pem')
+                            ->where(['pem.idFacturaEntregaMercancia' => $idfactura]);
+
+        $query->join('INNER JOIN', 'facturaentregamercancia fem', 'pem.idFacturaEntregaMercancia = fem.id');
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+        ]);
+
+        $this->load($params);
+
+        if (!$this->validate()) {
+            // uncomment the following line if you do not want to return any records when validation fails
+            // $query->where('0=1');
+            return $dataProvider;
+        }
+
+        // grid filtering conditions
+        /*$query->andFilterWhere([
+            'det.id' => $this->id,
+            'det.idAgendaEntregaMercancia' => $this->idAgendaEntregaMercancia,
+            'det.idEmpleadoLogistica' => $this->idEmpleadoLogistica,
+            'det.idEstado' => $this->idEstado,
+            'det.created_at' => $this->created_at,
+            'det.created_by' => $this->created_by,
+            'det.updated_at' => $this->updated_at,
+            'det.updated_by' => $this->updated_by,
+        ]);*/
+
+        //var_dump($this->fechaDesde); die("hola");
+
+        /*if ($this->fechaDesde && $this->fechaHasta) {
+            $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
+            $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
+        
+            // Aplicar filtro de rango de fechas
+            $query->andFilterWhere(['between', 'CONVERT(VARCHAR(10), ag.fechaCita, 23)', $fechaInicio, $fechaFin]);
+        }
+
+        $query->orderBy(['det.item' => SORT_ASC]);*/
 
         return $dataProvider;
     }

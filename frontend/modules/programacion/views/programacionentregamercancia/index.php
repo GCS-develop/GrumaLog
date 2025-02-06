@@ -49,7 +49,8 @@ use common\widgets\Alert;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'Programación';
-$this->params['breadcrumbs'][] = ['label' => 'Programación Recibo Mercancia', 'url' => ['indexprogramacion', 'menu' => 'programacion']];
+//$this->params['breadcrumbs'][] = ['label' => 'Programación Recibo Mercancia', 'url' => ['indexprogramacion', 'menu' => 'programacion']];
+$this->params['breadcrumbs'][] = ['label' => 'Factura Recibo Mercancia', 'url' => ['/programacion/facturaentregamercancia/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
@@ -235,6 +236,30 @@ $attributes = [
 
     ],
 
+    [
+        'group'=>true,
+        'label'=>'SECCIÓN 3: Información Factura',
+        'rowOptions'=>['class'=>'table-info']
+    ],
+    [
+        'columns' => [
+            [
+                'attribute'=>'numeroFactura',
+                'label' => 'Número Factura',
+                'value' => $modelfactura->numeroFactura,
+                'labelColOptions'=>['style'=>'width:5%'],
+                'valueColOptions'=>['style'=>'width:25%'],
+            ],
+
+            [
+                'attribute'=>'observacion',
+                'value' => $modelfactura->observaciones,
+                'labelColOptions'=>['style'=>'width:5%'],
+                'valueColOptions'=>['style'=>'width:30%'],
+            ],
+        ],        
+    ],
+
 
 ];
 ?>
@@ -270,7 +295,7 @@ $attributes = [
     <div class="row">
 
         <div class="col-lg-12 centrar">
-            <?php $url = Url::to(['assignoneuser', 'idagenda' => $modelagendaentrega->id]); ?>
+            <?php $url = Url::to(['assignoneuser', 'idfactura' => $modelfactura->id]); ?>
             
             <p>
             <?= Html::button('Asignar Solo 1 Usuario', 

@@ -18,6 +18,7 @@ use frontend\models\Estadoprogramacion;
 use frontend\models\Agendaentregamercancia;
 use frontend\models\Conteoentregamercancia;
 use frontend\models\Ordendecompradetalle;
+use frontend\models\Facturaentregamercancia;
 use common\models\OrdenesCompraWs;
 
 /**
@@ -205,6 +206,29 @@ class ProgramacionentregamercanciaController extends Controller
         ]);
     }
 
+    public function actionIndexfactura($idfactura)
+    {
+        $modelfactura = Facturaentregamercancia::findOne(['id' => $idfactura]);
+        $idagenda = $modelfactura->idAgendaEntregaMercancia;
+
+        $modelagendaentrega = Agendaentregamercancia::findOne(['id' => $idagenda]);
+
+        $idordencompra = $modelagendaentrega->idOrdenCompra;
+        $idcategoria = $modelagendaentrega->idCategoria;
+
+        Programacionentregamercancia::registrarItemsOC ($idagenda, $idordencompra, $idcategoria, $idfactura);
+
+        $searchModel = new ProgramacionentregamercanciaSearch();
+        $dataProvider = $searchModel->searchxFactura($this->request->queryParams, $idfactura);
+
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'modelagendaentrega' => $modelagendaentrega,
+            'modelfactura' => $modelfactura
+        ]);
+    }
+
     public function actionAssignuser($idagenda)
     {
         $modelagendaentrega = Agendaentregamercancia::findOne(['id' => $idagenda]);
@@ -241,11 +265,15 @@ class ProgramacionentregamercanciaController extends Controller
 
     }
 
-    public function actionAssignoneuser($idagenda){
+    public function actionAssignoneuser($idfactura){
+
+        $modelfactura = Facturaentregamercancia::findOne(['id' => $idfactura]);
+        $idagenda = $modelfactura->idAgendaEntregaMercancia;
 
         $model = new Programacionentregamercancia();
 
         $model->idAgendaEntregaMercancia = $idagenda;
+        $model->idFacturaEntregaMercancia = $idfactura;
         $model->unidadesAsignadas = 0;
         $model->item = 9999;
         $model->puedeModificarEntrada = 0;
@@ -265,7 +293,8 @@ class ProgramacionentregamercanciaController extends Controller
 
                     $numeroRegistros = Programacionentregamercancia::asignarUserConteo ($idagenda, 
                                                                                         $iduser,
-                                                                                        $idempleadologistica
+                                                                                        $idempleadologistica,
+                                                                                        $idfactura
                                                                                     );
 
                     Yii::$app->session->setFlash( 'success', ' Usuario Fue Asignado a Contar ' . $numeroRegistros );
@@ -274,7 +303,8 @@ class ProgramacionentregamercanciaController extends Controller
                     var_dump($model->getErrors()); die("hola");
                 }
 
-                return $this->redirect(['index', 'id' => $model->idAgendaEntregaMercancia]);
+                //return $this->redirect(['index', 'id' => $model->idAgendaEntregaMercancia]);
+                return $this->redirect(['indexfactura', 'idfactura' => $model->idFacturaEntregaMercancia]);
             }
         }
 
@@ -298,6 +328,7 @@ class ProgramacionentregamercanciaController extends Controller
         $model = new Programacionentregamercancia();
 
         $model->idAgendaEntregaMercancia = $modelprogramacion->idAgendaEntregaMercancia;
+        $model->idFacturaEntregaMercancia = $modelprogramacion->idFacturaEntregaMercancia;
         $model->item = $modelprogramacion->item;
         $model->idEstado = $modelprogramacion->idEstado;
         $model->referencia = $modelprogramacion->referencia;
@@ -346,6 +377,7 @@ class ProgramacionentregamercanciaController extends Controller
                         if ($unidades > 0){
                             $modelnew  = new Programacionentregamercancia(); 
                             $modelnew->idAgendaEntregaMercancia = $model->idAgendaEntregaMercancia;
+                            $modelnew->idFacturaEntregaMercancia = $model->idFacturaEntregaMercancia;
                             $modelnew->item = $model->item;
                             $modelnew->referencia = $model->referencia;
                             $modelnew->descripcion = $model->descripcion;
@@ -384,7 +416,8 @@ class ProgramacionentregamercanciaController extends Controller
 
         if ($model->idEstado == 4){
             Yii::$app->session->setFlash( 'error', 'Error Registro No puede Ser Modificado.');
-            return $this->redirect(['index', 'id' => $model->idAgendaEntregaMercancia]);
+            //return $this->redirect(['index', 'id' => $model->idAgendaEntregaMercancia]);
+            return $this->redirect(['indexfactura', 'idfactura' => $model->idFacturaEntregaMercancia]);
         }
 
         $idordencompra = $model->agendaEntregaMercancia->idOrdenCompra;
@@ -405,7 +438,8 @@ class ProgramacionentregamercanciaController extends Controller
                 if ($unidades < 0){
                     //die($totalunidadesoc . ' - ' . $totalasignadas . ' - ' . $unidades);
                     Yii::$app->session->setFlash( 'error', 'Error Total Número de Unidades YA Estan Asignadas => OC: ' . $totalunidadesoc . ' - Programada: ' . $totalasignadas);
-                    return $this->redirect(['index', 'id' => $model->idAgendaEntregaMercancia]);
+                    //return $this->redirect(['index', 'id' => $model->idAgendaEntregaMercancia]);
+                    return $this->redirect(['indexfactura', 'idfactura' => $model->idFacturaEntregaMercancia]);
                 }
 
                 $modelestado = Estadoprogramacion::findOne(['codigo' => 1]);
@@ -430,6 +464,7 @@ class ProgramacionentregamercanciaController extends Controller
                     if ($unidades > 0){
                         $modelnew  = new Programacionentregamercancia(); 
                         $modelnew->idAgendaEntregaMercancia = $model->idAgendaEntregaMercancia;
+                        $modelnew->idFacturaEntregaMercancia = $model->idFacturaEntregaMercancia;
                         $modelnew->item = $model->item;
                         $modelnew->referencia = $model->referencia;
                         $modelnew->descripcion = $model->descripcion;
@@ -439,7 +474,8 @@ class ProgramacionentregamercanciaController extends Controller
                     }
                 }
                 
-                return $this->redirect(['index', 'id' => $model->idAgendaEntregaMercancia]);
+                //return $this->redirect(['index', 'id' => $model->idAgendaEntregaMercancia]);
+                return $this->redirect(['indexfactura', 'idfactura' => $model->idFacturaEntregaMercancia]);
             }
         }
 
@@ -566,13 +602,14 @@ class ProgramacionentregamercanciaController extends Controller
         $codigo = 1;    
         $modelestado = Estadoconteo::findOne(['codigo' => $codigo]);
 
-        $modelagenda = Agendaentregamercancia::findOne(['id' => $model->idAgendaEntregaMercancia]);
+        /*$modelagenda = Agendaentregamercancia::findOne(['id' => $model->idAgendaEntregaMercancia]);
         $modelagenda->idEstadoConteo = $modelestado->id;
-        $modelagenda->save();
+        $modelagenda->save();*/
 
         Yii::$app->session->setFlash( 'success', 'Conteo de Orden de Compra Actualizado Con Éxito');
         
-        return $this->redirect(['indexconteoprogramacion', 'idagenda' => $model->idAgendaEntregaMercancia]);
+        //return $this->redirect(['indexconteoprogramacion', 'idagenda' => $model->idAgendaEntregaMercancia]);
+        return $this->redirect(['/programacion/facturaentregamercancia/indexconteoprogramacion', 'idfactura' => $model->idFacturaEntregaMercancia]);
 
     }
 

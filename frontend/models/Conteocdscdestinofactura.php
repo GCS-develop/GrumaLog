@@ -206,18 +206,28 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
     public static function generarQuery ($radicado, $idproveedor, $numerofactura)
     {
         $sql = "
-            SELECT fact.id AS radicado, dest.id AS numeroConteo, fact.numeroFactura,
-            fact.idProveedor, prv.razonSocial, prv.nit,
-            it.item, it.idColor, it.descripcion, 
-            col.codigo AS color, tal.codigo AS talla, SUM(det.totalUnidades) AS unidades
-              FROM conteocdscdestinodetalle det 
-              INNER JOIN item it ON det.idItem = it.id
-              INNER JOIN talla tal ON it.idTalla = tal.id
-              INNER JOIN color col ON it.idColor = col.id
-              INNER JOIN categoria cat ON it.idCategoria = cat.id 
-              INNER JOIN conteocdscdestino dest ON det.idConteocdscdestino = dest.id
-              INNER JOIN conteocdscdestinofactura fact ON dest.idConteocdscdestinofactura = fact.id
-              INNER JOIN proveedor prv ON fact.idProveedor = prv.id  
+            SELECT 
+                fact.id AS radicado, 
+                dest.id AS numeroConteo, 
+                fact.numeroFactura,
+                fact.idProveedor, 
+                prv.razonSocial, 
+                prv.nit,
+                it.item, 
+                it.idColor, 
+                it.descripcion, 
+                col.codigo AS color, 
+                tal.codigo AS talla, 
+                tal.orden,
+                SUM(det.totalUnidades) AS unidades
+            FROM conteocdscdestinodetalle det 
+            INNER JOIN item it ON det.idItem = it.id
+            INNER JOIN talla tal ON it.idTalla = tal.id
+            INNER JOIN color col ON it.idColor = col.id
+            INNER JOIN categoria cat ON it.idCategoria = cat.id 
+            INNER JOIN conteocdscdestino dest ON det.idConteocdscdestino = dest.id
+            INNER JOIN conteocdscdestinofactura fact ON dest.idConteocdscdestinofactura = fact.id
+            INNER JOIN proveedor prv ON fact.idProveedor = prv.id  
             WHERE 1 = 1
         ";
 
@@ -232,7 +242,7 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
         $sql = $sql . "
                 GROUP BY fact.id, dest.id, fact.numeroFactura, fact.idProveedor, 
                         prv.razonSocial, prv.nit,it.item, it.idColor, it.descripcion, 
-                        col.codigo, tal.codigo 
+                        col.codigo, tal.codigo, tal.orden 
                 ORDER BY it.item, tal.orden";
                 // ORDER BY it.item, col.codigo";
 

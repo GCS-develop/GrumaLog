@@ -40,7 +40,7 @@ use kartik\grid\GridView;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'Transferencia SIESA';
-$this->params['breadcrumbs'][] = ['label' => 'Legalización Conteo', 'url' => ['/programacion/conteoentregamercancia/indexlegalizacion']];
+$this->params['breadcrumbs'][] = ['label' => 'Legalización Conteo', 'url' => ['/programacion/facturaentregamercancia/indexlegalizaconteo']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="transferenciaordencompraexcel-index">

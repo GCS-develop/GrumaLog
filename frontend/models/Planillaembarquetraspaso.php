@@ -160,5 +160,10 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Traspaso::class, ['id' => 'idTraspaso']);
     }
+
+    public function getEstadoPlanilla()
+    {
+        return $this->hasOne(Estadorecepcion::class, ['id' => 'idEstado']);
+    }
     
 }

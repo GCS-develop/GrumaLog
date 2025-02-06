@@ -44,7 +44,42 @@ class Planillaembarquebodega extends \yii\db\ActiveRecord
             [['created_at', 'updated_at'], 'safe'],
             [['idBodegaDestino'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idBodegaDestino' => 'id']],
             [['idPlanillaEmbarque'], 'exist', 'skipOnError' => true, 'targetClass' => Planillaembarque::class, 'targetAttribute' => ['idPlanillaEmbarque' => 'id']],
+            ['selloSalida', 'compare', 'compareAttribute' => 'selloLlegada', 'operator' => '!=', 
+                'when' => function($model) {
+                    return !empty($model->selloLlegada) && !empty($model->selloSalida);
+                },
+                'message' => 'El sello de salida no puede ser igual al sello de llegada.'
+            ],
+            [['selloLlegada', 'selloSalida'], 'validateSelloUnico'], // Evita repetición de sellos
+            ['selloLlegada', 'validateSelloExistente'], // Asegura que solo se use un selloSalida previo
         ];
+    }
+
+    public function validateSelloUnico($attribute, $params)
+    {
+        if (!empty($this->$attribute)) {
+            $exists = static::find()
+                ->where(['selloLlegada' => $this->$attribute])
+                ->orWhere(['selloSalida' => $this->$attribute])
+                ->exists();
+
+            if ($exists) {
+                $this->addError($attribute, "El sello '{$this->$attribute}' ya ha sido utilizado.");
+            }
+        }
+    }
+
+    public function validateSelloExistente($attribute, $params)
+    {
+        if (!empty($this->$attribute)) {
+            $exists = static::find()
+                ->where(['selloSalida' => $this->$attribute]) // Solo permitimos que exista en selloSalida
+                ->exists();
+
+            if (!$exists) {
+                $this->addError($attribute, "El sello de llegada '{$this->$attribute}' no existe en registros previos como sello de salida.");
+            }
+        }
     }
 
     /**

@@ -191,7 +191,7 @@ class FileTransferenciaInput extends Model
             $talla = null;
             $valor_celda = $sheet->getCell('O' . $fila)->getValue();
             if ($valor_celda){
-                $talla = $valor_celda;
+                $talla = strval($valor_celda);
             }
 
             $numero = null;

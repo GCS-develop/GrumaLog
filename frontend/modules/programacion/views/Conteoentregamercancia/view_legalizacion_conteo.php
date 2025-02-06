@@ -58,7 +58,8 @@ use frontend\models\Programacionentregamercancia;
 use frontend\models\Conteoentregamercancia;
 
 $this->title = 'Conteo - Curva de Tallas y Colores';
-$this->params['breadcrumbs'][] = ['label' => 'Legalización Conteo', 'url' => ['/programacion/conteoentregamercancia/indexlegalizacion']];
+//$this->params['breadcrumbs'][] = ['label' => 'Legalización Conteo', 'url' => ['/programacion/conteoentregamercancia/indexlegalizacion']];
+$this->params['breadcrumbs'][] = ['label' => 'Legalización Conteo', 'url' => ['/programacion/facturaentregamercancia/indexlegalizaconteo']];
 $this->params['breadcrumbs'][] = $this->title;
 
 $fecha_actual = date("Y-m-d");
@@ -424,7 +425,7 @@ foreach ($dataProvider as $fila) {
         </div>
 
         <div class="col-lg-6 izquierda">
-            <?php $url = Url::to(['legalizarconteo', 'idagenda' => $modelagenda->id]); ?>
+            <?php $url = Url::to(['legalizarconteo', 'idfactura' => $modelfactura->id]); ?>
 
             <p>
                 <?= Html::button(
@@ -482,9 +483,13 @@ foreach ($dataProvider as $fila) {
     </div>
 
     <?php
-    echo '<div class="mi-titulo-black">OC:' . $modelagenda->ordenCompra->tipoDocumento->codigo . '-' .
+    echo '<div class="mi-titulo-black">OC: ' . $modelagenda->ordenCompra->tipoDocumento->codigo . '-' .
         $modelagenda->ordenCompra->cO->codigo . '-' .
         $modelagenda->ordenCompra->consecutivo . '</div>';
+    ?>
+
+    <?php
+    echo '<div class="mi-titulo-black">No Factura: ' . $modelfactura->numeroFactura . '</div>';
     ?>
 
     <div class="row">
@@ -492,22 +497,26 @@ foreach ($dataProvider as $fila) {
     </div>
 
     <?php
+        
     // Mostrar un GridView por cada bodega
     foreach ($dataByItem as $item => $data) {
 
         $modelprogramacion = Programacionentregamercancia::findOne([
-            'idAgendaEntregaMercancia' => $modelagenda->id,
+            // 'idAgendaEntregaMercancia' => $modelagenda->id,
+            'idFacturaEntregaMercancia' => $modelfactura->id,
             'item' => $item
         ]);
 
         $nombreempleado = null;
-        if ($modelprogramacion->userConteo != null) {
+        if ($modelprogramacion->idUserConteo != null) {
             //var_dump($modelagenda->id . ' - ' . $item); die("hola");
             $nombreempleado = $modelprogramacion->userConteo->empleadoLogistica->empleado->nombreEmpleado;
         }
 
         if ($nombreempleado == null) {
-            $nombreempleado = $modelprogramacion->empleadoLogistica->empleado->nombreEmpleado;
+            if ($modelprogramacion->idEmpleadoLogistica){
+                $nombreempleado = $modelprogramacion->empleadoLogistica->empleado->nombreEmpleado;
+            }
         }
 
         //$nombreempleado = $modelprogramacion->userConteo->empleadoLogistica->empleado->nombreEmpleado;

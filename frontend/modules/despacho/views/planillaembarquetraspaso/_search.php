@@ -6,6 +6,7 @@ use frontend\models\Tipodocumento;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use frontend\models\Estadodespacho;
+use kartik\date\DatePicker;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\PlanillaembarquetraspasoSearch $model */
@@ -23,7 +24,22 @@ use frontend\models\Estadodespacho;
 
     <div class="row">
 
-        <div class="col-2">
+        <div class="col-lg-4">
+            <?=
+                $form->field($model, 'fechaRecibido')->widget(DatePicker::className(), [
+                    'name' => 'fecha recibo',
+                    'language' => 'es',
+                    'options' => ['placeholder' => 'Fecha recibo ...', 'disabled' => false],
+                    'pluginOptions' => [
+                        'autoclose' => true,
+                        'format' => 'yyyy-mm-dd',
+                        'todayHighlight' => false
+                    ]
+                ])
+                ?>
+        </div>
+
+        <div class="col-3">
             <?php echo $form->field($model, 'codAlmacenOrigen')->dropDownList(
                 Bodegas::getListaDataCodigo(),
                 [
@@ -43,7 +59,7 @@ use frontend\models\Estadodespacho;
             <?= $form->field($model, 'codAlmacenDestino') ?>
         </div> -->
 
-        <div class="col-2">
+        <div class="col-3">
             <?php echo $form->field($model, 'codAlmacenDestino')->dropDownList(
                 Bodegas::getListaDataCodigo(),
                 [
@@ -59,7 +75,7 @@ use frontend\models\Estadodespacho;
             <?= $form->field($model, 'almacenDestino') ?>
         </div> -->
 
-        <div class="col-1">
+        <div class="col-2">
             <?php echo $form->field($model, 'idEstado')->dropDownList(
                 Estadodespacho::getListaData(),
                 [
@@ -71,19 +87,23 @@ use frontend\models\Estadodespacho;
 
         </div>
 
-        <div class="col-3">
+    </div>
+
+
+    <div class="row">
+        <div class="col-4">
             <?= $form->field($model, 'usuarioRecibido') ?>
         </div>
 
-    <!-- </div>
+        <!-- </div>
 
     <div class="row"> -->
 
-    <!-- <div class="col-2">
+        <!-- <div class="col-2">
             <?= $form->field($model, 'tipoDocumento') ?>
         </div> -->
 
-        <div class="col-2">
+        <div class="col-3">
             <?php echo $form->field($model, 'tipoDocumento')->dropDownList(
                 Tipodocumento::getListaDataCodigo2(),
                 [
@@ -95,7 +115,7 @@ use frontend\models\Estadodespacho;
 
         </div>
 
-        <div class="col-2">
+        <div class="col-5">
             <?= $form->field($model, 'consecutivoDocumento') ?>
         </div>
     </div>

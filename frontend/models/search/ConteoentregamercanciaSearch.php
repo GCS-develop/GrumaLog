@@ -5,6 +5,7 @@ namespace frontend\models\search;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use frontend\models\Conteoentregamercancia;
+use yii\db\Query;
 
 /**
  * ConteoentregamercanciaSearch represents the model behind the search form of `frontend\models\Conteoentregamercancia`.
@@ -38,10 +39,11 @@ class ConteoentregamercanciaSearch extends Conteoentregamercancia
      *
      * @return ActiveDataProvider
      */
-    public function search($params, $idprogramacion = null, $item = null, $idagenda = null, $iduserconteo = null)
+    public function search($params, $idprogramacion = null, $item = null, $idagenda = null, $iduserconteo = null, $idfactura = null)
     {
         $query = Conteoentregamercancia::find()->alias('det');
         $query->join('INNER JOIN', 'programacionentregamercancia pe', 'det.idProgramacionEntregaMercancia = pe.id');
+        $query->join('INNER JOIN', 'facturaentregamercancia fe', 'pe.idFacturaEntregaMercancia = fe.id');
         $query->join('INNER JOIN', 'item it', 'det.idItem = it.id');
         $query->join('INNER JOIN', 'agendaentregamercancia ae', 'pe.idAgendaEntregaMercancia = ae.id');
         $query->join('INNER JOIN', 'userconteo usc', 'pe.idUserConteo = usc.id');
@@ -78,7 +80,8 @@ class ConteoentregamercanciaSearch extends Conteoentregamercancia
             'ae.idOrdenCompra',
             'ae.idAgenda',
             'ae.idCategoria',
-            'ae.numeroFactura',
+            //'ae.numeroFactura',
+            'fe.numeroFactura',
 
             'co.codigo AS codigoCentroOperacion',
             'co.nombre AS centroOperacion',
@@ -120,6 +123,7 @@ class ConteoentregamercanciaSearch extends Conteoentregamercancia
         $query = $query->andFilterWhere(['det.idProgramacionEntregaMercancia' => $idprogramacion]);
         $query = $query->andFilterWhere(['det.item' => $item]);
         $query = $query->andFilterWhere(['pe.idUserConteo' => $iduserconteo]);
+        $query = $query->andFilterWhere(['fe.id' => $idfactura]);
 
         $query->orderBy(['det.idProgramacionEntregaMercancia' => SORT_ASC,
                         'det.item' => SORT_ASC,
@@ -154,53 +158,55 @@ class ConteoentregamercanciaSearch extends Conteoentregamercancia
         return $dataProvider;
     }
 
-    public function searchSIESA($idagenda)
+    public function searchSIESA($idagenda, $idfactura)
     {
         $query = Conteoentregamercancia::find()->alias('cem');
-        $query->join('LEFT JOIN', 'programacionentregamercancia pem', 'cem.idProgramacionEntregaMercancia = pem.id');
-        $query->join('LEFT JOIN', 'agendaentregamercancia aem', 'pem.idAgendaEntregaMercancia = aem.id');
-        $query->join('LEFT JOIN', 'ordendecompradetalle det', 'aem.idOrdenCompra = det.idOrdenCompra AND cem.idItem = det.idItem');
-        $query->join('LEFT JOIN', 'ordendecompra oc', 'aem.idOrdenCompra = oc.id');
-        $query->join('LEFT JOIN', 'tipodocumento td', 'oc.idTipoDocumento = td.id');
-        $query->join('LEFT JOIN', 'centrooperacion cope', 'oc.idCO = cope.id');
-        $query->join('LEFT JOIN', 'proveedor prv', 'oc.idProveedor = prv.id');
-        $query->join('LEFT JOIN', 'item it', 'cem.idItem = it.id');
-        $query->join('LEFT JOIN', 'color col', 'it.idColor = col.id');
-        $query->join('LEFT JOIN', 'talla tal', 'it.idTalla = tal.id');
-        $query->join('LEFT JOIN', 'tipodocumento td1', 'oc.idTipoDocumentoEntrada = td1.id');
-        $query->join('LEFT JOIN', 'centrooperacion cope1', 'oc.idCODocumentoEntrada = cope1.id');
-        $query->join('LEFT JOIN', 'unidadempaque ue', "ISNULL(it.unidadEmpaque,'UND') = ue.codigo");
+        $query->join('INNER JOIN', 'programacionentregamercancia pem', 'cem.idProgramacionEntregaMercancia = pem.id');
+        $query->join('INNER JOIN', 'facturaentregamercancia fe', 'pem.idFacturaEntregaMercancia = fe.id');
+        $query->join('INNER JOIN', 'agendaentregamercancia aem', 'pem.idAgendaEntregaMercancia = aem.id');
+        $query->join('INNER JOIN', 'item it', 'cem.idItem = it.id');
+        $query->join('INNER JOIN', 'color col', 'it.idColor = col.id');
+        $query->join('INNER JOIN', 'talla tal', 'it.idTalla = tal.id');
+        $query->join('INNER JOIN', 'tipodocumento td', 'fe.idTipoDocumentoEntrada = td.id');
+        $query->join('INNER JOIN', 'view_ordendecompradetalle vi', 'vi.idOrdenCompra = aem.idOrdenCompra AND it.item = vi.item AND col.codigo = vi.color AND tal.codigo = vi.talla ');
+
+        //$query->join('LEFT JOIN', 'unidadempaque ue', "ISNULL(it.unidadEmpaque,'UND') = ue.codigo");
 
         $query->select([
-            "cope.codigo AS codigoCentroOperacionDocumentoEntrada", 
-            "td1.codigo AS codigoTipoDocumentoEntrada", 
-            "oc.consecutivoDocumentoEntrada",
-            "FORMAT(oc.fechaDocumentoEntrada, 'yyyyMMdd') AS fechaDocumentoEntrada",
-            "prv.nit AS tercero",
+            "vi.CO AS codigoCentroOperacionDocumentoEntrada", 
+            "td.codigo AS codigoTipoDocumentoEntrada", 
+            "fe.consecutivoDocumentoEntrada",
+            "CONVERT(VARCHAR(8), fe.fechaDocumentoEntrada, 112) AS fechaDocumentoEntrada",
+            //"fe.fechaDocumentoEntrada",
+            "vi.tercero",
             "aem.numeroFactura",
-            "oc.sucursalProveedor", 
-            "oc.nitcomprador", 
-            "oc.consignacion AS consignacion", 
-            "cope.codigo AS codigoCentroOperacionOC",
-            "td.codigo AS codigoTipoDoctoOC", 
-            "oc.consecutivo AS consecutivoOC",
-            "det.bodega", 
+            "vi.sucursalProveedor", 
+            "vi.nitcomprador", 
+            "fe.consignacion", 
+            "vi.CO AS codigoCentroOperacionOC",
+            "vi.codigoTipoDoctoOC", 
+            "vi.consecutivo AS consecutivoOC",
+            "vi.bodega", 
             "ISNULL(it.unidadEmpaque,'UND') AS unidadEmpaque", 
-            "FORMAT(oc.fechaEntrega, 'yyyyMMdd') AS fechaEntrega",
+            "vi.fechaEntrega",
             "cem.unidadesConteo" ,
             // "(cem.unidadesConteo * ISNULL(ue.equivalencia, 1)) AS [unidadesConteo]", 
             "it.item", 
             "col.codigo AS color", 
             "tal.codigo AS talla", 
-            "det.codigointernomovto"
+            "vi.codigointernomovto"
         ]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'pagination' => false, // Deshabilita la paginación
+            /*'pagination' => [
+                'pageSize' => 50,
+            ],*/
         ]);
 
         $query = $query->andFilterWhere(['pem.idAgendaEntregaMercancia' => $idagenda]);
+        $query = $query->andFilterWhere(['pem.idFacturaEntregaMercancia' => $idfactura]);
 
         // echo $query->createCommand()->getRawSql(); die("hola");
  

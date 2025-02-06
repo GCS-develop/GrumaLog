@@ -80,7 +80,7 @@ class Traspaso extends \yii\db\ActiveRecord
             [['idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado', 'idUltimoItem', 'created_by', 'updated_by', 'tipoMovimiento'], 'integer'],
             [['consecutivo', 'und_traspaso', 'und_empaque'], 'number'],
             [['serie',], 'string', 'max' => 5],
-            [['updated_at', 'created_at', 'fechaDesde', 'fechaHasta',], 'safe'],
+            [['updated_at', 'created_at', 'fechaDesde', 'fechaHasta','anula_at', 'anula_by', ], 'safe'],
             [['idBodegaDestino'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idBodegaDestino' => 'id']],
             [['idBodegaOrigen'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idBodegaOrigen' => 'id']],
             [['idTipoDocumento'], 'exist', 'skipOnError' => true, 'targetClass' => Tipodocumento::class, 'targetAttribute' => ['idTipoDocumento' => 'id']],
@@ -164,7 +164,12 @@ class Traspaso extends \yii\db\ActiveRecord
 
     public function getCodigoerp()
     {
-        return $this->hasOne(Documentosiesa::class, ['idGruma' => 'id']);
+        return $this->hasOne(Documentosiesa::class, ['idGruma' => 'id'])->orderBy(['id' => SORT_DESC]);
+    }
+
+    public function getPlanillaembarquetraspaso()
+    {
+        return $this->hasOne(Planillaembarquetraspaso::class, ['idTraspaso' => 'id']);
     }
 
     public function enviarTraspasosPorPost()
@@ -248,30 +253,31 @@ class Traspaso extends \yii\db\ActiveRecord
         //Retorna la cantidad en unidades de los que son paquetes, es decir si una lista tiene 10 unidades 
         // y 2 paquetes x2 entonces retorna 4  
         return (float) (new \yii\db\Query())
-        ->select(['SUM(td.cantidad * COALESCE(ue.equivalencia, 1))'])
-        ->from('traspasodetalle td')
-        ->innerJoin('item i', 'td.idItem = i.id')
-        ->leftJoin('unidadempaque ue', 'i.unidadEmpaque = ue.codigo')
-        ->where(['td.idTraspaso' => $this->id])
-        ->andWhere(['IS NOT', 'i.unidadEmpaque', null])
-        ->scalar();
-    
+            ->select(['SUM(td.cantidad * COALESCE(ue.equivalencia, 1))'])
+            ->from('traspasodetalle td')
+            ->innerJoin('item i', 'td.idItem = i.id')
+            ->leftJoin('unidadempaque ue', 'i.unidadEmpaque = ue.codigo')
+            ->where(['td.idTraspaso' => $this->id])
+            ->andWhere(['IS NOT', 'i.unidadEmpaque', null])
+            ->scalar();
+
     }
 
     public function getTotalUnidades()
     {
-        
+
         return (float) (new \yii\db\Query())
-        ->select(['SUM(td.cantidad * COALESCE(ue.equivalencia, 1))'])
-        ->from('traspasodetalle td')
-        ->innerJoin('item i', 'td.idItem = i.id')
-        ->leftJoin('unidadempaque ue', 'i.unidadEmpaque = ue.codigo')
-        ->where(['td.idTraspaso' => $this->id])
-        ->scalar();
-    
+            ->select(['SUM(td.cantidad * COALESCE(ue.equivalencia, 1))'])
+            ->from('traspasodetalle td')
+            ->innerJoin('item i', 'td.idItem = i.id')
+            ->leftJoin('unidadempaque ue', 'i.unidadEmpaque = ue.codigo')
+            ->where(['td.idTraspaso' => $this->id])
+            ->scalar();
+
     }
 
-    public static function generarTraspasoDesdeTransferencia ($idtransferenciaerp){
+    public static function generarTraspasoDesdeTransferencia($idtransferenciaerp)
+    {
 
         $sql = "SELECT 1 AS idCentroOperacion, bs.id AS idBodegaOrigen, tte.bodegaSalidaDocumento, 
                     be.id AS idBodegaDestino, tte.bodegaEntradaDocumento,
@@ -301,7 +307,7 @@ class Traspaso extends \yii\db\ActiveRecord
             $traspaso->idUltimoItem = $resultado['idUltimoItem'];
             $traspaso->transferenciaerp = $resultado['transferenciaerp'];
             $traspaso->tipoMovimiento = $resultado['tipoMovimiento'];
-            
+
             if ($traspaso->save()) {
 
                 $id = $traspaso->id;
@@ -313,7 +319,7 @@ class Traspaso extends \yii\db\ActiveRecord
                 $bodegaentrada = $resultado['bodegaEntradaDocumento'];
 
                 self::generarTraspasoDetalle($idtransferenciaerp, $traspaso->id, $bodegasalida, $bodegaentrada);
-            }else{
+            } else {
                 break;
             }
         }
@@ -355,7 +361,8 @@ class Traspaso extends \yii\db\ActiveRecord
             $traspasoDetalle->codigoitem = $modelitem->codigoBarras;
             $traspasoDetalle->cantidad = $detalle['cantidad'];
             if (!$traspasoDetalle->save()) {
-                var_dump($traspasoDetalle->getErrors());die("hola");
+                var_dump($traspasoDetalle->getErrors());
+                die("hola");
             }
 
             $transferencia = Transferenciatransitoexcel::findOne(['id' => $detalle['id']]);
@@ -367,16 +374,31 @@ class Traspaso extends \yii\db\ActiveRecord
         }
     }
 
-    public static function sincronizarTraspaso($id){
+    public static function sincronizarTraspaso($id)
+    {
 
         $model = Traspaso::findOne(['id' => $id]);
         $tipodocumento = $model->tipodocumento->codigo;
         $idgruma = $id;
+        $numerodocumento = $model->consecutivo;
 
-        $traspasoSiesa = OrdendecompraSIESA::obtenerDatosDocumento($tipodocumento, $idgruma);
+        $tipomovimiento = 'No. Traspaso => ';
+        if ($model->tipoMovimiento == 2) {
+            $tipomovimiento = 'Crossdocking certificado => ';
+        }
+
+        $traspasoSiesa = OrdendecompraSIESA::obtenerDatosDocumento($tipodocumento, $numerodocumento, $tipomovimiento);
         Yii::trace('Buscar traspaso en siesa', __METHOD__);
+
+        //var_dump($traspasoSiesa); die ("STOP");
 
         $guardoDatos = Documentosiesa::grabarDatos($traspasoSiesa, $idgruma);
 
     }
+
+    public function getDocumentosiesa()
+    {
+        return $this->hasMany(Documentosiesa::class, ['idGruma' => 'id']);
+    }
+
 }

@@ -25,8 +25,8 @@ use frontend\models\Conteocdscusuariodestino;
 use frontend\models\Conteobylecturacodigo;
 use frontend\models\Conteocdscdestinodetalle;
 
+use frontend\models\Ordendecompra;
 use frontend\models\Parametroscontrol;
-
 
 /**
  * ConteocdscdestinofacturaController implements the CRUD actions for Conteocdscdestinofactura model.
@@ -198,6 +198,7 @@ class ConteocdscdestinofacturaController extends Controller
 
         $modelco = Centrooperacion::findOne(['codigo' => '002']);
         $model->idCentroOperacion = $modelco->id;
+        $idCia = 7;
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
@@ -206,12 +207,36 @@ class ConteocdscdestinofacturaController extends Controller
 
                 if ($model->validate()) {
 
-                    $respuesta = Conteocdscdestinofactura::grabarOrdenCompra($model);
+                    $OK = Ordendecompra::insertarDatosOC ($idCia, 
+                                                            $model->idCentroOperacion, 
+                                                            $model->idTipoDocumento, 
+                                                            $model->numeroOrdenCompra);
 
-                    if ($respuesta) {
-                        Yii::$app->session->setFlash('success', 'Registro Actualizado');
-                    } else {
-                        Yii::$app->session->setFlash('error', $mensajeError);
+
+                    if ($OK > 0){
+
+                        $modeloc = Ordendecompra::find()->where(['idCO' => $model->idCentroOperacion,
+                                                            'idTipoDocumento' => $model->idTipoDocumento,
+                                                            'consecutivo' => $model->numeroOrdenCompra])->one();
+
+                        $model->idOrdenCompra = $modeloc->id;
+                        $model->fechaOrden = $modeloc->fecha;
+                        $respuesta = Conteocdscdestinofactura::grabarOrdenCompra($model);
+
+                        if ($respuesta) {
+                            Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                        } else {
+                            Yii::$app->session->setFlash('error', $mensajeError);
+                        }
+                    }else {
+                        switch($OK){
+                            case - 1:
+                                Yii::$app->session->setFlash( 'error', 'OC. Tiene Inconsistencias. No Unidades de Item No Son Equivalentes a la Unidad de Medida');
+                                break;
+                            case 0: 
+                                Yii::$app->session->setFlash( 'error', 'Número Orden de Compra NO Existe');
+                                break;
+                        }
                     }
                 }
 

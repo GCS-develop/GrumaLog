@@ -371,11 +371,30 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             ->queryAll();
     }
 
-    public static function obtenerDatosDocumento ($tipodocumento, $numerodocumento){
+    public static function obtenerDatosDocumento ($tipodocumento, $numerodocumento, $tipomovimiento = null){
 
-        $pattern = $tipodocumento . $numerodocumento;
+        if ($tipomovimiento){
+            $pattern = $tipomovimiento . $tipodocumento . $numerodocumento;
+        }else{
+            $pattern = $tipodocumento . $numerodocumento;
+        }
 
         $sql = "
+            SELECT TOP 1
+            f350_rowid, 
+            f350_id_cia, 
+            f350_id_co, 
+            f350_id_tipo_docto,
+            f350_consec_docto, 
+            :tipodocumento AS tipoDocumento, 
+            :numerodocumento AS numeroDocumento
+            FROM t350_co_docto_contable
+            WHERE f350_id_tipo_docto = :tipodocumento
+            AND CHARINDEX(:pattern, f350_notas) > 0
+            AND f350_ind_estado = 1;
+        ";
+
+        /*$sql = "
             SELECT TOP 1 
             f350_rowid, 
             f350_id_cia, 
@@ -389,11 +408,12 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             WHERE f350_id_tipo_docto = :tipodocumento
             AND f350_notas LIKE CAST('%" . $pattern . "%' AS NVARCHAR) " .    
             "AND f350_ind_estado = 1;
-        ";
+        ";*/
 
         return self::getDb()->createCommand($sql)
         ->bindValue('tipodocumento', $tipodocumento)
         ->bindValue(':numerodocumento', $numerodocumento)
+        ->bindValue(':pattern', $pattern)
         ->queryAll();
         
     }

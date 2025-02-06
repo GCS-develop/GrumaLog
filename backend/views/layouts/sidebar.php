@@ -60,6 +60,10 @@ $baseUrl = Url::base(true);
                             ['label' => 'Asignar Acceso', 'url' => ['/admin/assignment'], 'iconStyle' => 'far'],
                             ['label' => 'Empleado', 'url' => ['/catalogos/empleado/index'], 'iconStyle' => 'far'],
                             ['label' => 'Usuarios', 'url' => ['/admin/user'], 'iconStyle' => 'far'],
+
+                            ['label' => 'Reiniciar clave', 'url' => ['/admin/user/reset-password'], 'iconStyle' => 'far'],
+
+
                             ['label' => 'Permisos', 'url' => ['/admin/permission'], 'iconStyle' => 'far'],
                             ['label' => 'Roles', 'url' => ['/admin/role'], 'iconStyle' => 'far'],
                             ['label' => 'Rutas', 'url' => ['/admin/route'], 'iconStyle' => 'far'],

@@ -4,6 +4,7 @@ namespace frontend\modules\programacion\controllers;
 
 use frontend\models\Conectoresdinamicos;
 use frontend\models\DataDocumentoEntrada;
+use frontend\models\Facturaentregamercancia;
 use frontend\models\Ordendecompra;
 use frontend\models\Transferenciaerp;
 use Yii;
@@ -92,7 +93,7 @@ class ConteoentregamercanciaController extends Controller
         ]);
     }
 
-    public function actionIndexagenda($idagenda)
+    public function actionIndexagenda($idagenda=null, $idfactura=null)
     {
 
         /*$modelprogramacion = Programacionentregamercancia::findOne(['id' => $idprogramacion]);*/
@@ -100,14 +101,20 @@ class ConteoentregamercanciaController extends Controller
         $item = null;
         $idprogramacion = null;
 
+        $modelfactura = Facturaentregamercancia::findOne(['id' => $idfactura]);
+
+        if ($idagenda == null){
+            $idagenda = $modelfactura->idAgendaEntregaMercancia;
+        }
+
         $modelagenda = Agendaentregamercancia::findOne(['id' => $idagenda]);
 
         $searchModel = new ConteoentregamercanciaSearch();
-        $dataProviderBD = $searchModel->search($this->request->queryParams, $idprogramacion, $item, $idagenda, $iduserconteo);
+        $dataProviderBD = $searchModel->search($this->request->queryParams, $idprogramacion, $item, $idagenda, $iduserconteo, $idfactura);
 
         $idordencompra = null;
         $idcategoria = null;
-        $dataProvider = Conteoentregamercancia::generarDataConteoCurvas ($idagenda, $idordencompra, $idcategoria, $iduserconteo, $idprogramacion);
+        $dataProvider = Conteoentregamercancia::generarDataConteoCurvas ($idagenda, $idordencompra, $idcategoria, $iduserconteo, $idprogramacion, $idfactura);
 
         // Agrupar los datos por bodega
         $dataByItem = [];
@@ -126,6 +133,7 @@ class ConteoentregamercanciaController extends Controller
             'dataByItem' => $dataByItem,
             'dataProviderBD' => $dataProviderBD,
             'modelagenda' => $modelagenda,
+            'modelfactura' => $modelfactura
         ]);
     }
 
@@ -233,7 +241,10 @@ class ConteoentregamercanciaController extends Controller
         }
     }
 
-    public function actionActualizardocumentoentrada ($idagenda){
+    public function actionActualizardocumentoentrada ($idfactura){
+
+        $factura = Facturaentregamercancia::findOne(['id' => $idfactura]);
+        $idagenda = $factura->idAgendaEntregaMercancia;
 
         $agenda = Agendaentregamercancia::findOne(['id' => $idagenda]);
 
@@ -241,11 +252,17 @@ class ConteoentregamercanciaController extends Controller
 
         $model = new DataDocumentoEntrada();
 
-        $model->fechaDocumento = $ordencompra->fechaDocumentoEntrada;
+        /*$model->fechaDocumento = $ordencompra->fechaDocumentoEntrada;
         $model->idTipoDocumento = $ordencompra->idTipoDocumentoEntrada;
         $model->consignacion = $ordencompra->consignacion;
         $model->consecutivo = $ordencompra->consecutivoDocumentoEntrada;
-        $model->idCO = $ordencompra->idCODocumentoEntrada;
+        $model->idCO = $ordencompra->idCODocumentoEntrada;*/
+
+        $model->fechaDocumento = $factura->fechaDocumentoEntrada;
+        $model->idTipoDocumento = $factura->idTipoDocumentoEntrada;
+        $model->consignacion = $factura->consignacion;
+        $model->consecutivo = $factura->consecutivoDocumentoEntrada;
+        $model->idCO = $factura->idCODocumentoEntrada;
 
         if($model->consignacion == null){
             $model->consignacion = 1;
@@ -262,15 +279,24 @@ class ConteoentregamercanciaController extends Controller
         
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $ordencompra->fechaDocumentoEntrada = $model->fechaDocumento;
+
+                /*$ordencompra->fechaDocumentoEntrada = $model->fechaDocumento;
                 $ordencompra->idTipoDocumentoEntrada = $model->idTipoDocumento;
                 $ordencompra->consignacion = $model->consignacion;
                 $ordencompra->consecutivoDocumentoEntrada = $model->consecutivo;
-                $ordencompra->idCODocumentoEntrada = $model->idCO;
+                $ordencompra->idCODocumentoEntrada = $model->idCO;*/
 
-                $ordencompra->save();
+                $factura->fechaDocumentoEntrada = $model->fechaDocumento;
+                $factura->idTipoDocumentoEntrada = $model->idTipoDocumento;
+                $factura->consignacion = $model->consignacion;
+                $factura->consecutivoDocumentoEntrada = $model->consecutivo;
+                $factura->idCODocumentoEntrada = $model->idCO;
 
-                return $this->redirect(['indexlegalizacion']);
+                $factura->save();
+
+                //$ordencompra->save();
+
+                return $this->redirect(['/programacion/facturaentregamercancia/indexlegalizaconteo']);
             }
         }
 
@@ -348,7 +374,7 @@ class ConteoentregamercanciaController extends Controller
         return $this->redirect(['index', 'idprogramacion' => $idprogramacion]);
     }
 
-    public function actionFinalizarconteo($id, $origen)
+    public function actionFinalizarconteo($id, $origen, $idfactura)
     {
         // Codigo = 3 -> Finalizado  (idEstado = 4)
         $modelestado = Estadoprogramacion::findOne(['codigo' => 3]);
@@ -377,7 +403,7 @@ class ConteoentregamercanciaController extends Controller
 
             $filasActualizadas = Programacionentregamercancia::updateAll(
                 [   'idEstado' => $idestadoprogramacion], 
-                [   'idAgendaEntregaMercancia' => $id]);
+                [   'idFacturaEntregaMercancia' => $idfactura]);
         }
 
         // Validar si se actualizó al menos una fila
@@ -404,7 +430,8 @@ class ConteoentregamercanciaController extends Controller
             return $this->redirect(['/programacion/programacionentregamercancia/indexconteoagenda']);    
         }
 
-        return $this->redirect(['/programacion/programacionentregamercancia/indexconteoprogramacion', 'idagenda' => $idagenda]);
+        //return $this->redirect(['/programacion/programacionentregamercancia/indexconteoprogramacion', 'idagenda' => $idagenda]);
+        return $this->redirect(['/programacion/facturaentregamercancia/indexconteoprogramacion', 'idfactura' => $idfactura]);
     }
 
         /**
@@ -440,20 +467,27 @@ class ConteoentregamercanciaController extends Controller
         ]);
     }
 
-    public function actionViewlegalizaconteo($idagenda)
+    public function actionViewlegalizaconteo($idagenda, $idfactura = null)
     {
-        $modelagenda = Agendaentregamercancia::findOne(['id' => $idagenda]);
+        $modelfactura = Facturaentregamercancia::findOne(['id' => $idfactura]);
+        if ($modelfactura){
+            $idagenda = $modelfactura->idAgendaEntregaMercancia;
+            $modelagenda = Agendaentregamercancia::findOne(['id' => $modelfactura->idAgendaEntregaMercancia]);
+        }else{
+            $modelagenda = Agendaentregamercancia::findOne(['id' => $idagenda]);
+        }
 
         $item = null;
         $idprogramacion = null;
         $iduserconteo = null;
 
         $searchModel = new ConteoentregamercanciaSearch();
-        $dataProviderBD = $searchModel->searchSIESA( $idagenda);
+        $dataProviderBD = $searchModel->searchSIESA($idagenda, $idfactura);
 
         $idordencompra = null;
         $idcategoria = null;
-        $dataProvider = Conteoentregamercancia::generarDataConteoCurvas ($idagenda, $idordencompra, $idcategoria, $iduserconteo);
+        
+        $dataProvider = Conteoentregamercancia::generarDataConteoCurvas ($idagenda, $idordencompra, $idcategoria, $iduserconteo, $idprogramacion, $idfactura);
 
         // Agrupar los datos por bodega
         $dataByItem = [];
@@ -465,17 +499,20 @@ class ConteoentregamercanciaController extends Controller
             $dataByItem[$item][] = $model;
         }
 
+        //var_dump($modelfactura);die("hola");
+
         return $this->render('view_legalizacion_conteo', [
             'dataProvider' => $dataProvider,
             'dataByItem' => $dataByItem,
             'dataProviderBD' => $dataProviderBD,
             'modelagenda' => $modelagenda,
+            'modelfactura' => $modelfactura
         ]);
     }
 
-    public function actionGenerarexcelconteocurvas ($idagenda){
+    public function actionGenerarexcelconteocurvas ($idfactura){
         
-        $filename = Conteoentregamercancia::generarExcelConteoCurvas ($idagenda);
+        $filename = Conteoentregamercancia::generarExcelConteoCurvas ($idfactura);
 
         //$rutaGuardado = Transferencia::generarArchivotransferencia($factura);
 
@@ -486,7 +523,7 @@ class ConteoentregamercanciaController extends Controller
         //$filename = Conteoentregamercancia::generarExcelConteoCurvas ($idagenda);
     }
 
-    public function actionLegalizarconteo ($idagenda){
+    public function actionLegalizarconteo ($idfactura){
 
         $model = new LegalizaConteoForm ();
 
@@ -499,6 +536,16 @@ class ConteoentregamercanciaController extends Controller
             if ($model->load($this->request->post())) {
 
                 if ($model->validate()){
+
+                    $modelfactura = Facturaentregamercancia::findOne(['id' => $idfactura]);
+                    $idagenda = $modelfactura->idAgendaEntregaMercancia;
+
+                    $modelfactura->numeroFacturaLegaliza = $model->numeroFactura;
+                    if ($model->observacion){
+                        $modelfactura->observaciones = $modelfactura->observaciones . ' - ' . $model->observacion;
+                    }
+
+                    $modelfactura->save();
 
                     $modelestado = Estadolegalizacion::findOne(['codigo' => 2]);
 
@@ -518,7 +565,7 @@ class ConteoentregamercanciaController extends Controller
                     }
                 }
 
-                return $this->redirect(['indexlegalizacion']);
+                return $this->redirect(['/programacion/facturaentregamercancia/indexlegalizaconteo']);
             }
         } 
 
@@ -529,9 +576,12 @@ class ConteoentregamercanciaController extends Controller
         }  
     }
 
-    public function actionHabilitarconteo ($idagenda){
+    public function actionHabilitarconteo ($idfactura){
         $codigo = 1;    
         $modelestado = Estadoconteo::findOne(['codigo' => $codigo]);
+
+        $modelfactura = Facturaentregamercancia::findOne(['id' => $idfactura]);
+        $idagenda = $modelfactura->idAgendaEntregaMercancia;
 
         $modelagenda = Agendaentregamercancia::findOne(['id' => $idagenda]);
         $modelagenda->idEstadoConteo = $modelestado->id;
@@ -540,7 +590,7 @@ class ConteoentregamercanciaController extends Controller
 
         Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
 
-        return $this->redirect(['indexlegalizacion']);
+        return $this->redirect(['/programacion/facturaentregamercancia/indexlegalizaconteo']);
     }
 
     public function actionExtraerdataocsiesa (){
@@ -578,13 +628,26 @@ class ConteoentregamercanciaController extends Controller
         }  
     }
 
-    public function actionTransferencia ($idagenda){
+    public function actionTransferencia ($idfactura){
+
+        $modelfactura = Facturaentregamercancia::findOne(['id' => $idfactura]);
+        $idagenda = $modelfactura->idAgendaEntregaMercancia;
+
+        if (!$modelfactura->consecutivoDocumentoEntrada){
+            Yii::$app->session->setFlash('error', 'Falta Actualizar Documentos Entrada SIESA');
+            return $this->redirect(['/programacion/facturaentregamercancia/indexlegalizaconteo']);
+        }
+
+        if (!$modelfactura->numeroFacturaLegaliza){
+            Yii::$app->session->setFlash('error', 'Falta Actualizar Número Factura de Legalización');
+            return $this->redirect(['/programacion/facturaentregamercancia/indexlegalizaconteo']);
+        }
 
         $searchModel = new ConteoentregamercanciaSearch();
-        $dataProviderBD = $searchModel->searchSIESA( $idagenda);
+        $dataProviderBD = $searchModel->searchSIESA($idagenda, $idfactura);
 
-        $idtransferenciaerp = Conteoentregamercancia::crearRegistroTransferencia($idagenda, $dataProviderBD);
-    
+        $idtransferenciaerp = Conteoentregamercancia::crearRegistroTransferencia($idagenda, $idfactura, $dataProviderBD);
+
         return $this->redirect(['viewtransferenciaocerp', 'id' => $idtransferenciaerp]);
     }
 

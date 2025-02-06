@@ -32,6 +32,18 @@ class Traspasodetalle extends \yii\db\ActiveRecord
     public $count;
     public $ultimo_codigo;
     public $cantidad_paquetes;
+    public $consecutivointerno;
+    public $consecutivosiesa;
+    public $talla;
+    public $color;
+
+
+    public $estado;
+    public $usuario;
+    public $tipomovimiento;
+    public $fechaDesde;
+    public $fechaHasta;
+    // public $color;
 
     /**
      * {@inheritdoc}
@@ -144,7 +156,7 @@ class Traspasodetalle extends \yii\db\ActiveRecord
     {
         return $this->hasOne(User::class, ['id' => 'updated_by']);
     }
-    
+
 
     public static function getInventario($codigobarras, $codigobodega)
     {
