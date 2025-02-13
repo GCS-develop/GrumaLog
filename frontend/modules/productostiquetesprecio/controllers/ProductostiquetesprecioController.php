@@ -49,12 +49,16 @@ class ProductostiquetesprecioController extends Controller
         $idusuario = Yii::$app->user->id;
         $modeluser = User::findOne(['id' => $idusuario]);
         $bodega = $modeluser->bodegarecibir->nombre;
-        $modeluser->bodegarecibir->cedi == 1 && $bodega = null;
+
+        if ($idusuario == 17) {
+            $bodega = null;
+            // var_dump($bodega);
+            // die();
+        }
 
         $searchModel = new ProductostiquetesprecioSearch();
         $dataProvider = $searchModel->search($this->request->queryParams, $bodega);
-        // var_dump($this->request->queryParams);
-        // die();
+
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -259,12 +263,12 @@ class ProductostiquetesprecioController extends Controller
 
         // Construir el código ZPL dinámico.
         $zpl = "^XA\n";
-        $x = 1; // Posición inicial horizontal (en la primera columna).
-        $y = 30; // Posición inicial vertical (en la primera fila).
+        $x = 30; // Posición inicial horizontal (en la primera columna).
+        $y = 80; // Posición inicial vertical (en la primera fila).
         $incrementoX = 270; // Separación horizontal entre stickers (movemos hacia la siguiente columna).
         $incrementoY = 100; // Separación vertical entre stickers (bajamos por la columna).
-        $lineasPorColumna = 2; // Cantidad de stickers por columna.
-        $saltoColumnaStikers = 6; // Número de stickers por "gran columna" (6 stickers).
+        $lineasPorColumna = 1; // Cantidad de stickers por columna.
+        $saltoColumnaStikers = 3; // Número de stickers por "gran columna" (6 stickers).
         $yInicio = $y; // Guardar la posición de inicio para saltar correctamente después de 6 stickers.
         $xInicio = $x;
         $envio = false;
@@ -456,12 +460,12 @@ class ProductostiquetesprecioController extends Controller
         ];
 
         // Variables de posición de etiquetas
-        $x = 20;
-        $y = 30;
+        $x = 30;
+        $y = 80;
         $incrementoX = 270;
         $incrementoY = 100;
-        $lineasPorColumna = 2;
-        $saltoColumnaStikers = 6;
+        $lineasPorColumna = 1;
+        $saltoColumnaStikers = 3;
         $yInicio = $y;
         $xInicio = $x;
         $envio = false;
@@ -566,7 +570,6 @@ class ProductostiquetesprecioController extends Controller
         $recurso = $config['recurso'] ?? null;
         Yii::$app->session->removeAllFlashes();
 
-
         Yii::trace("-----------Impresión enviada a $ip: con codigo:  $zpl", __METHOD__);
         // var_dump($zpl);
         // die();
@@ -650,6 +653,16 @@ class ProductostiquetesprecioController extends Controller
                 '\\\\' . str_replace('\\', '\\\\', ltrim($recurso, '\\')), // Recurso compartido (doble \\ inicial)
                 $tempFile // El archivo temporal, ahora entre comillas
             );
+
+            $userId = Yii::$app->user->id;
+
+            // if ($userId == 17) {
+
+            //     var_dump($zpl);
+            //     die();
+
+            // }
+
             // Ejecutar el comando
             exec($command, $output, $returnVar);
 

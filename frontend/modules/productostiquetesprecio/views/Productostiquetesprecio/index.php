@@ -159,9 +159,6 @@ Modal::end();
             );
         },
 
-
-
-
                     //             'view' => function ($url, $model) {
                     //     return Html::a(
                     //         '<i class="fa fa-eye"></i>',
@@ -175,7 +172,7 @@ Modal::end();
     
                 ],
                 //         'visibleButtons' => [
-                //             'printajax' => function ($model, $key, $index) {
+                //             'print2' => function ($model, $key, $index) {
                 //     return Yii::$app->user->id == 17; // Condición para mostrar el botón
                 // },
                 //         ],

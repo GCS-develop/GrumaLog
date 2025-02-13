@@ -105,9 +105,10 @@ $gridColumns = [
         'label' => 'Planilla',
         'value' => function ($model) {
             return ($model->codAlmacenOrigen)
-            // ($model->tipoDocumento ? $model->tipoDocumento : $model->tipoDocumentoInterno)
+                // ($model->tipoDocumento ? $model->tipoDocumento : $model->tipoDocumentoInterno)
                 . '-' .
-                ($model->consecutivoDocumento ? $model->consecutivoDocumento : $model->consecutivoInterno)
+                ($model->planillaEmbarque->id);
+            // ($model->consecutivoDocumento ? $model->consecutivoDocumento : $model->consecutivoInterno)
             ;
         },
 
