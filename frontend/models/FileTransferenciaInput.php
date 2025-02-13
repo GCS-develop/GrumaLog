@@ -186,12 +186,16 @@ class FileTransferenciaInput extends Model
             $valor_celda = $sheet->getCell('N' . $fila)->getValue();
             if ($valor_celda){
                 $color = $valor_celda;
+
+                $idcolor = Color::actualizarRegistro ($color, $color);
             }
 
             $talla = null;
             $valor_celda = $sheet->getCell('O' . $fila)->getValue();
             if ($valor_celda){
                 $talla = strval($valor_celda);
+
+                $idtalla = Talla::actualizarRegistro ($talla, $talla);
             }
 
             $numero = null;
@@ -224,6 +228,7 @@ class FileTransferenciaInput extends Model
             if (!$ok){
                 var_dump($model->getErrors()); die("hola");
             }else{
+                //var_dump($color); die("hola");
                 $modelcolor = Color::find()->where(['codigo' => $color])->one(); 
                 $modeltalla = Talla::find()->where(['codigo' => $talla])->one();
                 $modelitem = Item::find()->where([

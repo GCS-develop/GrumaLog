@@ -54,6 +54,7 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
     public $numeroFila;
     public $fechaEntrega;
     public $equivalencia;
+    public $unidades;
     //
     //
     public $codigoCentroOperacionDocumentoEntrada;
@@ -88,8 +89,9 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
     {
         return [
             [['idProgramacionEntregaMercancia', 'idItem', 'unidadesConteo'], 'required', 'message' => '{attribute} Es Un Valor Obligatorio'],
-            [['idProgramacionEntregaMercancia', 'idItem', 'created_by', 'updated_by'], 'integer'],
-            [['created_at', 'updated_at', 'unidadesConteo', 'unidadesAsignadas', 'codigoBarras', 'item'], 'safe'],
+            [['idProgramacionEntregaMercancia', 'idItem', 'created_by', 'updated_by', 'unidadesConteoEmpaque'], 'integer'],
+            [['created_at', 'updated_at', 'unidadesConteo', 'unidadesAsignadas', 'codigoBarras', 
+            'item', 'codigoUnidadEmpaque'], 'safe'],
             [['idProgramacionEntregaMercancia'], 'exist', 'skipOnError' => true, 'targetClass' => Programacionentregamercancia::class, 'targetAttribute' => ['idProgramacionEntregaMercancia' => 'id']],
             [['idProgramacionEntregaMercancia', 'idItem'], 'unique', 'targetAttribute' => ['idProgramacionEntregaMercancia', 'idItem'], 'message' => 'La Referencia Ya Esta Asignado a la Orden de Compra.'],
             [['idItem'], 'exist', 'skipOnError' => true, 'targetClass' => Item::class, 'targetAttribute' => ['idItem' => 'id']],
@@ -857,7 +859,6 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
 
     public static function detalleTransferencia($idtransferenciaerp, $dataProviderBD)
     {
-
         $ok = true;
         $models = $dataProviderBD->getModels();
 
@@ -882,12 +883,16 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
             $model->bodegaMovimiento = $registro->bodega;
             $model->unidadMovimiento = 'UND';
             $model->cantidadBase = $registro->unidadesConteo;
+            
             $model->fechaEntregaMovimiento = $registro->fechaEntrega;
             $model->item = $registro->item;
             $model->color = $registro->color;
             $model->talla = $registro->talla;
             $model->rowid = $registro->codigointernomovto;
             $model->idTransferenciaerp = $idtransferenciaerp;
+
+            $model->codigoUnidadEmpaque = $registro->unidadEmpaque;
+            $model->unidadesConteoEmpaque = $registro->unidades;
 
             if (!$model->save()) {
                 $ok = false;
