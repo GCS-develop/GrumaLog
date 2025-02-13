@@ -57,7 +57,7 @@ class ConteoentregamercanciaSearch extends Conteoentregamercancia
         $query->join('LEFT JOIN', 'talla ta', 'it.idTalla = ta.id');
         $query->join('LEFT JOIN', 'color col', 'it.idColor = col.id');
         $query->join('LEFT JOIN', 'marca ma', 'it.idMarca = ma.id');
-        $query->join('LEFT JOIN', 'unidadempaque ue', 'it.unidadEmpaque = ue.nombre');
+        $query->join('LEFT JOIN', 'unidadempaque ue', "ISNULL(it.unidadEmpaque,'UND') = ue.codigo");
         $query->join('LEFT JOIN', 'categoria cat', 'it.idCategoria = cat.id');
         $query->join('LEFT JOIN', 'subcategoria sub', 'it.idSubcategoria = sub.id');
         $query->join('LEFT JOIN', 'proveedor pr', 'oc.idProveedor = pr.id');
@@ -106,7 +106,7 @@ class ConteoentregamercanciaSearch extends Conteoentregamercancia
             'ma.nombre AS marca',
             'col.nombre AS color',
             'LTRIM(RTRIM(ta.nombre)) AS talla',
-            'ue.equivalencia AS equivalencia',
+            'ISNULL(ue.equivalencia,1) AS equivalencia',
 
             'it.idCategoria',
             'cat.nombre AS categoria',
@@ -170,7 +170,7 @@ class ConteoentregamercanciaSearch extends Conteoentregamercancia
         $query->join('INNER JOIN', 'tipodocumento td', 'fe.idTipoDocumentoEntrada = td.id');
         $query->join('INNER JOIN', 'view_ordendecompradetalle vi', 'vi.idOrdenCompra = aem.idOrdenCompra AND it.item = vi.item AND col.codigo = vi.color AND tal.codigo = vi.talla ');
 
-        //$query->join('LEFT JOIN', 'unidadempaque ue', "ISNULL(it.unidadEmpaque,'UND') = ue.codigo");
+        $query->join('LEFT JOIN', 'unidadempaque ue', "ISNULL(it.unidadEmpaque,'UND') = ue.codigo");
 
         $query->select([
             "vi.CO AS codigoCentroOperacionDocumentoEntrada", 
@@ -189,8 +189,9 @@ class ConteoentregamercanciaSearch extends Conteoentregamercancia
             "vi.bodega", 
             "ISNULL(it.unidadEmpaque,'UND') AS unidadEmpaque", 
             "vi.fechaEntrega",
-            "cem.unidadesConteo" ,
-            // "(cem.unidadesConteo * ISNULL(ue.equivalencia, 1)) AS [unidadesConteo]", 
+            "cem.unidadesConteo AS unidades" ,
+            "(cem.unidadesConteo * ISNULL(ue.equivalencia, 1)) AS unidadesConteo", 
+            'ISNULL(ue.equivalencia,1) AS equivalencia',
             "it.item", 
             "col.codigo AS color", 
             "tal.codigo AS talla", 

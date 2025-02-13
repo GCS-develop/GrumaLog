@@ -43,7 +43,7 @@ class Traspasodetalle extends \yii\db\ActiveRecord
     public $tipomovimiento;
     public $fechaDesde;
     public $fechaHasta;
-    // public $color;
+    public $proveedor;
 
     /**
      * {@inheritdoc}

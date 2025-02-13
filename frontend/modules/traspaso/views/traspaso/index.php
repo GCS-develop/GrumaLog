@@ -265,19 +265,14 @@ Modal::end();
             </p>
 
         </div> -->
+        
         <div class="col-lg-6 derecha">
 
-            <!-- <?php if (Yii::$app->user->identity->username == 'victor.burbano'): ?> -->
-
-                <!-- Botón para cambiar el estado de los registros -->
-                <?= Html::button('Muelle masivo', [
-                    'class' => 'btn btn-info btn-create btn-lg',
-                    'id' => 'cambiarEstadoBtn',
-                ]) ?>
-
-
-
-                <!-- <?php endif; ?> -->
+            <!-- Botón para cambiar el estado de los registros -->
+            <?= Html::button('Muelle masivo', [
+                'class' => 'btn btn-info btn-create btn-lg',
+                'id' => 'cambiarEstadoBtn',
+            ]) ?>
 
         </div>
 
@@ -330,6 +325,9 @@ Modal::end();
     'options' => [
         'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
     ],
+    'rowOptions' => function ($model) {
+        return $model->estado->nombre === 'anulado' ? ['class' => 'text-danger'] : [];
+    },
 
     'columns' => [
         ['class' => 'kartik\grid\SerialColumn'],
@@ -388,6 +386,13 @@ Modal::end();
             'value' => function ($model) {
     return $model->bodegaDestino->codigo . ' ' . $model->bodegaDestino->nombre;
 },
+        ],
+        [
+            'label' => 'nombre de proveedor',
+            'value' => function ($model) {
+    return isset($model->traspasodetalles[0]->item) ? $model->traspasodetalles[0]->item->nombreProveedor : 'Sin proveedor';
+},
+
         ],
         [
             'attribute' => 'numeroCajas',

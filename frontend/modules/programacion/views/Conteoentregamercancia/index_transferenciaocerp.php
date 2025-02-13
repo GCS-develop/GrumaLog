@@ -108,6 +108,12 @@ $this->params['breadcrumbs'][] = $this->title;
             'color',
             'talla',
             'rowid',
+            'codigoUnidadEmpaque',
+            [
+                'attribute' => 'unidadesConteoEmpaque',
+                'pageSummary' => true,
+            ],
+ 
             /*[
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Transferenciaordencompraexcel $model, $key, $index, $column) {

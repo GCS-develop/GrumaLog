@@ -108,13 +108,20 @@ $this->registerJs("
 
 
     $gridColumns = [
-        // [
-        //     'class' => 'kartik\grid\CheckboxColumn',
-        //     'checkboxOptions' => function ($model, $key, $index, $column) {
-        //         return ['value' => $model->id, 'name' => 'seleccionar[]']; // Asegúrate de que 'id' sea la clave primaria
-        //     },
-        // ],
-        // 'id',
+        [
+            'label' => 'bodegaorigen',
+            'value' => function ($model): mixed {
+                return $model->traspaso->bodegaOrigen->nombre;
+            },
+            'group' => true,
+        ],
+        [
+            'label' => 'bodegadestino',
+            'value' => function ($model) {
+                return $model->traspaso->bodegaDestino->nombre;
+            },
+            'group' => true,
+        ],
         [
             'label' => 'No Interno',
             'value' => function ($model) {
@@ -158,6 +165,14 @@ $this->registerJs("
             'attribute' => 'Bodega destino',
             'value' => function ($model) {
                 return $model->traspaso->bodegaDestino->codigo . '-' . $model->traspaso->bodegaDestino->nombre;
+            },
+            'enableSorting' => true,
+            'group' => true,
+        ],
+        [
+            'attribute' => 'proveedor',
+            'value' => function ($model) {
+                return $model->item->nombreProveedor;
             },
             'enableSorting' => true,
             'group' => true,
@@ -266,23 +281,7 @@ $this->registerJs("
         <h3><?php var_dump($usuarioCreador) ?></h3>
     </div> -->
 
-        <div class="col-lg-6 derecha">
-
-            <?php if (Yii::$app->user->identity->username == 'victor.burbano'): ?>
-
-                <!-- Botón para cambiar el estado de los registros -->
-                <?= Html::button('Muelle-ajax', [
-                    'class' => 'btn btn-warning btn-create btn-lg',
-                    'id' => 'cambiarEstadoBtn',
-                ]) ?>
-
-
-
-            <?php endif; ?>
-
-        </div>
-
-        <div class="col-lg-6 izquierda">
+        <div class="col-lg-12 centrar">
 
 
             <?php echo ExportMenu::widget(

@@ -41,7 +41,10 @@ class TraspasodetalleSearch extends Traspasodetalle
                     'tipomovimiento',
                     'cantidad',
                     'fechaDesde',
-                    'fechaHasta'
+                    'fechaHasta',
+                    'proveedor',
+                    'bodegaorigen',
+                    'bodegadestino',
                 ],
                 'safe'
             ],
@@ -100,7 +103,10 @@ class TraspasodetalleSearch extends Traspasodetalle
             'c.nombre',
             't.codigo',
             'e.codigo',
-            'tr.tipoMovimiento'
+            'tr.tipoMovimiento',
+            'i.nombreProveedor',
+            'tr.idBodegaOrigen',
+            'tr.idBodegaDestino',
 
         ]);
 
@@ -138,6 +144,8 @@ class TraspasodetalleSearch extends Traspasodetalle
             't.codigo' => $this->talla,
             'e.codigo' => $this->estado,
             'tr.tipoMovimiento' => $this->tipomovimiento,
+            'tr.idBodegaOrigen'=> $this->bodegaorigen,
+            'tr.idBodegaDestino' =>  $this->bodegadestino
 
             // 'tr.created_at' => $this->fechainicio,
             // 'tr.updated_at' => $this->fechafin,
@@ -164,8 +172,11 @@ class TraspasodetalleSearch extends Traspasodetalle
             }
         }
 
-        // $query->andFilterWhere(['like', 'i.item', $this->codigoitem]);
-// 
+
+        if (!empty($this->proveedor)) {
+            $query->andFilterWhere(['like', 'i.nombreProveedor', trim($this->proveedor)]);
+        }
+        // 
         // $query->andFilterWhere(['like', 'tr.consecutivo', $this->consecutivo]);
 
         $query->orderBy(['idItem' => SORT_ASC]); // Orden por defecto

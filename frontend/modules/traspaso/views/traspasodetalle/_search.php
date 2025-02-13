@@ -6,6 +6,7 @@ use yii\widgets\ActiveForm;
 use frontend\models\Estadotraspaso;
 use frontend\models\Usertraspaso;
 use kartik\date\DatePicker;
+use frontend\models\Bodegas;
 
 
 /** @var yii\web\View $this */
@@ -30,6 +31,25 @@ use kartik\date\DatePicker;
     <div class="row">
 
         <div class="col-lg-3">
+            <?= $form->field($model, 'bodegaorigen')->dropDownList(
+                Bodegas::getListaData(),
+                [
+                    'prompt' => ' Seleccionar bodega origen ... ',
+                    'id' => 'bodegaorigen',
+                ]
+            ) ?>
+        </div>
+        <div class="col-lg-3">
+            <?= $form->field($model, 'bodegadestino')->dropDownList(
+                Bodegas::getListaData(),
+                [
+                    'prompt' => ' Seleccionar bodega destino ... ',
+                    'id' => 'bodegadestino',
+                ]
+            ) ?>
+        </div>
+
+        <div class="col-lg-3">
             <?php
             echo $form->field($model, 'tipomovimiento')->label('Tipo de movimiento')->dropDownList(
                 [
@@ -44,7 +64,7 @@ use kartik\date\DatePicker;
             ?>
         </div>
 
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?=
                 $form->field($model, 'fechaDesde')->widget(DatePicker::className(), [
                     'name' => 'fecha inicio',
@@ -59,7 +79,7 @@ use kartik\date\DatePicker;
                 ?>
         </div>
 
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?=
                 $form->field($model, 'fechaHasta')->widget(DatePicker::className(), [
                     'name' => 'fecha fin',
@@ -74,7 +94,7 @@ use kartik\date\DatePicker;
                 ?>
         </div>
 
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?= $form->field($model, 'consecutivosiesa')->label('Consecutivo siesa') ?>
         </div>
 
@@ -111,6 +131,10 @@ use kartik\date\DatePicker;
         </div>
 
         <div class="col-lg-4">
+            <?= $form->field($model, 'proveedor') ?>
+        </div>
+
+        <div class="col-lg-2">
             <?php
             echo $form->field($model, 'estado')->dropDownList(
                 Estadotraspaso::getListaData(),
@@ -122,7 +146,7 @@ use kartik\date\DatePicker;
             ?>
         </div>
 
-        <div class="col-lg-4">
+        <div class="col-lg-2">
             <?php
             echo $form->field($model, 'updated_by')->label('Ultimo usuario')->dropDownList(
                 Usertraspaso::getListaDataUsertraspaso(),

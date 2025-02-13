@@ -15,14 +15,24 @@ $this->params['breadcrumbs'] = [['label' => $this->title]];
         <h3><i class="fas fa-exclamation-triangle text-danger"></i> <?= Html::encode($name) ?></h3>
 
         <p>
+            <?php if ($exception->statusCode == 403): ?>
+            <div class="d-flex flex-column align-items-center">
+                <h1>Acceso Denegado</h1>
+                <p>No tienes permiso para acceder a esta página. Si crees que esto es un error, contacta con el
+                    administrador.</p>
+                <a href="<?= Yii::$app->homeUrl ?>" class="btn btn-danger mt-3">Regresar al Inicio</a>
+            </div>
+        <?php else: ?>
             <?= nl2br(Html::encode($message)) ?>
+        <?php endif; ?>
         </p>
 
+
         <p>
-            The above error occurred while the Web server was processing your request.
-            Please contact us if you think this is a server error. Thank you.
-            Meanwhile, you may <?= Html::a('return to dashboard', Yii::$app->homeUrl); ?>
-            or try using the search form.
+            El error anterior se produjo mientras el servidor web estaba procesando su solicitud.
+            Póngase en contacto con nosotros si cree que se trata de un error del servidor. Gracias.
+            Mientras tanto, puede <?= Html::a('regresar al menu principal', Yii::$app->homeUrl); ?>
+            o intentar usar el formulario de búsqueda.
         </p>
 
         <form class="search-form" style="margin-right: 190px;">
@@ -37,4 +47,3 @@ $this->params['breadcrumbs'] = [['label' => $this->title]];
         </form>
     </div>
 </div>
-
