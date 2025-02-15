@@ -79,7 +79,7 @@ class Traspasodetalle extends \yii\db\ActiveRecord
         return [
             [['idTraspaso', 'idItem', 'codigoitem'], 'required', 'message' => '{attribute} Es Un Valor Obligatorio'],
             [['idTraspaso', 'cantidad', 'created_by', 'updated_by', 'idItem'], 'integer'],
-            [['created_at', 'updated_at'], 'safe'],
+            [['created_at', 'updated_at', 'cantidadTransferencia'], 'safe'],
             [['idTraspaso'], 'exist', 'skipOnError' => true, 'targetClass' => Traspaso::class, 'targetAttribute' => ['idTraspaso' => 'id']],
             /*[
                 ['idItem'],

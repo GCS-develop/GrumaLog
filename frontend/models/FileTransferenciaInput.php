@@ -456,6 +456,18 @@ class FileTransferenciaInput extends Model
                 $rowid = $valor_celda;
             }
 
+            $modelcolor = Color::find()->where(['codigo' => $color])->one(); 
+            $modeltalla = Talla::find()->where(['codigo' => $talla])->one();
+            $modelitem = Item::find()->where([
+                                                    'item' => $item,
+                                                    'idColor' => $modelcolor->id,
+                                                    'idTalla' => $modeltalla->id            
+                                                ])->one();
+
+            $unidades = $cantidadBase;
+            /*$equivalencia = $modelitem->unidadempaque ? $modelitem->unidadempaque->equivalencia : 1;
+            $cantidadBase = $cantidadBase / $equivalencia;*/
+
             $model = new Transferenciaordencompraexcel();
             $model->centroOperacionDocumento = $centroOperacionDocumento;
             $model->tipoDocumento = $tipoDocumento;
@@ -482,6 +494,9 @@ class FileTransferenciaInput extends Model
             $model->talla = $talla;
             $model->rowid = $rowid;
             $model->idTransferenciaerp = $id;
+
+            $model->codigoUnidadEmpaque = $modelitem->unidadEmpaque ? $modelitem->unidadEmpaque : 'UND';
+            $model->unidadesConteoEmpaque = $unidades;
 
             $ok = $model->save();
 

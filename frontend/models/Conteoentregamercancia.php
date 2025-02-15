@@ -483,13 +483,15 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
         $item = null;
         $idprogramacion = null;
         $iduserconteo = null;
+        $idagendaaux = null;
 
         $searchModel = new ConteoentregamercanciaSearch();
-        $dataProviderBD = $searchModel->search($params, $idprogramacion, $item, $idagenda, $iduserconteo, $idfactura);
+        $dataProviderBD = $searchModel->search($params, $idprogramacion, $item, $idagendaaux, $iduserconteo, $idfactura);
 
         $idordencompra = null;
         $idcategoria = null;
-        $dataProvider = Conteoentregamercancia::generarDataConteoCurvas($idagenda, $idordencompra, $idcategoria, $iduserconteo);
+        
+        $dataProvider = Conteoentregamercancia::generarDataConteoCurvas($idagendaaux, $idordencompra, $idcategoria, $iduserconteo, $idprogramacion, $idfactura);
 
         // Agrupar los datos por bodega
         $dataByItem = [];

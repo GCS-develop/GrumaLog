@@ -76,7 +76,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        //'filterModel' => $searchModel,
+        'filterModel' => $searchModel,
         'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
 		'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
 		'options' => [
@@ -84,19 +84,25 @@ $this->params['breadcrumbs'][] = $this->title;
 		],
 
         'columns' => [
-            [
+            /*[
                 'class' => 'kartik\grid\SerialColumn',
                 'format' => 'html',
                 'vAlign'=>'middle',
                 'hAlign'=>'center',
-            ],
+            ],*/
 
-            //'id',
+            [
+                'attribute' => 'id',
+                'format' => 'html',
+                'vAlign'=>'middle',
+                'hAlign'=>'left',
+            ],
             [
                 'attribute' => 'descripcion',
                 'format' => 'html',
                 'vAlign'=>'middle',
                 'hAlign'=>'left',
+                'filter' => ''
             ],
 
             [
@@ -104,6 +110,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format' => 'html',
                 'vAlign'=>'middle',
                 'hAlign'=>'left',
+                'filter' => ''
             ],
 
             [
@@ -113,7 +120,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 'hAlign'=>'left',                
                 'value' => function($model) {
                     return $model->conectordinamico->nombreDocumento;
-                }
+                },
+                'filter' => ''
             ],
 
             [
@@ -128,6 +136,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format' => 'html',
                 'vAlign'=>'middle',
                 'hAlign'=>'left',
+                'filter' => ''
             ],
 
             [
@@ -146,7 +155,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     }
                     
                     return $estado;
-                }
+                },
+                'filter' => ''
             ],
 
             [
@@ -156,6 +166,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
                 'width' => '10%',
+                'filter' => ''
             ],
 
             [
@@ -166,7 +177,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 'hAlign'=>'left',                
                 'value' => function($model) {
                     return $model->usercreated->username;
-                }
+                },
+                'filter' => ''
             ],
 
             //'updated_at',

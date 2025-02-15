@@ -304,6 +304,8 @@ class PlanillaembarqueController extends Controller
         $searchModel = new PlanillaembarquetraspasoSearch();
         $dataProvider = $searchModel->search($this->request->queryParams, $id);
 
+        $dataProvider->pagination = false;
+
         $data = $dataProvider->getModels();
 
         $totalGeneral = 0; // Para almacenar el total general
@@ -315,6 +317,8 @@ class PlanillaembarqueController extends Controller
         $tableRows = ''; // Para acumular las filas de la tabla por destino
         $numeroBodegasDestino = 0;
 
+        // var_dump($data); die("hola");
+        
         foreach ($data as $registro) {
             if ($previousDestino !== null && $previousDestino !== $registro['almacenDestino']) {
 
@@ -328,8 +332,16 @@ class PlanillaembarqueController extends Controller
                 ]);
                 $mpdf->WriteHTML($htmlTotalDestino);
 
+                $htmlTotalDestino = $this->renderPartial('_total_destino', [
+                    'destino' => $previousDestino,
+                    'totalDestino' => $totalDestino,
+                    'totalUnidadesEmp' => $totalUnidadesEmp,
+                ]);
+
+                $mpdf->WriteHTML($htmlTotalDestino);
+
                 // Hacer un salto de página
-                $mpdf->AddPage();
+                $mpdf->AddPage();  
 
                 // Resetear la tabla y el total del nuevo destino
                 $tableRows = '';
@@ -368,6 +380,15 @@ class PlanillaembarqueController extends Controller
                 'planillaembarque' => $planillaembarque
             ]);
             $mpdf->WriteHTML($htmlTable);
+
+            $htmlTotalDestino = $this->renderPartial('_total_destino', [
+                'destino' => $previousDestino,
+                'totalDestino' => $totalDestino,
+                'totalUnidadesEmp' => $totalUnidadesEmp,
+            ]);
+
+            $mpdf->WriteHTML($htmlTotalDestino);
+
         }
 
         // Agregar un salto de página antes del total general

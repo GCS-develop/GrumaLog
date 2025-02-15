@@ -689,9 +689,10 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                                                             $registro->tipoDocumentoOrdenCompra,
 															$registro->consecutivoOrdenCompra
                                                             );
-															
+			/*if ($registro->consecutivoOrdenCompra == 1101){			
+                var_dump($json); die("hola");
+            }*/
 			
-        
             if ($json == null){
                 $model = new Transferenciaerperror();
                 $model->idTransferenciaerp = $id;
@@ -755,8 +756,9 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                             ->where(['idTransferenciaerp' => $id, 
                                     'centroOperacionOrdenCompra' => $co,
                                     'tipoDocumentoOrdenCompra' => $tipodocumento,
-									'consecutivoOrdenCompra' => $consecutivo]
-                            )
+									'consecutivoOrdenCompra' => $consecutivo
+                            ])
+                            ->andWhere(['>', 'cantidadBase', 0])
                             ->orderBy([
                                 'centroOperacionDocumento' => SORT_ASC, 
                                 'tipoDocumento' => SORT_ASC,

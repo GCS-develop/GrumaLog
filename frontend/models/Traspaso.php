@@ -359,7 +359,15 @@ class Traspaso extends \yii\db\ActiveRecord
             $traspasoDetalle->idTraspaso = $idtraspaso;
             $traspasoDetalle->idItem = $iditem;
             $traspasoDetalle->codigoitem = $modelitem->codigoBarras;
-            $traspasoDetalle->cantidad = $detalle['cantidad'];
+
+            $cantidadBase = $detalle['cantidad'];
+
+            $equivalencia = $modelitem->unidadempaque ? $modelitem->unidadempaque->equivalencia : 1;
+            $cantidad = $cantidadBase / $equivalencia;
+
+            $traspasoDetalle->cantidad = $cantidad;
+            $traspasoDetalle->cantidadTransferencia = $cantidadBase;
+
             if (!$traspasoDetalle->save()) {
                 var_dump($traspasoDetalle->getErrors());
                 die("hola");

@@ -212,11 +212,13 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
 
             'pet.idPlanillaEmbarque' => SORT_DESC,
             'orden' => SORT_ASC,
-            'bo.codigo' => SORT_ASC,
             'bd.codigo' => SORT_ASC,
+            'bo.codigo' => SORT_ASC,
             'pet.fechaRecibido' => SORT_ASC,
 
         ]);
+
+        //echo $query->createCommand()->getRawSql(); die("hola");
 
         return $dataProvider;
     }

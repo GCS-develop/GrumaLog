@@ -123,6 +123,8 @@ use yii\helpers\Url;
             <th>Destino</th>
         </tr>
     </thead>
+    
+    <!--
     <tfoot>
         <tr>
             <td colspan="3" style="text-align: right;"><strong>Total para <?= $destino ?>:</strong></td>
@@ -130,6 +132,8 @@ use yii\helpers\Url;
             <td style="text-align: right;"><?= $totalUnidadesEmp ?></td>
         </tr>
     </tfoot>
+     -->
+    
     <tbody>
         <?= $rows ?>
     </tbody>

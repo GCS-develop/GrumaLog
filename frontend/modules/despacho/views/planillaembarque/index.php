@@ -73,9 +73,13 @@ $gridColumns = [
     ],
     [
         'label' => 'Tiendas destino',
-        // 'filter' => Vehiculo::getListaData(),
         'value' => function ($model) {
-            return $model->Listabodegasdestino;
+            $bodegas = $model->listabodegasdestino;
+            $nombresBodegas = [];
+            foreach ($bodegas as $bodega) {
+                $nombresBodegas[] = $bodega->bodegaDestino->nombre;  // Accede a cada nombre de bodega
+            }
+            return implode(', ', $nombresBodegas);  // Devuelve los nombres separados por coma
         },
     ],
     [
