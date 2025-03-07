@@ -48,10 +48,29 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['idInterfase', 'co', 'fecha', 'bodegaSalida', 'item', 'talla', 'color', 
-            'numeroDocumento', 'bodegaEntrada', 'codigoBodegaEntrada', 'codigoBodegaSalida', 
-            'referencia', 'itemResumen', 'unidadMedida', 'cantidad', 'categoria', 'proveedor', 
-            'codigoBarras'], 'required'],
+            [
+                [
+                    'idInterfase',
+                    'co',
+                    'fecha',
+                    'bodegaSalida',
+                    'item',
+                    'talla',
+                    'color',
+                    'numeroDocumento',
+                    'bodegaEntrada',
+                    'codigoBodegaEntrada',
+                    'codigoBodegaSalida',
+                    'referencia',
+                    'itemResumen',
+                    'unidadMedida',
+                    'cantidad',
+                    'categoria',
+                    'proveedor',
+                    'codigoBarras'
+                ],
+                'required'
+            ],
             [['idInterfase'], 'integer'],
             [['fecha', 'item'], 'safe'],
             [['cantidad'], 'number'],
@@ -117,23 +136,25 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
         $model = new Devolucionimportacion();
         $model->numeroRegistros = 0;
         $model->totalCantidad = 0;
-        if (!$model->save()){
-            var_dump($model->getErrors()); die("hola");
+        if (!$model->save()) {
+            var_dump($model->getErrors());
+            die("hola");
         }
         $id = $model->id;
 
-        $respuesta = Devolucionimportaciondetalle::extraer_data_archivo ($tempFileName, $model->id);
+        $respuesta = Devolucionimportaciondetalle::extraer_data_archivo($tempFileName, $model->id);
 
         $model = Devolucionimportacion::findOne($id);
         $model->numeroRegistros = Devolucionimportaciondetalle::find()->where(['idInterfase' => $id])->count();
         $model->totalCantidad = Devolucionimportaciondetalle::find()->where(['idInterfase' => $id])->sum('cantidad');
         $model->save();
-            
+
         unlink($tempFileName);
         return $respuesta;
     }
 
-    public static function extraer_data_archivo ($archivoExcel, $id){
+    public static function extraer_data_archivo($archivoExcel, $id)
+    {
 
         ini_set('memory_limit', '2048M'); // Aumentar el límite de memoria a 256 MB (puedes ajustar este valor según tus necesidades)
 
@@ -147,7 +168,7 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
 
         // Obtener la hoja específica por su nombre
         $sheet = $spreadsheet->getSheetByName('Data');
- 
+
         // Obtener el número total de filas en la hoja activa
         $totalFilas = $sheet->getHighestRow();
 
@@ -161,14 +182,23 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
 
             $fecha = null;
             $valor_celda = $sheet->getCell('B' . $fila)->getValue();
-            if (!$valor_celda){
+
+            if (!$valor_celda) {
                 continue;
             }
             $fecha = $valor_celda;
 
+            // Si la celda tiene un número (posible serial de Excel), convertirla
+            if (is_numeric($valor_celda)) {
+                $fecha = date('Y-m-d', strtotime('1899-12-30 + ' . $valor_celda . ' days'));
+            } else {
+                // Si ya viene en formato de fecha, mantenerla tal cual
+                $fecha = date('Y-m-d', strtotime($valor_celda));
+            }
+            
             $codigoBarras = null;
             $valor_celda = $sheet->getCell('R' . $fila)->getValue();
-            if (!$valor_celda){
+            if (!$valor_celda) {
                 continue;
             }
             $codigoBarras = $valor_celda;
@@ -180,38 +210,38 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
 
             $model->co = null;
             $valor_celda = $sheet->getCell('A' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->co = $valor_celda;
             }
 
             $model->bodegaSalida = null;
             $valor_celda = $sheet->getCell('C' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->bodegaSalida = $valor_celda;
             }
 
             $model->item = null;
             $valor_celda = $sheet->getCell('D' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->item = $valor_celda;
             }
 
 
             $model->talla = null;
             $valor_celda = $sheet->getCell('E' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->talla = $valor_celda;
             }
 
             $model->color = null;
             $valor_celda = $sheet->getCell('F' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->color = $valor_celda;
             }
 
             $model->numeroDocumento = null;
             $valor_celda = $sheet->getCell('G' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->numeroDocumento = $valor_celda;
             }
 
@@ -219,62 +249,70 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
 
             $model->bodegaEntrada = null;
             $valor_celda = $sheet->getCell('I' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->bodegaEntrada = $valor_celda;
             }
 
             $model->codigoBodegaEntrada = null;
             $valor_celda = $sheet->getCell('J' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->codigoBodegaEntrada = $valor_celda;
             }
 
             $model->codigoBodegaSalida = null;
             $valor_celda = $sheet->getCell('K' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->codigoBodegaSalida = $valor_celda;
             }
 
             $model->referencia = null;
             $valor_celda = $sheet->getCell('L' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->referencia = $valor_celda;
             }
 
             $model->itemResumen = null;
             $valor_celda = $sheet->getCell('M' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->itemResumen = $valor_celda;
             }
 
             $model->unidadMedida = null;
             $valor_celda = $sheet->getCell('N' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->unidadMedida = $valor_celda;
             }
 
             $model->cantidad = null;
             $valor_celda = $sheet->getCell('O' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->cantidad = floatval($valor_celda);
             }
 
             $model->categoria = null;
             $valor_celda = $sheet->getCell('P' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->categoria = $valor_celda;
             }
 
             $model->proveedor = null;
             $valor_celda = $sheet->getCell('Q' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $model->proveedor = $valor_celda;
             }
+
+            // var_dump($model);
+            // die('g');
+            if (!$model->save()) {
+                var_dump($model->errors);
+                die();
+            }
+
 
             $model->save();
 
             $modeldocumento = Devoluciondocumento::find()->where(['codigoBodegaSalida' => $model->codigoBodegaSalida, 'numeroDocumento' => $model->numeroDocumento])->one();
-            if ($modeldocumento == null){
+            if ($modeldocumento == null) {
                 $modeldocumento = new Devoluciondocumento();
                 $modeldocumento->codigoBodegaSalida = $model->codigoBodegaSalida;
                 $modeldocumento->numeroDocumento = $model->numeroDocumento;
@@ -285,7 +323,7 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
             }
 
             $detalle = Devoluciondocumentodetalle::find()->where(['idDocumento' => $modeldocumento->id, 'codigoBarras' => $model->codigoBarras])->one();
-            if ($detalle == null){
+            if ($detalle == null) {
                 $detalle = new Devoluciondocumentodetalle();
                 $detalle->idDocumento = $modeldocumento->id;
                 $detalle->codigoBarras = $model->codigoBarras;
@@ -297,12 +335,13 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
                 $detalle->referencia = $model->referencia;
                 $detalle->itemResumen = $model->itemResumen;
                 $detalle->unidadMedida = $model->unidadMedida;
-                if (!$detalle->save()){
-                    var_dump($detalle->getErrors()); die("hola");
+                if (!$detalle->save()) {
+                    var_dump($detalle->getErrors());
+                    die("hola");
                 }
 
 
-            }else{
+            } else {
                 $detalle->cantidadDevolucion = $detalle->cantidadDevolucion + $model->cantidad;
                 $detalle->save();
             }

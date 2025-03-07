@@ -54,6 +54,20 @@ class ConteocdscdestinodetalleController extends Controller
         ]);
     }
 
+    public function actionViewtraspaso($idconteodestino)
+    {
+        $modeldestino = Conteocdscdestino::findOne(['id' => $idconteodestino]);
+
+        $searchModel = new ConteocdscdestinodetalleSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams, $idconteodestino);
+
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'modeldestino' => $modeldestino,
+        ]);
+    }
+
     /**
      * Displays a single Conteocdscdestinodetalle model.
      * @param int $id ID

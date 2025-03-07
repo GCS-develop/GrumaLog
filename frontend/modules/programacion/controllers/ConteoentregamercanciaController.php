@@ -486,6 +486,10 @@ class ConteoentregamercanciaController extends Controller
 
         $idordencompra = null;
         $idcategoria = null;
+
+        if ($idfactura){
+            $idagenda = null;
+        }
         
         $dataProvider = Conteoentregamercancia::generarDataConteoCurvas ($idagenda, $idordencompra, $idcategoria, $iduserconteo, $idprogramacion, $idfactura);
 

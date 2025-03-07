@@ -47,7 +47,7 @@ class ProductostiquetesprecioSearch extends Productostiquetesprecio
             $query = Productostiquetesprecio::find()->where(['descBodega' => $descBodega]);
         }
 
-
+        // $query = Productostiquetesprecio::find();
 
         // add conditions that should always apply here
 

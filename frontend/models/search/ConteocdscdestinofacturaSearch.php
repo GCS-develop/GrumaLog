@@ -81,12 +81,58 @@ class ConteocdscdestinofacturaSearch extends Conteocdscdestinofactura
             'prv.criterioModeloLogistico AS modeloLogistico'
         ]);
 
-        $query->andFilterWhere([
+        if ($idestadolegaliza == 0 && $idestadofactura == 2){
+            $query->andFilterWhere([
+                'fact.idEstado' => $idestadofactura,
+                'fact.idLegalizado' => $idestadolegaliza,
+                'fact.idErpTraspaso' => null,
+                'fact.idErpEntrada' => null
+            ]);
+        }
+
+        if ($idestadoentrada == 1){
+            $query->andWhere([
+                'and',
+                ['is not', 'idUserLegaliza', null],
+                [
+                    'or',
+                    ['idUserEntrada' => null],
+                    ['idErpEntrada' => null]
+                ],
+                ['idErpTraspaso' => null]
+            ]);
+        }
+
+        if ($idestadoentrada == 2 && $idestadotraspaso == 2){
+            $query->andWhere([
+                'and',
+                ['is not', 'idUserLegaliza', null],
+                ['is not', 'idUserEntrada', null],
+                ['is not', 'idErpEntrada', null],
+                ['idErpTraspaso' => null]
+            ]);
+            
+        }
+
+        /*$query->andFilterWhere([
             'fact.idEstado' => $idestadofactura,
             'fact.idLegalizado' => $idestadolegaliza,
             'fact.idEstadoEntrada' => $idestadoentrada,
             'fact.idEstadoTraspaso' => $idestadotraspaso,
         ]);
+
+        $query->orWhere([
+            'and',
+            ['fact.idEstadoTraspaso' => 2],
+            ['fact.idErpTraspaso' => null],
+            ['not', ['fact.idErpEntrada' => null]]
+        ]);
+
+        $query->orWhere([
+            'and',
+            ['fact.idEstadoEntrada' => 2],
+            ['fact.idErpEntrada' => null]
+        ]);*/
 
         // add conditions that should always apply here
 

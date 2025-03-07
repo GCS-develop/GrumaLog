@@ -13,6 +13,9 @@ class TraspasoFacturaCDSCForm extends Model
 
     public $idImpresora;
     public $numeroEntrada;
+    public $idBodegaMovimiento;
+    public $idCentroOperacionMovimiento;
+    public $idBodega;
 
     /**
      * {@inheritdoc}
@@ -20,9 +23,7 @@ class TraspasoFacturaCDSCForm extends Model
     public function rules()
     {
         return [
-            [['idImpresora'], 'required',
-            'message' => '{attribute} Es Un Valor Obligatorio'],
-            [['numeroEntrada'], 'safe'],
+            [['numeroEntrada', 'idImpresora', 'idBodegaMovimiento', 'idCentroOperacionMovimiento'], 'safe'],
         ];
     }
 
@@ -34,6 +35,8 @@ class TraspasoFacturaCDSCForm extends Model
         return [
             'idImpresora' => 'Impresora',
             'numeroEntrada' => 'Número',
+            'idBodegaMovimiento' => 'Bodega Movimiento',
+            'idCentroOperacionMovimiento' => 'CO Movimiento'
         ];
     }
 }

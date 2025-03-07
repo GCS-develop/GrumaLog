@@ -2,6 +2,8 @@
 
 namespace frontend\modules\crossdocking\controllers;
 
+use frontend\models\Bodegatipodocumento;
+use frontend\models\search\ConteocdscdestinodetalleSearch;
 use Yii;
 use frontend\models\Conteocdscdestinofactura;
 use frontend\models\search\ConteocdscdestinofacturaSearch;
@@ -24,8 +26,11 @@ use frontend\models\Conteocdscusuario;
 use frontend\models\Conteocdscusuariodestino;
 use frontend\models\Conteobylecturacodigo;
 use frontend\models\Conteocdscdestinodetalle;
+use frontend\models\search\TransferenciaordencompraexcelSearch;
+use frontend\models\search\TransferenciatransitoexcelSearch;
 
 use frontend\models\Ordendecompra;
+use frontend\models\Traspaso;
 use frontend\models\Parametroscontrol;
 
 /**
@@ -359,7 +364,7 @@ class ConteocdscdestinofacturaController extends Controller
                     $modelfactura->idEstadoEntrada = 1; // Autorizada
                     $modelfactura->idEstadoTraspaso = 1; // Pendiente
 
-                    $modelfactura->fechaLegaliza = date('Y-m-d h:i:s');
+                    $modelfactura->fechaLegaliza = new Expression('GETDATE()');
                     $modelfactura->idUserLegaliza = Yii::$app->user->identity->id;
 
                     $respuesta = $modelfactura->save();
@@ -403,8 +408,14 @@ class ConteocdscdestinofacturaController extends Controller
 
     public function actionEntradafactura($idconteofactura)
     {
-
+        $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
         $model = new EntradaFacturaCDSCForm();
+
+        $model->idTipoDocumento = $modelfactura->idSerieEntrada;
+        $model->numeroEntrada = $modelfactura->numeroEntrada;
+        $model->fechaEntrada = $modelfactura->fechaEntrada;
+        $model->numeroFacturaEntrada = $modelfactura->numeroFacturaEntrada;
+        $model->consignacion = $modelfactura->consignacion;
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -419,12 +430,12 @@ class ConteocdscdestinofacturaController extends Controller
                     $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
                     $modelfactura->idSerieEntrada = $model->idTipoDocumento;
                     $modelfactura->numeroEntrada = $model->numeroEntrada;
+                    $modelfactura->consignacion = $model->consignacion;
 
-                    $modelfactura->idEstadoEntrada = 2; // Generada
-                    $modelfactura->idEstadoTraspaso = 2; // Autorizada
-
-                    $modelfactura->fechaEntrada = new Expression('GETDATE()');
+                    // $modelfactura->fechaEntrada = new Expression('GETDATE()');
                     $modelfactura->idUserEntrada = Yii::$app->user->identity->id;
+
+                    $modelfactura->numeroFacturaEntrada = $model->numeroFacturaEntrada;
 
                     $respuesta = $modelfactura->save();
 
@@ -446,29 +457,12 @@ class ConteocdscdestinofacturaController extends Controller
         }
     }
 
-    public function actionViewtraspasofactura($idconteofactura)
-    {
-        $modelfactura = $this->findModel($idconteofactura);
-
-        $searchModel = new ConteocdscdestinoSearch();
-        $dataProviderBD = $searchModel->search($this->request->queryParams, $idconteofactura);
-
-        $idproveedor = $modelfactura->idProveedor;
-        $numerofactura = $modelfactura->numeroFactura;
-
-        $dataProvider = Conteocdscdestinofactura::generarDataConteoCurvas($idconteofactura, $idproveedor, $numerofactura);
-
-        return $this->render('view_traspaso_factura', [
-            'dataProvider' => $dataProvider,
-            'dataProviderBD' => $dataProviderBD,
-            'modelfactura' => $modelfactura,
-        ]);
-    }
-
-    public function actionTraspasofactura($idconteofactura)
-    {
+    public function actionTraspasofactura ($idconteofactura){
 
         $model = new TraspasoFacturaCDSCForm();
+
+        $modelco = Centrooperacion::findOne(['codigo' => '002']);
+        $model->idCentroOperacionMovimiento = $modelco->id;
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -481,11 +475,12 @@ class ConteocdscdestinofacturaController extends Controller
                 if ($model->validate()) {
 
                     $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
+                    
+                    $bodega =Bodegatipodocumento::findOne(['id' => $model->idBodegaMovimiento]);
 
-                    $modelfactura->idEstadoTraspaso = 3; // Generada
-
-                    $modelfactura->fechaTraspaso = date('Y-m-d h:i');
-                    $modelfactura->idUserTraspaso = Yii::$app->user->identity->id;
+                    $modelfactura->idCentroOperacionMovimiento = $model->idCentroOperacionMovimiento;
+                    $modelfactura->idBodegaMovimiento = $bodega->idBodega;
+                    $modelfactura->idTipoDocumentoMovimiento = $bodega->idTipoDocumento;
 
                     $respuesta = $modelfactura->save();
 
@@ -494,11 +489,9 @@ class ConteocdscdestinofacturaController extends Controller
                     } else {
                         Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
                     }
-
-                    return $this->redirect(['printtraspaso', 'idconteofactura' => $idconteofactura]);
                 }
 
-                return $this->redirect(['indexentrada']);
+                return $this->redirect(['indextraspaso']);
             }
         }
 
@@ -509,9 +502,52 @@ class ConteocdscdestinofacturaController extends Controller
         }
     }
 
+    public function actionTransferenciatraspaso($idconteofactura)
+    {
+        $model = $this->findModel($idconteofactura);
+
+        if (!$model->idTipoDocumentoMovimiento){
+            Yii::$app->session->setFlash('error', 'Falta Especificar Tipo Documento de Movimiento');
+            return $this->redirect(['indextraspaso']);
+        }
+
+        if (!$model->idBodegaMovimiento){
+            Yii::$app->session->setFlash('error', 'Falta Especificar Bodega de Movimiento');
+            return $this->redirect(['indextraspaso']);
+        }
+
+        if (!$model->idErpEntrada){
+            Yii::$app->session->setFlash('error', 'Falta Ejecutar Transferencia de Entrada');
+            return $this->redirect(['indextraspaso']);
+        }
+
+        $data = Conteocdscdestinodetalle::generarTransferenciaTraspasoERP($model);
+
+        if (is_array($data) && !empty($data['id'])) {
+
+            $idtransferenciatraspasoerp = $data['id'];
+            $tipomovimiento = 3;
+
+            $model->idTransferenciatraspasoerp = $idtransferenciatraspasoerp;
+            $model->save();
+
+            $searchModel = new TransferenciatransitoexcelSearch();
+            $dataProvider = $searchModel->search($this->request->queryParams, $idtransferenciatraspasoerp);
+
+            return $this->render('index_transferencia_traspasoerp', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                'idtransferenciatraspasoerp' => $idtransferenciatraspasoerp,
+                'idconteofactura' => $idconteofactura
+            ]);
+
+        }
+        
+        return $this->redirect(['indextraspaso']);
+    }
+
     public function actionImprimirtraspasos($idconteofactura, $idcentrooperacion = null)
     {
-        // Datos de ejemplo para el recibo (puedes reemplazarlos con tus propios datos)
 
         $modelparametros = ParametrosControl::findOne(['codigo' => '001']);
         $nombreEmpresa = $modelparametros->valor;
@@ -624,13 +660,47 @@ class ConteocdscdestinofacturaController extends Controller
     public function actionTransferencia($idconteofactura)
     {
         $model = $this->findModel($idconteofactura);
+        $idtransferenciaerp = $model->idTransferenciaerp;
 
-        $respuesta = Conteocdscdestinodetalle::generarTransferenciaWS($model);
+        if (!$model->idSerieEntrada){
+            Yii::$app->session->setFlash('error', 'Falta Especificar Tipo Documento de Entrada');
+            return $this->redirect(['indexentrada']);
+        }
 
-        Yii::$app->session->setFlash( $respuesta['codigoError'] == 1 ? 'success' : 'error', $respuesta['mensaje']);
+        if (!$model->numeroEntrada){
+            Yii::$app->session->setFlash('error', 'Falta Especificar Número de Entrada');
+            return $this->redirect(['indexentrada']);
+        }
 
-        return $this->redirect(['indextraspaso']);
+        if (!$model->numeroFacturaEntrada){
+            Yii::$app->session->setFlash('error', 'Falta Especificar Número de Factura de Entrada');
+            return $this->redirect(['indexentrada']);
+        }
+
+        $searchModel = new ConteocdscdestinodetalleSearch();
+        $dataProviderBD = $searchModel->searchSIESA($idconteofactura);
+
+        $idtransferenciaerp = Conteocdscdestinofactura::crearRegistroTransferencia($model,  $dataProviderBD);
+
+        $model->idTransferenciaerp = $idtransferenciaerp;
+        $model->save();
+
+        return $this->redirect(['viewtransferenciaocerp', 'id' => $idtransferenciaerp, 'idconteofactura' => $idconteofactura]);
     }
+
+    public function actionViewtransferenciaocerp($id, $idconteofactura)
+    {
+        $searchModel = new TransferenciaordencompraexcelSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams, $id);
+
+        return $this->render('index_transferenciaocerp', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'idtransferenciaerp' => $id,
+            'idconteofactura' => $idconteofactura
+        ]);
+    }
+
 
     /**
      * Finds the Conteocdscdestinofactura model based on its primary key value.

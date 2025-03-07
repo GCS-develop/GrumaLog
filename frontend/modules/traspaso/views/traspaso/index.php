@@ -265,7 +265,7 @@ Modal::end();
             </p>
 
         </div> -->
-        
+
         <div class="col-lg-6 derecha">
 
             <!-- Botón para cambiar el estado de los registros -->
@@ -326,8 +326,8 @@ Modal::end();
         'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
     ],
     'rowOptions' => function ($model) {
-        return $model->estado->nombre === 'anulado' ? ['class' => 'text-danger'] : [];
-    },
+    return $model->estado->nombre === 'anulado' ? ['class' => 'text-danger'] : [];
+},
 
     'columns' => [
         ['class' => 'kartik\grid\SerialColumn'],
@@ -470,7 +470,17 @@ Modal::end();
         [
             'attribute' => 'tipoMovimiento',
             'value' => function ($model) {
-    return $model->tipoMovimiento == 1 ? 'Traspaso' : 'Entradas';
+    switch ($model->tipoMovimiento) {
+        case 3:
+            $movimiento = 'CDSC';
+            break;
+        case 2:
+            $movimiento = 'Entradas';
+            break;
+        default:
+            $movimiento = 'Traspaso';
+    }
+    return $movimiento;
 },
         ],
         'anula_at',
@@ -562,6 +572,9 @@ Modal::end();
     },
 
                 'anular' => function ($model, $key, $index) {
+        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+    },
+                'factura' => function ($model, $key, $index) {
         return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
     },
             ],

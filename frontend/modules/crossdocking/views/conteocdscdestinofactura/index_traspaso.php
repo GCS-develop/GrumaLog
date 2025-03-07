@@ -15,11 +15,16 @@ $this->registerCss('
     }
 ');
 
+$this->registerJsFile(Yii::$app->request->baseUrl.'/js/mainDataModal.js',
+['depends' => [\yii\web\JqueryAsset::className()]]
+);
+
 use frontend\models\Conteocdscdestinofactura;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use kartik\grid\GridView;
+use yii\bootstrap4\Modal;
 use common\widgets\Alert;
 
 /** @var yii\web\View $this */
@@ -29,6 +34,22 @@ use common\widgets\Alert;
 $this->title = 'Traspaso Factura CDSC';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+
+<?php
+    Modal::begin([                
+        'title'=>'<h4>Registro datos Documento Traspaso</h4>',
+        'id'=>'modaldata',
+        'size'=>'modal-lg',
+        'options' => [
+            'tabindex' => false  // Importante para que funcione el Select
+        ]
+    ]);
+        
+    echo "<div id='modalContentData'></div>";
+        
+    Modal::end(); 
+?>
+
 <div class="conteocdscdestinofactura-index">
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
@@ -160,9 +181,21 @@ $this->params['breadcrumbs'][] = $this->title;
                 'class' => ActionColumn::className(),
                 'header'=>'Acción',
                 //'headerOptions' => ['width' => '15%'],
-                'template' => '{traspasofactura} {indexalmacen} {transferencia}',
+                'template' => '{traspasofactura} {indexalmacen} {generartraspasodestino}',
 
                 'buttons' => [
+
+                    'traspasofactura' => function ($url, $model) {                                
+                        $t = Url::to([  'traspasofactura', 
+                                        'idconteofactura' => $model->id
+                                    ]);
+
+                        return Html::button('<i class="fa fa-edit"></i>',[
+                                    'value'=> $t,
+                                    'title' => 'Actualizar Datos Documento Traspaso',
+                                    'class' => 'btn btn-default btn_update',
+                        ]);
+                    },
 
                     /*'indexalmacen' => function ($url, $model) {                                  
                         return Html::a('<i class="fa fa-store"></i>', 
@@ -172,21 +205,6 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ]
                         );
                     },*/
-
-                    'traspasofactura' => function ($url, $model) {                                  
-                        return Html::a('<i class="fa fa-check"></i>', 
-                                [   'viewtraspasofactura', 'idconteofactura' => $model->id], 
-                                [   'class' => 'btn btn-default',
-                                    'title' => 'Traspaso Factura',
-                                    'data' => [
-                                        'confirm' => 'Esta Seguro de Registrar Traspaso? ( Proveedor:' . $model->nit . '-' . 
-                                                                                        $model->razonSocial . ' - Factura:' .
-                                                                                        $model->numeroFactura . ' )',
-                                        'method' => 'post',
-                                    ]
-                                ]
-                        );
-                    },
 
                     'indexalmacen' => function ($url, $model) {                                  
                         return Html::a('<i class="fa fa-print"></i>', 
@@ -204,22 +222,22 @@ $this->params['breadcrumbs'][] = $this->title;
                         );
                     },
 
-                    'printtirilla' => function ($url, $model) {                                  
-                        return Html::a('<i class="fa fa-barcode"></i>', 
-                                [   '/crossdocking/conteocdscdestino/index', 'idconteofactura' => $model->id], 
+                    'generartraspasodestino' => function ($url, $model) {                                  
+                        return Html::a('<i class="fa fa-list"></i>', 
+                                [   '/crossdocking/conteocdscdestino/indextraspaso', 'idconteofactura' => $model->id], 
                                 [   'class' => 'btn btn-default',
-                                    'title' => 'Imprimir Tirilla',
+                                    'title' => 'Generar Traspaso',
                                     'data' => [
-                                        'confirm' => 'Esta Seguro de Imprimir Etiqueta de la Caja? ( ' . $model->razonSocial . ' - ' . $model->numeroFactura  .' )',
+                                        'confirm' => 'Esta Seguro de Generar Traspaso ? ( ' . $model->razonSocial . ' - ' . $model->numeroFactura  .' )',
                                         'method' => 'post',
                                     ]
                                 ]
                         );
                     },
 
-                    'transferencia' => function ($url, $model) {                                  
+                    /*'transferenciatraspaso' => function ($url, $model) {                                  
                         return Html::a('<i class="fa fa-globe"></i>', 
-                                [   'transferencia', 'idconteofactura' => $model->id], 
+                                [   'transferenciatraspaso', 'idconteofactura' => $model->id], 
                                 [   'class' => 'btn btn-default',
                                     'title' => 'Transferencia ERP',
                                     'data' => [
@@ -228,9 +246,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     ]
                                 ]
                         );
-                    },
-
-
+                    },*/
 
                 ],
 

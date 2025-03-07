@@ -20,6 +20,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use kartik\grid\GridView;
+use common\widgets\Alert;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\ConteocdscdestinofacturaSearch $searchModel */
@@ -31,6 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="conteocdscdestinofactura-index">
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+    <?= Alert::widget() ?>
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
@@ -158,7 +160,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'class' => ActionColumn::className(),
                 'header'=>'Acción',
                 //'headerOptions' => ['width' => '15%'],
-                'template' => '{indexalmacen} {entradafactura}',
+                'template' => '{indexalmacen} {entradafactura} {transferencia}',
 
                 'buttons' => [
 
@@ -180,6 +182,19 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'confirm' => 'Esta Seguro de Registrar Entrada de Factura? ( Proveedor:' . $model->nit . '-' . 
                                                                                         $model->razonSocial . ' - Factura:' .
                                                                                         $model->numeroFactura . ' )',
+                                        'method' => 'post',
+                                    ]
+                                ]
+                        );
+                    },
+
+                    'transferencia' => function ($url, $model) {                                  
+                        return Html::a('<i class="fa fa-globe"></i>', 
+                                [   'transferencia', 'idconteofactura' => $model->id], 
+                                [   'class' => 'btn btn-default',
+                                    'title' => 'Transferencia ERP',
+                                    'data' => [
+                                        'confirm' => 'Esta Seguro de Realizar Transferencia? ( ' . $model->razonSocial . ' - ' . $model->numeroFactura  .' )',
                                         'method' => 'post',
                                     ]
                                 ]

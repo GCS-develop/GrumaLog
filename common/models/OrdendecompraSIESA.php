@@ -500,4 +500,62 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             ->queryAll();
     }
 
+    public static function obtenerDatosDocumentoCDSC ($tipodocumento, $numerodocumento, $origen){
+
+        if ($origen == 'CDSC'){
+            $pattern = 'Transferencia CDSC: ' . $numerodocumento . ' - ';
+        }else{
+            $pattern = 'Traspaso CDSC: ' . $numerodocumento . ' - ';            
+        }
+
+        $sql = "
+            SELECT TOP 1
+            f350_rowid, 
+            f350_id_cia, 
+            f350_id_co, 
+            f350_id_tipo_docto,
+            f350_consec_docto,
+            :tipodocumento AS tipoDocumento, 
+            :numerodocumento AS numeroDocumento
+            FROM t350_co_docto_contable
+            WHERE CHARINDEX(:pattern, f350_notas) > 0
+            AND f350_ind_estado = 1;
+        ";
+
+        $command = self::getDb()->createCommand($sql)
+        ->bindValue('tipodocumento', $tipodocumento)
+        ->bindValue(':numerodocumento', $numerodocumento)
+        ->bindValue(':pattern', $pattern);
+        
+        // echo $command->getRawSql();die("HOLA");
+
+        $resultados = $command->queryAll();   
+        
+        return $resultados;
+    }
+
+    public static function obtenerDatosItemxCodigo ($codigobarras){
+        $sql = "
+            SELECT 
+            ba.f131_id_cia, 
+            it.f120_id AS item, 
+            itx.f121_id_ext1_detalle AS color, 
+            itx.f121_id_ext2_detalle AS talla,
+            it.f120_referencia, 
+            it.f120_descripcion, 
+            ba.f131_id AS codigoBarras, 
+            itx.f121_id_barras_principal
+            FROM t131_mc_items_barras ba 
+            INNER JOIN  t121_mc_items_extensiones itx  
+            ON ba.f131_id_cia = f121_id_cia AND f131_rowid_item_ext = f121_rowid
+            INNER JOIN t120_mc_items it 
+            ON itx.f121_id_cia = it.f120_id_cia AND itx.f121_rowid_item = it.f120_rowid
+            WHERE ba.f131_id = :codigobarras
+        ";
+
+        return self::getDb()->createCommand($sql)
+        ->bindValue('codigobarras', $codigobarras)
+        ->queryAll();
+    }
+
 }

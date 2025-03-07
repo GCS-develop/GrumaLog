@@ -869,12 +869,12 @@ class TraspasodetalleController extends Controller
 
         if (Yii::$app->request->isAjax && Yii::$app->request->post()) {
 
-            
+
 
             // Para depurar y ver los ids
             Yii::debug($ids, 'ajax');  // Registra en los logs
             // O usar var_dump para verlos en el navegador
-            return ['success' => true, 'message' =>  $ids];
+            return ['success' => true, 'message' => $ids];
 
             // return json_encode(['success' => true, 'message' => 'Registros ' . $ids]);
 
@@ -897,6 +897,61 @@ class TraspasodetalleController extends Controller
 
 
 
+    }
+
+    public function actionEliminar()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $ids = Yii::$app->request->post('ids');
+
+        if (Yii::$app->request->isAjax && Yii::$app->request->post()) {
+
+            if ($ids) {
+                // Primero obtenemos los registros que están en estado "terminado"
+                $traspasos = Traspaso::find()
+                    ->joinWith('traspasodetalles') // Asegúrate de que la relación esté definida en el modelo
+                    ->where(['traspasodetalle.id' => $ids, 'traspaso.idEstado' => 1])
+                    ->all();
+
+                return ['success' => false, 'message' => 'No se encontraron registros en estado "terminado" para actualizar.' . explode(',', $traspasos)];
+
+
+                var_dump($traspasos);
+                die();
+
+                // Verificar si hay registros en estado "terminado"
+                if (empty($traspasos)) {
+                    return ['success' => false, 'message' => 'No se encontraron registros en estado "terminado" para actualizar.'];
+                }
+
+                // Array para almacenar los errores
+                $errores = [];
+
+                // Intentamos actualizar los registros
+                foreach ($traspasos as $traspaso) {
+                    // Actualizar el estado de cada registro
+                    $traspaso->idEstado = 3;  // Aquí pones el nuevo estado que deseas
+
+                    if (!$traspaso->save()) {
+                        // Si algo falla, guardamos el error
+                        $errores[] = 'Error al actualizar el registro con ID ' . $traspaso->id;
+                    }
+                }
+
+                // Si no hubo errores, confirmamos la actualización
+                if (empty($errores)) {
+                    return ['success' => true, 'message' => 'Todos los registros se actualizaron correctamente.'];
+                } else {
+                    // Si hubo errores, reportamos qué registros fallaron
+                    return ['success' => false, 'message' => implode(', ', $errores)];
+                }
+            } else {
+                return ['success' => false, 'message' => 'No se seleccionaron registros.'];
+            }
+        }
+
+        return ['success' => false, 'message' => 'La solicitud no es válida.'];
     }
 
 

@@ -3,6 +3,7 @@
 namespace frontend\models;
 
 use Yii;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "bodegatipodocumento".
@@ -53,4 +54,17 @@ class Bodegatipodocumento extends \yii\db\ActiveRecord
             'idTipoDocumento' => 'Id Tipo Documento',
         ];
     }
+
+    public static function getListaData()
+    {
+        $data = Bodegatipodocumento::find()
+            ->alias('btd')
+            ->select(['btd.id', "(bo.codigo + ' - ' + LTRIM(RTRIM(bo.nombre)) + ' - ' + td.codigo) AS nombre"])
+            ->join('INNER JOIN', 'tipodocumento td', 'btd.idTipoDocumento = td.id')
+            ->join('INNER JOIN', 'bodegas bo', 'btd.idBodega = bo.id')
+            ->orderBy('bo.codigo')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
+    }
+
 }

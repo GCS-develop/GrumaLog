@@ -116,7 +116,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
 
     public static function crearRegistro ($iddocumento, $descripcion, $documento, $notas, $origen=null){
 
-        $modelconector = Conectoresdinamicos::find(['idDocumento' => $iddocumento])->one();
+        $modelconector = Conectoresdinamicos::find()->where(['idDocumento' => $iddocumento])->one();
     
         $model = new Transferenciaerp();
         $model->descripcion = $descripcion;
@@ -189,7 +189,6 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                                                                         $modelconector);
 
             self::obtenerConsecutivoSIESA ($id);
-
         }
 
         return $error;
@@ -235,6 +234,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
 			
 			$conta = $conta + 1;
 			continue;*/
+            //var_dump($json); die("hola");
         
             if ($json == null){
                 $model = new Transferenciaerperror();
@@ -266,12 +266,6 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'content-type' => 'application/json'
                 // Agrega aquí otros headers si es necesario
             ];
-
-            /*$headers = [
-                $conniKey,
-                $conniToken,
-                'content-type' => 'application/json'
-            ];*/
 
             $respuesta = Transferenciaerp::ejecutartransferenciaWS ($url, $headers, $json);
 
@@ -722,12 +716,6 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'content-type' => 'application/json'
                 // Agrega aquí otros headers si es necesario
             ];
-
-            /*$headers = [
-                $conniKey,
-                $conniToken,
-                'content-type' => 'application/json'
-            ];*/
 
             $respuesta = Transferenciaerp::ejecutartransferenciaWS ($url, $headers, $json);
 

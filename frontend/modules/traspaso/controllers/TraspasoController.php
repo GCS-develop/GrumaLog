@@ -248,44 +248,51 @@ class TraspasoController extends Controller
     public function actionFactura($id)
     {
         $model = $this->findModel($id);
+        if ($model->idEstado !== 1 && $model->idEstado !== 3) {
+
+            Yii::$app->session->setFlash('warning', 'No puedes imprimir en este estado!');
+            return $this->redirect(['index']);
+
+        }
+
         return $this->redirect(['/traspaso/traspasodetalle/print', 'idtraspaso' => $model->id]);
     }
 
     public function actionCambiarEstado()
     {
         Yii::info('Acción Cambiar Estado ejecutada para mandar a muelle de forma masiva los 207 (VMI)', __METHOD__);
-    
+
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    
+
         $ids = Yii::$app->request->post('ids');
-    
+
         if (Yii::$app->request->isAjax && Yii::$app->request->post()) {
-    
+
             // Yii::debug($ids, 'ajax');
-    
+
             if ($ids) {
                 // Primero obtenemos los registros que están en estado "terminado"
                 $traspasos = Traspaso::find()->where(['id' => $ids, 'idEstado' => 1])->all();
-    
+
                 // Verificar si hay registros en estado "terminado"
                 if (empty($traspasos)) {
                     return ['success' => false, 'message' => 'No se encontraron registros en estado "terminado" para actualizar.'];
                 }
-    
+
                 // Array para almacenar los errores
                 $errores = [];
-    
+
                 // Intentamos actualizar los registros
                 foreach ($traspasos as $traspaso) {
                     // Actualizar el estado de cada registro
                     $traspaso->idEstado = 3;  // Aquí pones el nuevo estado que deseas
-    
+
                     if (!$traspaso->save()) {
                         // Si algo falla, guardamos el error
                         $errores[] = 'Error al actualizar el registro con ID ' . $traspaso->id;
                     }
                 }
-    
+
                 // Si no hubo errores, confirmamos la actualización
                 if (empty($errores)) {
                     return ['success' => true, 'message' => 'Todos los registros se actualizaron correctamente.'];
@@ -297,9 +304,9 @@ class TraspasoController extends Controller
                 return ['success' => false, 'message' => 'No se seleccionaron registros.'];
             }
         }
-    
+
         return ['success' => false, 'message' => 'La solicitud no es válida.'];
     }
-    
+
 
 }

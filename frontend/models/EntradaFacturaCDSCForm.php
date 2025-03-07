@@ -13,6 +13,9 @@ class EntradaFacturaCDSCForm extends Model
 
     public $idTipoDocumento;
     public $numeroEntrada;
+    public $consignacion;
+    public $fechaEntrada;
+    public $numeroFacturaEntrada;
 
     /**
      * {@inheritdoc}
@@ -22,7 +25,7 @@ class EntradaFacturaCDSCForm extends Model
         return [
             [['idTipoDocumento'], 'required',
             'message' => '{attribute} Es Un Valor Obligatorio'],
-            [['numeroEntrada'], 'safe'],
+            [['numeroEntrada', 'consignacion', 'fechaEntrada', 'numeroFacturaEntrada'], 'safe'],
         ];
     }
 
@@ -34,6 +37,9 @@ class EntradaFacturaCDSCForm extends Model
         return [
             'idTipoDocumento' => 'Serie',
             'numeroEntrada' => 'Número',
+            'consignacion' => 'Consignación',
+            'fechaEntrada' => 'Fecha Entrada',
+            'numeroFacturaEntrada' => 'Número Factura'
         ];
     }
 }

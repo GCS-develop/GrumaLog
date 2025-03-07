@@ -299,7 +299,7 @@ foreach ($tallasUnicas as $talla) {
     <?php 
         echo '<div class="mi-titulo-black">Proveedor:' . $modelfactura->proveedor->nit . '-' . 
         $modelfactura->proveedor->razonSocial . '-' .
-        $modelfactura->numeroFactura . '</div>';
+        $modelfactura->numeroFactura . ' Legalizacion: ' . $modelfactura->centroOperacionLegaliza->codigo .  $modelfactura->centroOperacionLegaliza->nombre  . '</div>';
     ?>
 
     <div class="row">

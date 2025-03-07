@@ -2,6 +2,7 @@
 
 namespace frontend\models;
 
+use frontend\models\search\ConteocdscdestinodetalleSearch;
 use Yii;
 use Mike42\Escpos\Printer;
 use diecoding\barcode\generator\Barcode;
@@ -49,6 +50,9 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
     public $fechaHasta;
     public $codigoAlmacenLegaliza;
     public $nombreAlmacenLegaliza;
+    public $idBodegaOrigen;
+    public $idBodegaDestino;
+    public $idTipoDocumento;
 
     /**
      * {@inheritdoc}
@@ -66,7 +70,8 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
         return [
             [['idConteocdscdestinofactura', 'idCentroOperacion', 'numeroCajas', 'idUserConteo', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'required'],
             [['idConteocdscdestinofactura', 'idCentroOperacion', 'numeroCajas', 'idUserConteo', 'idItemUltimoConteo', 'total', 'idEstado', 'idLegalizado', 'created_by', 'updated_by'], 'integer'],
-            [['created_at', 'updated_at'], 'safe'],
+            [['created_at', 'updated_at', 'idTempTransferencia', 'idErpTraspaso', 'idUserTraspaso',
+            'fechaTraspaso', 'idTraspaso', 'idEstadoTraspaso'], 'safe'],
             [['idUserConteo'], 'exist', 'skipOnError' => true, 'targetClass' => Userconteocdsc::class, 'targetAttribute' => ['idUserConteo' => 'id']],
             [['idCentroOperacion'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idCentroOperacion' => 'id']],
             [['idConteocdscdestinofactura'], 'exist', 'skipOnError' => true, 'targetClass' => Conteocdscdestinofactura::class, 'targetAttribute' => ['idConteocdscdestinofactura' => 'id']],
@@ -156,6 +161,11 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
         return $this->hasOne(Userconteocdsc::class, ['id' => 'idUserConteo']);
     }
 
+    public function getCodigoerp()
+    {
+        return $this->hasOne(Documentosiesa::class, ['id' => 'idErpTraspaso']);
+    }
+
     public static function imprimirEtiquetas($idconteofactura, $printer, $dataProviderDestino){
 
         foreach ($dataProviderDestino as $destino) {
@@ -170,7 +180,7 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
                 $totalunidadempaque = 0;
 
                 foreach($dataProviderDetalle as $detalle){
-                    if (!$detalle->item->unidadempaque){
+                    if ($detalle->item->unidadEmpaque == null){
                         $equivalencia = 1;
                     }else {
                         $equivalencia = $detalle->item->unidadempaque->equivalencia;
@@ -250,6 +260,12 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
 
         $serie = $destino->factura->tipodocumento->codigo;
         $numero = $destino->factura->numeroEntrada;
+
+        if ($destino->idErpTraspaso){
+            $serie = $destino->codigoerp->f350_id_tipo_docto;
+            $numero = $destino->codigoerp->f350_consec_docto;
+        }
+
         $codigoalmacenlegaliza = $destino->factura->centroOperacionLegaliza->codigo;
         $nombrealmacenlegaliza = $destino->factura->centroOperacionLegaliza->nombre;
         //var_dump($destino->factura->fechaEntrada);die();
@@ -331,8 +347,9 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
         $printer->text(str_repeat("-", $columna1 + $columna2 + $columna3 + $columna4) . "\n");
         $printer->setEmphasis(false);
 
+        var_dump("Paso 1. Empiezo Detalle");
         foreach($dataProviderDetalle as $referencia){
-
+            
             $unidadempaque = 'UND';
             $equivalencia = 1;
             if ($referencia->item->unidadEmpaque){
@@ -376,6 +393,11 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
         $serie = $destino->factura->tipodocumento->codigo;
         $numero = $destino->factura->numeroEntrada;
 
+        if ($destino->idErpTraspaso){
+            $serie = $destino->codigoerp->f350_id_tipo_docto;
+            $numero = $destino->codigoerp->f350_consec_docto;
+        }
+
         // Simular tabla con bordes
         $printer->text("+----------------------------+----+----+\n");
         $printer->text("| TOTAL UNIDADES             | " . str_pad($totales['totalpaquetes'],4) . "    " . str_pad($totales['totalunidades'],4)   .  " |\n");
@@ -389,15 +411,6 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
 
         // Línea vacía para separación
         $printer->text("\n");
-
-        $printer->setJustification(Printer::JUSTIFY_LEFT);
-        $printer->text("2. NUMERO DOCUMENTO" . "\n");
-
-        $printer->setJustification(Printer::JUSTIFY_CENTER);
-        $printer->barcode($numero, Printer::BARCODE_CODE39);
-        $printer->text($numero);
-
-        $printer->text("\n\n");
 
         $printer->setEmphasis(true);
         $printer->setJustification(Printer::JUSTIFY_LEFT);
@@ -428,5 +441,151 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
 
         // Línea vacía para separación adicional
         $printer->text("\n");
+
+        $printer->setJustification(Printer::JUSTIFY_LEFT);
+        $printer->text("2. NUMERO DOCUMENTO" . "\n");
+
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->barcode($numero, Printer::BARCODE_CODE39);
+        $printer->text($numero);
+
+        $printer->text("\n\n");
+
+    }
+
+    public static function generarTransferenciaFactura ($idconteofactura){
+
+        $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
+
+        $dataProviderDestino = $modelfactura->getConteocdscdestinos()
+                        ->andFilterWhere([
+                            'idConteocdscdestinofactura' => $idconteofactura,
+                        ])->all();
+
+        foreach($dataProviderDestino as $destino){
+            $idconteodestino = $destino->id;
+
+            Conteocdscdestino::generarTransferenciaDestino ($idconteodestino);
+        }
+    }
+
+    public static function generarTransferenciaDestino($idconteodestino)
+    {
+        
+        $modeldestino = Conteocdscdestino::findOne(['id' => $idconteodestino]);
+
+        if ($modeldestino->idTempTransferencia){
+            $id = $modeldestino->idTempTransferencia;
+            $numRegistrosBorrados = Temptransferenciatransitoexcel::deleteAll(['idTransferenciaerp' => $id]);
+            $numRegistrosBorrados = Temptransferenciaerp::deleteAll(['id' => $id]);
+            $numRegistrosBorrados = Temptraspasocdscdetalle::deleteAll(['idConteoDestino' => $modeldestino->id]);
+            $numRegistrosBorrados = Temptraspasocdsc::deleteAll(['idConteoDestino' => $modeldestino->id]);
+        }
+
+        $transferencia = Conteocdscdestino::crearTemporaltransferenciaerp ($modeldestino);
+        
+        $searchModel = new ConteocdscdestinodetalleSearch();
+        $dataProviderDestinoDetalle = $searchModel->searchTraspasoSIESA($modeldestino->id);
+
+        $traspaso = Temptraspasocdsc::crearRegistro( $transferencia->id, $modeldestino);
+
+        $fila = 0;
+
+        //$numero = 'Factura: ' . $transferencia->documento;
+        $numero_formateado = str_pad($modeldestino->id, 6, '0', STR_PAD_LEFT);
+        $numero = $traspaso->tipodocumento->codigo . $numero_formateado;
+
+        foreach($dataProviderDestinoDetalle as $detalle){
+            $fila++;
+            //var_dump($detalle['item']); 
+            Conteocdscdestino::generarTransferenciaDetalle ($transferencia, $numero, $detalle, $fila, $traspaso->id);
+        }
+
+        $modeldestino->idTempTransferencia = $transferencia->id;
+        $modeldestino->save();
+        //die("hola");
+    }
+
+    public static function generarTransferenciaDetalle($transferencia, $numero, $detalle, $fila, $idtraspaso){
+
+        $modeltransferencia = new Temptransferenciatransitoexcel();
+
+        //$unidad = $detalle['unidadEmpaque'];
+        $unidad = 'UND';
+        $modeltransferencia->idTransferenciaerp = $transferencia->id;
+        $modeltransferencia->centroOperacionDocumento = $detalle['centroOperacionDocumento'];
+        $modeltransferencia->tipoDocumento = $detalle['tipoDocumento'];
+        $modeltransferencia->fechaDocumento = $detalle['fechaDocumento'];
+        $modeltransferencia->bodegaSalidaDocumento = $detalle['bodegaSalidaDocumento'];
+        $modeltransferencia->bodegaEntradaDocumento = $detalle['bodegaEntradaDocumento'];
+        $modeltransferencia->centroOperacion = $detalle['centroOperacion'];
+        $modeltransferencia->tipoDocumentoMovimiento = $detalle['tipoDocumentoMovimiento'];
+        $modeltransferencia->bodegaSalidaMovimiento = $detalle['bodegaSalidaMovimiento'];
+        $modeltransferencia->centroOperacionMovimiento = $detalle['centroOperacionMovimiento'];
+        $modeltransferencia->unidadSalida = $unidad;
+        $modeltransferencia->cantidadBase = $detalle['unidades'];
+        $modeltransferencia->unidadesConteoEmpaque = $detalle['unidadesConteo'];
+        $modeltransferencia->costoPromedioUnitario = $detalle['costoPromedioUnitario'];
+        $modeltransferencia->item = $detalle['item'];
+        $modeltransferencia->color = $detalle['color'];
+        $modeltransferencia->talla = $detalle['talla'];
+        $modeltransferencia->numero = $numero;
+        $modeltransferencia->procesado = 0;
+        $modeltransferencia->fila = $fila;
+        $modeltransferencia->codigoUnidadEmpaque = $detalle['unidadEmpaque'];
+
+        if (!$modeltransferencia->save()){
+            var_dump($modeltransferencia->getErrors()); die("stop");
+        }
+
+        $traspasodetalle = Temptraspasocdscdetalle::crearRegistro($detalle['idItem'], $detalle['unidadesConteo'], $idtraspaso, $transferencia);
+    }
+
+    public static function crearTemporaltransferenciaerp ($destino){
+
+        $factura = $destino->factura;
+
+        $iddocumento = 165613;
+        $numero = $factura->ordenCompra->tipoDocumento->codigo . '-' . $factura->ordenCompra->consecutivo;
+        $descripcion =
+            "Traspaso CDSC: " . $destino->id . ' - ' . 
+            $factura->proveedor->razonSocial . ' - ' .
+            'OC: ' . $numero . ' - ' . 
+            'Factura: ' . $factura->numeroFactura . ' - ' .
+            'Bodega: ' . $destino->centrooperacion->codigo;
+
+        $documento = $factura->numeroFactura;
+
+        $numero = 'Traspaso CDSC: ' . $destino->id;
+
+        $notas = $numero;
+
+        $idconteofactura = $destino->idConteocdscdestinofactura;
+        $idconteodestino = $destino->id;
+
+        $origen = 'CDSC';
+        $transferencia = Temptransferenciaerp::crearRegistro($iddocumento, $descripcion, $documento, $notas, $origen, $idconteofactura, $idconteodestino);
+
+        return $transferencia;
+    }
+
+    public static function getTotalUnidades($idconteodestino)
+    {
+        return (float) (new \yii\db\Query())
+            ->select(['SUM(td.totalUnidades * COALESCE(ue.equivalencia, 1))'])
+            ->from('conteocdscdestinodetalle td')
+            ->innerJoin('item i', 'td.idItem = i.id')
+            ->leftJoin('unidadempaque ue', 'i.unidadEmpaque = ue.codigo')
+            ->where(['td.idConteocdscdestino' => $idconteodestino])
+            ->scalar();
+    }
+
+    public static function getTotalUnidadesEmp($idconteodestino)
+    {
+        return (float) (new \yii\db\Query())
+            ->select(['SUM(td.totalUnidades)'])
+            ->from('conteocdscdestinodetalle td')
+            ->where(['td.idConteocdscdestino' => $idconteodestino])
+            ->scalar();
     }
 }

@@ -8,6 +8,7 @@ use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 
 use common\models\User;
+use common\models\OrdendecompraSIESA;
 use diecoding\barcode\generator\Barcode;
 
 /**
@@ -74,10 +75,10 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
             //[['idProveedor', 'numeroFactura', 'fecha', 'totalUnidades'], 'required'],
             [['idProveedor', 'idCentroOperacionLegaliza', 'totalUnidades', 'created_by', 'updated_by',
             'idEstadoEntrada', 'idEstadoTraspaso', 'idUserLegaliza', 'idUserEntrada', 'idUserTraspaso',
-            'idSerieEntrada', 'numeroEntrada', 'idOrdenCompra'], 'integer'],
+            'idSerieEntrada', 'numeroEntrada', 'idOrdenCompra', 'consignacion', 'idErpEntrada'], 'integer'],
             [['fecha', 'created_at', 'updated_at', 'observacionLegalizacion', 'fechaLegaliza',
-            'fechaEntrada', 'fechaTraspaso'], 'safe'],
-            [['numeroFactura'], 'string', 'max' => 20],
+            'fechaEntrada', 'fechaTraspaso', 'idTransferenciaerp', 'idTraspaso'], 'safe'],
+            [['numeroFactura', 'numeroFacturaEntrada'], 'string', 'max' => 20],
             [['idProveedor', 'numeroFactura'], 'unique', 'targetAttribute' => ['idProveedor', 'numeroFactura']],
             [['idProveedor'], 'exist', 'skipOnError' => true, 'targetClass' => Proveedor::class, 'targetAttribute' => ['idProveedor' => 'id']],
             [['idCentroOperacionLegaliza'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idCentroOperacionLegaliza' => 'id']],
@@ -111,7 +112,10 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
             'idSerieEntrada' => 'Serie',
             'numeroEntrada' => 'Numero',
             'idUserEntrada' => 'Usuario Entrada',
-            'idUserTraspaso' => 'Usuario Traspaso'
+            'idUserTraspaso' => 'Usuario Traspaso',
+            'idTransferenciaerp' => 'ID Transferencia', 
+            'idTraspaso' => 'ID Traspaso',
+            'numeroFacturaEntrada' => 'Número Factura'
         ];
     }
 
@@ -469,4 +473,172 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
 
         return $contentAll;
     }*/
+
+    public static function crearRegistroTransferencia($factura, $dataProviderBD)
+    {
+
+        $ordencompra = Ordendecompra::findOne(['id' => $factura->idOrdenCompra]);
+
+        if ($factura->idTransferenciaerp){
+            $transferenciaerp = Transferenciaerp::findOne(['id' => $factura->idTransferenciaerp]);
+
+            if ($transferenciaerp) {
+                $numRegistrosBorrados = Transferenciaerperror::deleteAll((['idTransferenciaerp' => $transferenciaerp->id]));
+                $numRegistrosBorrados = Transferenciaordencompraexcel::deleteAll(['idTransferenciaerp' => $transferenciaerp->id]);
+                $numRegistrosBorrados = Transferenciaerp::deleteAll(['id' => $transferenciaerp->id]);
+            }
+        }
+
+        $idtransferenciaerp = Conteocdscdestinofactura::cabeceraTransferencia($ordencompra, $factura);
+
+        $respuesta = Conteocdscdestinofactura::detalleTransferencia($idtransferenciaerp, $dataProviderBD);
+
+        if ($respuesta) {
+            $count = Transferenciaordencompraexcel::find()->where(['idTransferenciaerp' => $idtransferenciaerp])->count();
+
+            $model = Transferenciaerp::findOne(['id' => $idtransferenciaerp]);
+            $model->numeroRegistros = $count;
+            $model->save();
+        }
+        return $idtransferenciaerp;
+    }
+
+    public static function cabeceraTransferencia($ordencompra, $factura)
+    {
+
+        $conector = Conectoresdinamicos::find()->where(['idDocumento' => '165604'])->one();
+
+        $descripcion = 'Transferencia CDSC: ' . 
+            $factura->id . ' - ' .
+            $ordencompra->proveedor->razonSocial . ' ' .
+            $ordencompra->tipoDocumento->codigo . '-' .
+            $ordencompra->consecutivo . ' - ' .
+            'No. Factura: ' . $factura->numeroFacturaEntrada;
+
+        $notas = 'Fecha Docto CDSC: ' .
+            $factura->fechaEntrada . ' ' .
+            'Docto Entrada: ' . $factura->tipodocumento->codigo . '-' .
+            $factura->numeroFacturaEntrada;
+
+        $model = new Transferenciaerp();
+        $model->descripcion = $descripcion;
+        $model->notas = $notas;
+        $model->documento = $factura->id;
+        $model->numeroRegistros = 0;
+        $model->enviadoWS = 0;
+        $model->origen = 'C';
+        $model->idConectorDinamico = $conector->id;
+        $model->idOrdenCompra = $ordencompra->id;
+
+        if (!$model->save()) {
+            var_dump($model->getErrors());
+            die("STOP");
+        }
+
+        return $model->id;
+    }
+
+    public static function detalleTransferencia($idtransferenciaerp, $dataProviderBD)
+    {
+        $ok = true;
+        $models = $dataProviderBD->getModels();
+
+        foreach ($models as $registro) {
+            $model = new Transferenciaordencompraexcel();
+            $model->centroOperacionDocumento = $registro->codigoCentroOperacionDocumentoEntrada;
+            $model->tipoDocumento = $registro->codigoTipoDocumentoEntrada;
+            $model->consecutivoDocumento = $registro->consecutivoDocumentoEntrada;
+            $model->fechaDocumento = $registro->fechaDocumentoEntrada;
+            $model->tercero = $registro->tercero;
+            $model->numeroFactura = $registro->numeroFactura;
+            $model->sucursal = $registro->sucursalProveedor;
+            $model->idTerceroComprador = $registro->nitcomprador;
+            $model->consignacion = $registro->consignacion;
+            $model->centroOperacionOrdenCompra = $registro->codigoCentroOperacionOC;
+            $model->tipoDocumentoOrdenCompra = $registro->codigoTipoDoctoOC;
+            $model->consecutivoOrdenCompra = $registro->consecutivoOC;
+            $model->centroOperacionMovimiento = $registro->codigoCentroOperacionDocumentoEntrada;
+            $model->tipoDocumentoMovimiento = $registro->codigoTipoDocumentoEntrada;
+            $model->consecutivoMovimiento = $registro->consecutivoDocumentoEntrada;
+            $model->numeroRegistroMovimiento = 1;
+            $model->bodegaMovimiento = $registro->bodega;
+            $model->unidadMovimiento = 'UND';
+            $model->cantidadBase = $registro->unidadesConteo;
+            
+            $model->fechaEntregaMovimiento = $registro->fechaEntrega;
+            $model->item = $registro->item;
+            $model->color = $registro->color;
+            $model->talla = $registro->talla;
+            $model->rowid = $registro->codigointernomovto;
+            $model->idTransferenciaerp = $idtransferenciaerp;
+
+            $model->codigoUnidadEmpaque = $registro->unidadEmpaque;
+            $model->unidadesConteoEmpaque = $registro->unidades;
+
+            if (!$model->save()) {
+                $ok = false;
+                var_dump($registro);
+                var_dump($model->getErrors()); die("hola");
+                continue;
+            }
+        }
+
+        return $ok;
+
+    }
+
+    public static function actualizarentradaerp($idconteofactura){
+
+        $model = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
+        $numerodocumento = $model->numeroEntrada;
+        $tipodocumento = $model->tipodocumento->codigo;
+
+        $origen = 'CDSC';
+        $idgruma = $idconteofactura;
+        $documento = OrdendecompraSIESA::obtenerDatosDocumentoCDSC($tipodocumento, $numerodocumento, $idconteofactura, $origen);
+        $guardoDatos = Documentosiesa::grabarDatos($documento, $idgruma, $origen);
+
+        $modelsiesa = Documentosiesa::find()->where([
+            'origen' => $origen,
+            'idGruma' => $idconteofactura
+        ])->one();
+
+        if ($modelsiesa){
+
+            $model->idEstadoEntrada = 2; // Generada
+            $model->idEstadoTraspaso = 2; // Autorizada
+
+            $model->fechaEntrada = new Expression('GETDATE()');
+            $model->idUserEntrada = Yii::$app->user->identity->id;
+
+            $model->idErpEntrada = $modelsiesa->id;
+            $model->save();
+        }
+    }
+
+    public static function actualizartraspasoerp($idconteofactura){
+
+        $model = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
+        $numerodocumento = $model->numeroEntrada;
+        $tipodocumento = $model->tipodocumento->codigo;
+
+        $origen = 'Traspaso CDSC';
+        $idgruma = $idconteofactura;
+        $documento = OrdendecompraSIESA::obtenerDatosDocumentoCDSC($tipodocumento, $numerodocumento, $idconteofactura, $origen);
+        $guardoDatos = Documentosiesa::grabarDatos($documento, $idgruma, $origen);
+
+        $modelsiesa = Documentosiesa::find()->where([
+            'origen' => $origen,
+            'idGruma' => $idconteofactura
+        ])->one();
+
+        if ($modelsiesa){
+            $model->idErpTraspaso = $modelsiesa->id;
+            $model->idEstadoTraspaso = 3; // Generada
+            $model->fechaTraspaso = new Expression('GETDATE()');
+            $model->idUserTraspaso = Yii::$app->user->identity->id;
+
+            $model->save();
+        }
+    }
 }

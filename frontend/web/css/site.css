@@ -1,5 +1,5 @@
-main > .container, main > .container-fluid
-{
+main>.container,
+main>.container-fluid {
     padding: 70px 15px 20px;
 }
 
@@ -9,7 +9,8 @@ main > .container, main > .container-fluid
     height: 60px;
 }
 
-.footer > .container, .footer > .container-fluid {
+.footer>.container,
+.footer>.container-fluid {
     padding-right: 15px;
     padding-left: 15px;
 }
@@ -20,7 +21,8 @@ main > .container, main > .container-fluid
 }
 
 /* add sorting icons to gridview sort links */
-a.asc:after, a.desc:after {
+a.asc:after,
+a.desc:after {
     content: '';
     left: 3px;
     display: inline-block;
@@ -66,27 +68,27 @@ a.desc:after {
 }
 
 /* align the logout "link" (button in form) of the navbar */
-.navbar form > button.logout {
+.navbar form>button.logout {
     padding-top: 7px;
     color: rgba(255, 255, 255, 0.5);
 }
 
 @media(max-width:767px) {
-    .navbar form > button.logout {
-        display:block;
+    .navbar form>button.logout {
+        display: block;
         text-align: left;
         width: 100%;
         padding: 10px 0;
     }
 }
 
-.navbar form > button.logout:focus,
-.navbar form > button.logout:hover {
+.navbar form>button.logout:focus,
+.navbar form>button.logout:hover {
     text-decoration: none;
     color: rgba(255, 255, 255, 0.75);
 }
 
-.navbar form > button.logout:focus {
+.navbar form>button.logout:focus {
     outline: none;
 }
 
@@ -97,13 +99,14 @@ a.desc:after {
     padding: .75rem 1rem;
 }
 
-.breadcrumb-item > a
-{
+.breadcrumb-item>a {
     text-decoration: none;
 }
 
 .horizontal-line {
     border: none;
-    border-top: 1px solid #ccc; /* Color y grosor de la línea */
-    margin: 10px 0; /* Espacio alrededor de la línea */
+    border-top: 1px solid #ccc;
+    /* Color y grosor de la línea */
+    margin: 10px 0;
+    /* Espacio alrededor de la línea */
 }

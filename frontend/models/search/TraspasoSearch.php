@@ -69,8 +69,8 @@ class TraspasoSearch extends Traspaso
         }
 
         $this->load($params);
-        Yii::debug($this->fechaDesde, 'fechaDesde');
-        Yii::debug($this->fechaHasta, 'fechaHasta');
+        // Yii::debug($this->fechaDesde, 'fechaDesde');
+        // Yii::debug($this->fechaHasta, 'fechaHasta');
 
         // grid filtering conditions
         $query->andFilterWhere([

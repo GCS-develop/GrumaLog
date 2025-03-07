@@ -39,7 +39,7 @@ class Documentosiesa extends \yii\db\ActiveRecord
     {
         return [
             [['numeroDocumento', 'f350_id_cia', 'f350_rowid', 'f350_consec_docto', 'idGruma', 'created_by', 'updated_by'], 'integer'],
-            [['created_at', 'updated_at'], 'safe'],
+            [['created_at', 'updated_at', 'origen'], 'safe'],
             [['tipoDocumento', 'f350_id_co', 'f350_id_tipo_docto'], 'string', 'max' => 5],
         ];
     }
@@ -66,7 +66,7 @@ class Documentosiesa extends \yii\db\ActiveRecord
         ];
     }
 
-    public static function grabarDatos($resultado, $idgruma)
+    public static function grabarDatos($resultado, $idgruma, $origen = null)
     {
 
         if (!empty($resultado)) {
@@ -74,26 +74,22 @@ class Documentosiesa extends \yii\db\ActiveRecord
                 $numerodocumento = $data['numeroDocumento'];
                 $tipodocumento = $data['tipoDocumento'];
 
-                $model = Documentosiesa::find()->where([
-                    'idGruma' => $idgruma
-                ])->one();
+                if ($origen){
+                    $model = Documentosiesa::find()->where([
+                        'origen' => $origen,
+                        'idGruma' => $idgruma
+                    ])->one();
+                }else{
+                    $model = Documentosiesa::find()->where([
+                        'idGruma' => $idgruma
+                    ])->one();
+                }
 
                 if (!$model) {
                     $model = new Documentosiesa();
                     $model->idGruma = $idgruma;
+                    $model->origen = $origen;
                 }
-
-                /*$model = Documentosiesa::find()->where([
-                    'tipoDocumento' => $tipodocumento,
-                    'numeroDocumento' => $numerodocumento
-                ])
-                    ->one();
-
-                if (!$model) {
-                    $model = new Documentosiesa();
-                    $model->tipoDocumento = $tipodocumento;
-                    $model->numeroDocumento = $numerodocumento;
-                }*/
 
                 $model->tipoDocumento = $tipodocumento;
                 $model->numeroDocumento = $numerodocumento;

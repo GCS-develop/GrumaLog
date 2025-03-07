@@ -152,6 +152,7 @@ use frontend\models\Usertraspaso;
                 [
                     '1' => 'Traspaso',
                     '2' => 'Entradas',
+                    '3' => 'CDSC',
                 ],
                 [
                     'prompt' => 'Seleccionar tipo de movimiento...',

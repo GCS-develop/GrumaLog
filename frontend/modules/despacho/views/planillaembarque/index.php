@@ -107,6 +107,14 @@ $gridColumns = [
             return $model->estado->nombre;
         },
     ],
+    [
+        'attribute' => 'flotaPropia',
+        'filter' => Estadodespacho::getListaData(),
+        'contentOptions' => ['data-cellvalue' => 'serie'],
+        'value' => function ($model) {
+            return $model->flotaPropia == '1' ? 'SI' : 'NO';
+        },
+    ],
 ];
 
 ?>
@@ -206,7 +214,19 @@ Modal::end();
     'options' => [
         'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
     ],
-
+    'rowOptions' => function ($model) {
+    $classes = [];
+    if ($model->estado->nombre === 'Recibido') {
+        $classes[] = 'text-success';
+    }
+    if ($model->estado->nombre === 'Anulado') {
+        $classes[] = 'text-danger';
+    }
+    if ($model->estado->nombre === 'Sin Enviar') {
+        $classes[] = 'text-primary';
+    }
+    return ['class' => implode(' ', $classes)];
+},
 
     'columns' => [
         ['class' => 'kartik\grid\SerialColumn'],
@@ -228,15 +248,15 @@ Modal::end();
         [
             'label' => 'Bodega destino',
             'value' => function ($model) {
-                $bodegas = $model->listabodegasdestino;
-                $nombresBodegas = [];
-                foreach ($bodegas as $bodega) {
-                    $nombresBodegas[] = $bodega->bodegaDestino->nombre;  // Accede a cada nombre de bodega
-                }
-                return implode(', ', $nombresBodegas);  // Devuelve los nombres separados por coma
-            },
+    $bodegas = $model->listabodegasdestino;
+    $nombresBodegas = [];
+    foreach ($bodegas as $bodega) {
+        $nombresBodegas[] = $bodega->bodegaDestino->nombre;  // Accede a cada nombre de bodega
+    }
+    return implode(', ', $nombresBodegas);  // Devuelve los nombres separados por coma
+},
         ],
-        
+
 
 
 
@@ -262,6 +282,23 @@ Modal::end();
             'contentOptions' => ['data-cellvalue' => 'serie'],
             'value' => function ($model) {
     return $model->estado->nombre;
+},
+        ],
+
+        [
+            'attribute' => 'created_by',
+            'label' => 'Usuario planilla',
+            'value' => function ($model) {
+    return $model->usuario->username;
+},
+        ],
+
+        [
+            'attribute' => 'flotaPropia',
+            'filter' => Estadodespacho::getListaData(),
+            'contentOptions' => ['data-cellvalue' => 'serie'],
+            'value' => function ($model) {
+    return $model->flotaPropia == '1' ? 'SI' : 'NO';
 },
         ],
 

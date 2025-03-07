@@ -173,7 +173,10 @@ class Item extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Categoria::class, ['id' => 'idCategoria']);
     }
-
+    public function geInventariogruma($codigoEAN,$bodega)
+    {
+        return Inventario::findOne(['codigoBarras' => $codigoEAN, 'codigoBodega' => $bodega])->existencia;
+    }
     public static function actualizarRegistro(
         $item,
         $referencia,
@@ -388,4 +391,28 @@ class Item extends \yii\db\ActiveRecord
 
         return $idprincipal ? $idprincipal : $id;
     }
+
+    public static function getInventario($codigobarras, $codigobodega){
+
+        $command = \Yii::$app->dbSiesa->createCommand("
+                select 
+                t400.f400_cant_existencia_1
+                -- t131.f131_id, f150_id_co, f150_id, t400.f400_cant_existencia_1
+                -- t400.f400_cant_comprometida_1, t400.f400_cant_existencia_2
+                from t400_cm_existencia t400
+                inner join t150_mc_bodegas t150
+                ON t400.f400_rowid_bodega = t150.f150_rowid
+                left join [t131_mc_items_barras] t131
+                ON t400.f400_rowid_item_ext = t131.f131_rowid_item_ext
+                WHERE 1 = 1
+                AND t131.f131_id = '" . $codigobarras . 
+                "' AND f150_id = '" . $codigobodega . "';");
+
+		// $result = $command->queryAll();
+
+        $existencia = $command->queryScalar();
+
+        return $existencia;
+    }
+
 }

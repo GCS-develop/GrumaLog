@@ -18,6 +18,9 @@ use frontend\models\Transferenciaerperror;
 use frontend\models\Transferencialogws;
 use frontend\models\Transferenciatransitoexcel;
 use frontend\models\Traspaso;
+use frontend\models\Conteocdscdestinofactura;
+
+use common\models\ProcedimientosGenerales;
 
 /**
  * TransferenciaerpController implements the CRUD actions for Transferenciaerp model.
@@ -154,7 +157,7 @@ class TransferenciaerpController extends Controller
         }  
     }
 
-    public function actionTransferencia ($id, $origen = null){
+    public function actionTransferencia ($id, $origen = null, $idconteofactura = null){
 
         $model = $this->findModel($id);
 
@@ -182,6 +185,17 @@ class TransferenciaerpController extends Controller
         if ($origen == 'Conteo'){
             return $this->redirect(['/programacion/facturaentregamercancia/indexlegalizaconteo']);    
         }
+
+        if ($origen == 'CDSC'){
+            Conteocdscdestinofactura::actualizarentradaerp ($idconteofactura);
+            return $this->redirect(['/crossdocking/conteocdscdestinofactura/indexentrada']);    
+        }
+
+        if ($origen == 'Traspaso CDSC'){
+            Conteocdscdestinofactura::actualizartraspasoerp ($idconteofactura);
+            return $this->redirect(['/crossdocking/conteocdscdestinofactura/indextraspaso']);    
+        }
+
         return $this->redirect(['index']);
     }
 
@@ -224,7 +238,8 @@ class TransferenciaerpController extends Controller
 
             if ($model->importTransferencia($id)) {
 
-                Traspaso::generarTraspasoDesdeTransferencia ($id);
+                $tipomovimiento = 2;
+                $idtraspaso = Traspaso::generarTraspasoDesdeTransferencia ($id, $tipomovimiento);
 
                 Yii::$app->session->setFlash('success', 'El Archivo se ha cargado correctamente. ');
             }else{

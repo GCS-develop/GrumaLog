@@ -2,6 +2,7 @@
 
 namespace frontend\models;
 
+use Exception;
 use Yii;
 use yii\base\Model;
 
@@ -71,7 +72,7 @@ class FileTransferenciaInput extends Model
 
         ini_set('memory_limit', '8G'); // Aumentar el límite de memoria a 256 MB (puedes ajustar este valor según tus necesidades)
 
-        ini_set('max_execution_time', '1200'); //300 seconds = 5 minutes
+        ini_set('max_execution_time', '2400'); //300 seconds = 5 minutes
 
         $numRegistrosBorrados = Transferenciatransitoexcel::deleteAll(['idTransferenciaerp' => $id]);
 
@@ -252,7 +253,7 @@ class FileTransferenciaInput extends Model
 
         ini_set('memory_limit', '2048M'); // Aumentar el límite de memoria a 256 MB (puedes ajustar este valor según tus necesidades)
 
-        ini_set('max_execution_time', '1200'); //300 seconds = 5 minutes
+        ini_set('max_execution_time', '2400'); //300 seconds = 5 minutes
 
         $numRegistrosBorrados = Transferenciaordencompraexcel::deleteAll(['idTransferenciaerp' => $id]);
 
@@ -456,13 +457,40 @@ class FileTransferenciaInput extends Model
                 $rowid = $valor_celda;
             }
 
-            $modelcolor = Color::find()->where(['codigo' => $color])->one(); 
-            $modeltalla = Talla::find()->where(['codigo' => $talla])->one();
-            $modelitem = Item::find()->where([
-                                                    'item' => $item,
-                                                    'idColor' => $modelcolor->id,
-                                                    'idTalla' => $modeltalla->id            
-                                                ])->one();
+            // $modelcolor = Color::find()->where(['codigo' => $color])->one(); 
+            // $modeltalla = Talla::find()->where(['codigo' => $talla])->one();
+            // $modelitem = Item::find()->where([
+            //                                         'item' => $item,
+            //                                         'idColor' => $modelcolor->id,
+            //                                         'idTalla' => $modeltalla->id            
+            //                                     ])->one();
+
+
+            try {
+                $modelcolor = Color::find()->where(['codigo' => $color])->one();
+                if (!$modelcolor) {
+                    throw new Exception("No se encontró el color con código: $color");
+                }
+            
+                $modeltalla = Talla::find()->where(['codigo' => $talla])->one();
+                if (!$modeltalla) {
+                    throw new Exception("No se encontró la talla con código: $talla");
+                }          
+                // Si todo está bien, puedes continuar con el código aquí...
+            
+            } catch (Exception $e) {
+                // Manejar el error, mostrar mensaje o registrar el error en logs
+                echo "Error: " . $e->getMessage();
+            }
+
+            
+            if (!$modelitem){
+                // var_dump($item . ' - ' . $color . ' - ' . $talla);
+                //die("Item NO Existe. Se debe Crear Primero");
+
+                $iditem = Item::grabarDataDesdeSIESA($item, $color, $talla);
+                $modelitem = Item::findOne(['id' => $iditem]);
+            }
 
             $unidades = $cantidadBase;
             /*$equivalencia = $modelitem->unidadempaque ? $modelitem->unidadempaque->equivalencia : 1;

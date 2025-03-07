@@ -1,5 +1,7 @@
 <?php
 
+
+
 $this->registerCss('
     .btn-create {
         width: 300px;
@@ -14,7 +16,8 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
 
-use frontend\models\Impresora;
+use frontend\models\Bodegatipodocumento;
+use frontend\models\Centrooperacion;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\Conteocdscdestinofactura $model */
@@ -30,13 +33,14 @@ use frontend\models\Impresora;
     ?>
 
     <div class="row">
-        <div class="col-lg-9">
-            <?= $form->field($model, 'idImpresora')->widget(Select2::classname(), [
-                    'data' => Impresora::getListaData(),
+        <div class="col-lg-6">
+            <?= $form->field($model, 'idCentroOperacionMovimiento')->widget(Select2::classname(), [
+                    'data' => Centrooperacion::getListaData(),
                     'options' => [
-                        'placeholder' => 'Impresora ...', 
+                        'placeholder' => 'Centro Operación ...', 
                         'multiple' => false,
-                        'id' => 'id-impresora',
+                        'id' => 'id-centro-operacion',
+                        'required' => true
                     ],
                     'pluginOptions' => [
                         'allowClear' => true
@@ -45,9 +49,22 @@ use frontend\models\Impresora;
             ?>
         </div>
 
-        <div class="col-lg-3">
-            <?= $form->field($model, 'numeroEntrada')->textInput() ?>
+        <div class="col-lg-6">
+            <?= $form->field($model, 'idBodegaMovimiento')->widget(Select2::classname(), [
+                    'data' => Bodegatipodocumento::getListaData(),
+                    'options' => [
+                        'placeholder' => 'Seleccionar Bodega ...', 
+                        'multiple' => false,
+                        'id' => 'id-bodega',
+                        'required' => true
+                    ],
+                    'pluginOptions' => [
+                        'allowClear' => true
+                    ],
+                ]);    
+            ?>
         </div>
+
     </div>
 
     <div class="form-group centrar">

@@ -233,6 +233,7 @@ $baseUrl = Url::base(true);
                         'items' => [
                             ['label' => 'Config. Impresoras paxar', 'url' => ['/productostiquetesprecio/impresoraspaxarbodega/index'], 'iconStyle' => 'far'],
                             ['label' => 'Impresion de precios', 'url' => ['/productostiquetesprecio/productostiquetesprecio/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Analisis de venta', 'url' => ['/ventas/analisisventa/index'], 'iconStyle' => 'far'],
                             ['label' => 'Consulta', 'url' => ['/ventas/factura/index'], 'iconStyle' => 'far'],
                             ['label' => 'Cotización Precio', 'url' => ['/ventas/cotizacionprecio/index'], 'iconStyle' => 'far'],
                         ]
@@ -253,6 +254,7 @@ $baseUrl = Url::base(true);
                         'badge' => '<span class="right badge badge-info">7</span>',
                         'items' => [
                             ['label' => 'Bodega', 'url' => ['/catalogos/bodegas/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Talla', 'url' => ['/catalogos/talla/index'], 'iconStyle' => 'far'],
                             ['label' => 'Bodega - Tipo Dcto.', 'url' => ['/catalogos/bodegatipodocumento/index'], 'iconStyle' => 'far'],
                             ['label' => 'Cross Docking', 'url' => ['/catalogos/crossdocking/index'], 'iconStyle' => 'far'],
                             ['label' => 'Categoría', 'url' => ['/catalogos/categoria/index'], 'iconStyle' => 'far'],

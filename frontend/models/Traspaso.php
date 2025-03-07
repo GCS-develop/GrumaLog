@@ -276,13 +276,17 @@ class Traspaso extends \yii\db\ActiveRecord
 
     }
 
-    public static function generarTraspasoDesdeTransferencia($idtransferenciaerp)
+    public static function generarTraspasoDesdeTransferencia($idtransferenciaerp, $tipomovimiento = null)
     {
+
+        if ($tipomovimiento == null){
+            $tipomovimiento = 1;
+        }
 
         $sql = "SELECT 1 AS idCentroOperacion, bs.id AS idBodegaOrigen, tte.bodegaSalidaDocumento, 
                     be.id AS idBodegaDestino, tte.bodegaEntradaDocumento,
                     1 AS numeroCajas, td.id AS idTipoDocumento, tte.idTransferenciaerp AS consecutivo,
-                    3 AS idEstado, NULL AS idUltimoItem, 1 AS transferenciaerp, 2 AS tipoMovimiento
+                    1 AS idEstado, NULL AS idUltimoItem, 1 AS transferenciaerp, :tipomovimiento AS tipoMovimiento
                 FROM transferenciatransitoexcel tte
                 INNER JOIN bodegas bs ON tte.bodegaSalidaDocumento = bs.codigo
                 INNER JOIN bodegas be ON tte.bodegaEntradaDocumento = be.codigo
@@ -291,8 +295,14 @@ class Traspaso extends \yii\db\ActiveRecord
                 GROUP BY tte.idTransferenciaerp, bs.id, tte.bodegaSalidaDocumento, be.id, tte.bodegaEntradaDocumento, td.id";
 
         $command = Yii::$app->db->createCommand($sql);
-        $command->bindValue(':idTransferenciaErp', $idtransferenciaerp);
+        $command->bindValues([':idTransferenciaErp' => $idtransferenciaerp,
+                                ':tipomovimiento' => $tipomovimiento
+                            ]);
+
+        //echo $command->getRawSql();die("hola");
+
         $resultados = $command->queryAll();
+        $id = null;
 
         foreach ($resultados as $resultado) {
 
@@ -318,14 +328,17 @@ class Traspaso extends \yii\db\ActiveRecord
                 $bodegasalida = $resultado['bodegaSalidaDocumento'];
                 $bodegaentrada = $resultado['bodegaEntradaDocumento'];
 
-                self::generarTraspasoDetalle($idtransferenciaerp, $traspaso->id, $bodegasalida, $bodegaentrada);
+                self::generarTraspasoDetalle($idtransferenciaerp, $traspaso->id, $bodegasalida, $bodegaentrada, $tipomovimiento);
             } else {
+                //var_dump($traspaso->getErrors()); die("hola");
                 break;
             }
         }
+
+        return $id;
     }
 
-    public static function generarTraspasoDetalle($idtransferenciaerp, $idtraspaso, $bodegasalida, $bodegaentrada)
+    public static function generarTraspasoDetalle($idtransferenciaerp, $idtraspaso, $bodegasalida, $bodegaentrada, $tipomovimiento)
     {
         $sqlDetalle = "
               SELECT tte.id, tte.item, tte.color, tte.talla, tte.cantidadBase AS cantidad
@@ -373,10 +386,19 @@ class Traspaso extends \yii\db\ActiveRecord
                 die("hola");
             }
 
+            switch ($tipomovimiento){
+                case 2: 
+                    $movimientomsg = 'Crossdocking certificado => '; break;
+                case 3:
+                    $movimientomsg = 'Crossdocking CDSC => '; break;
+                default: 
+                    $movimientomsg = 'Traspaso => '; break;
+            }
+
             $transferencia = Transferenciatransitoexcel::findOne(['id' => $detalle['id']]);
             $numero = $transferencia->tipoDocumento . $idtraspaso;
             $transferencia->numero = $numero;
-            $transferencia->notas = 'Crossdocking certificado => ' . $numero;
+            $transferencia->notas = $movimientomsg . $numero;
             $transferencia->codigoBarras = $modelitem->codigoBarras;
             $transferencia->save();
         }

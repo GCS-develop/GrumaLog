@@ -53,7 +53,7 @@ class Transferenciatransitoexcel extends \yii\db\ActiveRecord
             //[['fechaDocumento', 'unidadSalida'], 'string', 'max' => 10],
             [['color'], 'string', 'max' => 50],
             [['numero'], 'string', 'max' => 50],
-            [['notas'], 'safe'],
+            [['notas', 'unidadesConteoEmpaque', 'codigoUnidadEmpaque'], 'safe'],
             [['idTransferenciaerp'], 'exist', 'skipOnError' => true, 'targetClass' => Transferenciaerp::class, 'targetAttribute' => ['idTransferenciaerp' => 'id']],
         ];
     }
@@ -201,7 +201,7 @@ class Transferenciatransitoexcel extends \yii\db\ActiveRecord
 																$registro->bodegaEntradaDocumento,
 																$username
                                                             );
-			        
+
             if ($json == null){
                 $model = new Transferenciaerperror();
                 $model->idTransferenciaerp = $id;
@@ -301,6 +301,17 @@ class Transferenciatransitoexcel extends \yii\db\ActiveRecord
 			$username = 'WS SIESA';
 		}
 
+        $notas = null;
+        $modeltransferencia = Transferenciaerp::findOne(['id' => $id]);
+        if ($modeltransferencia->notas){
+            $buscar = 'Traspaso CDSC';
+            $posicion = strpos($modeltransferencia->notas, $buscar);
+
+            if ($posicion !== false){
+                $notas = $modeltransferencia->notas . ' - Documento => ' . $modeltransferencia->documento;
+            }
+        }
+
         // Recorrer los registros y construir el JSON
         foreach ($registros as $registro) {
 
@@ -314,6 +325,10 @@ class Transferenciatransitoexcel extends \yii\db\ActiveRecord
                             
             $nroregistro = $nroregistro + 1;
 
+            if ($notas == null){
+                $notas = 'No. Traspaso => ' . $registro->numero . ' - Fecha => ' . $registro->fechaDocumento . ' - ' . 'Usuario => ' . $username;
+            }
+
             $movimiento = [
                 'f470_id_co' => $registro->centroOperacion,
                 'f470_id_tipo_docto' => $registro->tipoDocumentoMovimiento,
@@ -325,7 +340,8 @@ class Transferenciatransitoexcel extends \yii\db\ActiveRecord
                 'f470_id_unidad_medida' => $registro->unidadSalida,
                 'f470_cant_base' => $registro->cantidadBase,
                 'f470_costo_prom_uni' => $registro->costoPromedioUnitario,
-                'f470_notas' => 'No. Traspaso => ' . $registro->numero . ' - Fecha => ' . $registro->fechaDocumento . ' - ' . 'Usuario => ' . $username,
+                //'f470_notas' => 'No. Traspaso => ' . $registro->numero . ' - Fecha => ' . $registro->fechaDocumento . ' - ' . 'Usuario => ' . $username,
+                'f470_notas' => $notas,
                 'f470_id_item' => $registro->item,
                 'f470_id_ext1_detalle' => $registro->color,
                 'f470_id_ext2_detalle' => $registro->talla,
@@ -341,7 +357,8 @@ class Transferenciatransitoexcel extends \yii\db\ActiveRecord
                         'f350_consec_docto' => $registro->transferenciaerp->documento,
                         'f350_fecha' => $registro->fechaDocumento,
                         'f350_id_tercero' => '',
-                        'f350_notas' => 'No. Traspaso => ' . $registro->numero . ' - Fecha => ' . $registro->fechaDocumento . ' - ' . 'Usuario => ' . $username,
+                        // 'f350_notas' => 'No. Traspaso => ' . $registro->numero . ' - Fecha => ' . $registro->fechaDocumento . ' - ' . 'Usuario => ' . $username,
+                        'f350_notas' => $notas,
                         'f450_id_bodega_salida' => $registro->bodegaSalidaDocumento,
                         'f450_id_bodega_entrada' => $registro->bodegaEntradaDocumento,
                     ],
@@ -356,7 +373,8 @@ class Transferenciatransitoexcel extends \yii\db\ActiveRecord
                 'f350_consec_docto' => $registro->transferenciaerp->documento,
                 'f350_fecha' => $registro->fechaDocumento,
                 'f350_id_tercero' => '',
-                'f350_notas' => 'No. Traspaso => ' . $registro->numero . ' - Fecha => ' . $registro->fechaDocumento . ' - ' . 'Usuario => ' . $username,
+                // 'f350_notas' => 'No. Traspaso => ' . $registro->numero . ' - Fecha => ' . $registro->fechaDocumento . ' - ' . 'Usuario => ' . $username,
+                'f350_notas' => $notas,
                 'f450_id_bodega_salida' => $registro->bodegaSalidaDocumento,
                 'f450_id_bodega_entrada' => $registro->bodegaEntradaDocumento,
             ];
@@ -379,5 +397,19 @@ class Transferenciatransitoexcel extends \yii\db\ActiveRecord
         $json = substr(Json::encode(array_values($documentosJsonArray)), 1, -1);
 
         return $json;
+    }
+
+    public static function getTotalUnidadesConteo($id)
+    {
+        return self::find()
+            ->where(['idTransferenciaerp' => $id])
+            ->sum('cantidadBase');
+    }
+
+    public static function getTotalUnidadesConteoEmpaque($id)
+    {
+        return self::find()
+            ->where(['idTransferenciaerp' => $id])
+            ->sum('unidadesConteoEmpaque');
     }
 }

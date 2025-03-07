@@ -19,7 +19,7 @@ class ConteocdscdestinoSearch extends Conteocdscdestino
         return [
             [['id', 'idConteocdscdestinofactura', 'idCentroOperacion', 'numeroCajas', 'idUserConteo', 
             'idItemUltimoConteo', 'total', 'idEstado', 'idLegalizado', 'created_by', 'updated_by',
-            'idEstadoFactura', 'idEstadoEntrada', 'idEstadoTraspaso'], 'integer'],
+            'idEstadoFactura', 'idEstadoEntrada', 'idEstadoTraspaso', 'idErpTraspaso'], 'integer'],
             [['created_at', 'updated_at', 'razonSocial', 'codigoAlmacen', 'numeroFactura', 'almacen',
             'fechaDesde', 'fechaHasta'], 'safe'],
         ];
@@ -64,6 +64,7 @@ class ConteocdscdestinoSearch extends Conteocdscdestino
             'dest.total',
             'dest.created_at',
             'dest.updated_at',
+            'dest.idErpTraspaso',
 
             'fact.id AS radicado',
             'fact.idProveedor',
@@ -117,6 +118,7 @@ class ConteocdscdestinoSearch extends Conteocdscdestino
             'dest.total' => $this->total,
             'dest.idEstado' => $this->idEstado,
             'dest.idLegalizado' => $this->idLegalizado,
+            'dest.idErpTraspaso' => $this->idErpTraspaso,
             /*'dest.created_at' => $this->created_at,
             'dest.created_by' => $this->created_by,
             'dest.updated_at' => $this->updated_at,

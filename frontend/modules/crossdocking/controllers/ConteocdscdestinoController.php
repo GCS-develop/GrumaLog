@@ -56,6 +56,24 @@ class ConteocdscdestinoController extends Controller
         ]);
     }
 
+    public function actionIndextraspaso($idconteofactura)
+    {
+        $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
+
+        $searchModel = new ConteocdscdestinoSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams, $idconteofactura);
+
+        Conteocdscdestino::generarTransferenciaFactura ($idconteofactura);
+
+        $origen = 'CDSC';
+        return $this->render('index_almacen_traspaso', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'origen' => $origen,
+            'modelfactura' => $modelfactura
+        ]);
+    }
+
     public function actionIndexalmacen($idconteofactura, $origen = null)
     {
         $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
@@ -313,7 +331,7 @@ class ConteocdscdestinoController extends Controller
             ])
             ->all(); // Obtener los datos como un arreglo
 
-        $puerto = '9100';
+            $puerto = '9100';
     
         try{
             $connector = new NetworkPrintConnector($printerURL, $puerto);
@@ -331,7 +349,7 @@ class ConteocdscdestinoController extends Controller
     
         } catch (\Exception $e) {
             var_dump($e->getMessage());
-            die("hola");
+            die("hola ....");
         }
 
         return false;

@@ -2,7 +2,7 @@
 use yii\widgets\ActiveForm;
 use yii\widgets\Pjax;
 
-
+use frontend\models\Item;
 use frontend\models\Traspasodetalle;
 use frontend\models\TipoDocumento;
 use frontend\models\Estadotraspaso;
@@ -24,13 +24,13 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 
-<!-- <?php
+<?php
 
 $this->registerJs("
     $(document).ready(function() {
         
-        $('#cambiarEstadoBtn').on('click', function() {
-            if (confirm('¿Estás seguro de que deseas enviar a muelle los registros seleccionados?')) {
+        $('#EliminarBtn').on('click', function() {
+            if (confirm('¿Estás seguro de que deseas eliminar los registros seleccionados?')) {
                 var ids = [];
                 $('input[name=\"selection[]\"]:checked').each(function() {
                     ids.push($(this).val());
@@ -42,25 +42,27 @@ $this->registerJs("
                 }
 
                 $.ajax({
-                    url: '" . \yii\helpers\Url::to(['/traspaso/traspasodetalle/cambiar-estado']) . "',
+                    url: '" . \yii\helpers\Url::to(['/traspaso/traspasodetalle/eliminar']) . "',
                     type: 'POST',
                     data: { ids: ids },
                     success: function(response) {
                         if (response.success) {
-                            alert('Estado actualizado con éxito: ' + response.message);
-                            $.pjax.reload({container: '#gridview-container'}); // Recargar tabla
+                            alert('Registros eliminados con éxito: ' + response.message);
+                            // $.pjax.reload({container: '#my-container'});
+                            $.pjax.reload({container: '#alert-pjax-container'});
+
                         } else {
                             alert('Error: ' + response.message);
                         }
                     },
                     error: function(xhr) {
-                        let errorMsg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Hubo un error al actualizar el estado.';
+                        let errorMsg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Hubo un error al eliminar el registro.';
                         alert(errorMsg);
-                        console.log(xhr.responseText);
+                        // console.log(xhr.responseText);
                     }
                 });
             } else {
-                console.log('Cambio de estado cancelado.');
+                console.log('Cancelado.');
             }
         });
 
@@ -68,7 +70,7 @@ $this->registerJs("
 ", \yii\web\View::POS_READY);
 
 
-?> -->
+?>
 
 
 
@@ -108,6 +110,18 @@ $this->registerJs("
 
 
     $gridColumns = [
+        [
+            'class' => 'kartik\grid\CheckboxColumn',
+            'checkboxOptions' => function ($model, $key, $index, $column) {
+                return ($model->traspaso->estado->nombre === 'pendiente')
+                    ? ['value' => $model->id, 'name' => 'seleccionar[]']
+                    : ['style' => 'display:none']; // Oculta el checkbox si el estado no es 'pendiente'
+            },
+            'visible' => function ($model, $key, $index, $column) {
+                return $model->traspaso->estado->nombre === 'pendiente'; // Oculta completamente la columna si no hay registros en estado 'pendiente'
+            },
+        ],
+
         [
             'label' => 'bodegaorigen',
             'value' => function ($model): mixed {
@@ -229,6 +243,36 @@ $this->registerJs("
             'pageSummary' => true,
 
         ],
+
+        [
+            'label' => 'unidadesInventarioSiesa',
+            'value' => function ($model) {
+                // Verifica si el estado es "Pendiente"
+                $estado = $model->traspaso->estado ? $model->traspaso->estado->nombre : '';
+                if (strcasecmp($estado, 'Pendiente') === 0) {
+                    return Item::getInventario($model->item->codigoBarras, $model->traspaso->bodegaOrigen->codigo);
+                }
+                return null; // O devuelve '-' si prefieres que se vea un guion en lugar de vacío
+            },
+            'format' => ['decimal', 0], // Formato decimal con 0 decimales
+            'pageSummary' => true,
+        ],
+
+        [
+            'label' => 'unidadesInventarioGruma',
+            'value' => function ($model) {
+                // Verifica si el estado es "Pendiente"
+                $estado = $model->traspaso->estado ? $model->traspaso->estado->nombre : '';
+                if (strcasecmp($estado, 'Pendiente') === 0) {
+                    return  $model->item->geInventariogruma( $model->item->codigoBarras, $model->traspaso->bodegaOrigen->codigo);
+                    ;
+                }
+                return null; // O devuelve '-' si prefieres que se vea un guion en lugar de vacío
+            },
+            'format' => ['decimal', 0], // Formato decimal con 0 decimales
+            'pageSummary' => true,
+        ],
+
         [
             'attribute' => 'idEstado',
             'contentOptions' => ['data-cellvalue' => 'idEstado',],
@@ -281,7 +325,7 @@ $this->registerJs("
         <h3><?php var_dump($usuarioCreador) ?></h3>
     </div> -->
 
-        <div class="col-lg-12 centrar">
+        <div class="col-lg-6 derecha">
 
 
             <?php echo ExportMenu::widget(
@@ -319,8 +363,19 @@ $this->registerJs("
         </div>
 
 
-    </div>
+        <div class="col-lg-6 izquierda">
 
+            <!-- Botón para cambiar el estado de los registros -->
+            <?= Html::button('Eliminar', [
+                'class' => 'btn btn-danger btn-create btn-lg',
+                'id' => 'EliminarBtn',
+            ]) ?>
+
+        </div>
+
+
+    </div>
+    <?php Pjax::begin(['id' => 'alert-pjax-container']); ?>
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         // 'filterModel' => $searchModel,
@@ -335,10 +390,12 @@ $this->registerJs("
             [
                 ['class' => 'kartik\grid\SerialColumn'],
             ],
+
             $gridColumns,
+
         ),
     ]);
     ?>
-
+    <?php Pjax::end(); ?>
 
 </div>
