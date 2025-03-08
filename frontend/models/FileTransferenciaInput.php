@@ -466,9 +466,9 @@ class FileTransferenciaInput extends Model
 
             $modelcolor = Color::find()->where(['codigo' => $color])->one();
             if (!$modelcolor) {
-                $modeltalla = Color::actualizarRegistroSiesa($talla);
+                $modelcolor = Color::actualizarRegistroSiesa($color);
                 if (!$modeltalla) {
-                    throw new Exception("No se encontró el color con código: $color por que $modeltalla");
+                    throw new Exception("No se encontró el color con código: $color por que $modelcolor");
                 }
             }
 
