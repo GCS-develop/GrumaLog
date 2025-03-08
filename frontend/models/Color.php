@@ -2,6 +2,7 @@
 
 namespace frontend\models;
 
+use common\models\OrdendecompraSIESA;
 use Yii;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -80,10 +81,11 @@ class Color extends \yii\db\ActiveRecord
         ];
     }
 
-    public static function actualizarRegistro ($codigo, $nombre){
+    public static function actualizarRegistro($codigo, $nombre)
+    {
 
         $model = Color::findOne(['codigo' => $codigo]);
-        if ($model == null){
+        if ($model == null) {
             $model = new Color();
             $model->codigo = $codigo;
             $model->nombre = $nombre;
@@ -93,12 +95,37 @@ class Color extends \yii\db\ActiveRecord
         return $model->id;
     }
 
-    public static  function  getListaData(){
+    public static function getListaData()
+    {
         $data = Color::find()
-                        ->select(['id', 'nombre'])
-                        ->orderBy('nombre')->asArray()->all();
-    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
-    	return $listadata;
+            ->select(['id', 'nombre'])
+            ->orderBy('nombre')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
+    }
+
+    public static function actualizarRegistroSiesa($codigo)
+    {
+        $resultado = OrdendecompraSIESA::obtenerColorPorCodigo($codigo);
+
+        if (!empty($resultado)) {
+
+            $model = Color::findOne(['codigo' => $codigo]);
+
+            if ($model == null) {
+                $model = new Color();
+                $model->codigo = $codigo;
+                $model->nombre = $resultado['nombre']; // 🔹 Se obtiene correctamente desde la consulta
+            } else {
+                $model->nombre = $resultado['nombre']; // 🔹 Actualiza si ya existe
+            }
+
+            $model->save();
+
+            return $model;
+        }
+
+        return 'NO existe en Siesa';
     }
 
 }

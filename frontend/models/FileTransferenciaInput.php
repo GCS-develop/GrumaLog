@@ -466,7 +466,10 @@ class FileTransferenciaInput extends Model
 
             $modelcolor = Color::find()->where(['codigo' => $color])->one();
             if (!$modelcolor) {
-                throw new Exception("No se encontró el color con código: $color");
+                $modeltalla = Color::actualizarRegistroSiesa($talla);
+                if (!$modeltalla) {
+                    throw new Exception("No se encontró el color con código: $color por que $modeltalla");
+                }
             }
 
             $modeltalla = Talla::find()->where(['codigo' => $talla])->one();
@@ -478,7 +481,7 @@ class FileTransferenciaInput extends Model
             }
 
             if (!$modelcolor || !$modeltalla || !$item) {
-                throw new Exception("No se encontro, Color: $color, Talla: $talla, Item: $item, en la Bd de grumalog, sincronizar item primero.");
+                throw new Exception("No se encontro, Color: $color, Talla: $talla, Item: $item, en la Bd de grumalog.");
             }
 
             // $modelcolor = Color::find()->where(['codigo' => $color])->one(); 

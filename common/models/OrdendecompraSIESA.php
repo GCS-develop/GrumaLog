@@ -432,6 +432,20 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             ->queryOne();
     }
 
+    public static function obtenerColorPorCodigo($codigoColor)
+    {
+        $sql = "
+            SELECT f117_id AS id, f117_descripcion AS nombre
+            FROM t117_mc_extensiones1_detalle
+            WHERE f117_id = :codigoColor
+        ";
+
+        return self::getDb()->createCommand($sql)
+            ->bindValue(':codigoColor', $codigoColor)
+            ->queryOne();
+    }
+
+
 
 
     public static function obtenerDatosItem($item, $color, $talla)
