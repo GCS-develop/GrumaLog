@@ -20,7 +20,7 @@ class FileTransferenciaInput extends Model
     public function rules()
     {
         return [
-            [['archivo', ], 'required', 'message' => '{attribute} Es Un Valor Obligatorio'],
+            [['archivo',], 'required', 'message' => '{attribute} Es Un Valor Obligatorio'],
 
             [['archivo'], 'safe'],
             [['archivo'], 'file', 'skipOnEmpty' => false, 'extensions' => 'xlsx, xls'],
@@ -50,16 +50,16 @@ class FileTransferenciaInput extends Model
 
             $model = Transferenciaerp::findOne(['id' => $id]);
 
-            switch($model->idConectorDinamico){
+            switch ($model->idConectorDinamico) {
                 case 1:
-                    FileTransferenciaInput::cargar_data_transferenciatransito ($destinationFileName, $id);
+                    FileTransferenciaInput::cargar_data_transferenciatransito($destinationFileName, $id);
                     break;
                 case 3:
-                    FileTransferenciaInput::cargar_data_desdeordencompra ($destinationFileName, $id);
+                    FileTransferenciaInput::cargar_data_desdeordencompra($destinationFileName, $id);
                     break;
             }
-            
-            
+
+
             unlink($tempFileName);
             return true;
         } else {
@@ -68,7 +68,8 @@ class FileTransferenciaInput extends Model
         }
     }
 
-    public static function cargar_data_transferenciatransito ($archivoExcel, $id){
+    public static function cargar_data_transferenciatransito($archivoExcel, $id)
+    {
 
         ini_set('memory_limit', '8G'); // Aumentar el límite de memoria a 256 MB (puedes ajustar este valor según tus necesidades)
 
@@ -84,7 +85,7 @@ class FileTransferenciaInput extends Model
 
         // Obtener la hoja específica por su nombre
         $sheet = $spreadsheet->getSheetByName('Transferencia transito');
- 
+
         // Obtener el número total de filas en la hoja activa
         $totalFilas = $sheet->getHighestRow();
 
@@ -93,115 +94,115 @@ class FileTransferenciaInput extends Model
         // Iterar por cada fila
         for ($fila = 1; $fila <= $totalFilas; $fila++) {
 
-            if ($fila == 1){
+            if ($fila == 1) {
                 continue;
             }
 
             $centroOperacionDocumento = null;
             $valor_celda = $sheet->getCell('A' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $centroOperacionDocumento = $valor_celda;
-            }else{
+            } else {
                 break;
             }
 
             $tipoDocumento = null;
             $valor_celda = $sheet->getCell('B' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $tipoDocumento = $valor_celda;
             }
 
             $fechaDocumento = null;
             $valor_celda = $sheet->getCell('C' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $fechaDocumento = $valor_celda;
             }
 
             $bodegaSalidaDocumento = null;
             $valor_celda = $sheet->getCell('D' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $bodegaSalidaDocumento = $valor_celda;
             }
 
             $bodegaEntradaDocumento = null;
             $valor_celda = $sheet->getCell('E' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $bodegaEntradaDocumento = $valor_celda;
             }
 
             $centroOperacion = null;
             $valor_celda = $sheet->getCell('F' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $centroOperacion = $valor_celda;
             }
-            
+
             $tipoDocumentoMovimiento = null;
             $valor_celda = $sheet->getCell('G' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $tipoDocumentoMovimiento = $valor_celda;
             }
 
             $bodegaSalidaMovimiento = null;
             $valor_celda = $sheet->getCell('H' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $bodegaSalidaMovimiento = $valor_celda;
             }
 
             $centroOperacionMovimiento = null;
             $valor_celda = $sheet->getCell('I' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $centroOperacionMovimiento = $valor_celda;
             }
 
             $unidadSalida = null;
             $valor_celda = $sheet->getCell('J' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $unidadSalida = $valor_celda;
             }
 
             $cantidadBase = 0;
             $valor_celda = $sheet->getCell('K' . $fila)->getValue();
-            if ($valor_celda){
-                $cantidadBase = ProcedimientosGenerales::convertirValorTextoNumero ($valor_celda);
-                if ($cantidadBase == null){
+            if ($valor_celda) {
+                $cantidadBase = ProcedimientosGenerales::convertirValorTextoNumero($valor_celda);
+                if ($cantidadBase == null) {
                     $cantidadBase = 0;
                 }
             }
 
             $costoPromedioUnitario = 0;
             $valor_celda = $sheet->getCell('L' . $fila)->getValue();
-            if ($valor_celda){
-                $costoPromedioUnitario = ProcedimientosGenerales::convertirValorTextoNumero ($valor_celda);
-                if ($costoPromedioUnitario == null){
+            if ($valor_celda) {
+                $costoPromedioUnitario = ProcedimientosGenerales::convertirValorTextoNumero($valor_celda);
+                if ($costoPromedioUnitario == null) {
                     $costoPromedioUnitario = 0;
                 }
             }
 
             $item = null;
             $valor_celda = $sheet->getCell('M' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $item = $valor_celda;
             }
 
             $color = null;
             $valor_celda = $sheet->getCell('N' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $color = $valor_celda;
 
-                $idcolor = Color::actualizarRegistro ($color, $color);
+                $idcolor = Color::actualizarRegistro($color, $color);
             }
 
             $talla = null;
             $valor_celda = $sheet->getCell('O' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $talla = strval($valor_celda);
 
-                $idtalla = Talla::actualizarRegistro ($talla, $talla);
+                $idtalla = Talla::actualizarRegistro($talla, $talla);
             }
 
             $numero = null;
             $valor_celda = $sheet->getCell('P' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $numero = $valor_celda;
             }
 
@@ -226,30 +227,32 @@ class FileTransferenciaInput extends Model
 
             $ok = $model->save();
 
-            if (!$ok){
-                var_dump($model->getErrors()); die("hola");
-            }else{
+            if (!$ok) {
+                var_dump($model->getErrors());
+                die("hola");
+            } else {
                 //var_dump($color); die("hola");
-                $modelcolor = Color::find()->where(['codigo' => $color])->one(); 
+                $modelcolor = Color::find()->where(['codigo' => $color])->one();
                 $modeltalla = Talla::find()->where(['codigo' => $talla])->one();
                 $modelitem = Item::find()->where([
-                                                    'item' => $item,
-                                                    'idColor' => $modelcolor->id,
-                                                    'idTalla' => $modeltalla->id            
-                                                ])->one();
+                    'item' => $item,
+                    'idColor' => $modelcolor->id,
+                    'idTalla' => $modeltalla->id
+                ])->one();
             }
         }
 
-        if ($ok){
+        if ($ok) {
             $total = Transferenciatransitoexcel::find()->where(['idTransferenciaerp' => $id])->count();
-            $model = Transferenciaerp::findOne (['id' => $id]);
+            $model = Transferenciaerp::findOne(['id' => $id]);
             $model->numeroRegistros = $total;
             $model->save();
         }
 
     }
 
-    public static function cargar_data_desdeordencompra ($archivoExcel, $id){
+    public static function cargar_data_desdeordencompra($archivoExcel, $id)
+    {
 
         ini_set('memory_limit', '2048M'); // Aumentar el límite de memoria a 256 MB (puedes ajustar este valor según tus necesidades)
 
@@ -265,7 +268,7 @@ class FileTransferenciaInput extends Model
 
         // Obtener la hoja específica por su nombre
         $sheet = $spreadsheet->getSheetByName('Entrada OC');
- 
+
         // Obtener el número total de filas en la hoja activa
         $totalFilas = $sheet->getHighestRow();
 
@@ -274,138 +277,141 @@ class FileTransferenciaInput extends Model
         // Iterar por cada fila
         for ($fila = 1; $fila <= $totalFilas; $fila++) {
 
-            if ($fila == 1){
+            if ($fila == 1) {
                 continue;
             }
 
             $centroOperacionDocumento = null;
             $valor_celda = $sheet->getCell('A' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $centroOperacionDocumento = $valor_celda;
-            }else{
+            } else {
                 break;
             }
 
             $tipoDocumento = null;
             $valor_celda = $sheet->getCell('B' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $tipoDocumento = $valor_celda;
             }
 
             $consecutivoDocumento = null;
             $valor_celda = $sheet->getCell('C' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $consecutivoDocumento = $valor_celda;
             }
 
             $fechaDocumento = null;
             $valor_celda = $sheet->getCell('D' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $fechaDocumento = $valor_celda;
             }
 
             $tercero = null;
             $valor_celda = $sheet->getCell('E' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 if (is_numeric($valor_celda)) {
                     $tercero = strval($valor_celda);
                 } else {
-                    $tercero = $valor_celda;;
+                    $tercero = $valor_celda;
+                    ;
                 }
             }
 
             $numeroFactura = null;
             $valor_celda = $sheet->getCell('F' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $numeroFactura = $valor_celda;
             }
 
             $sucursal = null;
             $valor_celda = $sheet->getCell('G' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $sucursal = $valor_celda;
             }
 
             $idTerceroComprador = null;
             $valor_celda = $sheet->getCell('H' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 if (is_numeric($valor_celda)) {
                     $idTerceroComprador = strval($valor_celda);
                 } else {
-                    $idTerceroComprador = $valor_celda;;
+                    $idTerceroComprador = $valor_celda;
+                    ;
                 }
             }
 
             $consignacion = 0;
             $valor_celda = $sheet->getCell('I' . $fila)->getValue();
-            if ($valor_celda){
-                $consignacion = ProcedimientosGenerales::convertirValorTextoNumero ($valor_celda);
-                if ($consignacion == null){
+            if ($valor_celda) {
+                $consignacion = ProcedimientosGenerales::convertirValorTextoNumero($valor_celda);
+                if ($consignacion == null) {
                     $consignacion = 0;
                 }
             }
 
             $centroOperacionOrdenCompra = null;
             $valor_celda = $sheet->getCell('J' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $centroOperacionOrdenCompra = $valor_celda;
             }
 
             $tipoDocumentoOrdenCompra = null;
             $valor_celda = $sheet->getCell('K' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $tipoDocumentoOrdenCompra = $valor_celda;
             }
 
             $consecutivoOrdenCompra = null;
             $valor_celda = $sheet->getCell('L' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $consecutivoOrdenCompra = $valor_celda;
             }
 
             $centroOperacionMovimiento = null;
             $valor_celda = $sheet->getCell('M' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $centroOperacionMovimiento = $valor_celda;
             }
-            
+
             $tipoDocumentoMovimiento = null;
             $valor_celda = $sheet->getCell('N' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $tipoDocumentoMovimiento = $valor_celda;
             }
 
             $consecutivoMovimiento = null;
             $valor_celda = $sheet->getCell('O' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $consecutivoMovimiento = $valor_celda;
             }
 
             $numeroRegistroMovimiento = null;
             $valor_celda = $sheet->getCell('P' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $numeroRegistroMovimiento = $valor_celda;
             }
 
             $bodegaMovimiento = null;
             $valor_celda = $sheet->getCell('Q' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 if (is_numeric($valor_celda)) {
                     $bodegaMovimiento = strval($valor_celda);
                 } else {
-                    $bodegaMovimiento = $valor_celda;;
+                    $bodegaMovimiento = $valor_celda;
+                    ;
                 }
             }
 
             $unidadMovimiento = null;
             $valor_celda = $sheet->getCell('R' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $unidadMovimiento = $valor_celda;
             }
 
             $fechaEntregaMovimiento = null;
             $valor_celda = $sheet->getCell('S' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $fechaEntregaMovimiento = $valor_celda;
             }
 
@@ -426,65 +432,64 @@ class FileTransferenciaInput extends Model
 
             $cantidadBase = 0;
             $valor_celda = $sheet->getCell('T' . $fila)->getValue();
-            if ($valor_celda){
-                $cantidadBase = ProcedimientosGenerales::convertirValorTextoNumero ($valor_celda);
-                if ($cantidadBase == null){
+            if ($valor_celda) {
+                $cantidadBase = ProcedimientosGenerales::convertirValorTextoNumero($valor_celda);
+                if ($cantidadBase == null) {
                     $cantidadBase = 0;
                 }
             }
 
             $item = null;
             $valor_celda = $sheet->getCell('U' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $item = $valor_celda;
             }
 
             $color = null;
             $valor_celda = $sheet->getCell('V' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $color = $valor_celda;
             }
 
             $talla = null;
             $valor_celda = $sheet->getCell('W' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $talla = $valor_celda;
             }
 
             $rowid = null;
             $valor_celda = $sheet->getCell('X' . $fila)->getValue();
-            if ($valor_celda){
+            if ($valor_celda) {
                 $rowid = $valor_celda;
+            }
+
+
+            $modelcolor = Color::find()->where(['codigo' => $color])->one();
+            if (!$modelcolor) {
+                throw new Exception("No se encontró el color con código: $color");
+            }
+
+            $modeltalla = Talla::find()->where(['codigo' => $talla])->one();
+            if (!$modeltalla) {
+                $modeltalla = Talla::actualizarRegistroSiesa($talla);
+                if (!$modeltalla) {
+                    throw new Exception("No se encontró la talla con código: $talla por que $modeltalla");
+                }
+            }
+
+            if (!$modelcolor || !$modeltalla || !$item) {
+                throw new Exception("No se encontro, Color: $color, Talla: $talla, Item: $item, en la Bd de grumalog, sincronizar item primero.");
             }
 
             // $modelcolor = Color::find()->where(['codigo' => $color])->one(); 
             // $modeltalla = Talla::find()->where(['codigo' => $talla])->one();
-            // $modelitem = Item::find()->where([
-            //                                         'item' => $item,
-            //                                         'idColor' => $modelcolor->id,
-            //                                         'idTalla' => $modeltalla->id            
-            //                                     ])->one();
+            $modelitem = Item::find()->where([
+                'item' => $item,
+                'idColor' => $modelcolor->id,
+                'idTalla' => $modeltalla->id
+            ])->one();
 
-
-            try {
-                $modelcolor = Color::find()->where(['codigo' => $color])->one();
-                if (!$modelcolor) {
-                    throw new Exception("No se encontró el color con código: $color");
-                }
-            
-                $modeltalla = Talla::find()->where(['codigo' => $talla])->one();
-                if (!$modeltalla) {
-                    throw new Exception("No se encontró la talla con código: $talla");
-                }          
-                // Si todo está bien, puedes continuar con el código aquí...
-            
-            } catch (Exception $e) {
-                // Manejar el error, mostrar mensaje o registrar el error en logs
-                echo "Error: " . $e->getMessage();
-            }
-
-            
-            if (!$modelitem){
+            if (!$modelitem) {
                 // var_dump($item . ' - ' . $color . ' - ' . $talla);
                 //die("Item NO Existe. Se debe Crear Primero");
 
@@ -528,15 +533,16 @@ class FileTransferenciaInput extends Model
 
             $ok = $model->save();
 
-            if (!$ok){
-                var_dump($model->getErrors()); die("hola");
+            if (!$ok) {
+                var_dump($model->getErrors());
+                die("hola");
             }
 
         }
 
-        if ($ok){
+        if ($ok) {
             $total = Transferenciaordencompraexcel::find()->where(['idTransferenciaerp' => $id])->count();
-            $model = Transferenciaerp::findOne (['id' => $id]);
+            $model = Transferenciaerp::findOne(['id' => $id]);
             $model->numeroRegistros = $total;
             $model->save();
         }

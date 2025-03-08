@@ -2,6 +2,7 @@
 
 namespace frontend\models;
 
+use common\models\OrdendecompraSIESA;
 use Yii;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -82,25 +83,27 @@ class Talla extends \yii\db\ActiveRecord
         ];
     }
 
-    public static function actualizarRegistro ($codigo, $nombre){
+    public static function actualizarRegistro($codigo, $nombre)
+    {
 
         $model = Talla::findOne(['codigo' => $codigo]);
-        if ($model == null){
+        if ($model == null) {
             $model = new Talla();
             $model->codigo = $codigo;
             $model->nombre = $nombre;
         }
-        
+
         $model->save();
         return $model->id;
     }
 
-    public static  function  getListaData(){
+    public static function getListaData()
+    {
         $data = Talla::find()
-                        ->select(['id', 'nombre'])
-                        ->orderBy('nombre')->asArray()->all();
-    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
-    	return $listadata;
+            ->select(['id', 'nombre'])
+            ->orderBy('nombre')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
     }
     public function getUsuarioCreador()
     {
@@ -110,4 +113,35 @@ class Talla extends \yii\db\ActiveRecord
     {
         return $this->hasOne(User::className(), ['id' => 'updated_by']);
     }
+
+    public static function actualizarRegistroSiesa($codigo)
+    {
+        $resultado = OrdendecompraSIESA::obtenerTallaPorCodigo($codigo);
+
+        if (!empty($resultado)) {
+
+            $model = Talla::findOne(['codigo' => $codigo]);
+
+            if ($model == null) {
+                $model = new Talla();
+                $model->codigo = $codigo;
+                $model->nombre = $resultado['nombre']; // 🔹 Se obtiene correctamente desde la consulta
+                $model->orden = self::obtenerNuevoOrden(); // 🔹 Se asigna el nuevo orden
+            } else {
+                $model->nombre = $resultado['nombre']; // 🔹 Actualiza si ya existe
+            }
+
+            $model->save();
+
+            return $model;
+        }
+
+        return 'NO existe en Siesa';
+    }
+    public static function obtenerNuevoOrden()
+    {
+        return (int) Talla::find()->max('orden') + 1;
+    }
+
+
 }

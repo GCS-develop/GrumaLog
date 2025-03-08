@@ -352,7 +352,8 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             ->queryAll();
     }
 
-    public static function obtenerDatosPrecioVenta ($codigobarras, $fechaactivacion, $codigolistaprecios){
+    public static function obtenerDatosPrecioVenta($codigobarras, $fechaactivacion, $codigolistaprecios)
+    {
         $sql = "
             SELECT TOP 1 ipre.f126_rowid, ipre.f126_id_cia, f126_rowid_item, FORMAT(ipre.f126_fecha_activacion, 'yyyy-MM-dd') AS fecha_activacion, ipre.f126_precio
                 FROM t126_mc_items_precios ipre
@@ -363,7 +364,7 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
                 AND FORMAT(ipre.f126_fecha_activacion, 'yyyy-MM-dd') <= :fechaactivacion
                 ORDER BY ipre.f126_fecha_activacion DESC     
         ";
-        
+
         return self::getDb()->createCommand($sql)
             ->bindValue('codigolistaprecios', $codigolistaprecios)
             ->bindValue(':codigobarras', $codigobarras)
@@ -371,11 +372,12 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             ->queryAll();
     }
 
-    public static function obtenerDatosDocumento ($tipodocumento, $numerodocumento, $tipomovimiento = null){
+    public static function obtenerDatosDocumento($tipodocumento, $numerodocumento, $tipomovimiento = null)
+    {
 
-        if ($tipomovimiento){
+        if ($tipomovimiento) {
             $pattern = $tipomovimiento . $tipodocumento . $numerodocumento;
-        }else{
+        } else {
             $pattern = $tipodocumento . $numerodocumento;
         }
 
@@ -411,14 +413,29 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
         ";*/
 
         return self::getDb()->createCommand($sql)
-        ->bindValue('tipodocumento', $tipodocumento)
-        ->bindValue(':numerodocumento', $numerodocumento)
-        ->bindValue(':pattern', $pattern)
-        ->queryAll();
-        
+            ->bindValue('tipodocumento', $tipodocumento)
+            ->bindValue(':numerodocumento', $numerodocumento)
+            ->bindValue(':pattern', $pattern)
+            ->queryAll();
+
+    }
+    public static function obtenerTallaPorCodigo($codigoTalla)
+    {
+        $sql = "
+        SELECT f119_id AS id, f119_descripcion AS nombre
+        FROM t119_mc_extensiones2_detalle
+        WHERE f119_id = :codigoTalla
+        ";
+
+        return self::getDb()->createCommand($sql)
+            ->bindValue(':codigoTalla', $codigoTalla)
+            ->queryOne();
     }
 
-    public static function obtenerDatosItem ($item, $color, $talla){
+
+
+    public static function obtenerDatosItem($item, $color, $talla)
+    {
         $sql = "
             SELECT 
                 bar.f131_id AS codigoBarras
@@ -500,12 +517,13 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             ->queryAll();
     }
 
-    public static function obtenerDatosDocumentoCDSC ($tipodocumento, $numerodocumento, $origen){
+    public static function obtenerDatosDocumentoCDSC($tipodocumento, $numerodocumento, $origen)
+    {
 
-        if ($origen == 'CDSC'){
+        if ($origen == 'CDSC') {
             $pattern = 'Transferencia CDSC: ' . $numerodocumento . ' - ';
-        }else{
-            $pattern = 'Traspaso CDSC: ' . $numerodocumento . ' - ';            
+        } else {
+            $pattern = 'Traspaso CDSC: ' . $numerodocumento . ' - ';
         }
 
         $sql = "
@@ -523,18 +541,19 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
         ";
 
         $command = self::getDb()->createCommand($sql)
-        ->bindValue('tipodocumento', $tipodocumento)
-        ->bindValue(':numerodocumento', $numerodocumento)
-        ->bindValue(':pattern', $pattern);
-        
+            ->bindValue('tipodocumento', $tipodocumento)
+            ->bindValue(':numerodocumento', $numerodocumento)
+            ->bindValue(':pattern', $pattern);
+
         // echo $command->getRawSql();die("HOLA");
 
-        $resultados = $command->queryAll();   
-        
+        $resultados = $command->queryAll();
+
         return $resultados;
     }
 
-    public static function obtenerDatosItemxCodigo ($codigobarras){
+    public static function obtenerDatosItemxCodigo($codigobarras)
+    {
         $sql = "
             SELECT 
             ba.f131_id_cia, 
@@ -554,8 +573,8 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
         ";
 
         return self::getDb()->createCommand($sql)
-        ->bindValue('codigobarras', $codigobarras)
-        ->queryAll();
+            ->bindValue('codigobarras', $codigobarras)
+            ->queryAll();
     }
 
 }

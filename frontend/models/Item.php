@@ -173,7 +173,7 @@ class Item extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Categoria::class, ['id' => 'idCategoria']);
     }
-    public function geInventariogruma($codigoEAN,$bodega)
+    public function geInventariogruma($codigoEAN, $bodega)
     {
         return Inventario::findOne(['codigoBarras' => $codigoEAN, 'codigoBodega' => $bodega])->existencia;
     }
@@ -245,25 +245,27 @@ class Item extends \yii\db\ActiveRecord
         return $model->id;
     }
 
-    public static  function  getListaData(){
+    public static function getListaData()
+    {
         $data = Item::find()
-                    ->select([  
-                                'it.id', 
-                                //'descripcion AS nombre'
-                                "(CAST(it.item AS VARCHAR) + ' - '  + it.descripcion + ' - ' + col.codigo + ' - ' + tal.codigo) AS nombre"
-                            ])
-                    ->alias('it')
-                    ->join('LEFT JOIN', 'color col','it.idColor = col.id')
-                    ->join('LEFT JOIN', 'talla tal','it.idTalla = tal.id')
-                    ->orderBy('it.item')->asArray()->all();
+            ->select([
+                'it.id',
+                //'descripcion AS nombre'
+                "(CAST(it.item AS VARCHAR) + ' - '  + it.descripcion + ' - ' + col.codigo + ' - ' + tal.codigo) AS nombre"
+            ])
+            ->alias('it')
+            ->join('LEFT JOIN', 'color col', 'it.idColor = col.id')
+            ->join('LEFT JOIN', 'talla tal', 'it.idTalla = tal.id')
+            ->orderBy('it.item')->asArray()->all();
 
-    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
-    	return $listadata;
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
     }
 
-    public static function obtenerPrecioVenta ($codigoEAN, $fecha_activacion){
+    public static function obtenerPrecioVenta($codigoEAN, $fecha_activacion)
+    {
 
-        $resultado = OrdendecompraSIESA::obtenerDatosPrecioVenta($codigoEAN, $fecha_activacion,'001');
+        $resultado = OrdendecompraSIESA::obtenerDatosPrecioVenta($codigoEAN, $fecha_activacion, '001');
         if (!empty($resultado)) {
             foreach ($resultado as $dato) {
                 return $dato['f126_precio'];
@@ -271,13 +273,14 @@ class Item extends \yii\db\ActiveRecord
         }
 
         return 0;
-    } 
+    }
 
-    public static function generarContenidoSticker($registro, $precio, $x, $y){
+    public static function generarContenidoSticker($registro, $precio, $x, $y)
+    {
 
         $lineax1 = $x + 5;
         $lineay1 = $y + 95;
-        $lineax2 = 1; 
+        $lineax2 = 1;
         $stickerContent = "
             ^XA
 
@@ -295,7 +298,8 @@ class Item extends \yii\db\ActiveRecord
         return $stickerContent;
     }
 
-    public static function grabarDataDesdeSIESA($item, $color, $talla){
+    public static function grabarDataDesdeSIESA($item, $color, $talla)
+    {
 
         $resultado = OrdendecompraSIESA::obtenerDatosItem($item, $color, $talla);
         if (!empty($resultado)) {
@@ -355,7 +359,7 @@ class Item extends \yii\db\ActiveRecord
                         'idTalla' => $idtalla,
                         'idColor' => $idcolor
                     ]);
-        
+
                     if ($model == null) {
                         $model = new Item();
                         $model->item = $item;
@@ -363,7 +367,7 @@ class Item extends \yii\db\ActiveRecord
                         $model->idColor = $idcolor;
                     }
                 }
-        
+
                 $model->referencia = $referencia;
                 $model->descripcion = $descripcion;
                 $model->idCategoria = $idcategoria;
@@ -375,7 +379,7 @@ class Item extends \yii\db\ActiveRecord
                 $model->idEstado = $estado;
                 $model->unidadEmpaque = $unidadempaque;
                 $model->unidadOrden = $unidadorden;
-        
+
                 if (!$model->save()) {
                     var_dump($model->getErrors());
                     die("hola ITEM: " . $model->item);
@@ -383,7 +387,7 @@ class Item extends \yii\db\ActiveRecord
 
                 $id = $model->id;
 
-                if ($dato['codigoBarras'] == $dato['codigoBarrasPrincipal']){
+                if ($dato['codigoBarras'] == $dato['codigoBarrasPrincipal']) {
                     $idprincipal = $model->id;
                 }
             }
@@ -392,7 +396,8 @@ class Item extends \yii\db\ActiveRecord
         return $idprincipal ? $idprincipal : $id;
     }
 
-    public static function getInventario($codigobarras, $codigobodega){
+    public static function getInventario($codigobarras, $codigobodega)
+    {
 
         $command = \Yii::$app->dbSiesa->createCommand("
                 select 
@@ -405,10 +410,10 @@ class Item extends \yii\db\ActiveRecord
                 left join [t131_mc_items_barras] t131
                 ON t400.f400_rowid_item_ext = t131.f131_rowid_item_ext
                 WHERE 1 = 1
-                AND t131.f131_id = '" . $codigobarras . 
-                "' AND f150_id = '" . $codigobodega . "';");
+                AND t131.f131_id = '" . $codigobarras .
+            "' AND f150_id = '" . $codigobodega . "';");
 
-		// $result = $command->queryAll();
+        // $result = $command->queryAll();
 
         $existencia = $command->queryScalar();
 

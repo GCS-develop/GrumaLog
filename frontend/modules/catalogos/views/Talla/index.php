@@ -96,7 +96,7 @@ Modal::end();
                     [
                         'class' => ActionColumn::className(),
                         'header' => 'Acción',
-                        'headerOptions' => ['width' => '10%'],
+                        'headerOptions' => ['width' => '8%'],
                         'template' => '  {update} {delete}',
                         'buttons' => [
 
