@@ -7,6 +7,7 @@ use Yii;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
+use common\models\User;
 
 use yii\helpers\ArrayHelper;
 
@@ -74,10 +75,10 @@ class Color extends \yii\db\ActiveRecord
             'id' => 'ID',
             'codigo' => 'Codigo',
             'nombre' => 'Nombre',
-            'created_at' => 'Created At',
-            'created_by' => 'Created By',
-            'updated_at' => 'Updated At',
-            'updated_by' => 'Updated By',
+            'created_at' => 'Creado',
+            'created_by' => 'Creado por',
+            'updated_at' => 'Actualizado',
+            'updated_by' => 'Actualizado por',
         ];
     }
 
@@ -126,6 +127,15 @@ class Color extends \yii\db\ActiveRecord
         }
 
         return 'NO existe en Siesa';
+    }
+
+    public function getUsuarioCreador()
+    {
+        return $this->hasOne(User::className(), ['id' => 'created_by']);
+    }
+    public function getUsuarioActualiza()
+    {
+        return $this->hasOne(User::className(), ['id' => 'updated_by']);
     }
 
 }

@@ -255,6 +255,7 @@ $baseUrl = Url::base(true);
                         'items' => [
                             ['label' => 'Bodega', 'url' => ['/catalogos/bodegas/index'], 'iconStyle' => 'far'],
                             ['label' => 'Talla', 'url' => ['/catalogos/talla/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Color', 'url' => ['/catalogos/color/index'], 'iconStyle' => 'far'],
                             ['label' => 'Bodega - Tipo Dcto.', 'url' => ['/catalogos/bodegatipodocumento/index'], 'iconStyle' => 'far'],
                             ['label' => 'Cross Docking', 'url' => ['/catalogos/crossdocking/index'], 'iconStyle' => 'far'],
                             ['label' => 'Categoría', 'url' => ['/catalogos/categoria/index'], 'iconStyle' => 'far'],
