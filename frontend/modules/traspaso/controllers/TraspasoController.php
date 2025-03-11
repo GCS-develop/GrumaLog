@@ -260,7 +260,7 @@ class TraspasoController extends Controller
 
     public function actionCambiarEstado()
     {
-        Yii::info('Acción Cambiar Estado ejecutada para mandar a muelle de forma masiva los 207 (VMI)', __METHOD__);
+        // Yii::info('Acción Cambiar Estado ejecutada para mandar a muelle de forma masiva los 207 (VMI)', __METHOD__);
 
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
@@ -286,6 +286,8 @@ class TraspasoController extends Controller
                 foreach ($traspasos as $traspaso) {
                     // Actualizar el estado de cada registro
                     $traspaso->idEstado = 3;  // Aquí pones el nuevo estado que deseas
+                    $traspaso->muelle_at = new Expression('GETDATE()');
+                    $traspaso->muelle_by = Yii::$app->user->id;
 
                     if (!$traspaso->save()) {
                         // Si algo falla, guardamos el error
@@ -295,6 +297,8 @@ class TraspasoController extends Controller
 
                 // Si no hubo errores, confirmamos la actualización
                 if (empty($errores)) {
+
+
                     return ['success' => true, 'message' => 'Todos los registros se actualizaron correctamente.'];
                 } else {
                     // Si hubo errores, reportamos qué registros fallaron

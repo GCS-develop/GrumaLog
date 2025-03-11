@@ -80,7 +80,7 @@ class Traspaso extends \yii\db\ActiveRecord
             [['idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado', 'idUltimoItem', 'created_by', 'updated_by', 'tipoMovimiento'], 'integer'],
             [['consecutivo', 'und_traspaso', 'und_empaque'], 'number'],
             [['serie',], 'string', 'max' => 5],
-            [['updated_at', 'created_at', 'fechaDesde', 'fechaHasta','anula_at', 'anula_by', ], 'safe'],
+            [['updated_at', 'created_at', 'fechaDesde', 'fechaHasta','anula_at', 'anula_by','muelle_at', 'muelle_by', ], 'safe'],
             [['idBodegaDestino'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idBodegaDestino' => 'id']],
             [['idBodegaOrigen'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idBodegaOrigen' => 'id']],
             [['idTipoDocumento'], 'exist', 'skipOnError' => true, 'targetClass' => Tipodocumento::class, 'targetAttribute' => ['idTipoDocumento' => 'id']],
@@ -112,6 +112,8 @@ class Traspaso extends \yii\db\ActiveRecord
             'horaUltimoRegistro' => 'Hora ultimo registro',
             'impresora' => 'impresora',
             'tipoMovimiento' => 'Tipo de movimiento',
+            'muelle_at' => 'Fecha en muelle',
+            'muelle_by'=> 'Usuario en muelle',
 
         ];
     }
@@ -230,7 +232,14 @@ class Traspaso extends \yii\db\ActiveRecord
     {
         return $this->hasOne(User::class, ['id' => 'updated_by']);
     }
-
+    public function getAnulaByUser()
+    {
+        return $this->hasOne(User::class, ['id' => 'anula_by']);
+    }
+    public function getMuelleByUser()
+    {
+        return $this->hasOne(User::class, ['id' => 'muelle_by']);
+    }
     public function getAllRecords()
     {
         return $this->getTraspasodetalles()->sum('cantidad');

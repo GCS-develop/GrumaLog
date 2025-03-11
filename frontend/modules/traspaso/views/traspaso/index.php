@@ -37,6 +37,7 @@ $filename = "Relacion_Traspaso_" . $fecha_actual;
 
 
 $gridColumns = [
+    'id',
     [
         'attribute' => 'serie',
         'contentOptions' => ['data-cellvalue' => 'serie'],
@@ -170,12 +171,28 @@ $gridColumns = [
         'attribute' => 'created_by',
         'label' => 'Usuario',
         'value' => function ($model) {
-            return $model->createdByUser ? $model->createdByUser->username : '(sin usuario)';
+            return $model->createdByUser ? "{$model->createdByUser->id} - {$model->createdByUser->username}" : '(sin usuario)';
         },
         'contentOptions' => ['data-cellvalue' => 'Usuario',],
     ],
     'anula_at',
-    'anula_by',
+    [
+        'attribute' => 'anula_by',
+        'label' => 'Usuario que puso en anula',
+        'contentOptions' => ['data-cellvalue' => 'Usuario'],
+        'value' => function ($model) {
+            return $model->anula_by ? $model->anula_by . '-'  . $model->anulaByUser->username  : ' - ';
+        },
+    ],    
+    'muelle_at',
+    [
+        'attribute' => 'muelle_by',
+        'label' => 'Usuario que puso en muelle',
+        'contentOptions' => ['data-cellvalue' => 'Usuario'],
+        'value' => function ($model) {
+            return $model->muelle_by ? $model->muelle_by . '-'  . $model->muelleByUser->username  : ' - ';
+        },
+    ],
 ];
 
 ?>
@@ -484,7 +501,23 @@ Modal::end();
 },
         ],
         'anula_at',
-        'anula_by',
+        [
+            'attribute' => 'anula_by',
+            'label' => 'Usuario que anulo',
+            'contentOptions' => ['data-cellvalue' => 'Usuario'],
+            'value' => function ($model) {
+    return $model->anula_by ? $model->anula_by : 'Sin anular';
+},
+        ],
+        'muelle_at',
+        [
+            'attribute' => 'muelle_by',
+            'label' => 'Usuario que puso en muelle',
+            'contentOptions' => ['data-cellvalue' => 'Usuario'],
+            'value' => function ($model) {
+    return $model->muelle_by ? $model->muelle_by : ' - ';
+},
+        ],
         [
             'class' => ActionColumn::className(),
             'header' => 'Acción',
