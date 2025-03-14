@@ -181,16 +181,16 @@ $gridColumns = [
         'label' => 'Usuario que puso en anula',
         'contentOptions' => ['data-cellvalue' => 'Usuario'],
         'value' => function ($model) {
-            return $model->anula_by ? $model->anula_by . '-'  . $model->anulaByUser->username  : ' - ';
+            return $model->anula_by ? $model->anula_by . '-' . $model->anulaByUser->username : ' - ';
         },
-    ],    
+    ],
     'muelle_at',
     [
         'attribute' => 'muelle_by',
         'label' => 'Usuario que puso en muelle',
         'contentOptions' => ['data-cellvalue' => 'Usuario'],
         'value' => function ($model) {
-            return $model->muelle_by ? $model->muelle_by . '-'  . $model->muelleByUser->username  : ' - ';
+            return $model->muelle_by ? $model->muelle_by . '-' . $model->muelleByUser->username : ' - ';
         },
     ],
 ];
@@ -503,10 +503,10 @@ Modal::end();
         'anula_at',
         [
             'attribute' => 'anula_by',
-            'label' => 'Usuario que anulo',
+            'label' => 'Usuario que puso en anula',
             'contentOptions' => ['data-cellvalue' => 'Usuario'],
             'value' => function ($model) {
-    return $model->anula_by ? $model->anula_by : 'Sin anular';
+    return $model->anula_by ? $model->anula_by . '-' . $model->anulaByUser->username : ' - ';
 },
         ],
         'muelle_at',
@@ -515,7 +515,7 @@ Modal::end();
             'label' => 'Usuario que puso en muelle',
             'contentOptions' => ['data-cellvalue' => 'Usuario'],
             'value' => function ($model) {
-    return $model->muelle_by ? $model->muelle_by : ' - ';
+    return $model->muelle_by ? $model->muelle_by . '-' . $model->muelleByUser->username : ' - ';
 },
         ],
         [
