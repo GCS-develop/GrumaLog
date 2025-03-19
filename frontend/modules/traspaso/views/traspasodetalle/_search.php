@@ -1,5 +1,6 @@
 <?php
 
+use frontend\models\Estadorecepcion;
 use frontend\models\Tipodocumento;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
@@ -30,7 +31,7 @@ use frontend\models\Bodegas;
 
     <div class="row">
 
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?= $form->field($model, 'bodegaorigen')->dropDownList(
                 Bodegas::getListaData(),
                 [
@@ -39,7 +40,8 @@ use frontend\models\Bodegas;
                 ]
             ) ?>
         </div>
-        <div class="col-lg-3">
+
+        <div class="col-lg-2">
             <?= $form->field($model, 'bodegadestino')->dropDownList(
                 Bodegas::getListaData(),
                 [
@@ -49,7 +51,7 @@ use frontend\models\Bodegas;
             ) ?>
         </div>
 
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?php
             echo $form->field($model, 'tipomovimiento')->label('Tipo de movimiento')->dropDownList(
                 [
@@ -64,7 +66,7 @@ use frontend\models\Bodegas;
             ?>
         </div>
 
-        <div class="col-lg-2">
+        <div class="col-lg-3">
             <?=
                 $form->field($model, 'fechaDesde')->widget(DatePicker::className(), [
                     'name' => 'fecha inicio',
@@ -79,7 +81,7 @@ use frontend\models\Bodegas;
                 ?>
         </div>
 
-        <div class="col-lg-2">
+        <div class="col-lg-3">
             <?=
                 $form->field($model, 'fechaHasta')->widget(DatePicker::className(), [
                     'name' => 'fecha fin',
@@ -94,19 +96,19 @@ use frontend\models\Bodegas;
                 ?>
         </div>
 
-        <div class="col-lg-2">
-            <?= $form->field($model, 'consecutivosiesa')->label('Consecutivo siesa') ?>
-        </div>
-
     </div>
 
     <div class="row">
 
         <div class="col-lg-2">
+            <?= $form->field($model, 'consecutivosiesa')->label('Consecutivo siesa') ?>
+        </div>
+
+        <div class="col-lg-2">
             <?= $form->field($model, 'idTraspaso')->label('Id traspaso') ?>
         </div>
 
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?= $form->field($model, 'consecutivointerno')->label('Consecutivo interno') ?>
         </div>
 
@@ -114,7 +116,7 @@ use frontend\models\Bodegas;
             <?= $form->field($model, 'cantidad') ?>
         </div>
 
-        <div class="col-lg-4">
+        <div class="col-lg-3">
             <?= $form->field($model, 'codigoitem')->label('Item') ?>
         </div>
 
@@ -129,9 +131,17 @@ use frontend\models\Bodegas;
         <div class="col-lg-2">
             <?= $form->field($model, 'talla') ?>
         </div>
-
-        <div class="col-lg-4">
-            <?= $form->field($model, 'proveedor') ?>
+        
+        <div class="col-lg-2">
+            <?php
+            echo $form->field($model, 'updated_by')->label('Ultimo usuario')->dropDownList(
+                Usertraspaso::getListaDataUsertraspaso(),
+                [
+                    'prompt' => ' Seleccionar usuario ... ',
+                    'id' => 'updated_by',
+                ]
+            );
+            ?>
         </div>
 
         <div class="col-lg-2">
@@ -147,15 +157,19 @@ use frontend\models\Bodegas;
         </div>
 
         <div class="col-lg-2">
-            <?php
-            echo $form->field($model, 'updated_by')->label('Ultimo usuario')->dropDownList(
-                Usertraspaso::getListaDataUsertraspaso(),
+            <?php echo $form->field($model, 'estadoPlanilla')->dropDownList(
+                Estadorecepcion::getListaData(),
                 [
-                    'prompt' => ' Seleccionar usuario ... ',
-                    'id' => 'updated_by',
+                    'prompt' => ' Seleccionar estado ... ',
+                    'id' => 'idEstado',
                 ]
             );
             ?>
+
+        </div>
+
+        <div class="col-lg-2">
+            <?= $form->field($model, 'proveedor') ?>
         </div>
 
     </div>
