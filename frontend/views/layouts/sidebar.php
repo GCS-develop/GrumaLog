@@ -116,7 +116,7 @@ $baseUrl = Url::base(true);
                                     ['label' => 'Gestionar Factura', 'url' => ['/programacion/facturaentregamercancia/index'], 'iconStyle' => 'far'],
                                     ['label' => 'Gestionar Conteo', 'url' => ['/programacion/facturaentregamercancia/indexprogramacion'], 'iconStyle' => 'far'],
                                     ['label' => 'Legalización Conteo', 'url' => ['/programacion/facturaentregamercancia/indexlegalizaconteo'], 'iconStyle' => 'far'],
-                                    //['label' => 'Programación Recibo Mercancia', 'url' => ['/programacion/programacionentregamercancia/indexprogramacion', 'menu' => 'programacion'], 'iconStyle' => 'far'],
+                                    ['label' => 'Conteo por Usuario', 'url' => ['/programacion/conteobylecturacodigo/indexusuario'], 'iconStyle' => 'far'],
                                     //['label' => 'Conteo Recibo Mercancia', 'url' => ['/programacion/programacionentregamercancia/indexconteoagenda'], 'iconStyle' => 'far'],
                                     //['label' => 'Legalización Conteo', 'url' => ['/programacion/conteoentregamercancia/indexlegalizacion'], 'iconStyle' => 'far'],
                                     //['label' => 'Gestionar Conteo', 'url' => ['/programacion/conteoentregamercancia/indexall'], 'iconStyle' => 'far'],

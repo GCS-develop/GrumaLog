@@ -25,6 +25,9 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'cantidadRegistrada') ?>
 
+    <?= $form->field($model, 'fechaRegistra') ?>
+
+
     <?php // echo $form->field($model, 'item') ?>
 
     <?php // echo $form->field($model, 'talla') ?>
