@@ -120,45 +120,48 @@ class FacturaentregamercanciaController extends Controller
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return ActiveForm::validate($model);
-        } 
+        }
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
                 $modeloc = Ordendecompra::find()
-                                ->where([
-                                    'idCO' => $model->idCentroOperacion,
-                                    'idTipoDocumento' => $model->idTipoDocumento,
-                                    'consecutivo' => $model->consecutivo
-                                ])->one();
-                if ($modeloc){
+                    ->where([
+                        'idCO' => $model->idCentroOperacion,
+                        'idTipoDocumento' => $model->idTipoDocumento,
+                        'consecutivo' => $model->consecutivo
+                    ])->one();
+                if ($modeloc) {
                     $modelagenda = Agendaentregamercancia::find()
-                                            ->where([
-                                                'idOrdenCompra' => $modeloc->id
-                                            ])->one();
-                    if ($modelagenda){
+                        ->where([
+                            'idOrdenCompra' => $modeloc->id,
+                        ])->andWhere(['<>', 'idEstado', 5])
+                        ->andWhere(['<>', 'idEstado', 8])
+                        ->one();
+                    if ($modelagenda) {
                         $model->idAgendaEntregaMercancia = $modelagenda->id;
-                        if (!$model->save()){
-                            Yii::$app->session->setFlash( 'error', 'Error Registrando Datos Factura' );    
-                        }else{
-                            Yii::$app->session->setFlash( 'success', 'Factura Registrada Con ÉXito' );
+
+                        if (!$model->save()) {
+                            Yii::$app->session->setFlash('error', 'Error Registrando Datos Factura');
+                        } else {
+                            Yii::$app->session->setFlash('success', 'Factura Registrada Con ÉXito');
                         }
-                    }else{
-                        Yii::$app->session->setFlash( 'error', 'Orden de Compra No Ha Sido Agendada' );
+                    } else {
+                        Yii::$app->session->setFlash('error', 'Orden de Compra No Ha Sido Agendada');
                     }
-                }else{
-                    Yii::$app->session->setFlash( 'error', 'Orden de Compra NO Existe: ' . $model->idCentroOperacion. '-' . $model->idTipoDocumento . '-' . $model->consecutivo );
+                } else {
+                    Yii::$app->session->setFlash('error', 'Orden de Compra NO Existe: ' . $model->idCentroOperacion . '-' . $model->idTipoDocumento . '-' . $model->consecutivo . 'o su estado es No Cumplio');
                 }
 
                 return $this->redirect(['index']);
             }
-        } 
+        }
 
-        if (Yii::$app->request->isAjax){  
+        if (Yii::$app->request->isAjax) {
             return $this->renderAjax('create', [
                 'model' => $model,
             ]);
-        }  
+        }
 
     }
 

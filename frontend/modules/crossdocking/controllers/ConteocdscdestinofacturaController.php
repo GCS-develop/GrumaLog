@@ -433,6 +433,7 @@ class ConteocdscdestinofacturaController extends Controller
                     $modelfactura->consignacion = $model->consignacion;
 
                     // $modelfactura->fechaEntrada = new Expression('GETDATE()');
+                    $modelfactura->fechaEntrada = $model->fechaEntrada;
                     $modelfactura->idUserEntrada = Yii::$app->user->identity->id;
 
                     $modelfactura->numeroFacturaEntrada = $model->numeroFacturaEntrada;

@@ -349,12 +349,14 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
 
         var_dump("Paso 1. Empiezo Detalle");
         foreach($dataProviderDetalle as $referencia){
-            
+
+            $item = Item::findOne($referencia->idItem);
+
             $unidadempaque = 'UND';
             $equivalencia = 1;
-            if ($referencia->item->unidadEmpaque){
-                $unidadempaque = $referencia->item->unidadEmpaque;
-                $equivalencia = $referencia->item->unidadempaque->equivalencia;
+            if ($item->unidadEmpaque){
+                $unidadempaque = $item->unidadEmpaque;
+                $equivalencia = $item->unidadempaque->equivalencia;
             }
 
             $total = $referencia->totalUnidades * $equivalencia;
@@ -364,16 +366,16 @@ class Conteocdscdestino extends \yii\db\ActiveRecord
 
             // Primera línea con REF, COLOR, TALLA y UNDS
             $printer->text(
-                str_pad($referencia->item->item, $columna1) .
-                str_pad($referencia->item->color->codigo, $columna2) .
-                str_pad($referencia->item->talla->codigo, $columna3) .
+                str_pad($item->item, $columna1) .
+                str_pad($item->color->codigo, $columna2) .
+                str_pad($item->talla->codigo, $columna3) .
                 str_pad($referencia->totalUnidades, $columna4) .
                 str_pad($unidadempaque, $columna5) .
                 str_pad($total, $columna6, ' ', STR_PAD_LEFT) . "\n"
             );
 
             // Segunda línea con descripción
-            $descripcion = $referencia->item->descripcion;
+            $descripcion = $item->descripcion;
             $printer->text(str_pad($descripcion, $columna1 + $columna2 + $columna3 + $columna4) . "\n");
 
             // Línea divisoria para cada entrada

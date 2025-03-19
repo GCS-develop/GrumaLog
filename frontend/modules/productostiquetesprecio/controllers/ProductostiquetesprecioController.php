@@ -706,6 +706,7 @@ class ProductostiquetesprecioController extends Controller
 
             $nombreArchivoSinExtension = $model->archivo->baseName;
 
+
             try {
                 // Llamada al método de carga del archivo
                 $respuesta = Productostiquetesprecio::upload($model->archivo);

@@ -26,6 +26,19 @@ use common\models\User;
  */
 class Conteobylecturacodigo extends \yii\db\ActiveRecord
 {
+    public $nombreEmpleado;
+    public $idUserConteo;
+    public $fechaConteo;
+    public $codigoTipodocumento;
+    public $consecutivo;
+    public $ordenCompra;
+    public $item;
+    public $color;
+    public $talla;
+    public $unidadEmpaque;
+    public $equivalencia;
+    public $totalUnidades;
+
     /**
      * {@inheritdoc}
      */

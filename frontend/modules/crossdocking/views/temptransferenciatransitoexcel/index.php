@@ -22,6 +22,12 @@ $this->registerCss('
         text-align: right;
     }
 
+    .titulo {
+        color: black;
+        font-weight: bold;
+        font-size: 18px;
+    }
+
     .horizontal-line {
         border: none;
         border-top: 1px solid #ccc; /* Color y grosor de la línea */
@@ -39,6 +45,8 @@ use kartik\grid\GridView;
 /** @var frontend\models\search\TemptransferenciatransitoexcelSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
+// echo $modeldestino->centrooperacion->nombre;
+
 $this->title = 'Transferencia SIESA';
 $this->params['breadcrumbs'][] = ['label' => 'Conteo por Destino', 
                                     'url' => ['/crossdocking/conteocdscdestino/indextraspaso',
@@ -53,6 +61,22 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <div class="temptransferenciatransitoexcel-index">
+
+    <div class="row">
+        <div class="col-lg-2 titulo">
+            <?= Html::encode('OC: ' . $modeldestino->factura->ordenCompra->tipoDocumento->codigo . '-' . $modeldestino->factura->ordenCompra->consecutivo) ?>
+        </div>
+
+        <div class="col-lg-2 titulo">
+            <?= Html::encode('Factura: ' . $modeldestino->factura->numeroFactura) ?>
+        </div>
+
+        <div class="col-lg-4 titulo">
+            <?= Html::encode('Bodega: ' . $modeldestino->centrooperacion->nombre) ?>
+        </div>
+    </div>
+
+    <?= Html::tag('hr', '', ['class' => 'horizontal-line']) ?>
 
     <div class="row">
         <div class="col-lg-12 centrar">

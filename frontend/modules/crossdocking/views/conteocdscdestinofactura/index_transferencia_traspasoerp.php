@@ -69,7 +69,7 @@ $this->params['breadcrumbs'][] = $this->title;
         $totalCantidad = Transferenciatransitoexcel::getTotalUnidadesConteo($idtransferenciatraspasoerp);
         $totalConteoEmpaque = Transferenciatransitoexcel::getTotalUnidadesConteoEmpaque( $idtransferenciatraspasoerp);
 
-        //var_dump($idtransferenciatraspasoerp); die("hola");
+        //var_dump($idtransferenciatraspasoerp); die("hola");asda
         echo $idtransferenciatraspasoerp;
     ?>
 

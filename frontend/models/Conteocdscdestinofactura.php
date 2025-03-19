@@ -578,9 +578,10 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
             if (!$model->save()) {
                 $ok = false;
                 var_dump($registro);
-                var_dump($model->getErrors()); die("hola");
+                var_dump($model->getErrors()); die("Error en detalleTransferencia");
                 continue;
             }
+
         }
 
         return $ok;
@@ -614,6 +615,7 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
             $model->idErpEntrada = $modelsiesa->id;
             $model->save();
         }
+
     }
 
     public static function actualizartraspasoerp($idconteofactura){
