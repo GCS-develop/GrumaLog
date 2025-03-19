@@ -18,8 +18,23 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
     {
         return [
             [['id', 'idDocumento', 'created_by', 'updated_by'], 'integer'],
-            [['codigoBarras', 'item', 'talla', 'color', 'referencia', 'itemResumen', 'created_at', 'updated_at', 'numeroDocumento', 
-            'codigoBodegaSalida', 'unidadMedida'], 'safe'],
+            [
+                [
+                    'codigoBarras',
+                    'item',
+                    'talla',
+                    'color',
+                    'referencia',
+                    'itemResumen',
+                    'created_at',
+                    'updated_at',
+                    'numeroDocumento',
+                    'codigoBodegaSalida',
+                    'unidadMedida',
+                    'fechaRegistra'
+                ],
+                'safe'
+            ],
             [['cantidadDevolucion', 'cantidadRegistrada', 'registrada'], 'number'],
         ];
     }
@@ -42,9 +57,9 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
      */
     public function search($params, $iddocumento = null)
     {
-        if ($iddocumento == null){
+        if ($iddocumento == null) {
             $query = Devoluciondocumentodetalle::find()->alias('det');
-        }else{
+        } else {
             $query = Devoluciondocumentodetalle::find()->alias('det')->where(['idDocumento' => $iddocumento]);
         }
 
@@ -107,8 +122,14 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             'det.registrada' => $this->registrada,
             'det.unidadMedida' => $this->unidadMedida,
             'dct.numeroDocumento' => $this->numeroDocumento,
-            'dct.codigoBodegaSalida' => $this->codigoBodegaSalida
+            'dct.codigoBodegaSalida' => $this->codigoBodegaSalida,
+            // 'det.fechaRegistra' => trim($this->fechaRegistra),
         ]);
+        if (!empty($this->fechaRegistra)) {
+            $fecha = date('Y-m-d', strtotime($this->fechaRegistra));
+            $query->andWhere("CAST(det.fechaRegistra AS DATE) = :fecha", [':fecha' => $fecha]);
+
+        }
 
         $query->andFilterWhere(['like', 'det.codigoBarras', $this->codigoBarras])
             ->andFilterWhere(['like', 'det.item', $this->item])
