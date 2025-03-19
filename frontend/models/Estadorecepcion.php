@@ -3,6 +3,7 @@
 namespace frontend\models;
 
 use Yii;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "estadorecepcion".
@@ -59,6 +60,14 @@ class Estadorecepcion extends \yii\db\ActiveRecord
     {
         return 'o';
         // return $this->hasOne(Estadorecepcion::class, ['id' => 'idEstado']);
+    }
+    public static function getListaData()
+    {
+        $data = Estadorecepcion::find()
+            ->select(['id', 'nombre'])
+            ->orderBy('nombre')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
     }
 
 }

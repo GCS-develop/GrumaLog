@@ -26,7 +26,7 @@ class TraspasoSearch extends Traspaso
     {
         return [
             [['id', 'idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado', 'tipoMovimiento'], 'integer'],
-            [['updated_at', 'created_by', 'updated_by', 'fechaDesde', 'fechaHasta',], 'safe'],
+            [['updated_at', 'created_by', 'updated_by', 'fechaDesde', 'fechaHasta', 'estadoPlanilla',], 'safe'],
             [['consecutivo',], 'number'],
             [['serie'], 'string', 'max' => 5],
         ];
@@ -49,7 +49,39 @@ class TraspasoSearch extends Traspaso
      */
     public function search($params)
     {
-        $query = Traspaso::find();
+        $query = Traspaso::find()->alias('tr');
+
+        $query->join('INNER JOIN', 'traspasodetalle td', 'td.idTraspaso = tr.id');
+        $query->join('INNER JOIN', 'item i', 'i.id = td.iditem');
+        $query->join('INNER JOIN', 'talla t', 't.id = i.idTalla');
+        $query->join('INNER JOIN', 'color c', 'c.id = i.idColor');
+        $query->join('INNER JOIN', 'estadotraspaso e', 'e.id = tr.idestado');
+        $query->join('left JOIN', 'documentosiesa ds', 'tr.id = ds.idGruma');
+        $query->join(
+            'LEFT JOIN',
+            'planillaembarquetraspaso pet',
+            'pet.id = (SELECT MAX(id) FROM planillaembarquetraspaso WHERE idTraspaso = tr.id)'
+        );
+        $query->join('LEFT JOIN', 'estadorecepcion er', 'er.id = pet.idEstado AND er.id <> 5'); // Agregando la relación
+
+
+        $query->select([
+            'tr.*',
+            'td.updated_by',
+            'tr.consecutivo',
+            'ds.f350_consec_docto',
+            'i.item',
+            'c.nombre',
+            't.codigo',
+            'e.codigo',
+            'tr.tipoMovimiento',
+            'i.nombreProveedor',
+            'tr.idBodegaOrigen',
+            'tr.idBodegaDestino',
+            'er.nombre as estadoPlanilla',
+            'tr.created_by' // Agregar esto
+        ]);
+
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -81,9 +113,11 @@ class TraspasoSearch extends Traspaso
             'idTipoDocumento' => $this->idTipoDocumento,
             'idEstado' => $this->idEstado,
             'created_by' => $this->created_by,
-            'updated_by' => $this->updated_by,
+            'tr.created_by' => $this->created_by,
             'created_at' => $this->created_at,
             'tipoMovimiento' => $this->tipoMovimiento,
+            'er.id' => $this->estadoPlanilla,
+
             // 'fechaDesde' => $this->fechaDesde,
             // 'fechaHasta' => $this->fechaHasta,
 
@@ -128,11 +162,11 @@ class TraspasoSearch extends Traspaso
                 }, $usuarios);
 
                 // Filtrar por IDs de usuario encontrados
-                $query->andFilterWhere(['IN', 'created_by', $userIds]);
+                $query->andFilterWhere(['IN', 'tr.created_by', $userIds]);
             } else {
                 // Manejar el caso en que no se encuentren usuarios
                 // Por ejemplo, puedes aplicar un filtro predeterminado
-                $query->andFilterWhere(['created_by' => null]); // Filtro predeterminado
+                $query->andFilterWhere(['tr.created_by' => null]); // Filtro predeterminado
             }
         }
 

@@ -42,6 +42,7 @@ class Traspaso extends \yii\db\ActiveRecord
     public $impresora;
     public $fechaDesde;
     public $fechaHasta;
+    public $estadoPlanilla;
 
     /**
      * {@inheritdoc}
@@ -80,7 +81,7 @@ class Traspaso extends \yii\db\ActiveRecord
             [['idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado', 'idUltimoItem', 'created_by', 'updated_by', 'tipoMovimiento'], 'integer'],
             [['consecutivo', 'und_traspaso', 'und_empaque'], 'number'],
             [['serie',], 'string', 'max' => 5],
-            [['updated_at', 'created_at', 'fechaDesde', 'fechaHasta','anula_at', 'anula_by','muelle_at', 'muelle_by', ], 'safe'],
+            [['updated_at', 'created_at', 'fechaDesde', 'fechaHasta', 'anula_at', 'anula_by', 'muelle_at', 'muelle_by',], 'safe'],
             [['idBodegaDestino'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idBodegaDestino' => 'id']],
             [['idBodegaOrigen'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idBodegaOrigen' => 'id']],
             [['idTipoDocumento'], 'exist', 'skipOnError' => true, 'targetClass' => Tipodocumento::class, 'targetAttribute' => ['idTipoDocumento' => 'id']],
@@ -113,7 +114,7 @@ class Traspaso extends \yii\db\ActiveRecord
             'impresora' => 'impresora',
             'tipoMovimiento' => 'Tipo de movimiento',
             'muelle_at' => 'Fecha en muelle',
-            'muelle_by'=> 'Usuario en muelle',
+            'muelle_by' => 'Usuario en muelle',
 
         ];
     }
@@ -171,7 +172,8 @@ class Traspaso extends \yii\db\ActiveRecord
 
     public function getPlanillaembarquetraspaso()
     {
-        return $this->hasOne(Planillaembarquetraspaso::class, ['idTraspaso' => 'id']);
+        return $this->hasOne(Planillaembarquetraspaso::class, ['idTraspaso' => 'id'])
+            ->orderBy(['id' => SORT_DESC]);
     }
 
     public function enviarTraspasosPorPost()
@@ -288,7 +290,7 @@ class Traspaso extends \yii\db\ActiveRecord
     public static function generarTraspasoDesdeTransferencia($idtransferenciaerp, $tipomovimiento = null)
     {
 
-        if ($tipomovimiento == null){
+        if ($tipomovimiento == null) {
             $tipomovimiento = 1;
         }
 
@@ -304,9 +306,10 @@ class Traspaso extends \yii\db\ActiveRecord
                 GROUP BY tte.idTransferenciaerp, bs.id, tte.bodegaSalidaDocumento, be.id, tte.bodegaEntradaDocumento, td.id";
 
         $command = Yii::$app->db->createCommand($sql);
-        $command->bindValues([':idTransferenciaErp' => $idtransferenciaerp,
-                                ':tipomovimiento' => $tipomovimiento
-                            ]);
+        $command->bindValues([
+            ':idTransferenciaErp' => $idtransferenciaerp,
+            ':tipomovimiento' => $tipomovimiento
+        ]);
 
         //echo $command->getRawSql();die("hola");
 
@@ -395,13 +398,16 @@ class Traspaso extends \yii\db\ActiveRecord
                 die("hola");
             }
 
-            switch ($tipomovimiento){
-                case 2: 
-                    $movimientomsg = 'Crossdocking certificado => '; break;
+            switch ($tipomovimiento) {
+                case 2:
+                    $movimientomsg = 'Crossdocking certificado => ';
+                    break;
                 case 3:
-                    $movimientomsg = 'Crossdocking CDSC => '; break;
-                default: 
-                    $movimientomsg = 'Traspaso => '; break;
+                    $movimientomsg = 'Crossdocking CDSC => ';
+                    break;
+                default:
+                    $movimientomsg = 'Traspaso => ';
+                    break;
             }
 
             $transferencia = Transferenciatransitoexcel::findOne(['id' => $detalle['id']]);

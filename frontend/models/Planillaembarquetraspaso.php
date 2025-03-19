@@ -163,7 +163,9 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
 
     public function getEstadoPlanilla()
     {
-        return $this->hasOne(Estadorecepcion::class, ['id' => 'idEstado']);
+        return $this->hasOne(Estadorecepcion::class, ['id' => 'idEstado'])
+            ->andwhere(['<>', 'id', '5']); // Filtra estados que NO sean "Anulado"
+
     }
-    
+
 }

@@ -90,16 +90,19 @@ $gridColumns = [
     ],
     [
         'attribute' => 'idEstado',
+        'contentOptions' => ['data-cellvalue' => 'idEstado'],
         'filter' => Estadotraspaso::getListaData(),
         'value' => function ($model) {
-            // Obtiene el nombre del estado de la planilla y el estado general
-            $estado = $model->planillaembarquetraspaso ? $model->planillaembarquetraspaso->estadoPlanilla->nombre : '';
-            $estadoPlanilla = $model->estado ? $model->estado->nombre : '';
+            $planillaEmbarque = $model->planillaembarquetraspaso;
 
-            // Concatenar los dos estados (si ambos existen)
-            return $estadoPlanilla && $estado ? $estadoPlanilla . ' / ' . $estado : $estadoPlanilla . $estado;
+            $estadoPlanilla = is_object($planillaEmbarque->estadoPlanilla ?? null) ?
+                $planillaEmbarque->estadoPlanilla->nombre : '';
+            $estado = $model->estado ? $model->estado->nombre : '';
+
+            $estaActual = $estadoPlanilla ? $estadoPlanilla : $estado;
+
+            return $estaActual;
         },
-        'contentOptions' => ['data-cellvalue' => 'idEstado',],
     ],
     [
         'attribute' => 'updated_at',
@@ -343,7 +346,17 @@ Modal::end();
         'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
     ],
     'rowOptions' => function ($model) {
-    return $model->estado->nombre === 'anulado' ? ['class' => 'text-danger'] : [];
+    $classes = [];
+    if ($model->estado->nombre === 'muelle') {
+        $classes[] = 'text-success';
+    }
+    if ($model->estado->nombre === 'anulado') {
+        $classes[] = 'text-danger';
+    }
+    if ($model->estado->nombre === 'terminado') {
+        $classes[] = 'text-primary';
+    }
+    return ['class' => implode(' ', $classes)];
 },
 
     'columns' => [
@@ -437,20 +450,16 @@ Modal::end();
 
         ],
 
-        // 'idEstado',
         [
             'attribute' => 'idEstado',
             'contentOptions' => ['data-cellvalue' => 'idEstado',],
             'filter' => Estadotraspaso::getListaData(),
             'value' => function ($model) {
-    // Obtiene el nombre del estado de la planilla y el estado general
-    $estado = $model->planillaembarquetraspaso ? $model->planillaembarquetraspaso->estadoPlanilla->nombre : '';
-    $estadoPlanilla = $model->estado ? $model->estado->nombre : '';
-
-    // Concatenar los dos estados (si ambos existen)
-    return $estadoPlanilla && $estado ? $estadoPlanilla . ' / ' . $estado : $estadoPlanilla . $estado;
-},
+                return $model->estado->nombre;
+            },
         ],
+        'estadoPlanilla',
+
         // 'idUltimoItem',
         [
             'attribute' => 'created_at',
@@ -522,7 +531,7 @@ Modal::end();
             'class' => ActionColumn::className(),
             'header' => 'Acción',
             'headerOptions' => ['width' => '10%'],
-            'template' => ' {view} {update} {anular} {factura} {siesa}',
+            'template' => ' {view} {update} {anular} {factura} {directo} {siesa}',
             'buttons' => [
 
                 'view' => function ($url, $model) {
@@ -555,6 +564,16 @@ Modal::end();
             ['factura', 'id' => $model->id],
             [
                 'title' => 'Ver factura generada',
+                'class' => 'btn btn-default',
+            ]
+        );
+    },
+                'directo' => function ($url, $model) {
+        return Html::a(
+            '<i class="fa fa-check"></i>',
+            ['directo', 'id' => $model->id],
+            [
+                'title' => 'Traspaso directo de tienda',
                 'class' => 'btn btn-default',
             ]
         );

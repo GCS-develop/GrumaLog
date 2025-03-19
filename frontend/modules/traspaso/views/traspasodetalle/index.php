@@ -264,7 +264,7 @@ $this->registerJs("
                 // Verifica si el estado es "Pendiente"
                 $estado = $model->traspaso->estado ? $model->traspaso->estado->nombre : '';
                 if (strcasecmp($estado, 'Pendiente') === 0) {
-                    return  $model->item->geInventariogruma( $model->item->codigoBarras, $model->traspaso->bodegaOrigen->codigo);
+                    return $model->item->geInventariogruma($model->item->codigoBarras, $model->traspaso->bodegaOrigen->codigo);
                     ;
                 }
                 return null; // O devuelve '-' si prefieres que se vea un guion en lugar de vacío
@@ -278,14 +278,10 @@ $this->registerJs("
             'contentOptions' => ['data-cellvalue' => 'idEstado',],
             'filter' => Estadotraspaso::getListaData(),
             'value' => function ($model) {
-                // Obtiene el nombre del estado de la planilla y el estado general
-                $estado = $model->traspaso->planillaembarquetraspaso ? $model->traspaso->planillaembarquetraspaso->estadoPlanilla->nombre : '';
-                $estadoPlanilla = $model->traspaso->estado ? $model->traspaso->estado->nombre : '';
-
-                // Concatenar los dos estados (si ambos existen)
-                return $estadoPlanilla && $estado ? $estadoPlanilla . ' / ' . $estado : $estadoPlanilla . $estado;
+                return $model->traspaso->estado->nombre;
             },
         ],
+        'estadoPlanilla',
         'created_at',
         [
             'attribute' => 'created_by',
@@ -385,7 +381,19 @@ $this->registerJs("
         'options' => [
             'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
         ],
-
+        'rowOptions' => function ($model) {
+        $classes = [];
+        if ($model->traspaso->estado->nombre === 'muelle') {
+            $classes[] = 'text-success';
+        }
+        if ($model->traspaso->estado->nombre === 'anulado') {
+            $classes[] = 'text-danger';
+        }
+        if ($model->traspaso->estado->nombre === 'pendiente') {
+            $classes[] = 'text-primary';
+        }
+        return ['class' => implode(' ', $classes)];
+    },
         'columns' => array_merge(
             [
                 ['class' => 'kartik\grid\SerialColumn'],

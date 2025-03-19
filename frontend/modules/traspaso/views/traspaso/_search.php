@@ -1,5 +1,6 @@
 <?php
 
+
 $this->registerCss('
 
     .btn-create {
@@ -19,6 +20,7 @@ use frontend\models\TipoDocumento;
 use frontend\models\Bodegas;
 use frontend\models\Estadotraspaso;
 use frontend\models\Usertraspaso;
+use frontend\models\Estadorecepcion;
 
 
 /** @var yii\web\View $this */
@@ -78,16 +80,22 @@ use frontend\models\Usertraspaso;
                 $form->field($model, 'numeroCajas')->textInput(['type' => 'number', 'min' => 0, 'step' => 1, 'id' => 'numero-cajas'])
                 ?>
         </div>
+
         <div class="col-lg-3">
-            <?php echo $form->field($model, 'idEstado')->dropDownList(
-                Estadotraspaso::getListaData(),
+            <?php
+            echo $form->field($model, 'tipoMovimiento')->label('Tipo de movimiento')->dropDownList(
                 [
-                    'prompt' => ' Seleccionar estado ... ',
-                    'id' => 'idEstado',
+                    '1' => 'Traspaso',
+                    '2' => 'Entradas',
+                    '3' => 'CDSC',
+                ],
+                [
+                    'prompt' => 'Seleccionar tipo de movimiento...',
+                    'id' => 'tipoMovimiento',
                 ]
             );
-            ?>
 
+            ?>
         </div>
         <div class="col-lg-3">
             <?=
@@ -147,20 +155,26 @@ use frontend\models\Usertraspaso;
         </div>
 
         <div class="col-lg-3">
-            <?php
-            echo $form->field($model, 'tipoMovimiento')->label('Tipo de movimiento')->dropDownList(
+            <?php echo $form->field($model, 'idEstado')->dropDownList(
+                Estadotraspaso::getListaData(),
                 [
-                    '1' => 'Traspaso',
-                    '2' => 'Entradas',
-                    '3' => 'CDSC',
-                ],
-                [
-                    'prompt' => 'Seleccionar tipo de movimiento...',
-                    'id' => 'tipoMovimiento',
+                    'prompt' => ' Seleccionar estado ... ',
+                    'id' => 'idEstado',
                 ]
             );
-
             ?>
+
+        </div>
+        <div class="col-lg-3">
+            <?php echo $form->field($model, 'estadoPlanilla')->dropDownList(
+                Estadorecepcion::getListaData(),
+                [
+                    'prompt' => ' Seleccionar estado ... ',
+                    'id' => 'idEstado',
+                ]
+            );
+            ?>
+
         </div>
 
     </div>

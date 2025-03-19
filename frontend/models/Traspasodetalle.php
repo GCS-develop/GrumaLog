@@ -44,6 +44,8 @@ class Traspasodetalle extends \yii\db\ActiveRecord
     public $fechaDesde;
     public $fechaHasta;
     public $proveedor;
+    public $estadoPlanilla;
+    
 
     /**
      * {@inheritdoc}

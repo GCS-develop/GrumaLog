@@ -313,4 +313,32 @@ class TraspasoController extends Controller
     }
 
 
+
+    public function actionDirecto($id)
+    {
+        $model = $this->findModel($id);
+
+        if ($model->idEstado != 2) {
+
+            $model->idEstado = 4;
+
+            if ($model->save()) {
+
+                Yii::$app->session->setFlash('success', 'Estado cambiado!');
+                return $this->redirect(['index']);
+
+            } else {
+
+                Yii::$app->session->setFlash('error', 'Ups!, ocurrio un problema');
+
+            }
+
+        } else {
+
+            Yii::$app->session->setFlash('warning', 'No puedes cambiar a recibir en tiendas desde este estado!');
+            return $this->redirect(['index']);
+
+        }
+
+    }
 }

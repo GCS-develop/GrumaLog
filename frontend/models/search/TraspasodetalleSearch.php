@@ -45,6 +45,7 @@ class TraspasodetalleSearch extends Traspasodetalle
                     'proveedor',
                     'bodegaorigen',
                     'bodegadestino',
+                    'estadoPlanilla',
                 ],
                 'safe'
             ],
@@ -85,6 +86,13 @@ class TraspasodetalleSearch extends Traspasodetalle
         $query->join('INNER JOIN', 'talla t', 't.id = i.idTalla');
         $query->join('INNER JOIN', 'color c', 'c.id = i.idColor');
         $query->join('INNER JOIN', 'estadotraspaso e', 'e.id = tr.idestado');
+        $query->join(
+            'LEFT JOIN',
+            'planillaembarquetraspaso pet',
+            'pet.id = (SELECT MAX(id) FROM planillaembarquetraspaso WHERE idTraspaso = tr.id)'
+        );
+        $query->join('LEFT JOIN', 'estadorecepcion er', 'er.id = pet.idEstado AND er.id <> 5'); // Agregando la relación
+
         // $query->join('INNER JOIN', 'unidadempaque ue', 'ue.id = i.unidadEmpaque');
 
 
@@ -107,6 +115,7 @@ class TraspasodetalleSearch extends Traspasodetalle
             'i.nombreProveedor',
             'tr.idBodegaOrigen',
             'tr.idBodegaDestino',
+            'er.nombre as estadoPlanilla'
 
         ]);
 
@@ -126,7 +135,7 @@ class TraspasodetalleSearch extends Traspasodetalle
             // $query->where('0=1');
             return $dataProvider;
         }
-
+        // var_dump($this->estadoPlanilla);die()
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
@@ -144,9 +153,9 @@ class TraspasodetalleSearch extends Traspasodetalle
             't.codigo' => $this->talla,
             'e.codigo' => $this->estado,
             'tr.tipoMovimiento' => $this->tipomovimiento,
-            'tr.idBodegaOrigen'=> $this->bodegaorigen,
-            'tr.idBodegaDestino' =>  $this->bodegadestino
-
+            'tr.idBodegaOrigen' => $this->bodegaorigen,
+            'tr.idBodegaDestino' => $this->bodegadestino,
+            'er.id' => $this->estadoPlanilla,
             // 'tr.created_at' => $this->fechainicio,
             // 'tr.updated_at' => $this->fechafin,
 
