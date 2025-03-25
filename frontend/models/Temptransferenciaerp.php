@@ -185,7 +185,8 @@ class Temptransferenciaerp extends \yii\db\ActiveRecord
 
         $origen = 'Traspaso CDSC';
         $idgruma = $idtraspaso;
-        $documento = OrdendecompraSIESA::obtenerDatosDocumentoCDSC($tipodocumento, $numerodocumento, $origen);
+    
+        $documento = OrdendecompraSIESA::obtenerDatosDocumentoCDSC($tipodocumento, $numerodocumento, $idconteodestino, $origen);
 
         $guardoDatos = Documentosiesa::grabarDatos($documento, $idgruma, $origen);
 

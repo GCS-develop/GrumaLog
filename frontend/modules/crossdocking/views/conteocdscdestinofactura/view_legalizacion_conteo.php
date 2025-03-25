@@ -33,8 +33,9 @@ $this->registerCss('
     }
 ');
 
-$this->registerJsFile(Yii::$app->request->baseUrl.'/js/mainDataModal.js',
-['depends' => [\yii\web\JqueryAsset::className()]]
+$this->registerJsFile(
+    Yii::$app->request->baseUrl . '/js/mainDataModal.js',
+    ['depends' => [\yii\web\JqueryAsset::className()]]
 );
 
 use yii\helpers\Html;
@@ -55,26 +56,34 @@ $fecha_actual = date("Y-m-d");
 $numerofactura = $modelfactura->numeroFactura;
 $nit = $modelfactura->proveedor->nit;
 
-$numero = $nit . '-' .$numerofactura ;
+$numero = $nit . '-' . $numerofactura;
 
 $filename = "Relacion_CDSCDestino_Matriz_CurvaTallasColores_" . $numero . "_" . $fecha_actual;
 $filenameBD = "Relacion_CDSCDestino_BD_CurvaTallasColores_" . $numero . "_" . $fecha_actual;
 
+
+$dataArraydataProviderEspecifico = $dataProviderEspecifico;
+if (!empty($dataArraydataProviderEspecifico) && is_array(reset($dataArraydataProviderEspecifico))) {
+    $columnsdataProviderEspecifico = array_keys(reset($dataArraydataProviderEspecifico));
+} else {
+    $columnsdataProviderEspecifico = []; // O establece columnas predeterminadas si es necesario
+}
+
 ?>
 
 <?php
-    Modal::begin([                
-        'title'=>'<h4>Registro datos básicos legalización factura</h4>',
-        'id'=>'modaldata',
-        'size'=>'modal-lg',
-        'options' => [
-            'tabindex' => false  // Importante para que funcione el Select
-        ]
-    ]);
-        
-    echo "<div id='modalContentData'></div>";
-        
-    Modal::end(); 
+Modal::begin([
+    'title' => '<h4>Registro datos básicos legalización factura</h4>',
+    'id' => 'modaldata',
+    'size' => 'modal-lg',
+    'options' => [
+        'tabindex' => false  // Importante para que funcione el Select
+    ]
+]);
+
+echo "<div id='modalContentData'></div>";
+
+Modal::end();
 ?>
 
 <?php
@@ -94,7 +103,7 @@ foreach ($dataProvider as $fila) {
 //					
 
 $gridColumns = [
-    
+
     'radicado',
     'razonSocial',
     'nit',
@@ -105,32 +114,37 @@ $gridColumns = [
 
     [
         'attribute' => 'idEstadoFactura',
-        'value' => function($model) {
+        'value' => function ($model) {
             $estado = '';
-            switch($model->idEstadoFactura){
+            switch ($model->idEstadoFactura) {
                 case 1:
-                    $estado = 'En Conteo'; break;
+                    $estado = 'En Conteo';
+                    break;
                 case 2:
-                    $estado = 'Finalizada'; break;
+                    $estado = 'Finalizada';
+                    break;
                 default:
-                    $estado = 'Sin Conteo'; break;
+                    $estado = 'Sin Conteo';
+                    break;
             }
-            
+
             return $estado;
         },
     ],
 
     [
         'attribute' => 'idLegalizadoFactura',
-        'value' => function($model) {
+        'value' => function ($model) {
             $estado = '';
-            switch($model->idLegalizadoFactura){
+            switch ($model->idLegalizadoFactura) {
                 case 1:
-                    $estado = 'Legalizado'; break;
+                    $estado = 'Legalizado';
+                    break;
                 default:
-                    $estado = 'No Legalizado'; break;
+                    $estado = 'No Legalizado';
+                    break;
             }
-            
+
             return $estado;
         },
     ],
@@ -190,7 +204,7 @@ foreach ($tallasUnicas as $talla) {
                     // La clave 'unidadesConteo' está definida en la fila actual
                     $unidades = $model[$talla]['unidades'];
                 }
-            } 
+            }
 
             return $unidades;
         },
@@ -206,7 +220,7 @@ foreach ($tallasUnicas as $talla) {
 
     <div class="row">
 
-        <div class="col-lg-4 centrar">   
+        <div class="col-lg-3 centrar">
             <?php echo ExportMenu::widget(
                 [
                     'dataProvider' => new \yii\data\ArrayDataProvider([
@@ -228,7 +242,7 @@ foreach ($tallasUnicas as $talla) {
                         ExportMenu::FORMAT_CSV => false,
                         ExportMenu::FORMAT_EXCEL_X => [
                             'label' => 'Excel 2007+',
-                            'icon' => 'file-excel-o' ,
+                            'icon' => 'file-excel-o',
                             'iconOptions' => ['class' => 'text-success'],
                             'linkOptions' => [],
                             'options' => ['title' => 'Microsoft Excel 2007+ (xlsx)'],
@@ -237,25 +251,30 @@ foreach ($tallasUnicas as $talla) {
                             'extension' => 'xlsx',
                             'writer' => ExportMenu::FORMAT_EXCEL_X
                         ],
-                        
-                    ]                            
-                ]);
-            ?>        
+
+                    ]
+                ]
+            );
+            ?>
         </div>
 
-        <div class="col-lg-4 centrar">
+        <div class="col-lg-3 centrar">
             <?php $url = Url::to(['legalizarconteo', 'idconteofactura' => $modelfactura->id]); ?>
-            
+
             <p>
-            <?= Html::button('Legalizar Factura', 
-                        [   'value'=>  $url, 
-                            'class' => 'btn btn-success btn-lg btn-create', 'id'=>'modalButtonCreate',
-                        ]) 
-            ?>
+                <?= Html::button(
+                    'Legalizar Factura',
+                    [
+                        'value' => $url,
+                        'class' => 'btn btn-success btn-lg btn-create',
+                        'id' => 'modalButtonCreate',
+                    ]
+                )
+                    ?>
             </p>
         </div>
 
-        <div class="col-lg-4 centrar">   
+        <div class="col-lg-3 centrar">
             <?php echo ExportMenu::widget(
                 [
                     'dataProvider' => $dataProviderBD,
@@ -274,7 +293,7 @@ foreach ($tallasUnicas as $talla) {
                         ExportMenu::FORMAT_CSV => false,
                         ExportMenu::FORMAT_EXCEL_X => [
                             'label' => 'Excel 2007+',
-                            'icon' => 'file-excel-o' ,
+                            'icon' => 'file-excel-o',
                             'iconOptions' => ['class' => 'text-success'],
                             'linkOptions' => [],
                             'options' => ['title' => 'Microsoft Excel 2007+ (xlsx)'],
@@ -283,21 +302,60 @@ foreach ($tallasUnicas as $talla) {
                             'extension' => 'xlsx',
                             'writer' => ExportMenu::FORMAT_EXCEL_X
                         ],
-                        
-                    ]                            
-                ]);
-            ?>        
+
+                    ]
+                ]
+            );
+            ?>
         </div>
 
-    </div>    
+        <div class="col-lg-3 centrar">
+            <?php echo ExportMenu::widget(
+                [
+                    'dataProvider' => new \yii\data\ArrayDataProvider([
+                        'allModels' => $dataProviderEspecifico,
+                        'pagination' => false, // Opcional: desactiva la paginación si no la necesitas
+                    ]),
+                    'columns' => $columnsdataProviderEspecifico,
+                    'fontAwesome' => true,
+                    'filename' => 'Detalles -' . $filename,
+                    'dropdownOptions' => [
+                        'label' => 'Exportar Matriz Detalles',
+                        'class' => 'btn btn-success btn-lg btn-create',
+                    ],
+                    'exportConfig' => [
+                        ExportMenu::FORMAT_TEXT => false,
+                        ExportMenu::FORMAT_HTML => false,
+                        ExportMenu::FORMAT_EXCEL => false,
+                        ExportMenu::FORMAT_PDF => false,
+                        ExportMenu::FORMAT_CSV => false,
+                        ExportMenu::FORMAT_EXCEL_X => [
+                            'label' => 'Excel 2007+',
+                            'icon' => 'file-excel-o',
+                            'iconOptions' => ['class' => 'text-primary'],
+                            'linkOptions' => [],
+                            'options' => ['title' => 'Microsoft Excel 2007+ (xlsx)'],
+                            'alertMsg' => 'Se va a generar un archivo en formato EXCEL 2007+ (xlsx).',
+                            'mime' => 'application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            'extension' => 'xlsx',
+                            'writer' => ExportMenu::FORMAT_EXCEL_X
+                        ],
+
+                    ]
+                ]
+            );
+            ?>
+        </div>
+
+    </div>
 
     <!-- Espacio -->
     <div class="row">
         <div class="col-md-12" style="margin-bottom: 20px;"></div>
     </div>
 
-    <?php 
-        echo '<div class="mi-titulo-black">Proveedor:' . $modelfactura->proveedor->nit . '-' . 
+    <?php
+    echo '<div class="mi-titulo-black">Proveedor:' . $modelfactura->proveedor->nit . '-' .
         $modelfactura->proveedor->razonSocial . '-' .
         $modelfactura->numeroFactura . '</div>';
     ?>
@@ -314,10 +372,10 @@ foreach ($tallasUnicas as $talla) {
         ]),
 
         'summary' => '',
-		'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
-		'options' => [
-			'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
-		],
+        'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
+        'options' => [
+            'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
+        ],
         'showPageSummary' => true,
 
         'columns' => $columns,
@@ -340,18 +398,18 @@ foreach ($tallasUnicas as $talla) {
     <?= GridView::widget([
         'dataProvider' => $dataProviderBD,
         //'filterModel' => $searchModel,
-
+    
         'summary' => '',
-		'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
-		'options' => [
-			'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
-		],
+        'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
+        'options' => [
+            'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
+        ],
 
         'showPageSummary' => true,
 
         'columns' => [
             //['class' => 'yii\grid\SerialColumn'],
-
+    
             'radicado',
             'id',
             'codigoAlmacen',
@@ -362,7 +420,7 @@ foreach ($tallasUnicas as $talla) {
                 'format' => ['date', 'php:Y-m-d H:i'],
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
-            ],  
+            ],
 
             [
                 'attribute' => 'updated_at', // Nombre del atributo en el modelo
@@ -379,11 +437,42 @@ foreach ($tallasUnicas as $talla) {
                 'vAlign' => 'middle', // Alineación vertical al centro
                 'format' => ['decimal', 0], // Formato decimal con 0 decimales,
                 'pageSummary' => true,
-        
+
             ],
 
         ],
     ]); ?>
 
 
+
+    <?= GridView::widget([
+        'dataProvider' => new \yii\data\ArrayDataProvider([
+            'allModels' => $dataProviderEspecifico,
+            //'allModels' => $data,
+            'pagination' => [
+                'pageSize' => 50, // Número de elementos por página
+            ],
+        ]),
+
+        'summary' => '',
+        'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
+        'options' => [
+            'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
+        ],
+        'showPageSummary' => true,
+
+        'columns' => $columnsdataProviderEspecifico,
+
+        /*'rowOptions' => function ($model, $key, $index, $grid) {
+            $options = [];
+            $diferencia = $model['totalUnidadesAsignadas'] - $model['totalUnidadesConteo'];
+
+            if ($diferencia != 0){
+                $options['style'] = 'background-color: #ff9999;'; // Puedes cambiar el color aquí
+            }
+
+            return $options;
+        },*/
+
+    ]); ?>
 </div>

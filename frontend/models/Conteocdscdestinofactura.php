@@ -73,11 +73,40 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
     {
         return [
             //[['idProveedor', 'numeroFactura', 'fecha', 'totalUnidades'], 'required'],
-            [['idProveedor', 'idCentroOperacionLegaliza', 'totalUnidades', 'created_by', 'updated_by',
-            'idEstadoEntrada', 'idEstadoTraspaso', 'idUserLegaliza', 'idUserEntrada', 'idUserTraspaso',
-            'idSerieEntrada', 'numeroEntrada', 'idOrdenCompra', 'consignacion', 'idErpEntrada'], 'integer'],
-            [['fecha', 'created_at', 'updated_at', 'observacionLegalizacion', 'fechaLegaliza',
-            'fechaEntrada', 'fechaTraspaso', 'idTransferenciaerp', 'idTraspaso'], 'safe'],
+            [
+                [
+                    'idProveedor',
+                    'idCentroOperacionLegaliza',
+                    'totalUnidades',
+                    'created_by',
+                    'updated_by',
+                    'idEstadoEntrada',
+                    'idEstadoTraspaso',
+                    'idUserLegaliza',
+                    'idUserEntrada',
+                    'idUserTraspaso',
+                    'idSerieEntrada',
+                    'numeroEntrada',
+                    'idOrdenCompra',
+                    'consignacion',
+                    'idErpEntrada'
+                ],
+                'integer'
+            ],
+            [
+                [
+                    'fecha',
+                    'created_at',
+                    'updated_at',
+                    'observacionLegalizacion',
+                    'fechaLegaliza',
+                    'fechaEntrada',
+                    'fechaTraspaso',
+                    'idTransferenciaerp',
+                    'idTraspaso'
+                ],
+                'safe'
+            ],
             [['numeroFactura', 'numeroFacturaEntrada'], 'string', 'max' => 20],
             [['idProveedor', 'numeroFactura'], 'unique', 'targetAttribute' => ['idProveedor', 'numeroFactura']],
             [['idProveedor'], 'exist', 'skipOnError' => true, 'targetClass' => Proveedor::class, 'targetAttribute' => ['idProveedor' => 'id']],
@@ -113,7 +142,7 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
             'numeroEntrada' => 'Numero',
             'idUserEntrada' => 'Usuario Entrada',
             'idUserTraspaso' => 'Usuario Traspaso',
-            'idTransferenciaerp' => 'ID Transferencia', 
+            'idTransferenciaerp' => 'ID Transferencia',
             'idTraspaso' => 'ID Traspaso',
             'numeroFacturaEntrada' => 'Número Factura'
         ];
@@ -174,17 +203,19 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
         return $this->hasOne(Ordendecompra::class, ['id' => 'idOrdenCompra']);
     }
 
-    public static function generarDataConteoCurvas ($radicado, $idproveedor, $numerofactura) {
+    public static function generarDataConteoCurvas($radicado, $idproveedor, $numerofactura)
+    {
 
-        $informaciondataconteo = self::generarQuery ($radicado, $idproveedor, $numerofactura);
+        $informaciondataconteo = self::generarQuery($radicado, $idproveedor, $numerofactura);
 
-        $arrayresultado = self::generarArregloCurvas ($informaciondataconteo);
+        $arrayresultado = self::generarArregloCurvas($informaciondataconteo);
 
 
         return $arrayresultado;
     }
 
-    public static function grabarOrdenCompra ($model){
+    public static function grabarOrdenCompra($model)
+    {
         $respuesta = false;
 
         $modeloc = OrdendeCompra::findOne(['id' => $model->idOrdenCompra]);
@@ -200,14 +231,14 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
         $modelfactura->idEstadoTraspaso = 0;
         $modelfactura->totalUnidades = 0;
 
-        if ($modelfactura->save()){
+        if ($modelfactura->save()) {
             $respuesta = true;
         }
 
         return $respuesta;
     }
 
-    public static function generarQuery ($radicado, $idproveedor, $numerofactura)
+    public static function generarQuery($radicado, $idproveedor, $numerofactura)
     {
         $sql = "
             SELECT 
@@ -235,11 +266,11 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
             WHERE 1 = 1
         ";
 
-        if ($radicado != null){
+        if ($radicado != null) {
             $sql = $sql . " AND fact.id = :radicado";
         }
 
-        if (($idproveedor != null) && ($numerofactura != null)){
+        if (($idproveedor != null) && ($numerofactura != null)) {
             $sql = $sql . " AND fact.idProveedor = :idproveedor AND fact.numeroFactura = :numerofactura";
         }
 
@@ -248,18 +279,74 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
                         prv.razonSocial, prv.nit,it.item, it.idColor, it.descripcion, 
                         col.codigo, tal.codigo, tal.orden 
                 ORDER BY it.item, tal.orden";
-                // ORDER BY it.item, col.codigo";
+        // ORDER BY it.item, col.codigo";
 
         $data = self::getDb()->createCommand($sql, [
-                                                        ':radicado' => $radicado,
-                                                        ':idproveedor' => $idproveedor,
-                                                        ':numerofactura' => $numerofactura
-                                                    ])->queryAll();
+            ':radicado' => $radicado,
+            ':idproveedor' => $idproveedor,
+            ':numerofactura' => $numerofactura
+        ])->queryAll();
 
         return $data;
     }
 
-    public static function generarArregloCurvas ($filasConsulta){
+    public static function generarQueryCrossdocking($oc)
+    {
+        $sql = "
+        SELECT 
+            oc.consecutivo AS oc,  
+            CONCAT(uc.id,'-', uc.username)AS usuario,
+            i.nombreProveedor AS proveedor,
+            cop.nombre AS tienda,  
+            cd.numeroCajas,  
+            cdd.codigoBarras,  
+            i.item,  
+            c.codigo AS color,  
+            t.nombre AS talla,  
+            COALESCE(i.unidadEmpaque, i.unidadOrden) AS unidadEmpaque,  
+            cdd.totalUnidades AS totalRegistros,  
+            COALESCE(uem.equivalencia, 1) * cdd.totalUnidades AS Unidades,
+            SUM(CASE WHEN i.unidadEmpaque IS NOT NULL THEN cdd.totalUnidades ELSE 0 END) OVER () AS TotalRegistrosPaquetes,
+            SUM(cdd.totalUnidades) OVER () AS sumaTotalRegistros,
+
+            SUM(CASE WHEN i.unidadEmpaque IS NOT NULL THEN COALESCE(uem.equivalencia, 1) * cdd.totalUnidades ELSE 0 END) OVER () AS TotalUnidadesPaquetes,
+            SUM(COALESCE(uem.equivalencia, 1) * cdd.totalUnidades) OVER () AS sumaTotalUnidades
+
+        FROM conteocdscdestinofactura cdf
+        JOIN ordendecompra oc ON oc.id = cdf.idOrdenCompra
+        JOIN conteocdscdestino cd ON cdf.id = cd.idConteocdscdestinofactura
+        JOIN conteocdscdestinodetalle cdd ON cdd.idConteocdscdestino = cd.id
+        JOIN item i ON i.id = cdd.idItem
+        LEFT JOIN talla t ON t.id = i.idTalla
+        LEFT JOIN color c ON c.id = i.idColor
+        JOIN userconteocdsc ucc ON ucc.id = cd.idUserConteo
+        JOIN [user] uc ON uc.id = ucc.idUser
+        LEFT JOIN unidadempaque uem on uem.codigo = i.unidadEmpaque
+        LEFT JOIN bodegas cop ON cop.id = cd.idCentroOperacion
+        LEFT JOIN centrooperacion copm ON copm.id = cdf.idCentroOperacionMovimiento
+        LEFT JOIN centrooperacion copl ON copl.id = cdf.idCentroOperacionLegaliza
+        ";
+
+
+        if ($oc != null) {
+            $sql = $sql . " WHERE oc.consecutivo = :oc";
+        }
+
+        $sql = $sql . "
+                ORDER BY cop.nombre, cdd.codigoBarras;";
+
+        $data = self::getDb()->createCommand($sql, [
+            ':oc' => $oc,
+        ])->queryAll();
+
+
+        // var_dump($oc);
+        // die();
+        return $data;
+    }
+
+    public static function generarArregloCurvas($filasConsulta)
+    {
 
         $filas = [];
 
@@ -269,7 +356,7 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
 
             // Verificar si la fila ya existe en el array
             if (!isset($filas[$identificador])) {
-                
+
                 // Si no existe, crear la fila con los valores predeterminados
                 $filas[$identificador] = [
                     'radicado' => $fila['radicado'],
@@ -284,10 +371,10 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
             $filas[$identificador]['totalUnidadesConteo'] += $fila['unidades'];
 
             $unidades = 0;
-            if (isset($filas[$identificador][$fila['talla']]['unidades'])){
+            if (isset($filas[$identificador][$fila['talla']]['unidades'])) {
                 $unidades = $filas[$identificador][$fila['talla']]['unidades'];
             }
-        
+
             // Agregar los demás valores a la fila
             // Puedes agregar aquí las demás columnas que quieras incluir en la fila
             $filas[$identificador][$fila['talla']] = [
@@ -479,7 +566,7 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
 
         $ordencompra = Ordendecompra::findOne(['id' => $factura->idOrdenCompra]);
 
-        if ($factura->idTransferenciaerp){
+        if ($factura->idTransferenciaerp) {
             $transferenciaerp = Transferenciaerp::findOne(['id' => $factura->idTransferenciaerp]);
 
             if ($transferenciaerp) {
@@ -508,7 +595,7 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
 
         $conector = Conectoresdinamicos::find()->where(['idDocumento' => '165604'])->one();
 
-        $descripcion = 'Transferencia CDSC: ' . 
+        $descripcion = 'Transferencia CDSC: ' .
             $factura->id . ' - ' .
             $ordencompra->proveedor->razonSocial . ' ' .
             $ordencompra->tipoDocumento->codigo . '-' .
@@ -564,7 +651,7 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
             $model->bodegaMovimiento = $registro->bodega;
             $model->unidadMovimiento = 'UND';
             $model->cantidadBase = $registro->unidadesConteo;
-            
+
             $model->fechaEntregaMovimiento = $registro->fechaEntrega;
             $model->item = $registro->item;
             $model->color = $registro->color;
@@ -578,7 +665,8 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
             if (!$model->save()) {
                 $ok = false;
                 var_dump($registro);
-                var_dump($model->getErrors()); die("Error en detalleTransferencia");
+                var_dump($model->getErrors());
+                die("Error en detalleTransferencia");
                 continue;
             }
 
@@ -588,37 +676,45 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
 
     }
 
-    public static function actualizarentradaerp($idconteofactura){
+    public static function actualizarentradaerp($idconteofactura)
+    {
 
         $model = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
-        $numerodocumento = $model->numeroEntrada;
-        $tipodocumento = $model->tipodocumento->codigo;
 
-        $origen = 'CDSC';
-        $idgruma = $idconteofactura;
-        $documento = OrdendecompraSIESA::obtenerDatosDocumentoCDSC($tipodocumento, $numerodocumento, $idconteofactura, $origen);
-        $guardoDatos = Documentosiesa::grabarDatos($documento, $idgruma, $origen);
+        if ($model->numeroEntrada && $model->idSerieEntrada) {
 
-        $modelsiesa = Documentosiesa::find()->where([
-            'origen' => $origen,
-            'idGruma' => $idconteofactura
-        ])->one();
+            $numerodocumento = $model->numeroEntrada;
+            $tipodocumento = $model->tipodocumento->codigo;
 
-        if ($modelsiesa){
+            $origen = 'CDSC';
+            $idgruma = $idconteofactura;
+            $documento = OrdendecompraSIESA::obtenerDatosDocumentoCDSC($tipodocumento, $numerodocumento, $idconteofactura, $origen);
 
-            $model->idEstadoEntrada = 2; // Generada
-            $model->idEstadoTraspaso = 2; // Autorizada
+            $guardoDatos = Documentosiesa::grabarDatos($documento, $idgruma, $origen);
 
-            $model->fechaEntrada = new Expression('GETDATE()');
-            $model->idUserEntrada = Yii::$app->user->identity->id;
+            $modelsiesa = Documentosiesa::find()->where([
+                'origen' => $origen,
+                'idGruma' => $idconteofactura
+            ])->one();
 
-            $model->idErpEntrada = $modelsiesa->id;
-            $model->save();
+            if ($modelsiesa) {
+
+                $model->idEstadoEntrada = 2; // Generada
+                $model->idEstadoTraspaso = 2; // Autorizada
+
+                $model->fechaEntrada = new Expression('GETDATE()');
+                $model->idUserEntrada = Yii::$app->user->identity->id;
+
+                $model->idErpEntrada = $modelsiesa->id;
+                $model->save();
+            }
         }
 
+        return $model->idErpEntrada;
     }
 
-    public static function actualizartraspasoerp($idconteofactura){
+    public static function actualizartraspasoerp($idconteofactura)
+    {
 
         $model = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
         $numerodocumento = $model->numeroEntrada;
@@ -634,7 +730,7 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
             'idGruma' => $idconteofactura
         ])->one();
 
-        if ($modelsiesa){
+        if ($modelsiesa) {
             $model->idErpTraspaso = $modelsiesa->id;
             $model->idEstadoTraspaso = 3; // Generada
             $model->fechaTraspaso = new Expression('GETDATE()');

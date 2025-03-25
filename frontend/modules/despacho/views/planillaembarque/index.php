@@ -206,6 +206,7 @@ Modal::end();
 
 
 <?= GridView::widget([
+    'responsiveWrap' => false,
     'dataProvider' => $dataProvider,
     // 'filterModel' => $searchModel,
     // 'showPageSummary' => true,

@@ -6,6 +6,7 @@ use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use kartik\grid\GridView;
 use kartik\export\ExportMenu;
+use common\widgets\Alert;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\PlanillaembarquetraspasoSearch $searchModel */
@@ -122,7 +123,32 @@ $gridColumns = [
     // 'horaRecibido',// Hora recibido transito  : indica la hora en que los documentos en trasito fueron recibidos en el CEDI por el auxiliar administrativo de transporte. 
 
     // 'planillaTransito ',// Planilla transito     : planilla que se elabora para el envío nuevamente desde el CEDI de los documentos TRT o traslados entre tiendas recibidos en trasito CEDI
+    [
+        'class' => ActionColumn::className(),
+        'header' => 'Acción',
+        'headerOptions' => ['width' => '10%'],
+        'template' => ' {anular} ',
+        'buttons' => [
 
+            'anular' => function ($url, $model) {
+                return Html::a(
+                    '<i class="fa fa-ban"></i>',
+                    ['anular', 'id' => $model->id],
+                    [
+                        'class' => 'btn btn-default',
+                        'title' => 'Anular Registro',
+                        'data' => [
+                            'confirm' => 'Esta seguro de anular este registro? ( Planilla: '
+                                . $model->planillaEmbarque->id . ', Traspaso: '
+                                . $model->tipoDocumento . $model->consecutivoDocumento . ', con unidades: '
+                                . $model->unidades . ' para la tienda ' . $model->codAlmacenDestino . $model->almacenDestino . ' )',
+                            'method' => 'post',
+                        ]
+                    ]
+                );
+            },
+        ]
+    ],
 
 ];
 
@@ -142,7 +168,8 @@ $gridColumns = [
         <!-- <div class="col-lg-12 centrar">
             <h3><?php var_dump($usuarioCreador) ?></h3>
         </div> -->
-
+        <?= Alert::widget() ?>
+        
         <div class="col-lg-12 centrar">
 
 
@@ -192,24 +219,26 @@ $gridColumns = [
             'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
         ],
         'rowOptions' => function ($model) {
-            $classes = [];
-            if ($model->estado === 'Recibido') {
-                $classes[] = 'text-success';
-            }
-            if ($model->estado === 'Anulado') {
-                $classes[] = 'text-danger';
-            }
-            if ($model->estado === 'Sin Enviar') {
-                $classes[] = 'text-primary';
-            }
-            return ['class' => implode(' ', $classes)];
-        },
+        $classes = [];
+        if ($model->estado === 'Recibido') {
+            $classes[] = 'text-success';
+        }
+        if ($model->estado === 'Anulado') {
+            $classes[] = 'text-danger';
+        }
+        if ($model->estado === 'Sin Enviar') {
+            $classes[] = 'text-primary';
+        }
+        return ['class' => implode(' ', $classes)];
+    },
         'columns' => array_merge(
             [
                 ['class' => 'kartik\grid\SerialColumn'],
             ],
             $gridColumns,
+
         ),
+
 
 
     ]); ?>

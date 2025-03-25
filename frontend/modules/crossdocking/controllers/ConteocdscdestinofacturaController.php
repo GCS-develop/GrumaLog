@@ -3,6 +3,7 @@
 namespace frontend\modules\crossdocking\controllers;
 
 use frontend\models\Bodegatipodocumento;
+use frontend\models\Documentosiesa;
 use frontend\models\search\ConteocdscdestinodetalleSearch;
 use Yii;
 use frontend\models\Conteocdscdestinofactura;
@@ -164,7 +165,7 @@ class ConteocdscdestinofacturaController extends Controller
         }*/
 
         $programa = 'index_almacen';
-        if ($origen == 'traspaso'){
+        if ($origen == 'traspaso') {
             $programa = 'index_almacen_imprimir';
         }
 
@@ -212,17 +213,21 @@ class ConteocdscdestinofacturaController extends Controller
 
                 if ($model->validate()) {
 
-                    $OK = Ordendecompra::insertarDatosOC ($idCia, 
-                                                            $model->idCentroOperacion, 
-                                                            $model->idTipoDocumento, 
-                                                            $model->numeroOrdenCompra);
+                    $OK = Ordendecompra::insertarDatosOC(
+                        $idCia,
+                        $model->idCentroOperacion,
+                        $model->idTipoDocumento,
+                        $model->numeroOrdenCompra
+                    );
 
 
-                    if ($OK > 0){
+                    if ($OK > 0) {
 
-                        $modeloc = Ordendecompra::find()->where(['idCO' => $model->idCentroOperacion,
-                                                            'idTipoDocumento' => $model->idTipoDocumento,
-                                                            'consecutivo' => $model->numeroOrdenCompra])->one();
+                        $modeloc = Ordendecompra::find()->where([
+                            'idCO' => $model->idCentroOperacion,
+                            'idTipoDocumento' => $model->idTipoDocumento,
+                            'consecutivo' => $model->numeroOrdenCompra
+                        ])->one();
 
                         $model->idOrdenCompra = $modeloc->id;
                         $model->fechaOrden = $modeloc->fecha;
@@ -233,13 +238,13 @@ class ConteocdscdestinofacturaController extends Controller
                         } else {
                             Yii::$app->session->setFlash('error', $mensajeError);
                         }
-                    }else {
-                        switch($OK){
-                            case - 1:
-                                Yii::$app->session->setFlash( 'error', 'OC. Tiene Inconsistencias. No Unidades de Item No Son Equivalentes a la Unidad de Medida');
+                    } else {
+                        switch ($OK) {
+                            case -1:
+                                Yii::$app->session->setFlash('error', 'OC. Tiene Inconsistencias. No Unidades de Item No Son Equivalentes a la Unidad de Medida');
                                 break;
-                            case 0: 
-                                Yii::$app->session->setFlash( 'error', 'Número Orden de Compra NO Existe');
+                            case 0:
+                                Yii::$app->session->setFlash('error', 'Número Orden de Compra NO Existe');
                                 break;
                         }
                     }
@@ -287,8 +292,8 @@ class ConteocdscdestinofacturaController extends Controller
         $idconteofactura = $id;
         $model = $this->findModel($idconteofactura);
 
-        if ($model->idEstado == 2){
-            Yii::$app->session->setFlash( 'error', 'Factura Ya se Encuentra Finalizada');
+        if ($model->idEstado == 2) {
+            Yii::$app->session->setFlash('error', 'Factura Ya se Encuentra Finalizada');
             return $this->redirect(['/crossdocking/conteocdscdestinofactura/index']);
         }
 
@@ -325,6 +330,7 @@ class ConteocdscdestinofacturaController extends Controller
     public function actionViewlegalizaconteo($idconteofactura)
     {
         $modelfactura = $this->findModel($idconteofactura);
+        $consecutivoOc = $modelfactura->ordenCompra->consecutivo;
 
         $searchModel = new ConteocdscdestinoSearch();
         $dataProviderBD = $searchModel->search($this->request->queryParams, $idconteofactura);
@@ -334,10 +340,17 @@ class ConteocdscdestinofacturaController extends Controller
 
         $dataProvider = Conteocdscdestinofactura::generarDataConteoCurvas($idconteofactura, $idproveedor, $numerofactura);
 
+        $dataProviderEspecifico = Conteocdscdestinofactura::generarQueryCrossdocking($consecutivoOc);
+
+        // var_dump($dataProviderEspecifico);
+        // die('hola');
+
         return $this->render('view_legalizacion_conteo', [
             'dataProvider' => $dataProvider,
             'dataProviderBD' => $dataProviderBD,
             'modelfactura' => $modelfactura,
+            'dataProviderEspecifico' => $dataProviderEspecifico,
+
         ]);
     }
 
@@ -458,7 +471,8 @@ class ConteocdscdestinofacturaController extends Controller
         }
     }
 
-    public function actionTraspasofactura ($idconteofactura){
+    public function actionTraspasofactura($idconteofactura)
+    {
 
         $model = new TraspasoFacturaCDSCForm();
 
@@ -476,8 +490,8 @@ class ConteocdscdestinofacturaController extends Controller
                 if ($model->validate()) {
 
                     $modelfactura = Conteocdscdestinofactura::findOne(['id' => $idconteofactura]);
-                    
-                    $bodega =Bodegatipodocumento::findOne(['id' => $model->idBodegaMovimiento]);
+
+                    $bodega = Bodegatipodocumento::findOne(['id' => $model->idBodegaMovimiento]);
 
                     $modelfactura->idCentroOperacionMovimiento = $model->idCentroOperacionMovimiento;
                     $modelfactura->idBodegaMovimiento = $bodega->idBodega;
@@ -507,17 +521,17 @@ class ConteocdscdestinofacturaController extends Controller
     {
         $model = $this->findModel($idconteofactura);
 
-        if (!$model->idTipoDocumentoMovimiento){
+        if (!$model->idTipoDocumentoMovimiento) {
             Yii::$app->session->setFlash('error', 'Falta Especificar Tipo Documento de Movimiento');
             return $this->redirect(['indextraspaso']);
         }
 
-        if (!$model->idBodegaMovimiento){
+        if (!$model->idBodegaMovimiento) {
             Yii::$app->session->setFlash('error', 'Falta Especificar Bodega de Movimiento');
             return $this->redirect(['indextraspaso']);
         }
 
-        if (!$model->idErpEntrada){
+        if (!$model->idErpEntrada) {
             Yii::$app->session->setFlash('error', 'Falta Ejecutar Transferencia de Entrada');
             return $this->redirect(['indextraspaso']);
         }
@@ -543,7 +557,7 @@ class ConteocdscdestinofacturaController extends Controller
             ]);
 
         }
-        
+
         return $this->redirect(['indextraspaso']);
     }
 
@@ -645,8 +659,8 @@ class ConteocdscdestinofacturaController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($model->idEstado == 2){
-            Yii::$app->session->setFlash( 'error', 'Factura Ya se Encuentra Finalizada');
+        if ($model->idEstado == 2) {
+            Yii::$app->session->setFlash('error', 'Factura Ya se Encuentra Finalizada');
             return $this->redirect(['/crossdocking/conteocdscdestinofactura/index']);
         }
 
@@ -663,17 +677,17 @@ class ConteocdscdestinofacturaController extends Controller
         $model = $this->findModel($idconteofactura);
         $idtransferenciaerp = $model->idTransferenciaerp;
 
-        if (!$model->idSerieEntrada){
+        if (!$model->idSerieEntrada) {
             Yii::$app->session->setFlash('error', 'Falta Especificar Tipo Documento de Entrada');
             return $this->redirect(['indexentrada']);
         }
 
-        if (!$model->numeroEntrada){
+        if (!$model->numeroEntrada) {
             Yii::$app->session->setFlash('error', 'Falta Especificar Número de Entrada');
             return $this->redirect(['indexentrada']);
         }
 
-        if (!$model->numeroFacturaEntrada){
+        if (!$model->numeroFacturaEntrada) {
             Yii::$app->session->setFlash('error', 'Falta Especificar Número de Factura de Entrada');
             return $this->redirect(['indexentrada']);
         }
@@ -681,7 +695,7 @@ class ConteocdscdestinofacturaController extends Controller
         $searchModel = new ConteocdscdestinodetalleSearch();
         $dataProviderBD = $searchModel->searchSIESA($idconteofactura);
 
-        $idtransferenciaerp = Conteocdscdestinofactura::crearRegistroTransferencia($model,  $dataProviderBD);
+        $idtransferenciaerp = Conteocdscdestinofactura::crearRegistroTransferencia($model, $dataProviderBD);
 
         $model->idTransferenciaerp = $idtransferenciaerp;
         $model->save();
@@ -700,6 +714,23 @@ class ConteocdscdestinofacturaController extends Controller
             'idtransferenciaerp' => $id,
             'idconteofactura' => $idconteofactura
         ]);
+    }
+
+    public function actionValidarerp($idconteofactura)
+    {
+
+        $iderpentrada = Conteocdscdestinofactura::actualizarentradaerp($idconteofactura);
+
+        if ($iderpentrada) {
+
+            $model = Documentosiesa::findOne(['id' => $iderpentrada]);
+
+            Yii::$app->session->setFlash('success', 'Registro Actualizado. No Documento => ' . $model->f350_consec_docto);
+        } else {
+            Yii::$app->session->setFlash('error', 'No Existe Documento Asociado a SIESA');
+        }
+
+        return $this->redirect(['indexentrada']);
     }
 
 

@@ -531,11 +531,11 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             ->queryAll();
     }
 
-    public static function obtenerDatosDocumentoCDSC($tipodocumento, $numerodocumento, $origen)
+    public static function obtenerDatosDocumentoCDSC($tipodocumento, $numerodocumento, $idconteofactura, $origen)
     {
 
         if ($origen == 'CDSC') {
-            $pattern = 'Transferencia CDSC: ' . $numerodocumento . ' - ';
+            $pattern = 'Transferencia CDSC: ' . $idconteofactura . ' - ';
         } else {
             $pattern = 'Traspaso CDSC: ' . $numerodocumento . ' - ';
         }

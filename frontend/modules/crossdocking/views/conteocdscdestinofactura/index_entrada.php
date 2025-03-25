@@ -160,7 +160,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'class' => ActionColumn::className(),
                 'header'=>'Acción',
                 //'headerOptions' => ['width' => '15%'],
-                'template' => '{indexalmacen} {entradafactura} {transferencia}',
+                'template' => '{indexalmacen} {entradafactura} {transferencia} {validarerp}',
 
                 'buttons' => [
 
@@ -197,6 +197,15 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'confirm' => 'Esta Seguro de Realizar Transferencia? ( ' . $model->razonSocial . ' - ' . $model->numeroFactura  .' )',
                                         'method' => 'post',
                                     ]
+                                ]
+                        );
+                    },
+
+                    'validarerp' => function ($url, $model) {                                  
+                        return Html::a('<i class="fa fa-search"></i>', 
+                                [   'validarerp', 'idconteofactura' => $model->id], 
+                                [   'class' => 'btn btn-default',
+                                    'title' => 'Validar Interfase en SIESA',
                                 ]
                         );
                     },
