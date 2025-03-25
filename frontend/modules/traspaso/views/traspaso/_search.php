@@ -39,7 +39,7 @@ use frontend\models\Estadorecepcion;
 
     <!-- <?= $form->field($model, 'idCentroOperacion') ?> -->
     <div class="row">
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?php echo $form->field($model, 'idTipoDocumento')->dropDownList(
                 TipoDocumento::getListaDataCodigo(),
                 [
@@ -49,8 +49,11 @@ use frontend\models\Estadorecepcion;
             )->label('Serie');
             ?>
         </div>
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?= $form->field($model, 'consecutivo')->label('Consecutivo'); ?>
+        </div>
+        <div class="col-lg-2">
+            <?= $form->field($model, 'consecutivosiesa')->label('Consecutivo siesa'); ?>
         </div>
         <div class="col-lg-3">
             <?= $form->field($model, 'idBodegaOrigen')->dropDownList(

@@ -74,7 +74,7 @@ class TraspasodetalleSearch extends Traspasodetalle
         if ($id == null) {
             $query = Traspasodetalle::find()->alias('td');
         } else {
-            $query = Traspasodetalle::find()->where(['idTraspaso' => $id])->alias('td');
+            $query = Traspasodetalle::find()->where(['td.idTraspaso' => $id])->alias('td');
         }
         // Realizar el JOIN con la tabla 'item'
         // $query->joinWith(['item']);
@@ -138,13 +138,13 @@ class TraspasodetalleSearch extends Traspasodetalle
         // var_dump($this->estadoPlanilla);die()
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
-            'idTraspaso' => $this->idTraspaso,
-            'idItem' => $this->idItem,
+            'td.id' => $this->id,
+            'td.idTraspaso' => $this->idTraspaso,
+            'td.idItem' => $this->idItem,
             'td.cantidad' => $this->cantidad,
             // 'created_at' => $this->created_at,
-            'created_by' => $this->created_by,
-            'updated_at' => $this->updated_at,
+            'td.created_by' => $this->created_by,
+            'td.updated_at' => $this->updated_at,
             'td.updated_by' => $this->updated_by,
             'i.item' => $this->codigoitem,
             'tr.consecutivo' => $this->consecutivointerno,
@@ -188,7 +188,7 @@ class TraspasodetalleSearch extends Traspasodetalle
         // 
         // $query->andFilterWhere(['like', 'tr.consecutivo', $this->consecutivo]);
 
-        $query->orderBy(['idItem' => SORT_ASC]); // Orden por defecto
+        $query->orderBy(['td.idItem' => SORT_ASC]); // Orden por defecto
 
         return $dataProvider;
     }

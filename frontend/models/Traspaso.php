@@ -43,7 +43,8 @@ class Traspaso extends \yii\db\ActiveRecord
     public $fechaDesde;
     public $fechaHasta;
     public $estadoPlanilla;
-
+    public $consecutivosiesa;
+    public $idusertraspasocdsc;
     /**
      * {@inheritdoc}
      */
@@ -81,7 +82,7 @@ class Traspaso extends \yii\db\ActiveRecord
             [['idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado', 'idUltimoItem', 'created_by', 'updated_by', 'tipoMovimiento'], 'integer'],
             [['consecutivo', 'und_traspaso', 'und_empaque'], 'number'],
             [['serie',], 'string', 'max' => 5],
-            [['updated_at', 'created_at', 'fechaDesde', 'fechaHasta', 'anula_at', 'anula_by', 'muelle_at', 'muelle_by',], 'safe'],
+            [['updated_at', 'created_at', 'fechaDesde', 'fechaHasta', 'anula_at', 'anula_by', 'muelle_at', 'muelle_by','idusertraspasocdsc'], 'safe'],
             [['idBodegaDestino'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idBodegaDestino' => 'id']],
             [['idBodegaOrigen'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idBodegaOrigen' => 'id']],
             [['idTipoDocumento'], 'exist', 'skipOnError' => true, 'targetClass' => Tipodocumento::class, 'targetAttribute' => ['idTipoDocumento' => 'id']],
@@ -115,6 +116,7 @@ class Traspaso extends \yii\db\ActiveRecord
             'tipoMovimiento' => 'Tipo de movimiento',
             'muelle_at' => 'Fecha en muelle',
             'muelle_by' => 'Usuario en muelle',
+            'idusertraspasocdsc' => 'Usuario',
 
         ];
     }
@@ -170,7 +172,7 @@ class Traspaso extends \yii\db\ActiveRecord
         return $this->hasOne(Documentosiesa::class, ['idGruma' => 'id'])->orderBy(['id' => SORT_DESC]);
     }
 
-    public function getPlanillaembarquetraspaso()
+    public function getUltimaplanillaembarquetraspaso()
     {
         return $this->hasOne(Planillaembarquetraspaso::class, ['idTraspaso' => 'id'])
             ->orderBy(['id' => SORT_DESC]);

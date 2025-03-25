@@ -187,7 +187,7 @@ class TransferenciaerpController extends Controller
         }
 
         if ($origen == 'CDSC'){
-            Conteocdscdestinofactura::actualizarentradaerp ($idconteofactura);
+            $iderpentrada = Conteocdscdestinofactura::actualizarentradaerp ($idconteofactura);
             return $this->redirect(['/crossdocking/conteocdscdestinofactura/indexentrada']);    
         }
 

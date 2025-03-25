@@ -45,7 +45,7 @@ class Traspasodetalle extends \yii\db\ActiveRecord
     public $fechaHasta;
     public $proveedor;
     public $estadoPlanilla;
-    
+
 
     /**
      * {@inheritdoc}
@@ -280,12 +280,36 @@ class Traspasodetalle extends \yii\db\ActiveRecord
     }
     public function retornarInventario()
     {
-        return Inventario::updateAllCounters(
-            ['existencia' => $this->cantidad],
-            ['codigoBarras' => $this->item->codigoBarras, 'codigoBodega' => $this->traspaso->bodegaOrigen->codigo]
-        );
+        try {
+            $barcode = $this->item->codigoBarras ?? null;
+            $codbodega = $this->traspaso->bodegaOrigen->codigo ?? null;
 
+            if (!$barcode || !$codbodega) {
+                throw new \Exception("Código de barras o código de bodega no válido.");
+            }
+
+            $inventario = Item::getInventario($barcode, $codbodega); // Consultar inventario en Siesa
+
+            if ($inventario === null) {
+                throw new \Exception("No se pudo obtener el inventario para el código de barras: $barcode y bodega: $codbodega.");
+            }
+
+            $actualizado = Inventario::updateAllCounters(
+                ['existencia' => $inventario],
+                ['codigoBarras' => $barcode, 'codigoBodega' => $codbodega]
+            );
+
+            if ($actualizado === 0) {
+                throw new \Exception("No se actualizó ninguna fila en el inventario. Verifica los datos.");
+            }
+
+            return $actualizado;
+        } catch (\Throwable $e) {
+            \Yii::error("Error al retornar inventario: " . $e->getMessage(), __METHOD__);
+            return false; // Devuelve false para indicar fallo
+        }
     }
+
 
     public static function generarArchivotransferencia($traspaso)
     {
@@ -336,5 +360,23 @@ class Traspasodetalle extends \yii\db\ActiveRecord
 
         return $rutaGuardado;
     }
+
+    // public function getItemUnidad()
+    // {
+    //     $item = $this->hasOne(Item::class, ['id' => 'idItem'])
+    //     ->where(['idEstado' => 'ACTIVO']);
+    //     $equivalencia = $item->unidadEmpaque ?  $item->unidadEmpaque->equivalencia : $item->unidadOrden->equivalencia;
+    //     $unidades = 'cantidad' * $equivalencia;
+
+    //     return $unidades ;
+    // }
+
+    public function getCantidadUnidades()
+    {
+        $equivalencia = $this->item->unidadempaque ? $this->item->unidadempaque->equivalencia : 1;
+        return $equivalencia * $this->cantidad ?? $this->cantidad;
+    }
+
+
 
 }

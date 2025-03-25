@@ -200,6 +200,14 @@ $this->registerJs("
             'group' => true,
         ],
         [
+            'attribute' => 'idItem',
+            'value' => function ($model) {
+                return $model->item->codigoBarras;
+            },
+            'enableSorting' => true,
+            'group' => true,
+        ],
+        [
             'label' => 'Talla',
             // 'attribute' => 'idItem',
             'value' => function ($model) {
@@ -299,6 +307,7 @@ $this->registerJs("
                 return $model->usuarioupdated->username;
             },
         ],
+
     ];
 
 
@@ -391,6 +400,9 @@ $this->registerJs("
         }
         if ($model->traspaso->estado->nombre === 'pendiente') {
             $classes[] = 'text-primary';
+        }
+        if (($model->traspaso->estado->nombre === 'pendiente') && (Item::getInventario($model->item->codigoBarras, $model->traspaso->bodegaOrigen->codigo) < $model->cantidadunidades)) {
+            $classes[] = 'text-danger';
         }
         return ['class' => implode(' ', $classes)];
     },

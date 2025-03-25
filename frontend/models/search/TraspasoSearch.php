@@ -26,7 +26,7 @@ class TraspasoSearch extends Traspaso
     {
         return [
             [['id', 'idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado', 'tipoMovimiento'], 'integer'],
-            [['updated_at', 'created_by', 'updated_by', 'fechaDesde', 'fechaHasta', 'estadoPlanilla',], 'safe'],
+            [['updated_at', 'created_by', 'updated_by', 'fechaDesde', 'fechaHasta', 'estadoPlanilla', 'consecutivosiesa'], 'safe'],
             [['consecutivo',], 'number'],
             [['serie'], 'string', 'max' => 5],
         ];
@@ -50,12 +50,6 @@ class TraspasoSearch extends Traspaso
     public function search($params)
     {
         $query = Traspaso::find()->alias('tr');
-
-        $query->join('INNER JOIN', 'traspasodetalle td', 'td.idTraspaso = tr.id');
-        $query->join('INNER JOIN', 'item i', 'i.id = td.iditem');
-        $query->join('INNER JOIN', 'talla t', 't.id = i.idTalla');
-        $query->join('INNER JOIN', 'color c', 'c.id = i.idColor');
-        $query->join('INNER JOIN', 'estadotraspaso e', 'e.id = tr.idestado');
         $query->join('left JOIN', 'documentosiesa ds', 'tr.id = ds.idGruma');
         $query->join(
             'LEFT JOIN',
@@ -63,23 +57,26 @@ class TraspasoSearch extends Traspaso
             'pet.id = (SELECT MAX(id) FROM planillaembarquetraspaso WHERE idTraspaso = tr.id)'
         );
         $query->join('LEFT JOIN', 'estadorecepcion er', 'er.id = pet.idEstado AND er.id <> 5'); // Agregando la relación
+        $query->join('LEFT JOIN', 'conteocdscdestino dest', 'tr.id = dest.idTraspaso');
+        $query->join('LEFT JOIN', 'userconteocdsc uc', 'dest.idUserConteo = uc.id');
+        $query->join('LEFT JOIN', 'user u', 'uc.idUser = u.id');
+        $query->join('LEFT JOIN', 'user ut', 'tr.created_by = ut.id');
 
 
         $query->select([
             'tr.*',
-            'td.updated_by',
+            'tr.created_by',
+            "(CASE
+                WHEN tr.tipoMovimiento <> 3 THEN (CAST(tr.created_by AS NVARCHAR) + ' - ' + ut.username)
+                ELSE (CAST(uc.idUser AS NVARCHAR) + ' - ' + u.username)
+            END) AS idusertraspasocdsc",
             'tr.consecutivo',
-            'ds.f350_consec_docto',
-            'i.item',
-            'c.nombre',
-            't.codigo',
-            'e.codigo',
-            'tr.tipoMovimiento',
-            'i.nombreProveedor',
             'tr.idBodegaOrigen',
             'tr.idBodegaDestino',
+            'tr.tipoMovimiento',
+            'ds.f350_consec_docto as consecutivosiesa',
             'er.nombre as estadoPlanilla',
-            'tr.created_by' // Agregar esto
+
         ]);
 
 
@@ -88,9 +85,10 @@ class TraspasoSearch extends Traspaso
             'pagination' => [
                 'pageSize' => '100',
             ],
+
         ]);
 
-        $query->orderBy(['created_at' => SORT_DESC]);
+        $query->orderBy(['tr.created_at' => SORT_DESC]);
 
         $this->load($params);
 
@@ -106,22 +104,18 @@ class TraspasoSearch extends Traspaso
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
-            'idBodegaOrigen' => $this->idBodegaOrigen,
-            'idBodegaDestino' => $this->idBodegaDestino,
-            'numeroCajas' => $this->numeroCajas,
-            'idTipoDocumento' => $this->idTipoDocumento,
-            'idEstado' => $this->idEstado,
-            'created_by' => $this->created_by,
+            'tr.id' => $this->id,
+            'tr.idBodegaOrigen' => $this->idBodegaOrigen,
+            'tr.idBodegaDestino' => $this->idBodegaDestino,
+            'tr.numeroCajas' => $this->numeroCajas,
+            'tr.idTipoDocumento' => $this->idTipoDocumento,
+            'tr.idEstado' => $this->idEstado,
             'tr.created_by' => $this->created_by,
-            'created_at' => $this->created_at,
-            'tipoMovimiento' => $this->tipoMovimiento,
+            'tr.created_at' => $this->created_at,
+            'tr.tipoMovimiento' => $this->tipoMovimiento,
             'er.id' => $this->estadoPlanilla,
-
-            // 'fechaDesde' => $this->fechaDesde,
-            // 'fechaHasta' => $this->fechaHasta,
-
-
+            'tr.updated_by' => $this->updated_by,
+            'ds.f350_consec_docto' => $this->consecutivosiesa
 
         ]);
 
@@ -130,25 +124,25 @@ class TraspasoSearch extends Traspaso
             // Si solo está presente fechaDesde, buscar por esa fecha exacta
             if ($this->fechaDesde && !$this->fechaHasta) {
                 $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
-                $query->andWhere(['=', new \yii\db\Expression('CAST(created_at AS DATE)'), $fechaInicio]);
+                $query->andWhere(['=', new \yii\db\Expression('CAST(tr.created_at AS DATE)'), $fechaInicio]);
             }
             // Si solo está presente fechaHasta, buscar hasta esa fecha
             elseif (!$this->fechaDesde && $this->fechaHasta) {
                 $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
-                $query->andWhere(['<=', new \yii\db\Expression('CAST(created_at AS DATE)'), $fechaFin]);
+                $query->andWhere(['<=', new \yii\db\Expression('CAST(tr.created_at AS DATE)'), $fechaFin]);
             }
             // Si están presentes ambas, buscar entre ambas fechas
             elseif ($this->fechaDesde && $this->fechaHasta) {
                 $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
                 $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
-                $query->andWhere(['between', new \yii\db\Expression('CAST(created_at AS DATE)'), $fechaInicio, $fechaFin]);
+                $query->andWhere(['between', new \yii\db\Expression('CAST(tr.created_at AS DATE)'), $fechaInicio, $fechaFin]);
             }
         }
 
 
-        $query->andFilterWhere(['like', 'consecutivo', $this->consecutivo]);
+        $query->andFilterWhere(['like', 'tr.consecutivo', $this->consecutivo]);
 
-        $query->andFilterWhere(['like', 'created_at', $this->created_at]);
+        $query->andFilterWhere(['like', 'tr.created_at', $this->created_at]);
 
         if ($this->created_by !== null) {
             $usuarios = User::find()
@@ -174,10 +168,10 @@ class TraspasoSearch extends Traspaso
         if ($this->serie !== null) {
             $tipoDocumento = Tipodocumento::findOne(['codigo' => $this->serie]);
             if ($tipoDocumento !== null) {
-                $query->andFilterWhere(['idTipoDocumento' => $tipoDocumento->id]);
+                $query->andFilterWhere(['tr.idTipoDocumento' => $tipoDocumento->id]);
             } else {
                 // Si el tipo de documento no se encuentra, no se filtrará por tipo de documento
-                $query->andFilterWhere(['idTipoDocumento' => null]);
+                $query->andFilterWhere(['tr.idTipoDocumento' => null]);
             }
         }
 

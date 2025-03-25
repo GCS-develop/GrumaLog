@@ -207,7 +207,7 @@ class TraspasoController extends Controller
         $model = $this->findModel($id);
         $filasAfectadas = 0;
 
-        if ($model->idEstado !== 1 && $model->idEstado !== 3) {
+        if ($model->idEstado === 2) {
 
             Yii::$app->session->setFlash('warning', 'No puedes anular en este estado!');
             return $this->redirect(['index']);

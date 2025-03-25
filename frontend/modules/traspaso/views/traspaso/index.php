@@ -90,20 +90,13 @@ $gridColumns = [
     ],
     [
         'attribute' => 'idEstado',
-        'contentOptions' => ['data-cellvalue' => 'idEstado'],
+        'contentOptions' => ['data-cellvalue' => 'idEstado',],
         'filter' => Estadotraspaso::getListaData(),
         'value' => function ($model) {
-            $planillaEmbarque = $model->planillaembarquetraspaso;
-
-            $estadoPlanilla = is_object($planillaEmbarque->estadoPlanilla ?? null) ?
-                $planillaEmbarque->estadoPlanilla->nombre : '';
-            $estado = $model->estado ? $model->estado->nombre : '';
-
-            $estaActual = $estadoPlanilla ? $estadoPlanilla : $estado;
-
-            return $estaActual;
+            return $model->estado->nombre;
         },
     ],
+    'estadoPlanilla',
     [
         'attribute' => 'updated_at',
         'value' => function ($model) {
@@ -170,14 +163,7 @@ $gridColumns = [
 
     ],
 
-    [
-        'attribute' => 'created_by',
-        'label' => 'Usuario',
-        'value' => function ($model) {
-            return $model->createdByUser ? "{$model->createdByUser->id} - {$model->createdByUser->username}" : '(sin usuario)';
-        },
-        'contentOptions' => ['data-cellvalue' => 'Usuario',],
-    ],
+    'idusertraspasocdsc',
     'anula_at',
     [
         'attribute' => 'anula_by',
@@ -358,6 +344,14 @@ Modal::end();
     }
     return ['class' => implode(' ', $classes)];
 },
+    'toolbar' => [
+        '{export}',
+    ],
+    'export' => [
+        'fontAwesome' => true,
+        'target' => GridView::TARGET_SELF, // Evita la recarga completa de la página
+        'filename' => $filename,
+    ],
 
     'columns' => [
         ['class' => 'kartik\grid\SerialColumn'],
@@ -455,8 +449,8 @@ Modal::end();
             'contentOptions' => ['data-cellvalue' => 'idEstado',],
             'filter' => Estadotraspaso::getListaData(),
             'value' => function ($model) {
-                return $model->estado->nombre;
-            },
+    return $model->estado->nombre;
+},
         ],
         'estadoPlanilla',
 
@@ -468,15 +462,8 @@ Modal::end();
     return substr($model->created_at, 0, 16);
 },
         ],
-        [
-            'attribute' => 'created_by',
-            'label' => 'Creador',
-            'filter' => Usertraspaso::getListaData(),
-            'contentOptions' => ['data-cellvalue' => 'Usuario'],
-            'value' => function ($model) {
-    return $model->created_by . ' - ' . ($model->createdByUser ? $model->createdByUser->username : '(sin usuario)');
-},
-        ],
+
+        'idusertraspasocdsc',
 
         [
             'attribute' => 'updated_at',
@@ -624,9 +611,15 @@ Modal::end();
     },
 
                 'anular' => function ($model, $key, $index) {
-        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+        return $model->idEstado != 2; // Condición para mostrar el botón
     },
                 'factura' => function ($model, $key, $index) {
+        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+    },
+                'siesa' => function ($model, $key, $index) {
+        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+    },
+                'directo' => function ($model, $key, $index) {
         return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
     },
             ],
