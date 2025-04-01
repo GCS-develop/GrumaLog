@@ -163,11 +163,6 @@ use yii\helpers\ArrayHelper;
 
         <div class="col-lg-3">
             <?php
-            //establecer por defecto el estado "id = 0"
-            if (empty($model->idEstado)) {
-                $model->idEstado = [0];
-            }
-
             echo $form->field($model, 'idEstado')->widget(Select2::classname(), [
                 'data' => Estadotraspaso::getListaData(),
                 'options' => [
@@ -179,8 +174,6 @@ use yii\helpers\ArrayHelper;
                 ],
             ]);
             ?>
-
-
 
         </div>
         <div class="col-lg-3">

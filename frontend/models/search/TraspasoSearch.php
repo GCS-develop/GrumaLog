@@ -87,6 +87,15 @@ class TraspasoSearch extends Traspaso
             ],
 
         ]);
+        $query->orderBy([
+            "CASE 
+                WHEN pet.fechaPlanillaembarque IS NOT NULL 
+                AND DATEDIFF(DAY, pet.fechaPlanillaembarque, GETDATE()) > 2 
+                THEN 0 
+                ELSE 1 
+            END" => SORT_ASC,
+            'tr.created_at' => SORT_DESC
+        ]);
 
         $query->orderBy(['tr.created_at' => SORT_DESC]);
 
@@ -137,13 +146,7 @@ class TraspasoSearch extends Traspaso
                 $query->andWhere(['between', new \yii\db\Expression('CAST(tr.created_at AS DATE)'), $fechaInicio, $fechaFin]);
             }
         }
-        if (!empty($this->idEstado)) {
-            // Si hay selección, filtra por los estados seleccionados
-            $query->andFilterWhere(['IN', 'tr.idEstado', $this->idEstado]);
-        } else {
-            // Si no se selecciona nada
-            $query->andWhere(['tr.idEstado' => 0]);
-        }
+        $query->andFilterWhere(['IN', 'tr.idEstado', $this->idEstado]);
 
 
         $query->andFilterWhere(['like', 'tr.consecutivo', $this->consecutivo]);

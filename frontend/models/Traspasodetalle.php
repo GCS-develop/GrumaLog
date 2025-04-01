@@ -278,25 +278,53 @@ class Traspasodetalle extends \yii\db\ActiveRecord
             }
         }
     }
-    public function retornarInventario()//mas bien actualizar inventario
+    public function retornarInventario()
     {
         try {
             $barcode = $this->item->codigoBarras ?? null;
             $codbodega = $this->traspaso->bodegaOrigen->codigo ?? null;
+            $cantidadAnulada = $this->cantidad ?? 0;
 
-            if (!$barcode || !$codbodega) {
-                throw new \Exception("Código de barras o código de bodega no válido.");
+            if (!$barcode || !$codbodega || $cantidadAnulada <= 0) {
+                throw new \Exception("Código de barras, código de bodega o cantidad no válidos.");
             }
 
-            $inventario = Item::getInventario($barcode, $codbodega); // Consultar inventario en Siesa
+            // Consultar inventario en Siesa
+            $inventarioDisponible = Item::getInventario($barcode, $codbodega);
 
-            if ($inventario === null) {
+            if ($inventarioDisponible === null) {
                 throw new \Exception("No se pudo obtener el inventario para el código de barras: $barcode y bodega: $codbodega.");
             }
 
+            // Determinar la cantidad a retornar (lo menor entre lo anulado y lo disponible)
+            $cantidadARetornar = min($cantidadAnulada, $inventarioDisponible);
+
+            if ($cantidadARetornar <= 0) {
+                throw new \Exception("No hay inventario suficiente en Siesa para retornar.");
+            }
+            // Obtener los ítems relacionados
+            $itemsRelacionados = Item::find()
+                ->where([
+                    'item' => $this->item->item,
+                    'idTalla' => $this->item->idTalla,
+                    'idColor' => $this->item->idColor,
+                ])
+                ->all();
+
+            if (!$itemsRelacionados) {
+                return $this->asJson(['status' => 'error', 'message' => "No se encontraron otros items relacionados."]);
+            }
+
+            // 🔹 Extraer los IDs de los items relacionados
+            $itemIds = array_column($itemsRelacionados, 'id'); // Convertir objetos en array de IDs
+
+            // Actualizar el inventario para todos los items relacionados
             $actualizado = Inventario::updateAllCounters(
-                ['existencia' => $inventario],
-                ['codigoBarras' => $barcode, 'codigoBodega' => $codbodega]
+                ['existencia' => $cantidadARetornar],  // Actualizar la existencia con la cantidad a retornar
+                [
+                    'codigoBodega' => $codbodega,       // Filtrar por la bodega
+                    'idItem' => $itemIds                // Filtrar por los IDs de los items relacionados
+                ]
             );
 
             if ($actualizado === 0) {
@@ -309,6 +337,7 @@ class Traspasodetalle extends \yii\db\ActiveRecord
             return false; // Devuelve false para indicar fallo
         }
     }
+
 
 
     public static function generarArchivotransferencia($traspaso)
