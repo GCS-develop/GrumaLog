@@ -253,6 +253,7 @@ $baseUrl = Url::base(true);
                         'icon' => 'tachometer-alt',
                         'badge' => '<span class="right badge badge-info">7</span>',
                         'items' => [
+                            ['label' => 'Inventario', 'url' => ['/catalogos/inventario/index'], 'iconStyle' => 'far'],
                             ['label' => 'Bodega', 'url' => ['/catalogos/bodegas/index'], 'iconStyle' => 'far'],
                             ['label' => 'Talla', 'url' => ['/catalogos/talla/index'], 'iconStyle' => 'far'],
                             ['label' => 'Color', 'url' => ['/catalogos/color/index'], 'iconStyle' => 'far'],

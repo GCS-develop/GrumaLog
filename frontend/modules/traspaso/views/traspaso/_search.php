@@ -22,6 +22,10 @@ use frontend\models\Estadotraspaso;
 use frontend\models\Usertraspaso;
 use frontend\models\Estadorecepcion;
 
+use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
+
+
 
 /** @var yii\web\View $this */
 /** @var frontend\models\searchTraspasoSearch $model */
@@ -158,14 +162,25 @@ use frontend\models\Estadorecepcion;
         </div>
 
         <div class="col-lg-3">
-            <?php echo $form->field($model, 'idEstado')->dropDownList(
-                Estadotraspaso::getListaData(),
-                [
-                    'prompt' => ' Seleccionar estado ... ',
-                    'id' => 'idEstado',
-                ]
-            );
+            <?php
+            //establecer por defecto el estado "id = 0"
+            if (empty($model->idEstado)) {
+                $model->idEstado = [0];
+            }
+
+            echo $form->field($model, 'idEstado')->widget(Select2::classname(), [
+                'data' => Estadotraspaso::getListaData(),
+                'options' => [
+                    'placeholder' => 'Seleccionar estado...',
+                    'multiple' => true, // Permite seleccionar varios valores
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true, // Permite limpiar selección
+                ],
+            ]);
             ?>
+
+
 
         </div>
         <div class="col-lg-3">

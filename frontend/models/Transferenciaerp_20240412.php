@@ -65,9 +65,18 @@ class Transferenciaerp extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['descripcion', 'numeroRegistros', 'documento', ], 'required', 'message' => '{attribute} Es Un Valor Obligatorio'],
-            [['documento', 'numeroRegistros', 'enviadoWS', 'created_by', 'updated_by',
-                'idConectorDinamico'], 'integer'],
+            [['descripcion', 'numeroRegistros', 'documento',], 'required', 'message' => '{attribute} Es Un Valor Obligatorio'],
+            [
+                [
+                    'documento',
+                    'numeroRegistros',
+                    'enviadoWS',
+                    'created_by',
+                    'updated_by',
+                    'idConectorDinamico'
+                ],
+                'integer'
+            ],
             [['created_at', 'updated_at'], 'safe'],
             [['descripcion', 'notas'], 'string', 'max' => 150],
         ];
@@ -112,13 +121,14 @@ class Transferenciaerp extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Conectoresdinamicos::class, ['id' => 'idConectorDinamico']);
     }
-    
-    public static function transferenciaSalidaWS ($id){
+
+    public static function transferenciaSalidaWS($id)
+    {
 
         $error = 0;
 
         $modeltransferencia = Transferenciaerp::findOne(['id' => $id]);
-        if ($modeltransferencia == null){
+        if ($modeltransferencia == null) {
             $model = new Transferenciaerperror();
             $model->idTransferenciaerp = $id;
             $model->centroOperacionDocumento = $registro->centroOperacionDocumento;
@@ -130,7 +140,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
 
         $modelconector = Conectoresdinamicos::findOne(['id' => $modeltransferencia->idConectorDinamico]);
 
-        if ($modelconector == null){
+        if ($modelconector == null) {
             $model = new Transferenciaerperror();
             $model->idTransferenciaerp = $id;
             $model->centroOperacionDocumento = $registro->centroOperacionDocumento;
@@ -140,53 +150,57 @@ class Transferenciaerp extends \yii\db\ActiveRecord
             $error = 1;
         }
 
-        if ($error == 0){
+        if ($error == 0) {
 
             $numRegistrosBorrados = Transferenciaerperror::deleteAll(['idTransferenciaerp' => $id]);
 
             $tiposdocumentos = Transferenciatransitoexcel::find()
-                            ->select([
-                                'centroOperacionDocumento', 
-                                'tipoDocumento',
-								'bodegaSalidaDocumento',
-								'bodegaEntradaDocumento'
-                                ])
-                            ->distinct()
-                            ->where(['idTransferenciaerp' => $id])
-                            ->orderBy([
-                                'centroOperacionDocumento' => SORT_ASC, 
-                                'tipoDocumento' => SORT_ASC
-                            ])->all();
+                ->select([
+                    'centroOperacionDocumento',
+                    'tipoDocumento',
+                    'bodegaSalidaDocumento',
+                    'bodegaEntradaDocumento'
+                ])
+                ->distinct()
+                ->where(['idTransferenciaerp' => $id])
+                ->orderBy([
+                    'centroOperacionDocumento' => SORT_ASC,
+                    'tipoDocumento' => SORT_ASC
+                ])->all();
 
-            $error = Transferenciaerp::transferenciasalidaxtipodocumento ($id, 
-                                                                        $tiposdocumentos,
-                                                                        $modelconector);
+            $error = Transferenciaerp::transferenciasalidaxtipodocumento(
+                $id,
+                $tiposdocumentos,
+                $modelconector
+            );
         }
 
         return $error;
     }
 
-    public static function transferenciasalidaxtipodocumento ($id, $tiposdocumentos, $modelconector){
+    public static function transferenciasalidaxtipodocumento($id, $tiposdocumentos, $modelconector)
+    {
 
         $error = 0;
-		$conta = 1;
-        foreach($tiposdocumentos as $registro){
+        $conta = 1;
+        foreach ($tiposdocumentos as $registro) {
 
-            $json = Transferenciaerp::transferenciaTransitoERP ($id, 
-                                                                $registro->centroOperacionDocumento,
-                                                                $registro->tipoDocumento,
-																$registro->bodegaSalidaDocumento,
-																$registro->bodegaEntradaDocumento
-                                                            );
-			
-			/*if ($conta == 3){
-				var_dump($json); die("hola");
-			}
-			
-			$conta = $conta + 1;
-			continue;*/
-        
-            if ($json == null){
+            $json = Transferenciaerp::transferenciaTransitoERP(
+                $id,
+                $registro->centroOperacionDocumento,
+                $registro->tipoDocumento,
+                $registro->bodegaSalidaDocumento,
+                $registro->bodegaEntradaDocumento
+            );
+
+            /*if ($conta == 3){
+                         var_dump($json); die("hola");
+                     }
+                     
+                     $conta = $conta + 1;
+                     continue;*/
+
+            if ($json == null) {
                 $model = new Transferenciaerperror();
                 $model->idTransferenciaerp = $id;
                 $model->centroOperacionDocumento = $registro->centroOperacionDocumento;
@@ -198,15 +212,15 @@ class Transferenciaerp extends \yii\db\ActiveRecord
 
             $endpointConfig = Yii::$app->params['endpoints']['service'];
             $conniKey = $endpointConfig['conniKey'];
-		    $conniToken = $endpointConfig['conniToken'];
+            $conniToken = $endpointConfig['conniToken'];
             $idCompania = $endpointConfig['idCompania'];
 
             $baseurl = $endpointConfig['urlConector'];
 
             $url = $baseurl . '?' . 'idCompania=' . $idCompania . '&' .
-                    'idInterface=' . $modelconector->idInterface . '&' . 
-                    'idDocumento=' . $modelconector->idDocumento . '&' . 
-                    'nombreDocumento=' . $modelconector->nombreSIESA;
+                'idInterface=' . $modelconector->idInterface . '&' .
+                'idDocumento=' . $modelconector->idDocumento . '&' .
+                'nombreDocumento=' . $modelconector->nombreSIESA;
 
             $headers = [
                 'conniKey: Connikey-grupomayorista-QJBYOFU3',
@@ -221,14 +235,16 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'content-type' => 'application/json'
             ];*/
 
-            $respuesta = Transferenciaerp::ejecutartransferenciaWS ($url, $headers, $json);
+            $respuesta = Transferenciaerp::ejecutartransferenciaWS($url, $headers, $json);
 
-            $codigo = Transferenciaerp::errortransferenciaWS ($id, 
-                                                    $registro->centroOperacionDocumento,
-                                                    $registro->tipoDocumento, 
-                                                    $respuesta);
+            $codigo = Transferenciaerp::errortransferenciaWS(
+                $id,
+                $registro->centroOperacionDocumento,
+                $registro->tipoDocumento,
+                $respuesta
+            );
 
-            if ($codigo != 0){
+            if ($codigo != 0) {
                 $error = 1;
             }
         }
@@ -237,7 +253,8 @@ class Transferenciaerp extends \yii\db\ActiveRecord
     }
 
 
-    public static function ejecutartransferenciaWS ($url, $headers, $json){
+    public static function ejecutartransferenciaWS($url, $headers, $json)
+    {
         $client = new Client();
         $response = $client->createRequest()
             ->setUrl($url)
@@ -247,12 +264,13 @@ class Transferenciaerp extends \yii\db\ActiveRecord
             ->send();
 
         return $response->content;
-	}
+    }
 
-    public static function errortransferenciaWS ($id, $CO, $tipoDocumento, $respuesta){
+    public static function errortransferenciaWS($id, $CO, $tipoDocumento, $respuesta)
+    {
         $data = json_decode($respuesta, true); // Convertir JSON a array asociativo
 
-        if (isset($data['errors']['conniKey']) || isset($data['errors']['conniToken'])){
+        if (isset($data['errors']['conniKey']) || isset($data['errors']['conniToken'])) {
             $model = new Transferenciaerperror();
             $model->idTransferenciaerp = $id;
             $model->centroOperacionDocumento = $CO;
@@ -270,7 +288,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
         //$mensaje = $data['mensaje'];
         //$f_detalle = '';
 
-        if ($codigo != 0){
+        if ($codigo != 0) {
             $error = 1;
             if (isset($data['detalle']) && is_array($data['detalle'])) {
                 // Recorrer y extraer datos si 'detalle' es un array
@@ -304,22 +322,26 @@ class Transferenciaerp extends \yii\db\ActiveRecord
         return $codigo;
     }
 
-    public static function transferenciaTransitoERP ($id, $co, $tipodocumento, $bodegasalida, $bodegaentrada){
+    public static function transferenciaTransitoERP($id, $co, $tipodocumento, $bodegasalida, $bodegaentrada)
+    {
 
         $registros = Transferenciatransitoexcel::find()
-                            ->where(['idTransferenciaerp' => $id,
-                                    'centroOperacionDocumento' => $co,
-                                    'tipoDocumento' => $tipodocumento,
-									'bodegaSalidaDocumento' => $bodegasalida,
-									'bodegaEntradaDocumento' => $bodegaentrada]
-                                    )
-                            ->orderBy([
-                                'centroOperacionDocumento' => SORT_ASC, 
-                                'tipoDocumento' => SORT_ASC,
-                                'fechaDocumento' => SORT_ASC,
-                                'bodegaSalidaDocumento' => SORT_ASC,
-                                'bodegaEntradaDocumento' => SORT_ASC,
-                            ])->all();
+            ->where(
+                [
+                    'idTransferenciaerp' => $id,
+                    'centroOperacionDocumento' => $co,
+                    'tipoDocumento' => $tipodocumento,
+                    'bodegaSalidaDocumento' => $bodegasalida,
+                    'bodegaEntradaDocumento' => $bodegaentrada
+                ]
+            )
+            ->orderBy([
+                'centroOperacionDocumento' => SORT_ASC,
+                'tipoDocumento' => SORT_ASC,
+                'fechaDocumento' => SORT_ASC,
+                'bodegaSalidaDocumento' => SORT_ASC,
+                'bodegaEntradaDocumento' => SORT_ASC,
+            ])->all();
 
         // Arreglo para almacenar los datos
         $jsonArray = [];
@@ -328,13 +350,13 @@ class Transferenciaerp extends \yii\db\ActiveRecord
         // Recorrer los registros y construir el JSON
         foreach ($registros as $registro) {
 
-            $documentoKey = $registro->centroOperacion . '-' . 
-                            $registro->tipoDocumentoMovimiento . '-' .
-                            $registro->transferenciaerp->documento . '-' .
-                            $registro->fechaDocumento . '-' . 
-                            $registro->bodegaSalidaDocumento . '-' . 
-                            $registro->bodegaEntradaDocumento;
-                            
+            $documentoKey = $registro->centroOperacion . '-' .
+                $registro->tipoDocumentoMovimiento . '-' .
+                $registro->transferenciaerp->documento . '-' .
+                $registro->fechaDocumento . '-' .
+                $registro->bodegaSalidaDocumento . '-' .
+                $registro->bodegaEntradaDocumento;
+
             $nroregistro = $nroregistro + 1;
 
             $movimiento = [
@@ -368,7 +390,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                         'f450_id_bodega_salida' => $registro->bodegaSalidaDocumento,
                         'f450_id_bodega_entrada' => $registro->bodegaEntradaDocumento,
                     ],
-                    
+
                     'Movimientos' => [],
                 ];
             }
@@ -383,7 +405,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'f450_id_bodega_salida' => $registro->bodegaSalidaDocumento,
                 'f450_id_bodega_entrada' => $registro->bodegaEntradaDocumento,
             ];
-                
+
             //$jsonArray[$documentoKey]['Documentos'][] = $documento;
             $jsonArray[$documentoKey]['Movimientos'][] = $movimiento;
         }
@@ -404,12 +426,13 @@ class Transferenciaerp extends \yii\db\ActiveRecord
         return $json;
     }
 
-    public static function entradaAlmacenInteWS ($id){
+    public static function entradaAlmacenInteWS($id)
+    {
 
         $error = 0;
 
         $modeltransferencia = Transferenciaerp::findOne(['id' => $id]);
-        if ($modeltransferencia == null){
+        if ($modeltransferencia == null) {
             $model = new Transferenciaerperror();
             $model->idTransferenciaerp = $id;
             $model->centroOperacionDocumento = $registro->centroOperacionDocumento;
@@ -421,7 +444,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
 
         $modelconector = Conectoresdinamicos::findOne(['id' => $modeltransferencia->idConectorDinamico]);
 
-        if ($modelconector == null){
+        if ($modelconector == null) {
             $model = new Transferenciaerperror();
             $model->idTransferenciaerp = $id;
             $model->centroOperacionDocumento = $registro->centroOperacionDocumento;
@@ -431,44 +454,48 @@ class Transferenciaerp extends \yii\db\ActiveRecord
             $error = 1;
         }
 
-        if ($error == 0){
+        if ($error == 0) {
 
             $numRegistrosBorrados = Transferenciaerperror::deleteAll(['idTransferenciaerp' => $id]);
 
             $ordenescompra = Transferenciaordencompraexcel::find()
-                            ->select([
-                                'centroOperacionOrdenCompra', 
-                                'tipoDocumentoOrdenCompra',
-								'consecutivoOrdenCompra'
-                                ])
-                            ->distinct()
-                            ->where(['idTransferenciaerp' => $id])
-                            ->orderBy([
-                                'centroOperacionOrdenCompra' => SORT_ASC, 
-                                'tipoDocumentoOrdenCompra' => SORT_ASC,
-								'consecutivoOrdenCompra' => SORT_ASC
-                            ])->all();
+                ->select([
+                    'centroOperacionOrdenCompra',
+                    'tipoDocumentoOrdenCompra',
+                    'consecutivoOrdenCompra'
+                ])
+                ->distinct()
+                ->where(['idTransferenciaerp' => $id])
+                ->orderBy([
+                    'centroOperacionOrdenCompra' => SORT_ASC,
+                    'tipoDocumentoOrdenCompra' => SORT_ASC,
+                    'consecutivoOrdenCompra' => SORT_ASC
+                ])->all();
 
-            $error = Transferenciaerp::entradaalmacenintxoc ($id, 
-                                                            $ordenescompra,
-                                                            $modelconector);
+            $error = Transferenciaerp::entradaalmacenintxoc(
+                $id,
+                $ordenescompra,
+                $modelconector
+            );
         }
 
         return $error;
-	}
-	
-	public static function entradaalmacenintxoc ($id, $ordenescompra, $modelconector){
+    }
+
+    public static function entradaalmacenintxoc($id, $ordenescompra, $modelconector)
+    {
 
         $error = 0;
-        foreach($ordenescompra as $registro){
+        foreach ($ordenescompra as $registro) {
 
-            $json = Transferenciaerp::entradaalmacenintERP ($id, 
-                                                            $registro->centroOperacionOrdenCompra,
-                                                            $registro->tipoDocumentoOrdenCompra,
-															$registro->consecutivoOrdenCompra
-                                                            );
-															
-            if ($json == null){
+            $json = Transferenciaerp::entradaalmacenintERP(
+                $id,
+                $registro->centroOperacionOrdenCompra,
+                $registro->tipoDocumentoOrdenCompra,
+                $registro->consecutivoOrdenCompra
+            );
+
+            if ($json == null) {
                 $model = new Transferenciaerperror();
                 $model->idTransferenciaerp = $id;
                 $model->centroOperacionDocumento = $registro->centroOperacionOrdenCompra;
@@ -480,15 +507,15 @@ class Transferenciaerp extends \yii\db\ActiveRecord
 
             $endpointConfig = Yii::$app->params['endpoints']['service'];
             $conniKey = $endpointConfig['conniKey'];
-		    $conniToken = $endpointConfig['conniToken'];
+            $conniToken = $endpointConfig['conniToken'];
             $idCompania = $endpointConfig['idCompania'];
 
             $baseurl = $endpointConfig['urlConector'];
 
             $url = $baseurl . '?' . 'idCompania=' . $idCompania . '&' .
-                    'idInterface=' . $modelconector->idInterface . '&' . 
-                    'idDocumento=' . $modelconector->idDocumento . '&' . 
-                    'nombreDocumento=' . $modelconector->nombreSIESA;
+                'idInterface=' . $modelconector->idInterface . '&' .
+                'idDocumento=' . $modelconector->idDocumento . '&' .
+                'nombreDocumento=' . $modelconector->nombreSIESA;
 
             $headers = [
                 'conniKey: Connikey-grupomayorista-QJBYOFU3',
@@ -503,36 +530,42 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'content-type' => 'application/json'
             ];*/
 
-            $respuesta = Transferenciaerp::ejecutartransferenciaWS ($url, $headers, $json);
+            $respuesta = Transferenciaerp::ejecutartransferenciaWS($url, $headers, $json);
 
-            $codigo = Transferenciaerp::errortransferenciaWS ($id, 
-                                                    $registro->centroOperacionOrdenCompra,
-                                                    $registro->tipoDocumentoOrdenCompra, 
-                                                    $respuesta);
+            $codigo = Transferenciaerp::errortransferenciaWS(
+                $id,
+                $registro->centroOperacionOrdenCompra,
+                $registro->tipoDocumentoOrdenCompra,
+                $respuesta
+            );
 
-            if ($codigo != 0){
+            if ($codigo != 0) {
                 $error = 1;
             }
         }
 
         return $error;
-	}
+    }
 
-    public static function entradaalmacenintERP ($id, $co, $tipodocumento, $consecutivo){
+    public static function entradaalmacenintERP($id, $co, $tipodocumento, $consecutivo)
+    {
 
         $registros = Transferenciaordencompraexcel::find()
-                            ->where(['idTransferenciaerp' => $id, 
-                                    'centroOperacionOrdenCompra' => $co,
-                                    'tipoDocumentoOrdenCompra' => $tipodocumento,
-									'consecutivoOrdenCompra' => $consecutivo]
-                            )
-                            ->orderBy([
-                                'centroOperacionDocumento' => SORT_ASC, 
-                                'tipoDocumento' => SORT_ASC,
-                                'consecutivoDocumento' => SORT_ASC,
-                                'tercero' => SORT_ASC,
-                                'numeroFactura' => SORT_ASC,
-                            ])->all();
+            ->where(
+                [
+                    'idTransferenciaerp' => $id,
+                    'centroOperacionOrdenCompra' => $co,
+                    'tipoDocumentoOrdenCompra' => $tipodocumento,
+                    'consecutivoOrdenCompra' => $consecutivo
+                ]
+            )
+            ->orderBy([
+                'centroOperacionDocumento' => SORT_ASC,
+                'tipoDocumento' => SORT_ASC,
+                'consecutivoDocumento' => SORT_ASC,
+                'tercero' => SORT_ASC,
+                'numeroFactura' => SORT_ASC,
+            ])->all();
 
         // Arreglo para almacenar los datos
         $jsonArray = [];
@@ -541,12 +574,12 @@ class Transferenciaerp extends \yii\db\ActiveRecord
         // Recorrer los registros y construir el JSON
         foreach ($registros as $registro) {
 
-            $documentoKey = $registro->centroOperacionDocumento . '-' . 
-                            $registro->tipoDocumento . '-' .
-                            $registro->consecutivoDocumento . '-' .
-                            $registro->tercero . '-' . 
-                            $registro->numeroFactura;
-                            
+            $documentoKey = $registro->centroOperacionDocumento . '-' .
+                $registro->tipoDocumento . '-' .
+                $registro->consecutivoDocumento . '-' .
+                $registro->tercero . '-' .
+                $registro->numeroFactura;
+
             $nroregistro = $nroregistro + 1;
             $numero_formateado = str_pad($nroregistro, 7, "0", STR_PAD_LEFT);
             $numero_formateado = "0000000";
@@ -587,7 +620,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                         'f420_id_tipo_docto' => $registro->tipoDocumentoOrdenCompra,
                         'f420_consec_docto' => $registro->consecutivoOrdenCompra,
                     ],
-                    
+
                     'Movimientos' => [],
                 ];
             }
@@ -607,7 +640,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'f420_id_tipo_docto' => $registro->tipoDocumentoOrdenCompra,
                 'f420_consec_docto' => $registro->consecutivoOrdenCompra,
             ];
-                
+
             //$jsonArray[$documentoKey]['Documentos'][] = $documento;
             $jsonArray[$documentoKey]['Movimientos'][] = $movimiento;
         }
@@ -629,17 +662,18 @@ class Transferenciaerp extends \yii\db\ActiveRecord
     }
 
 
-    public static function generarExcelGenericTransfer ($id){
+    public static function generarExcelGenericTransfer($id)
+    {
 
         $registros = Transferenciaordencompraexcel::find()
-                            ->where(['idTransferenciaerp' => $id])
-                            ->orderBy([
-                                'centroOperacionDocumento' => SORT_ASC, 
-                                'tipoDocumento' => SORT_ASC,
-                                'consecutivoDocumento' => SORT_ASC,
-                                'tercero' => SORT_ASC,
-                                'numeroFactura' => SORT_ASC,
-                            ])->all();
+            ->where(['idTransferenciaerp' => $id])
+            ->orderBy([
+                'centroOperacionDocumento' => SORT_ASC,
+                'tipoDocumento' => SORT_ASC,
+                'consecutivoDocumento' => SORT_ASC,
+                'tercero' => SORT_ASC,
+                'numeroFactura' => SORT_ASC,
+            ])->all();
 
         // Arreglo para almacenar los datos
         $jsonArray = [];
@@ -648,12 +682,12 @@ class Transferenciaerp extends \yii\db\ActiveRecord
         // Recorrer los registros y construir el JSON
         foreach ($registros as $registro) {
 
-            $documentoKey = $registro->centroOperacionDocumento . '-' . 
-                            $registro->tipoDocumento . '-' .
-                            $registro->consecutivoDocumento . '-' .
-                            $registro->tercero . '-' . 
-                            $registro->numeroFactura;
-                            
+            $documentoKey = $registro->centroOperacionDocumento . '-' .
+                $registro->tipoDocumento . '-' .
+                $registro->consecutivoDocumento . '-' .
+                $registro->tercero . '-' .
+                $registro->numeroFactura;
+
             $nroregistro = $nroregistro + 1;
             $numero_formateado = str_pad($nroregistro, 7, "0", STR_PAD_LEFT);
             $numero_formateado = "0000000";
@@ -694,7 +728,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                         'f420_id_tipo_docto' => $registro->tipoDocumentoOrdenCompra,
                         'f420_consec_docto' => $registro->consecutivoOrdenCompra,
                     ],
-                    
+
                     'Movimientos' => [],
                 ];
             }
@@ -714,7 +748,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'f420_id_tipo_docto' => $registro->tipoDocumentoOrdenCompra,
                 'f420_consec_docto' => $registro->consecutivoOrdenCompra,
             ];
-                
+
             //$jsonArray[$documentoKey]['Documentos'][] = $documento;
             $jsonArray[$documentoKey]['Movimientos'][] = $movimiento;
         }

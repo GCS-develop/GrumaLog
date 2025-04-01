@@ -25,8 +25,8 @@ class TraspasoSearch extends Traspaso
     public function rules()
     {
         return [
-            [['id', 'idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado', 'tipoMovimiento'], 'integer'],
-            [['updated_at', 'created_by', 'updated_by', 'fechaDesde', 'fechaHasta', 'estadoPlanilla', 'consecutivosiesa'], 'safe'],
+            [['id', 'idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'tipoMovimiento'], 'integer'],
+            [['updated_at', 'created_by', 'updated_by', 'fechaDesde', 'fechaHasta', 'estadoPlanilla', 'consecutivosiesa', 'idEstado'], 'safe'],
             [['consecutivo',], 'number'],
             [['serie'], 'string', 'max' => 5],
         ];
@@ -109,7 +109,6 @@ class TraspasoSearch extends Traspaso
             'tr.idBodegaDestino' => $this->idBodegaDestino,
             'tr.numeroCajas' => $this->numeroCajas,
             'tr.idTipoDocumento' => $this->idTipoDocumento,
-            'tr.idEstado' => $this->idEstado,
             'tr.created_by' => $this->created_by,
             'tr.created_at' => $this->created_at,
             'tr.tipoMovimiento' => $this->tipoMovimiento,
@@ -137,6 +136,13 @@ class TraspasoSearch extends Traspaso
                 $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
                 $query->andWhere(['between', new \yii\db\Expression('CAST(tr.created_at AS DATE)'), $fechaInicio, $fechaFin]);
             }
+        }
+        if (!empty($this->idEstado)) {
+            // Si hay selección, filtra por los estados seleccionados
+            $query->andFilterWhere(['IN', 'tr.idEstado', $this->idEstado]);
+        } else {
+            // Si no se selecciona nada
+            $query->andWhere(['tr.idEstado' => 0]);
         }
 
 

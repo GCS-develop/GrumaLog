@@ -88,24 +88,24 @@ class TransferenciaerpController extends Controller
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return ActiveForm::validate($model);
-        } 
+        }
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
-                if ($model->save() != null){
+                if ($model->save() != null) {
 
-                    $documentoNotas = 'Crossdocking certificado => ' . $model->id . '-' .$model->documento . ' ' . $model->notas;
-                    $documentoDescripcion = 'Crossdocking certificado => ' . $model->id . '-' .$model->documento . ' ' . $model->descripcion;
-                    
+                    $documentoNotas = 'Crossdocking certificado => ' . $model->id . '-' . $model->documento . ' ' . $model->notas;
+                    $documentoDescripcion = 'Crossdocking certificado => ' . $model->id . '-' . $model->documento . ' ' . $model->descripcion;
+
                     $modeltransferencia = $this->findModel($model->id);
                     $modeltransferencia->notas = $documentoNotas;
                     $modeltransferencia->descripcion = $documentoDescripcion;
                     $modeltransferencia->save();
 
-                    Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
-                }else{
-                    Yii::$app->session->setFlash( 'error', 'Error Actualizando Registro');
+                    Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                } else {
+                    Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
                 }
                 return $this->redirect(['index']);
             }
@@ -113,11 +113,11 @@ class TransferenciaerpController extends Controller
             $model->loadDefaultValues();
         }
 
-        if (Yii::$app->request->isAjax){  
+        if (Yii::$app->request->isAjax) {
             return $this->renderAjax('create', [
                 'model' => $model,
             ]);
-        }  
+        }
     }
 
     /**
@@ -134,15 +134,15 @@ class TransferenciaerpController extends Controller
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return ActiveForm::validate($model);
-        } 
+        }
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
-                if ($model->save() != null){
-                    Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
-                }else{
-                    Yii::$app->session->setFlash( 'error', 'Error Actualizando Registro');
+                if ($model->save() != null) {
+                    Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                } else {
+                    Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
                 }
                 return $this->redirect(['index']);
             }
@@ -150,50 +150,55 @@ class TransferenciaerpController extends Controller
             $model->loadDefaultValues();
         }
 
-        if (Yii::$app->request->isAjax){  
+        if (Yii::$app->request->isAjax) {
             return $this->renderAjax('update', [
                 'model' => $model,
             ]);
-        }  
+        }
     }
 
-    public function actionTransferencia ($id, $origen = null, $idconteofactura = null){
+    public function actionTransferencia($id, $origen = null, $idconteofactura = null)
+    {
 
         $model = $this->findModel($id);
 
-        switch($model->idConectorDinamico){
+        switch ($model->idConectorDinamico) {
             case 1:
-                $respuesta = Transferenciaerp::transferenciaSalidaWS ($id);
+                $respuesta = Transferenciaerp::transferenciaSalidaWS($id);
+                if (Yii::$app->user->id == '17') {
+                    var_dump($model->idConectorDinamico . '-' .  $respuesta);
+                    die('respuesta');
+                }
                 break;
             case 3:
-                $respuesta = Transferenciaerp::entradaAlmacenInteWS ($id);
+                $respuesta = Transferenciaerp::entradaAlmacenInteWS($id);
                 break;
         }
 
-        if ($respuesta == 0){
+        if ($respuesta == 0) {
             $mensaje = "Proceso de Actualización Finalizo Con Éxito";
-            Yii::$app->session->setFlash( 'success', $mensaje);
+            Yii::$app->session->setFlash('success', $mensaje);
 
             $model->enviadoWS = 1;
-        }else{
+        } else {
             $mensaje = "Proceso de Actualización Presenta Inconsistencia";
-            Yii::$app->session->setFlash( 'error', $mensaje);
+            Yii::$app->session->setFlash('error', $mensaje);
             $model->enviadoWS = 0;
         }
         $model->save();
 
-        if ($origen == 'Conteo'){
-            return $this->redirect(['/programacion/facturaentregamercancia/indexlegalizaconteo']);    
+        if ($origen == 'Conteo') {
+            return $this->redirect(['/programacion/facturaentregamercancia/indexlegalizaconteo']);
         }
 
-        if ($origen == 'CDSC'){
-            $iderpentrada = Conteocdscdestinofactura::actualizarentradaerp ($idconteofactura);
-            return $this->redirect(['/crossdocking/conteocdscdestinofactura/indexentrada']);    
+        if ($origen == 'CDSC') {
+            $iderpentrada = Conteocdscdestinofactura::actualizarentradaerp($idconteofactura);
+            return $this->redirect(['/crossdocking/conteocdscdestinofactura/indexentrada']);
         }
 
-        if ($origen == 'Traspaso CDSC'){
-            Conteocdscdestinofactura::actualizartraspasoerp ($idconteofactura);
-            return $this->redirect(['/crossdocking/conteocdscdestinofactura/indextraspaso']);    
+        if ($origen == 'Traspaso CDSC') {
+            Conteocdscdestinofactura::actualizartraspasoerp($idconteofactura);
+            return $this->redirect(['/crossdocking/conteocdscdestinofactura/indextraspaso']);
         }
 
         return $this->redirect(['index']);
@@ -208,8 +213,8 @@ class TransferenciaerpController extends Controller
      */
     public function actionDelete($id)
     {
-		$numRegistrosBorrados = Transferencialogws::deleteAll(['idTransferenciaerp' => $id]);
-		
+        $numRegistrosBorrados = Transferencialogws::deleteAll(['idTransferenciaerp' => $id]);
+
         $numRegistrosBorrados = Transferenciaerperror::deleteAll(['idTransferenciaerp' => $id]);
 
         $numRegistrosBorrados = Transferenciaordencompraexcel::deleteAll(['idTransferenciaerp' => $id]);
@@ -217,19 +222,20 @@ class TransferenciaerpController extends Controller
         $numRegistrosBorrados = Transferenciatransitoexcel::deleteAll(['idTransferenciaerp' => $id]);
 
         $model = $this->findModel($id);
-        
+
         $model->delete();
 
         return $this->redirect(['index']);
     }
 
-    public function actionImportardataxls ($id){
-        $model = new FileTransferenciaInput(); 
+    public function actionImportardataxls($id)
+    {
+        $model = new FileTransferenciaInput();
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return ActiveForm::validate($model);
-        }         
+        }
 
         if ($model->load(Yii::$app->request->post())) {
 
@@ -239,11 +245,11 @@ class TransferenciaerpController extends Controller
             if ($model->importTransferencia($id)) {
 
                 $tipomovimiento = 2;
-                $idtraspaso = Traspaso::generarTraspasoDesdeTransferencia ($id, $tipomovimiento);
+                $idtraspaso = Traspaso::generarTraspasoDesdeTransferencia($id, $tipomovimiento);
 
                 Yii::$app->session->setFlash('success', 'El Archivo se ha cargado correctamente. ');
-            }else{
-                $errorString = ProcedimientosGenerales::erroresModelo ($model->getErrors());
+            } else {
+                $errorString = ProcedimientosGenerales::erroresModelo($model->getErrors());
                 Yii::$app->session->setFlash('error', 'Ocurrió un error al cargar los archivos: ' . $errorString);
             }
 
@@ -251,11 +257,11 @@ class TransferenciaerpController extends Controller
 
         }
 
-        if (Yii::$app->request->isAjax){  
+        if (Yii::$app->request->isAjax) {
             return $this->renderAjax('uploadtransferencia', [
                 'model' => $model,
             ]);
-        }  
+        }
     }
 
     /**

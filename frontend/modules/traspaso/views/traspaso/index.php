@@ -342,6 +342,10 @@ Modal::end();
     if ($model->estado->nombre === 'terminado') {
         $classes[] = 'text-primary';
     }
+    // if ($model->ultimaplanillaembarquetraspaso->estadoplanillanoanulado === 'recibido' &&  ) {
+    //     $classes[] = 'text-primary';
+    // }
+
     return ['class' => implode(' ', $classes)];
 },
     'toolbar' => [
@@ -518,7 +522,7 @@ Modal::end();
             'class' => ActionColumn::className(),
             'header' => 'Acción',
             'headerOptions' => ['width' => '10%'],
-            'template' => ' {view} {update} {anular} {factura} {directo} {siesa}',
+            'template' => ' {view} {update} {anular} {factura} {directo} {interno} {siesa}',
             'buttons' => [
 
                 'view' => function ($url, $model) {
@@ -561,6 +565,16 @@ Modal::end();
             ['directo', 'id' => $model->id],
             [
                 'title' => 'Traspaso directo de tienda',
+                'class' => 'btn btn-default',
+            ]
+        );
+    },
+                'interno' => function ($url, $model) {
+        return Html::a(
+            '<i class="fa fa-arrow-right"></i>',
+            ['interno', 'id' => $model->id],
+            [
+                'title' => 'Traspaso interno',
                 'class' => 'btn btn-default',
             ]
         );
@@ -620,6 +634,9 @@ Modal::end();
         return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
     },
                 'directo' => function ($model, $key, $index) {
+        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+    },
+                'interno' => function ($model, $key, $index) {
         return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
     },
             ],

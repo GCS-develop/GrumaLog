@@ -98,7 +98,8 @@ class TraspasoController extends Controller
                     Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
                 }
 
-                return $this->redirect(['index']);
+                return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+
             }
         } else {
             $model->loadDefaultValues();
@@ -175,7 +176,8 @@ class TraspasoController extends Controller
             Yii::$app->session->setFlash('error', 'Registro no encontrado.');
         }
 
-        return $this->redirect(['index']);
+        return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+
     }
 
     public function actionSincronizar($id)
@@ -183,7 +185,8 @@ class TraspasoController extends Controller
 
         Traspaso::sincronizarTraspaso($id);
 
-        return $this->redirect(['index']);
+        return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+
     }
 
     /**
@@ -210,8 +213,20 @@ class TraspasoController extends Controller
         if ($model->idEstado === 2) {
 
             Yii::$app->session->setFlash('warning', 'No puedes anular en este estado!');
-            return $this->redirect(['index']);
+            return $this->redirect(Yii::$app->request->referrer ?: ['index']);
 
+
+        }
+
+        $existeEnPlanilla = $model->ultimaplanillaembarquetraspaso ? $model->ultimaplanillaembarquetraspaso->estadoPlanillaNoAnulado : false;
+
+        if ($existeEnPlanilla) {
+
+            Yii::$app->session->setFlash(
+                'warning',
+                'No puedes anular si existe en una planilla, numero de planilla: ' . $model->ultimaplanillaembarquetraspaso->idPlanillaEmbarque . ' estado: ' . $existeEnPlanilla->nombre
+            );
+            return $this->redirect(Yii::$app->request->referrer ?: ['index']);
         }
 
         if ($this->request->isPost) {
@@ -235,7 +250,7 @@ class TraspasoController extends Controller
                     (isset($model->codigoerp) ? $model->codigoerp->f350_consec_docto : ' interno: ' . $model->consecutivo)
                 );
 
-                return $this->redirect(['index']);
+                return $this->redirect(Yii::$app->request->referrer ?: ['index']);
 
             } else {
 
@@ -251,7 +266,8 @@ class TraspasoController extends Controller
         if ($model->idEstado !== 1 && $model->idEstado !== 3) {
 
             Yii::$app->session->setFlash('warning', 'No puedes imprimir en este estado!');
-            return $this->redirect(['index']);
+            return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+
 
         }
 
@@ -325,7 +341,8 @@ class TraspasoController extends Controller
             if ($model->save()) {
 
                 Yii::$app->session->setFlash('success', 'Estado cambiado!');
-                return $this->redirect(['index']);
+                return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+
 
             } else {
 
@@ -335,8 +352,39 @@ class TraspasoController extends Controller
 
         } else {
 
-            Yii::$app->session->setFlash('warning', 'No puedes cambiar a recibir en tiendas desde este estado!');
-            return $this->redirect(['index']);
+            Yii::$app->session->setFlash('warning', 'No puedes cambiar a ' . $model->estado->nombre . ' desde este estado!');
+            return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+
+
+        }
+
+    }
+
+    public function actionInterno($id)
+    {
+        $model = $this->findModel($id);
+
+        if ($model->idEstado != 2) {
+
+            $model->idEstado = 5;
+
+            if ($model->save()) {
+
+                Yii::$app->session->setFlash('success', 'Estado cambiado!');
+                return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+
+
+            } else {
+
+                Yii::$app->session->setFlash('error', 'Ups!, ocurrio un problema');
+
+            }
+
+        } else {
+
+            Yii::$app->session->setFlash('warning', 'No puedes cambiar a ' . $model->estado->nombre . ' desde este estado!');
+            return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+
 
         }
 

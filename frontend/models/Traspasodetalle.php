@@ -278,7 +278,7 @@ class Traspasodetalle extends \yii\db\ActiveRecord
             }
         }
     }
-    public function retornarInventario()
+    public function retornarInventario()//mas bien actualizar inventario
     {
         try {
             $barcode = $this->item->codigoBarras ?? null;
