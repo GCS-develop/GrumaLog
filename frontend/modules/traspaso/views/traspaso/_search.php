@@ -53,8 +53,11 @@ use yii\helpers\ArrayHelper;
             )->label('Serie');
             ?>
         </div>
-        <div class="col-lg-2">
+        <div class="col-lg-1">
             <?= $form->field($model, 'consecutivo')->label('Consecutivo'); ?>
+        </div>
+        <div class="col-lg-1">
+            <?= $form->field($model, 'id')->label('id'); ?>
         </div>
         <div class="col-lg-2">
             <?= $form->field($model, 'consecutivosiesa')->label('Consecutivo siesa'); ?>

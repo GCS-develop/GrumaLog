@@ -45,6 +45,7 @@ class Traspaso extends \yii\db\ActiveRecord
     public $estadoPlanilla;
     public $consecutivosiesa;
     public $idusertraspasocdsc;
+    public $fechaRecibido;
     /**
      * {@inheritdoc}
      */
@@ -82,10 +83,12 @@ class Traspaso extends \yii\db\ActiveRecord
             [['idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado', 'idUltimoItem', 'created_by', 'updated_by', 'tipoMovimiento'], 'integer'],
             [['consecutivo', 'und_traspaso', 'und_empaque'], 'number'],
             [['serie',], 'string', 'max' => 5],
-            [['updated_at', 'created_at', 'fechaDesde', 'fechaHasta', 'anula_at', 'anula_by', 'muelle_at', 'muelle_by','idusertraspasocdsc'], 'safe'],
+            [['updated_at', 'created_at', 'fechaDesde', 'fechaHasta', 'anula_at', 'anula_by', 'muelle_at', 'muelle_by', 'idusertraspasocdsc'], 'safe'],
             [['idBodegaDestino'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idBodegaDestino' => 'id']],
             [['idBodegaOrigen'], 'exist', 'skipOnError' => true, 'targetClass' => Bodegas::class, 'targetAttribute' => ['idBodegaOrigen' => 'id']],
             [['idTipoDocumento'], 'exist', 'skipOnError' => true, 'targetClass' => Tipodocumento::class, 'targetAttribute' => ['idTipoDocumento' => 'id']],
+            ['transferenciaerp', 'in', 'range' => [0, 1], 'message' => 'El valor debe ser 1 (Enviada) o 0 (No enviada).'],
+
         ];
     }
     /**
@@ -117,6 +120,7 @@ class Traspaso extends \yii\db\ActiveRecord
             'muelle_at' => 'Fecha en muelle',
             'muelle_by' => 'Usuario en muelle',
             'idusertraspasocdsc' => 'Usuario',
+            'transferenciaerp' => 'Transferencia'
 
         ];
     }
@@ -140,7 +144,11 @@ class Traspaso extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Bodegas::class, ['id' => 'idBodegaOrigen']);
     }
-
+    public function getEstadoTransferencia()
+    {
+        return $this->transferenciaerp == 1 ? 'Enviado' : 'Sin Enviar';
+    }
+    
     /**
      * Gets query for [[Traspasodetalles]].
      *

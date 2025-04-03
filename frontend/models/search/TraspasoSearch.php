@@ -26,7 +26,7 @@ class TraspasoSearch extends Traspaso
     {
         return [
             [['id', 'idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'tipoMovimiento'], 'integer'],
-            [['updated_at', 'created_by', 'updated_by', 'fechaDesde', 'fechaHasta', 'estadoPlanilla', 'consecutivosiesa', 'idEstado'], 'safe'],
+            [['updated_at', 'created_by', 'updated_by', 'fechaDesde', 'fechaHasta', 'estadoPlanilla', 'consecutivosiesa', 'idEstado', 'fechaRecibido'], 'safe'],
             [['consecutivo',], 'number'],
             [['serie'], 'string', 'max' => 5],
         ];
@@ -76,6 +76,7 @@ class TraspasoSearch extends Traspaso
             'tr.tipoMovimiento',
             'ds.f350_consec_docto as consecutivosiesa',
             'er.nombre as estadoPlanilla',
+            'pet.fechaRecibido',
 
         ]);
 
