@@ -106,11 +106,14 @@ use frontend\models\Transportadora;
         <!-- <div class="col-lg-3">
             <?php echo $form->field($model, 'idConductor') ?>
         </div> -->
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?php echo $form->field($model, 'nombreConductor') ?>
         </div>
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?php echo $form->field($model, 'sello') ?>
+        </div>
+        <div class="col-lg-2">
+            <?php echo $form->field($model, 'id') ?>
         </div>
 
     </div>
