@@ -60,14 +60,22 @@ class Planillaembarque extends \yii\db\ActiveRecord
                     'fechaDespacho',
                     'horaDespacho',
                     'idTransportadora',
-                    'flotaPropia',
-                    'placa',
-                    'nombreConductor'
+                    'flotaPropia'
                 ],
                 'required',
                 'message' => '{attribute} Es Un Valor Obligatorio'
             ],
-            [['fechaDespacho', 'created_at', 'updated_at', 'flotaPropia'], 'safe'],
+            [
+                [
+                    'fechaDespacho',
+                    'created_at',
+                    'updated_at',
+                    'flotaPropia',
+                    'placa',
+                    'nombreConductor'
+                ],
+                'safe'
+            ],
             [['idTransportadora', 'idVehiculo', 'idConductor', 'created_by', 'updated_by', 'idEstado'], 'integer'],
             [['horaDespacho'], 'string', 'max' => 10],
             [['placa'], 'string', 'max' => 20],

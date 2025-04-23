@@ -333,13 +333,11 @@ Modal::end();
     ],
     'rowOptions' => function ($model) {
     $classes = [];
-    if (
-        $model->estadoPlanilla == 'Recibido'
-    ) {
-        $classes[] = 'text-success';
-    }
-    if ($model->estado->nombre === 'muelle') {
+
+    if ($model->estado->nombre === 'muelle' && $model->estadoPlanilla != 'Recibido') {
         $classes[] = 'text-info';
+    } else {
+        $classes[] = 'text-success';
     }
     if ($model->estado->nombre === 'anulado') {
         $classes[] = 'text-danger';
@@ -347,12 +345,17 @@ Modal::end();
     if ($model->estado->nombre === 'terminado') {
         $classes[] = 'text-secondary';
     }
-    if (
-        $model->estadoPlanilla == 'Recibido' &&
-        strtotime($model->fechaRecibido) < strtotime('-2 days')
-    ) {
-        $classes[] = 'text-danger';
-    }
+    // if (
+    //     $model->estadoPlanilla == 'Recibido'
+    // ) {
+    //     $classes[] = 'text-success';
+    // }
+    // if (
+    //     $model->estadoPlanilla == 'Recibido' &&
+    //     strtotime($model->fechaRecibido) < strtotime('-2 days')
+    // ) {
+    //     $classes[] = 'text-danger';
+    // }
 
 
 
@@ -602,7 +605,7 @@ Modal::end();
             '<i class="fa fa-ban"></i>',
             ['anular', 'id' => $model->id],
             [
-                'class' => 'btn btn-default',
+                'class' => 'btn btn-default text-danger',
                 'title' => 'Anular Registro',
                 'data' => [
                     'confirm' => 'Esta seguro de anular este registro? ( Origen: '

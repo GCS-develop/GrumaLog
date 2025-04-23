@@ -165,10 +165,6 @@ class TransferenciaerpController extends Controller
         switch ($model->idConectorDinamico) {
             case 1:
                 $respuesta = Transferenciaerp::transferenciaSalidaWS($id);
-                if (Yii::$app->user->id == '17') {
-                    var_dump($model->idConectorDinamico . '-' .  $respuesta);
-                    die('respuesta');
-                }
                 break;
             case 3:
                 $respuesta = Transferenciaerp::entradaAlmacenInteWS($id);

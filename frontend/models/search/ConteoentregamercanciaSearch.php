@@ -210,6 +210,7 @@ class ConteoentregamercanciaSearch extends Conteoentregamercancia
         $query = $query->andFilterWhere(['pem.idFacturaEntregaMercancia' => $idfactura]);
 
         // echo $query->createCommand()->getRawSql(); die("hola");
+        // var_dump($dataProvider); die("QUE PASO");
  
         // add conditions that should always apply here
 

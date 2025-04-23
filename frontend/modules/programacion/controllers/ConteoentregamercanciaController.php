@@ -650,6 +650,7 @@ class ConteoentregamercanciaController extends Controller
         $searchModel = new ConteoentregamercanciaSearch();
         $dataProviderBD = $searchModel->searchSIESA($idagenda, $idfactura);
 
+        // var_dump($dataProviderBD); die("pare 1");
         $idtransferenciaerp = Conteoentregamercancia::crearRegistroTransferencia($idagenda, $idfactura, $dataProviderBD);
 
         return $this->redirect(['viewtransferenciaocerp', 'id' => $idtransferenciaerp]);

@@ -390,7 +390,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'f470_id_tipo_docto' => $registro->tipoDocumentoMovimiento,
                 'f470_consec_docto' => $registro->transferenciaerp->documento,
                 'f470_nro_registro' => $nroregistro,
-                'f470_id_bodega' => $registro->bodegaSalidaMovimiento,
+                'f470_id_bodega' => trim($registro->bodegaSalidaMovimiento),
                 'f470_id_motivo' => '01',
                 'f470_id_co_movto' => $registro->centroOperacionMovimiento,
                 'f470_id_unidad_medida' => $registro->unidadSalida,

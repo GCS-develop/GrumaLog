@@ -79,7 +79,7 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
             [['idAgendaEntregaMercancia', 'idEmpleadoLogistica', 'idEstado', 'created_by', 
             'updated_by', 'idUserConteo', 'unidadxPaquete', 'puedeModificarEntrada'], 'integer'],
             [['created_at', 'updated_at', 'unidadesAsignadas'], 'safe'],
-            [['idAgendaEntregaMercancia', 'item', 'idUserConteo'], 'unique', 'targetAttribute' => ['idAgendaEntregaMercancia', 'item', 'idUserConteo'], 'message' => 'El Item Ya Esta Asignado al Usuario.'],
+            [['idAgendaEntregaMercancia', 'item', 'idUserConteo'], 'unique', 'targetAttribute' => ['idAgendaEntregaMercancia', 'idFacturaEntregaMercancia','item', 'idUserConteo'], 'message' => 'El Item Ya Esta Asignado al Usuario.'],
             [['idAgendaEntregaMercancia'], 'exist', 'skipOnError' => true, 'targetClass' => Agendaentregamercancia::class, 'targetAttribute' => ['idAgendaEntregaMercancia' => 'id']],
         ];
     }

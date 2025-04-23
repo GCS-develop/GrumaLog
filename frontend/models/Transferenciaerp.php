@@ -255,7 +255,8 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                      
                      $conta = $conta + 1;
                      continue;*/
-            //var_dump($json); die("hola");
+            // var_dump($json);
+            // die("hola JSON 2");
 
             if ($json == null) {
                 $model = new Transferenciaerperror();
@@ -468,7 +469,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'f470_id_tipo_docto' => $registro->tipoDocumentoMovimiento,
                 'f470_consec_docto' => $registro->transferenciaerp->documento,
                 'f470_nro_registro' => $nroregistro,
-                'f470_id_bodega' => $registro->bodegaSalidaMovimiento,
+                'f470_id_bodega' => trim($registro->bodegaSalidaMovimiento),
                 'f470_id_motivo' => '01',
                 'f470_id_co_movto' => $registro->centroOperacionMovimiento,
                 'f470_id_unidad_medida' => $registro->unidadSalida,
@@ -720,9 +721,14 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 $registro->tipoDocumentoOrdenCompra,
                 $registro->consecutivoOrdenCompra
             );
+
+            // var_dump($json);die("Hola JSON 1");
             /*if ($registro->consecutivoOrdenCompra == 1101){			
                          var_dump($json); die("hola");
                      }*/
+
+
+
 
             if ($json == null) {
                 $model = new Transferenciaerperror();
@@ -753,6 +759,17 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'content-type' => 'application/json'
                 // Agrega aquí otros headers si es necesario
             ];
+
+            if (Yii::$app->user->id == '17') {
+                var_dump($url);
+                var_dump('  <----- ' . '  -------> ');
+                var_dump($headers);
+                var_dump('  <----- ' . '  -------> ');
+
+                var_dump($json);
+                die("hola->entradas");
+
+            }
 
             $respuesta = Transferenciaerp::ejecutartransferenciaWS($url, $headers, $json);
 
@@ -817,19 +834,20 @@ class Transferenciaerp extends \yii\db\ActiveRecord
             $cantidad_formateado = str_pad($registro->cantidadBase, 15, "0", STR_PAD_LEFT) . '.' . '0000';
 
             $movimiento = [
-                'f470_id_co' => $registro->centroOperacionMovimiento,
-                'f470_id_tipo_docto' => $registro->tipoDocumentoMovimiento,
-                'f470_consec_docto' => $registro->consecutivoMovimiento,
-                'f470_nro_registro' => $registro->numeroRegistroMovimiento,
-                'f470_id_bodega' => $registro->bodegaMovimiento,
-                'f470_id_unidad_medida' => $registro->unidadMovimiento,
-                'f421_fecha_entrega' => $registro->fechaEntregaMovimiento,
-                'f470_cant_base' => $cantidad_formateado,
-                'f470_notas' => $registro->transferenciaerp->notas,
-                'f470_id_item' => $registro->item,
-                'f470_id_ext1_detalle' => $registro->color,
-                'f470_id_ext2_detalle' => $registro->talla,
-                'f470_rowid' => $numero_formateado,
+                'f470_id_co' => trim($registro->centroOperacionMovimiento),
+                'f470_id_tipo_docto' => trim($registro->tipoDocumentoMovimiento),
+                'f470_consec_docto' => trim($registro->consecutivoMovimiento),
+                'f470_nro_registro' => trim($registro->numeroRegistroMovimiento),
+                // 'f470_id_bodega' => trim($registro->bodegaMovimiento,
+                'f470_id_bodega' => trim($registro->bodegaMovimiento),
+                'f470_id_unidad_medida' => trim($registro->unidadMovimiento),
+                'f421_fecha_entrega' => trim($registro->fechaEntregaMovimiento),
+                'f470_cant_base' => trim($cantidad_formateado),
+                'f470_notas' => trim($registro->transferenciaerp->notas),
+                'f470_id_item' => trim($registro->item),
+                'f470_id_ext1_detalle' => trim($registro->color),
+                'f470_id_ext2_detalle' => trim($registro->talla),
+                'f470_rowid' => trim($numero_formateado),
             ];
 
             if (!isset($jsonArray[$documentoKey])) {
