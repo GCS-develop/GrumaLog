@@ -99,24 +99,25 @@ class AgendaentregamercanciaController extends Controller
     public function actionViewcalendario($id, $action)
     {
         $model = $this->findModel($id);
-        $fechaInicio = $model->agenda->desde; 
+        $fechaInicio = $model->agenda->desde;
         $fechaFin = $model->agenda->hasta;
 
         $events = [];
 
         // Obtener los datos de la tabla agendaentregamercancia
         $agendaData = Agendaentregamercancia::find()
-                        ->where(['not', ['fechaCita' => null]])
-                        ->andWhere(['between', 'fechaCita', $fechaInicio, $fechaFin])
-                        ->all();
+            ->where(['not', ['fechaCita' => null]])
+            ->andWhere(['between', 'fechaCita', $fechaInicio, $fechaFin])
+            ->all();
 
         // Formatear los datos para que sean compatibles con yii2fullcalendar
         foreach ($agendaData as $agendaItem) {
             $events[] = [
                 'id' => $agendaItem->id,
-                'title' => $agendaItem->transportadora->nombre . ' - ' . 
-                            'OC: ' . $agendaItem->ordenCompra->tipoDocumento->codigo . '-' . $agendaItem->ordenCompra->consecutivo . ' - ' . 
-                            'UND: ' . number_format($agendaItem->unidades,0) .  ' H: ' . $agendaItem->horaCita,               
+                'title' => $agendaItem->transportadora->nombre . ' - ' .
+                    'OC: ' . $agendaItem->ordenCompra->tipoDocumento->codigo . '-' . $agendaItem->ordenCompra->consecutivo . ' - ' .
+                    'UND: ' . number_format($agendaItem->unidades, 0) . ' H: ' . $agendaItem->horaCita . ' - Proovedor: '
+                    . $agendaItem->ordenCompra->proveedor->razonSocial,
                 'start' => $agendaItem->fechaCita, // Suponiendo que 'fecha_inicio' es la fecha de inicio del evento
                 //'end' => $agendaItem->fechaCita, // Suponiendo que 'fecha_fin' es la fecha de fin del evento
                 'estado' => $agendaItem->estado,
@@ -169,33 +170,33 @@ class AgendaentregamercanciaController extends Controller
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return ActiveForm::validate($model);
-        } 
+        }
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 $id = null;
                 $mensajeError = 'Error Actualizando Registro';
 
-                if ($model->validate()){
+                if ($model->validate()) {
 
                     $respuesta = Agendaentregamercancia::grabarOrdenCompraCategoria($model);
 
-                    if ($respuesta){
-                        Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
-                    }else{
-                        Yii::$app->session->setFlash( 'error', $mensajeError);
+                    if ($respuesta) {
+                        Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                    } else {
+                        Yii::$app->session->setFlash('error', $mensajeError);
                     }
                 }
 
                 return $this->redirect(['index', 'id' => $model->idAgenda]);
             }
-        } 
+        }
 
-        if (Yii::$app->request->isAjax){  
+        if (Yii::$app->request->isAjax) {
             return $this->renderAjax('create_orden_compra', [
                 'model' => $model,
             ]);
-        }  
+        }
     }
 
     public function actionCreate($idagenda)
@@ -217,57 +218,63 @@ class AgendaentregamercanciaController extends Controller
                 $id = null;
                 $mensajeError = 'Error Actualizando Registro';
 
-                if ($model->validate()){
-                    $OK = Ordendecompra::insertarDatosOC ($idCia, 
-                                                            $model->idCentroOperacion, 
-                                                            $model->idTipoDocumento, 
-                                                            $model->numeroOrdenCompra);
+                if ($model->validate()) {
+                    $OK = Ordendecompra::insertarDatosOC(
+                        $idCia,
+                        $model->idCentroOperacion,
+                        $model->idTipoDocumento,
+                        $model->numeroOrdenCompra
+                    );
 
 
-                    if ($OK > 0){
+                    if ($OK > 0) {
 
-                        $modeloc = Ordendecompra::find()->where(['idCO' => $model->idCentroOperacion,
-                                                            'idTipoDocumento' => $model->idTipoDocumento,
-                                                            'consecutivo' => $model->numeroOrdenCompra])->one();
+                        $modeloc = Ordendecompra::find()->where([
+                            'idCO' => $model->idCentroOperacion,
+                            'idTipoDocumento' => $model->idTipoDocumento,
+                            'consecutivo' => $model->numeroOrdenCompra
+                        ])->one();
 
                         //die("Hola : " .$modeloc->id);
 
                         $ordencompraok = true;
                         $modelagenda = Agendaentregamercancia::find()->where(['idOrdenCompra' => $modeloc->id])->all();
 
-                        foreach($modelagenda as $agenda){
+                        foreach ($modelagenda as $agenda) {
 
-                            switch($agenda->estado->codigo){
+                            switch ($agenda->estado->codigo) {
                                 case 1:
                                 case 2:
-                                case 0: $ordencompraok = false; break;
+                                case 0:
+                                    $ordencompraok = false;
+                                    break;
                             }
 
-                            if ($ordencompraok == false){
+                            if ($ordencompraok == false) {
                                 break;
                             }
                         }
 
 
-                        if ($ordencompraok){
+                        if ($ordencompraok) {
                             $model->idOrdenCompra = $modeloc->id;
                             $respuesta = Agendaentregamercancia::grabarOrdenCompraCategoria($model);
 
-                            if ($respuesta){
-                                Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
-                            }else{
-                                Yii::$app->session->setFlash( 'error', 'No se Puede Agendar Orden de Compra');
+                            if ($respuesta) {
+                                Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                            } else {
+                                Yii::$app->session->setFlash('error', 'No se Puede Agendar Orden de Compra');
                             }
-                        }else{
-                            Yii::$app->session->setFlash( 'error', 'Error: Orden de Compra YA fue agendada. ' . $agenda->fechaCita." ".$agenda->horaCita. " " . $agenda->usuariocrea->username);
+                        } else {
+                            Yii::$app->session->setFlash('error', 'Error: Orden de Compra YA fue agendada. ' . $agenda->fechaCita . " " . $agenda->horaCita . " " . $agenda->usuariocrea->username);
                         }
-                    }else{
-                        switch($OK){
-                            case - 1:
-                                Yii::$app->session->setFlash( 'error', 'OC. Tiene Inconsistencias. No Unidades de Item No Son Equivalentes a la Unidad de Medida');
+                    } else {
+                        switch ($OK) {
+                            case -1:
+                                Yii::$app->session->setFlash('error', 'OC. Tiene Inconsistencias. No Unidades de Item No Son Equivalentes a la Unidad de Medida');
                                 break;
-                            case 0: 
-                                Yii::$app->session->setFlash( 'error', 'Número Orden de Compra NO Existe');
+                            case 0:
+                                Yii::$app->session->setFlash('error', 'Número Orden de Compra NO Existe');
                                 break;
                         }
 
@@ -277,11 +284,11 @@ class AgendaentregamercanciaController extends Controller
 
                 return $this->redirect(['index', 'id' => $model->idAgenda]);
             }
-        } 
+        }
 
         return $this->render('create_orden_compra_test', [
-                'model' => $model,
-            ]);
+            'model' => $model,
+        ]);
     }
 
     /**
@@ -298,8 +305,8 @@ class AgendaentregamercanciaController extends Controller
         $codigoEstado = $model->estado->codigo;
 
         // 0 -> Sin Asignar 
-        if ($codigoEstado != 0){
-            Yii::$app->session->setFlash( 'error', 'Error Estado de la Orden de Compra No Permite Agendamiento ');
+        if ($codigoEstado != 0) {
+            Yii::$app->session->setFlash('error', 'Error Estado de la Orden de Compra No Permite Agendamiento ');
             return $this->redirect(['index', 'id' => $model->idAgenda]);
         }
 
@@ -317,9 +324,9 @@ class AgendaentregamercanciaController extends Controller
         $model->fechaAgenda = $model->ordenCompra->fechaEntrega;
         $model->fechaContacto = date('Y-m-d');
 
-        if ($model->categoria){
+        if ($model->categoria) {
             $categoria = $model->categoria->nombre;
-        }else{
+        } else {
             var_dump($model);
             die($model->idCategoria);
         }
@@ -337,7 +344,7 @@ class AgendaentregamercanciaController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 $id = null;
-                if ($model->validate()){
+                if ($model->validate()) {
 
                     $modelestado = Estadoagenda::findOne(['codigo' => 1]);
 
@@ -347,21 +354,21 @@ class AgendaentregamercanciaController extends Controller
 
                     $model->idEstado = $modelestado->id;
 
-                    $id = $model->save();  
-                    
-                    if ($id != null){
-                        Agendaentregamercancia::actualizarUnidadesAgendamiento (
-                                                            $model->idAgenda,
-                                                            $model->idOrdenCompra, 
-                                                            $model->fechaAgenda
-                                                        );
+                    $id = $model->save();
+
+                    if ($id != null) {
+                        Agendaentregamercancia::actualizarUnidadesAgendamiento(
+                            $model->idAgenda,
+                            $model->idOrdenCompra,
+                            $model->fechaAgenda
+                        );
                     }
                 }
 
-                if ($id != null){
-                    Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
-                }else{
-                    Yii::$app->session->setFlash( 'error', 'Error Actualizando Registro');
+                if ($id != null) {
+                    Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                } else {
+                    Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
                 }
 
                 return $this->redirect(['index', 'id' => $model->idAgenda]);
@@ -401,8 +408,8 @@ class AgendaentregamercanciaController extends Controller
         $codigoEstado = $modelold->estado->codigo;
 
         // 1 -> Agendamiento 
-        if ($codigoEstado != 1){
-            Yii::$app->session->setFlash( 'error', 'Error Estado de la Orden de Compra No Permite Re-Agendamiento ');
+        if ($codigoEstado != 1) {
+            Yii::$app->session->setFlash('error', 'Error Estado de la Orden de Compra No Permite Re-Agendamiento ');
             return $this->redirect(['index', 'id' => $modelold->idAgenda]);
         }
 
@@ -434,7 +441,7 @@ class AgendaentregamercanciaController extends Controller
         $model->fechaAgenda = $fechaCita->format('Y-m-d');
         $model->horaAgenda = $fechaCita->format('H:i');
         */
-        $model->fechaAgenda = substr($modelold->fechaCita,0,10);
+        $model->fechaAgenda = substr($modelold->fechaCita, 0, 10);
         $model->horaAgenda = $modelold->horaCita;
 
         $model->fechaContacto = date('Y-m-d');
@@ -454,10 +461,10 @@ class AgendaentregamercanciaController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 $id = null;
-                if ($model->validate()){
+                if ($model->validate()) {
 
                     $modelestado = Estadoagenda::findOne(['codigo' => 1]);
-                    
+
                     //$model->fechaCita = $model->fechaAgenda . ' ' . $model->horaAgenda;
                     $model->fechaCita = $model->fechaAgenda;
                     $model->horaCita = $model->horaAgenda;
@@ -465,18 +472,18 @@ class AgendaentregamercanciaController extends Controller
                     $model->idEstado = $modelestado->id;
                     $model->idAgendaEntregaMercancia = $modelold->id;
 
-                    $id = $model->save();  
-                    
-                    if ($id != null){
+                    $id = $model->save();
+
+                    if ($id != null) {
                         //die($model->idAgenda . ' - ' . $model->idOrdenCompra . ' - ' . $model->fechaAgenda);
-                        Agendaentregamercancia::actualizarUnidadesAgendamiento (
-                                                            $model->idAgenda,
-                                                            $model->idOrdenCompra, 
-                                                            $model->fechaCita
-                                                        );
+                        Agendaentregamercancia::actualizarUnidadesAgendamiento(
+                            $model->idAgenda,
+                            $model->idOrdenCompra,
+                            $model->fechaCita
+                        );
                     }
 
-                    if ($id){
+                    if ($id) {
                         //var_dump($model->fechaCita); die("hola");
 
                         //$fechaObjeto = \DateTime::createFromFormat('Y-m-d', $model->fechaCita);
@@ -489,25 +496,25 @@ class AgendaentregamercanciaController extends Controller
                         $modelestado = Estadoagenda::findOne(['codigo' => 5]);
                         $modelold->idEstado = $modelestado->id;
 
-                        $id = $modelold->save();  
+                        $id = $modelold->save();
                         $operacion = "restar";
-                        
-                        if ($id != null){
-                            Agendaentregamercancia::actualizarUnidadesAgendamiento (
-                                                                $modelold->idAgenda,
-                                                                $modelold->idOrdenCompra, 
-                                                                $modelold->fechaCita,
-                                                                $operacion
-                                                            );
+
+                        if ($id != null) {
+                            Agendaentregamercancia::actualizarUnidadesAgendamiento(
+                                $modelold->idAgenda,
+                                $modelold->idOrdenCompra,
+                                $modelold->fechaCita,
+                                $operacion
+                            );
                         }
                     }
                 }
 
-                if ($id != null){
+                if ($id != null) {
                     $mensaje = '(' . $model->idAgenda . ' - ' . $model->idOrdenCompra . ' - ' . $model->fechaAgenda . ') - (' . $modelold->idAgenda . ' - ' . $modelold->idOrdenCompra . ' - ' . $modelold->fechaAgenda . ') - (';
-                    Yii::$app->session->setFlash( 'success', 'Registro Actualizado. ' . $mensaje);
-                }else{
-                    Yii::$app->session->setFlash( 'error', 'Error Actualizando Registro');
+                    Yii::$app->session->setFlash('success', 'Registro Actualizado. ' . $mensaje);
+                } else {
+                    Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
                 }
 
                 return $this->redirect(['index', 'id' => $model->idAgenda]);
@@ -554,24 +561,24 @@ class AgendaentregamercanciaController extends Controller
         $codigoEstado = $model->estado->codigo;
 
         // 1 -> Agendamiento 
-        if (($codigoEstado == 1) || ($codigoEstado == 0)){
+        if (($codigoEstado == 1) || ($codigoEstado == 0)) {
             $ok = true;
-        } else{
-            Yii::$app->session->setFlash( 'error', 'Error Estado de la Orden de Compra No Permite Eliminar Este Registro ');
+        } else {
+            Yii::$app->session->setFlash('error', 'Error Estado de la Orden de Compra No Permite Eliminar Este Registro ');
             return $this->redirect(['index', 'id' => $model->idAgenda]);
         }
 
-        if ($model->delete()){
-            Yii::$app->session->setFlash( 'success', 'Registro Eliminado');
-        }else{
-            Yii::$app->session->setFlash( 'error', 'Error Eliminando Registro');
+        if ($model->delete()) {
+            Yii::$app->session->setFlash('success', 'Registro Eliminado');
+        } else {
+            Yii::$app->session->setFlash('error', 'Error Eliminando Registro');
         }
 
         return $this->redirect(['index', 'id' => $idAgenda]);
     }
 
 
-    public function actionCancel ($id)
+    public function actionCancel($id)
     {
         $model = $this->findModel($id);
 
@@ -588,28 +595,28 @@ class AgendaentregamercanciaController extends Controller
         $model->horaAgenda = $fechaCita->format('H:i');
 
         // 1 -> Agendamiento 
-        if ($codigoEstado != 1){
-            Yii::$app->session->setFlash( 'error', 'Error Estado de la Orden de Compra No Permite Cancelar Cita Entrega Mercancía ');
+        if ($codigoEstado != 1) {
+            Yii::$app->session->setFlash('error', 'Error Estado de la Orden de Compra No Permite Cancelar Cita Entrega Mercancía ');
             return $this->redirect(['index', 'id' => $model->idAgenda]);
         }
 
         $modelestado = Estadoagenda::findOne(['codigo' => 3]);
         $model->idEstado = $modelestado->id;
 
-        if ($model->save()){
+        if ($model->save()) {
 
             //die($model->idAgenda . ' - ' . $model->idOrdenCompra . ' - ' . $model->fechaAgenda);
             $operacion = "restar";
-            Agendaentregamercancia::actualizarUnidadesAgendamiento (
+            Agendaentregamercancia::actualizarUnidadesAgendamiento(
                 $model->idAgenda,
-                $model->idOrdenCompra, 
+                $model->idOrdenCompra,
                 $model->fechaAgenda,
                 $operacion
             );
 
-            Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
-        }else{
-            Yii::$app->session->setFlash( 'error', 'Error Actualizando Registro');
+            Yii::$app->session->setFlash('success', 'Registro Actualizado');
+        } else {
+            Yii::$app->session->setFlash('error', 'Error Actualizando Registro');
         }
 
         return $this->redirect(['index', 'id' => $model->idAgenda]);
@@ -770,14 +777,14 @@ class AgendaentregamercanciaController extends Controller
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return ActiveForm::validate($model);
-        } 
+        }
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 $id = null;
                 $mensajeError = 'Error Actualizando Registro';
 
-                if ($model->validate()){
+                if ($model->validate()) {
 
                     $modelestado = Estadoagenda::findOne(['codigo' => 0]);
 
@@ -786,28 +793,28 @@ class AgendaentregamercanciaController extends Controller
                     $modelagendaoc->idOrdenCompra = $model->idOrdenCompra;
                     $modelagendaoc->idEstado = $modelestado->id;
 
-                    if ($modelagendaoc->ordenCompra->totalCantidadPendiente > 0){
+                    if ($modelagendaoc->ordenCompra->totalCantidadPendiente > 0) {
                         $id = $modelagendaoc->save();
-                    }else{
+                    } else {
                         $mensajeError = 'Error Actualizando Registro. Cantidad Debe Ser Mayor a Cero';
-                    }                   
+                    }
                 }
 
-                if ($id != null){
-                    Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
-                }else{
-                    Yii::$app->session->setFlash( 'error', $mensajeError);
+                if ($id != null) {
+                    Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                } else {
+                    Yii::$app->session->setFlash('error', $mensajeError);
                 }
 
                 return $this->redirect(['index', 'id' => $model->idAgenda]);
             }
-        } 
+        }
 
-        if (Yii::$app->request->isAjax){  
+        if (Yii::$app->request->isAjax) {
             return $this->renderAjax('create_orden_compra', [
                 'model' => $model,
             ]);
-        }  
+        }
     }
 
     public function actionUpdatedatabasic($id)
@@ -817,35 +824,36 @@ class AgendaentregamercanciaController extends Controller
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return ActiveForm::validate($model);
-        } 
+        }
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 $id = null;
                 $mensajeError = 'Error Actualizando Registro';
 
-                if ($model->validate()){
+                if ($model->validate()) {
                     $id = $model->save();
                 }
 
-                if ($id != null){
-                    Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
-                }else{
-                    Yii::$app->session->setFlash( 'error', $mensajeError);
+                if ($id != null) {
+                    Yii::$app->session->setFlash('success', 'Registro Actualizado');
+                } else {
+                    Yii::$app->session->setFlash('error', $mensajeError);
                 }
 
                 return $this->redirect(['index', 'id' => $model->idAgenda]);
             }
-        } 
+        }
 
-        if (Yii::$app->request->isAjax){  
+        if (Yii::$app->request->isAjax) {
             return $this->renderAjax('update_data_basic', [
                 'model' => $model,
             ]);
-        }  
+        }
     }
 
-    public function actionReportdaily($id, $anio, $mes){
+    public function actionReportdaily($id, $anio, $mes)
+    {
 
         $searchModel = new AgendaentregamercanciaSearch();
         $dataProvider = $searchModel->searchReportDaily($id, $anio, $mes, "1");
