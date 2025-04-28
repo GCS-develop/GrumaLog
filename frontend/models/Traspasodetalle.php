@@ -283,7 +283,7 @@ class Traspasodetalle extends \yii\db\ActiveRecord
         try {
             $barcode = $this->item->codigoBarras ?? null;
             $codbodega = $this->traspaso->bodegaOrigen->codigo ?? null;
-            $cantidadAnulada = $this->cantidad ?? 0;
+            $cantidadAnulada = $this->getCantidadUnidades() ?? 0;
 
             if (!$barcode || !$codbodega || $cantidadAnulada <= 0) {
                 throw new \Exception("Código de barras, código de bodega o cantidad no válidos.");

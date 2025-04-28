@@ -27,7 +27,7 @@ use common\models\OrdendecompraSIESA;
  * @property string|null $serie
  * @property int|null $und_traspaso
  * @property int|null $und_empaque
-  * @property int|null $tipoMovimiento
+ * @property int|null $tipoMovimiento
 
  * @property tipoDocumento $tipoDocumento
  * @property Bodegas $bodegaDestino
