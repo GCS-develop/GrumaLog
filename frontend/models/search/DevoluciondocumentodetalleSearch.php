@@ -31,7 +31,9 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
                     'numeroDocumento',
                     'codigoBodegaSalida',
                     'unidadMedida',
-                    'fechaRegistra'
+                    'fechaRegistra',
+                    'fechaDesde',
+                    'fechaHasta',
                 ],
                 'safe'
             ],
@@ -125,6 +127,26 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             'dct.codigoBodegaSalida' => $this->codigoBodegaSalida,
             // 'det.fechaRegistra' => trim($this->fechaRegistra),
         ]);
+
+        if ($this->fechaDesde || $this->fechaHasta) {
+            // Si solo está presente fechaDesde, buscar por esa fecha exacta
+            if ($this->fechaDesde && !$this->fechaHasta) {
+                $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
+                $query->andWhere(['>=', new \yii\db\Expression('CAST(det.fechaRegistra AS DATE)'), $fechaInicio]);
+            }
+            // Si solo está presente fechaHasta, buscar hasta esa fecha
+            elseif (!$this->fechaDesde && $this->fechaHasta) {
+                $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
+                $query->andWhere(['<=', new \yii\db\Expression('CAST(det.fechaRegistra AS DATE)'), $fechaFin]);
+            }
+            // Si están presentes ambas, buscar entre ambas fechas
+            elseif ($this->fechaDesde && $this->fechaHasta) {
+                $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
+                $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
+                $query->andWhere(['between', new \yii\db\Expression('CAST(det.fechaRegistra AS DATE)'), $fechaInicio, $fechaFin]);
+            }
+        }
+
         if (!empty($this->fechaRegistra)) {
             $fecha = date('Y-m-d', strtotime($this->fechaRegistra));
             $query->andWhere("CAST(det.fechaRegistra AS DATE) = :fecha", [':fecha' => $fecha]);

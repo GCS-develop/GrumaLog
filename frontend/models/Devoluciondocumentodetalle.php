@@ -31,6 +31,8 @@ class Devoluciondocumentodetalle extends \yii\db\ActiveRecord
 {
     public $numeroDocumento;
     public $codigoBodegaSalida;
+    public $fechaDesde;
+    public $fechaHasta;
 
     /**
      * {@inheritdoc}
@@ -70,8 +72,8 @@ class Devoluciondocumentodetalle extends \yii\db\ActiveRecord
             [['idDocumento', 'codigoBarras', 'item', 'talla', 'color', 'referencia', 'itemResumen'], 'required'],
             [['idDocumento', 'created_by', 'updated_by', 'registrada', 'usuarioRegistra'], 'integer'],
             [['cantidadDevolucion', 'cantidadRegistrada'], 'number'],
-            [['item','created_at', 'updated_at', 'fechaRegistra'], 'safe'],
-            [['codigoBarras',  'talla'], 'string', 'max' => 20],
+            [['item', 'created_at', 'updated_at', 'fechaRegistra'], 'safe'],
+            [['codigoBarras', 'talla'], 'string', 'max' => 20],
             [['color', 'referencia'], 'string', 'max' => 50],
             [['itemResumen'], 'string', 'max' => 300],
             [['unidadMedida'], 'string', 'max' => 10],
@@ -112,7 +114,8 @@ class Devoluciondocumentodetalle extends \yii\db\ActiveRecord
         return $this->hasOne(Unidadempaque::class, ['codigo' => 'unidadMedida']);
     }
 
-    public function getDiferencia (){
+    public function getDiferencia()
+    {
         return $this->cantidadDevolucion - $this->cantidadRegistrada;
     }
 }
