@@ -84,7 +84,7 @@ class TraspasoSearch extends Traspaso
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'pagination' => [
-                'pageSize' => '100',
+                'pageSize' => '20',
             ],
 
         ]);
@@ -128,7 +128,6 @@ class TraspasoSearch extends Traspaso
 
         ]);
 
-        // $query->andFilterWhere(['LIKE', 'updated_at', $this->updated_at]);
         if ($this->fechaDesde || $this->fechaHasta) {
             // Si solo está presente fechaDesde, buscar por esa fecha exacta
             if ($this->fechaDesde && !$this->fechaHasta) {
@@ -147,6 +146,7 @@ class TraspasoSearch extends Traspaso
                 $query->andWhere(['between', new \yii\db\Expression('CAST(tr.created_at AS DATE)'), $fechaInicio, $fechaFin]);
             }
         }
+
         $query->andFilterWhere(['IN', 'tr.idEstado', $this->idEstado]);
 
 
