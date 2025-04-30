@@ -168,4 +168,10 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
 
     }
 
+    public function getDocumentosiesa()
+    {
+        return $this->hasOne(Documentosiesa::class, ['idGruma' => 'idTraspaso']);
+    }
+
+
 }

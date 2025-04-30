@@ -41,6 +41,11 @@ use yii\helpers\ArrayHelper;
 
 class Planillaembarque extends \yii\db\ActiveRecord
 {
+
+    public $fechaDesde;
+    public $fechaHasta;
+    public $numeroDocumento;
+    public $numeroDocumentoInterno;
     /**
      * {@inheritdoc}
      */
@@ -206,8 +211,5 @@ class Planillaembarque extends \yii\db\ActiveRecord
             ->select(['idBodegaDestino', 'bodegas.nombre AS bodega_nombre'])
             ->orderBy('idBodegaDestino');
     }
-
-
-
 
 }

@@ -32,16 +32,15 @@ use frontend\models\Transportadora;
         'method' => 'get',
     ]); ?>
 
-    <!-- <?= $form->field($model, 'id') ?> -->
 
     <div class="row">
-        <div class="col-lg-3">
 
+        <div class="col-lg-2">
             <?=
-                $form->field($model, 'fechaDespacho')->widget(DatePicker::className(), [
-                    'name' => 'fechaDespacho',
+                $form->field($model, 'fechaDesde')->widget(DatePicker::className(), [
+                    'name' => 'fechadesde',
                     'language' => 'es',
-                    'options' => ['placeholder' => 'Fecha despacho...'],
+                    'options' => ['placeholder' => 'Fecha Cita Desde ...', 'disabled' => false],
                     'pluginOptions' => [
                         'autoclose' => true,
                         'format' => 'yyyy-mm-dd',
@@ -50,7 +49,24 @@ use frontend\models\Transportadora;
                 ])
                 ?>
         </div>
-        <div class="col-lg-3">
+
+        <div class="col-lg-2">
+            <?=
+                $form->field($model, 'fechaHasta')->widget(DatePicker::className(), [
+                    'name' => 'fechahasta',
+                    'language' => 'es',
+                    'options' => ['placeholder' => 'Fecha Cita Hasta ...', 'disabled' => false],
+                    'pluginOptions' => [
+                        'autoclose' => true,
+                        'format' => 'yyyy-mm-dd',
+                        'todayHighlight' => true
+                    ]
+                ])
+                ?>
+        </div>
+
+
+        <div class="col-lg-2">
             <?=
                 $form->field($model, 'horaDespacho')->widget(TimePicker::className(), [
                     'name' => 'horaDespacho',
@@ -64,9 +80,9 @@ use frontend\models\Transportadora;
                         // 'defaultTime' => 'current', // Para seleccionar la hora actual por defecto
                     ]
                 ]) ?>
-
         </div>
-        <div class="col-lg-3">
+
+        <div class="col-lg-2">
             <?php echo $form->field($model, 'idTransportadora')->dropDownList(
                 Transportadora::getListaData(),
                 [
@@ -77,7 +93,7 @@ use frontend\models\Transportadora;
             ?>
         </div>
 
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?php echo $form->field($model, 'idEstado')->dropDownList(
                 Estadodespacho::getListaData(),
                 [
@@ -88,43 +104,37 @@ use frontend\models\Transportadora;
             ?>
         </div>
 
+        <div class="col-lg-2">
+            <?php echo $form->field($model, 'nombreConductor') ?>
+        </div>
+
     </div>
 
     <div class="row">
-        <div class="col-lg-3">
-        <?php echo $form->field($model, 'idVehiculo')->dropDownList(
+        <div class="col-lg-2">
+            <?php echo $form->field($model, 'idVehiculo')->dropDownList(
                 Vehiculo::getListaData(),
                 [
                     'prompt' => ' Seleccionar estado ... ',
                     'id' => 'idVehiculo',
                 ]
             );
-            ?>        </div>
-        <div class="col-lg-3">
-            <?php echo $form->field($model, 'placa') ?>
+            ?>
         </div>
-        <!-- <div class="col-lg-3">
-            <?php echo $form->field($model, 'idConductor') ?>
-        </div> -->
-        <div class="col-lg-2">
-            <?php echo $form->field($model, 'nombreConductor') ?>
-        </div>
+
         <div class="col-lg-2">
             <?php echo $form->field($model, 'sello') ?>
         </div>
         <div class="col-lg-2">
             <?php echo $form->field($model, 'id') ?>
         </div>
-
+        <div class="col-lg-3">
+            <?php echo $form->field($model, 'numeroDocumento') ?>
+        </div>
+        <div class="col-lg-3">
+            <?php echo $form->field($model, 'numeroDocumentoInterno') ?>
+        </div>
     </div>
-
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
 
     <div class="form-group centrar">
         <?= Html::submitButton('Buscar', ['class' => 'btn btn-primary btn-lg btn-create']) ?>
