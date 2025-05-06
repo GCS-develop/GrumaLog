@@ -14,10 +14,10 @@ use common\widgets\Alert;
 
 
 $this->title = ' Detalle de planilla: ' . $model->id . ' | usuario: ' . $model->usuario->username . ' | Sello inicial: ' . $model->sello
-    . ' |  ' . $model->estado->nombre;
+    . ' |  ' . $model->estado->nombre . ' | '  . $model->fechaDespacho . ' | ' . $model->horaDespacho;
 
 $this->params['breadcrumbs'][] = ['label' => 'Planilla Embarque', 'url' => ['/despacho/planillaembarque/index']];
-$this->params['breadcrumbs'][] = $this->title;
+// $this->params['breadcrumbs'][] = $this->title;
 
 // $this->title = 'Detalle planilla ' . ' - usuario : ' . $usuarioCreador;
 
@@ -47,13 +47,15 @@ $gridColumns = [
             return $model->tipoDocumento ? $model->tipoDocumento : $model->tipoDocumentoInterno;
         },
     ],
-    [
-        'attribute' => 'consecutivoDocumento',
-        'contentOptions' => ['data-cellvalue' => 'consecutivoDocumento'],
-        'value' => function ($model) {
-            return $model->consecutivoDocumento ? $model->consecutivoDocumento : $model->consecutivoInterno;
-        },
-    ],
+    // [
+    //     'attribute' => 'consecutivoDocumento',
+    //     'contentOptions' => ['data-cellvalue' => 'consecutivoDocumento'],
+    //     'value' => function ($model) {
+    //         return $model->consecutivoDocumento ? $model->consecutivoDocumento : $model->consecutivoInterno;
+    //     },
+    // ],
+    'consecutivoDocumento',
+    'consecutivoInterno',
     [
         'attribute' => 'fechaTraspaso',
         'contentOptions' => ['data-cellvalue' => 'fechaTraspaso'],
@@ -77,7 +79,8 @@ $gridColumns = [
         'attribute' => 'created_at',
         'contentOptions' => ['data-cellvalue' => 'created_at'],
         'value' => function ($model) {
-            return Yii::$app->formatter->asDate($model->created_at, 'php:Y-m-d');
+            $dt = new DateTime($model->created_at); // No especificamos zona horaria
+            return $dt->format('Y-m-d'); // Solo la fecha
         },
     ],
     [
@@ -85,10 +88,11 @@ $gridColumns = [
         'attribute' => 'created_at',
         'contentOptions' => ['data-cellvalue' => 'created_at'],
         'value' => function ($model) {
-            return Yii::$app->formatter->asDatetime(strtotime($model->created_at), 'php:H:i:s');
-
+            $dt = new DateTime($model->created_at); // sin zona explícita
+            return $dt->format('H:i:s');
         },
     ],
+
     [
         'attribute' => 'unidades',
         'contentOptions' => ['data-cellvalue' => 'unidades',],

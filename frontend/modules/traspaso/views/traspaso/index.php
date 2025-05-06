@@ -37,133 +37,29 @@ $filename = "Relacion_Traspaso_" . $fecha_actual;
 
 
 $gridColumns = [
-    'id',
+    'serie',
+    'consecutivo',
+    'consecutivosiesa',
+    'Origen',
+    'Destino',
+    'numeroCajas',
     [
-        'attribute' => 'serie',
-        'contentOptions' => ['data-cellvalue' => 'serie'],
-        'value' => function ($model) {
-            return $model->tipodocumento ? $model->tipodocumento->codigo : null;
-        },
+        'attribute' => 'totalRegistros',
+        'pageSummary' => true,
     ],
     [
-        'attribute' => 'consecutivo',
-        'contentOptions' => ['data-cellvalue' => 'consecutivo'],
-        'value' => function ($model) {
-            return $model->codigoerp ? $model->codigoerp->f350_consec_docto : $model->consecutivo;
-        },
+        'attribute' => 'totalUnidad',
+        'pageSummary' => true,
+
     ],
-    [
-        'attribute' => 'codeBodegaOrigen',
-        'value' => function ($model) {
-            return $model->bodegaOrigen->codigo;
-        },
-    ],
-    [
-        'attribute' => 'idBodegaOrigen',
-        'value' => function ($model) {
-            return $model->bodegaOrigen->nombre;
-        },
-        'filter' => Traspasouserbodega::getListaData(),
-        'contentOptions' => ['data-cellvalue' => 'idBodegaOrigen'],
-    ],
-    [
-        'attribute' => 'codeBodegaDestino',
-        'value' => function ($model) {
-            return $model->bodegaDestino->codigo;
-        },
-    ],
-    [
-        'attribute' => 'idBodegaDestino',
-        'value' => function ($model) {
-            return $model->bodegaDestino->nombre;
-        },
-    ],
-    [
-        'attribute' => 'numeroCajas',
-        'contentOptions' => ['data-cellvalue' => 'numeroCajas',],
-    ],
-    [
-        'attribute' => 'caja',
-        'value' => function ($model) {
-            return 'PKM';
-        },
-    ],
-    [
-        'attribute' => 'idEstado',
-        'contentOptions' => ['data-cellvalue' => 'idEstado',],
-        'filter' => Estadotraspaso::getListaData(),
-        'value' => function ($model) {
-            return $model->estado->nombre;
-        },
-    ],
+    'estadoNombre',
     'estadoPlanilla',
-    [
-        'attribute' => 'updated_at',
-        'value' => function ($model) {
-            $dateTimeParts = explode(' ', $model->created_at);
-            return $dateTimeParts[0];
-        },
-    ],
-    [
-        'attribute' => 'horaInicio',
-        'value' => function ($model) {
-            $dateTimeParts = explode(' ', $model->created_at);
-            return $dateTimeParts[1];
-        },
-    ],
-    [
-        'attribute' => 'fechaUltimoRegistro',
-        'value' => function ($model) {
-            if ($model->traspasodetalle !== null) {
-                $dateTimeParts = explode(' ', $model->traspasodetalle->updated_at);
-                return $dateTimeParts[0];
-            } else {
-                return 'No tiene items asignados';
-            }
-        },
-    ],
-    [
-        'attribute' => 'horaUltimoRegistro',
-        'value' => function ($model) {
-            if ($model->traspasodetalle !== null) {
-                $dateTimeParts = explode(' ', $model->traspasodetalle->updated_at);
-                return $dateTimeParts[1];
-            } else {
-                return 'No tiene items asignados';
-            }
-        },
-    ],
-    [
-        'attribute' => 'fechaFin',
-        'value' => function ($model) {
-            $dateTimeParts = explode(' ', $model->updated_at);
-            return $dateTimeParts[0];
-        },
-    ],
-    [
-        'attribute' => 'horaFin',
-        'value' => function ($model) {
-            $dateTimeParts = explode(' ', $model->updated_at);
-            return $dateTimeParts[1];
-        },
-    ],
-    [
-        'attribute' => 'Und.Empaque',
-        'contentOptions' => ['data-cellvalue' => 'Und.Empaque',],
-        'value' => function ($model) {
-            return $model->totalRegistrosPaquetes;
-        },
-    ],
-    [
-        'attribute' => 'Und.Traspaso',
-        'contentOptions' => ['data-cellvalue' => 'Und.Traspaso',],
-        'value' => function ($model) {
-            return $model->totalUnidades;
-        },
-
-    ],
-
+    'fechaRecibido',
+    'FechaCrea',
     'idusertraspasocdsc',
+    'FechaActualiza',
+    'userActualiza',
+    'tipoMovimientoNombre',
     'anula_at',
     [
         'attribute' => 'anula_by',
@@ -258,19 +154,6 @@ Modal::end();
     <?= Alert::widget() ?>
 
     <div class="row">
-        <!-- <div class="col-lg-6 derecha">
-
-            <?php $url = Url::to(['create']); ?>
-
-            <p>
-                <?= Html::button(
-                    'Registrar',
-                    ['value' => $url, 'class' => 'btn btn-success btn-lg btn-create', 'id' => 'modalButtonCreate']
-                )
-                    ?>
-            </p>
-
-        </div> -->
 
         <div class="col-lg-6 derecha">
 
@@ -314,7 +197,19 @@ Modal::end();
                 ]
             );
             ?>
+
+            <?php if (Yii::$app->user->id == '17'): ?>
+
+                <?= Html::a('Exportar Excel', ['exportar-excel'], [
+                    'class' => 'btn btn-success btn-lg btn-create',
+                    'target' => '_blank'
+                ]) ?>
+
+            <?php endif; ?>
         </div>
+
+
+
     </div>
 
 
@@ -386,7 +281,7 @@ Modal::end();
         ],
 
         'id',
-        // 'idTipoDocumento',
+        // 'tipodocumento',
         [
             'attribute' => 'idTipoDocumento',
             'label' => 'Tipo Dcto.',
@@ -408,9 +303,6 @@ Modal::end();
     return $model->codigoerp ? $model->codigoerp->f350_consec_docto : '-';
 },
         ],
-        // 'idCentroOperacion',
-        // 'idBodegaOrigen',
-        // 'idBodegaDestino',
         [
             'attribute' => 'idBodegaOrigen',
             'filter' => Bodegas::getListaData(),
@@ -472,13 +364,11 @@ Modal::end();
             'attribute' => 'transferenciaerp',
             'value' =>
                 function ($model) {
-        return $model->estadoTransferencia;
-    },
+    return $model->estadoTransferencia;
+},
         ],
         'estadoPlanilla',
         'fechaRecibido',
-
-        // 'idUltimoItem',
         [
             'attribute' => 'created_at',
             'label' => 'Fecha Crea',
@@ -546,119 +436,119 @@ Modal::end();
             'buttons' => [
 
                 'view' => function ($url, $model) {
-        return Html::a(
-            '<i class="fa fa-eye"></i>',
-            ['/traspaso/traspasodetalle/index', 'idtraspaso' => $model->id],
-            [
-                'title' => 'Ver',
-                'class' => 'btn btn-default btn-view',
-            ]
-        );
-    },
+    return Html::a(
+        '<i class="fa fa-eye"></i>',
+        ['/traspaso/traspasodetalle/index', 'idtraspaso' => $model->id],
+        [
+            'title' => 'Ver',
+            'class' => 'btn btn-default btn-view',
+        ]
+    );
+},
 
                 'update' => function ($url, $model) {
-        $t = Url::to([
-            'update',
-            'id' => $model->id
-        ]);
+    $t = Url::to([
+        'update',
+        'id' => $model->id
+    ]);
 
-        return Html::button('<i class="fa fa-edit"></i>', [
-            'value' => $t,
-            'title' => 'Actualizar',
-            'class' => 'btn btn-default btn_update',
-        ]);
-    },
+    return Html::button('<i class="fa fa-edit"></i>', [
+        'value' => $t,
+        'title' => 'Actualizar',
+        'class' => 'btn btn-default btn_update',
+    ]);
+},
 
                 'factura' => function ($url, $model) {
-        return Html::a(
-            '<i class="fa fa-print"></i>',
-            ['factura', 'id' => $model->id],
-            [
-                'title' => 'Ver factura generada',
-                'class' => 'btn btn-default',
-            ]
-        );
-    },
+    return Html::a(
+        '<i class="fa fa-print"></i>',
+        ['factura', 'id' => $model->id],
+        [
+            'title' => 'Ver factura generada',
+            'class' => 'btn btn-default',
+        ]
+    );
+},
                 'directo' => function ($url, $model) {
-        return Html::a(
-            '<i class="fa fa-check"></i>',
-            ['directo', 'id' => $model->id],
-            [
-                'title' => 'Traspaso directo de tienda',
-                'class' => 'btn btn-default',
-            ]
-        );
-    },
+    return Html::a(
+        '<i class="fa fa-check"></i>',
+        ['directo', 'id' => $model->id],
+        [
+            'title' => 'Traspaso directo de tienda',
+            'class' => 'btn btn-default',
+        ]
+    );
+},
                 'interno' => function ($url, $model) {
-        return Html::a(
-            '<i class="fa fa-arrow-right"></i>',
-            ['interno', 'id' => $model->id],
-            [
-                'title' => 'Traspaso interno',
-                'class' => 'btn btn-default',
-            ]
-        );
-    },
+    return Html::a(
+        '<i class="fa fa-arrow-right"></i>',
+        ['interno', 'id' => $model->id],
+        [
+            'title' => 'Traspaso interno',
+            'class' => 'btn btn-default',
+        ]
+    );
+},
 
                 'anular' => function ($url, $model) {
-        return Html::a(
-            '<i class="fa fa-ban"></i>',
-            ['anular', 'id' => $model->id],
-            [
-                'class' => 'btn btn-default text-danger',
-                'title' => 'Anular Registro',
-                'data' => [
-                    'confirm' => 'Esta seguro de anular este registro? ( Origen: '
-                        . $model->bodegaOrigen->nombre . ', Destino: '
-                        . $model->bodegaDestino->nombre . ', Numero de cajas: '
-                        . $model->numeroCajas . ' )',
-                    'method' => 'post',
-                ]
+    return Html::a(
+        '<i class="fa fa-ban"></i>',
+        ['anular', 'id' => $model->id],
+        [
+            'class' => 'btn btn-default text-danger',
+            'title' => 'Anular Registro',
+            'data' => [
+                'confirm' => 'Esta seguro de anular este registro? ( Origen: '
+                    . $model->bodegaOrigen->nombre . ', Destino: '
+                    . $model->bodegaDestino->nombre . ', Numero de cajas: '
+                    . $model->numeroCajas . ' )',
+                'method' => 'post',
             ]
-        );
-    },
+        ]
+    );
+},
 
                 'siesa' => function ($url, $model) {
-        return Html::a(
-            '<i class="fa fa-sync"></i>',
-            ['sincronizar', 'id' => $model->id],
-            [
-                'class' => 'btn btn-default',
-                'title' => 'Sincronizar Documento ERP',
-                'data' => [
-                    'confirm' => 'Esta seguro de Sincronizar Este Documento? ( Origen: '
-                        . $model->bodegaOrigen->nombre . ', Destino: '
-                        . $model->bodegaDestino->nombre . ', No. Traspaso: ' . $model->id . ' )',
-                    'method' => 'post',
-                ]
+    return Html::a(
+        '<i class="fa fa-sync"></i>',
+        ['sincronizar', 'id' => $model->id],
+        [
+            'class' => 'btn btn-default',
+            'title' => 'Sincronizar Documento ERP',
+            'data' => [
+                'confirm' => 'Esta seguro de Sincronizar Este Documento? ( Origen: '
+                    . $model->bodegaOrigen->nombre . ', Destino: '
+                    . $model->bodegaDestino->nombre . ', No. Traspaso: ' . $model->id . ' )',
+                'method' => 'post',
             ]
-        );
-    },
+        ]
+    );
+},
             ],
 
             'visibleButtons' => [
                 'update' => function ($model, $key, $index) {
-        return $model->idEstado == 0; // Condición para mostrar el botón
-    },
+    return $model->idEstado == 0; // Condición para mostrar el botón
+},
                 'detalle' => function ($model, $key, $index) {
-        return $model->idEstado == 0; // Condición para mostrar el botón
-    },
+    return $model->idEstado == 0; // Condición para mostrar el botón
+},
 
                 'anular' => function ($model, $key, $index) {
-        return $model->idEstado != 2; // Condición para mostrar el botón
-    },
+    return $model->idEstado != 2; // Condición para mostrar el botón
+},
                 'factura' => function ($model, $key, $index) {
-        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
-    },
+    return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+},
                 'siesa' => function ($model, $key, $index) {
-        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
-    },
+    return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+},
                 'directo' => function ($model, $key, $index) {
-        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
-    },
+    return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+},
                 'interno' => function ($model, $key, $index) {
-        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
-    },
+    return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+},
             ],
 
         ],

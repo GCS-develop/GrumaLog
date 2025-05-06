@@ -130,4 +130,15 @@ class Tipodocumento extends \yii\db\ActiveRecord
         return $listadata;
     }
 
+    public static function getListaDataCodigoTraspaso()
+    {
+        $data = Tipodocumento::find()
+            ->select(['id', 'codigo AS nombre'])
+            ->where(['codigo' => ['3TA', '3TB']])
+            ->orderBy('codigo')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
+    }
+
+
 }

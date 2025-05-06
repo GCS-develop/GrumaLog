@@ -28,7 +28,10 @@ use common\models\OrdendecompraSIESA;
  * @property int|null $und_traspaso
  * @property int|null $und_empaque
  * @property int|null $tipoMovimiento
-
+ * @property int|null $totalUnidad
+ * @property int|null $totalRegistros
+ * 
+ * 
  * @property tipoDocumento $tipoDocumento
  * @property Bodegas $bodegaDestino
  * @property Bodegas $bodegaOrigen
@@ -46,6 +49,17 @@ class Traspaso extends \yii\db\ActiveRecord
     public $consecutivosiesa;
     public $idusertraspasocdsc;
     public $fechaRecibido;
+    public $Origen;
+    public $Destino;
+    public $nombreProveedor;
+    public $estadoNombre;
+    public $transferenciaerpNombre;
+    public $FechaCrea;
+    public $FechaActualiza;
+    public $userActualiza;
+    public $tipoMovimientoNombre;
+
+
     /**
      * {@inheritdoc}
      */
@@ -80,7 +94,22 @@ class Traspaso extends \yii\db\ActiveRecord
     {
         return [
             [['idBodegaOrigen', 'idBodegaDestino'], 'required'],
-            [['idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'idEstado', 'idUltimoItem', 'created_by', 'updated_by', 'tipoMovimiento'], 'integer'],
+            [
+                [
+                    'idBodegaOrigen',
+                    'idBodegaDestino',
+                    'numeroCajas',
+                    'idTipoDocumento',
+                    'idEstado',
+                    'idUltimoItem',
+                    'created_by',
+                    'updated_by',
+                    'tipoMovimiento',
+                    'totalUnidad',
+                    'totalRegistros'
+                ],
+                'integer'
+            ],
             [['consecutivo', 'und_traspaso', 'und_empaque'], 'number'],
             [['serie',], 'string', 'max' => 5],
             [['updated_at', 'created_at', 'fechaDesde', 'fechaHasta', 'anula_at', 'anula_by', 'muelle_at', 'muelle_by', 'idusertraspasocdsc'], 'safe'],
@@ -102,7 +131,7 @@ class Traspaso extends \yii\db\ActiveRecord
             'idBodegaDestino' => 'Bodega Destino',
             'numeroCajas' => 'Cajas',
             'serie' => 'serie',
-            'consecutivo' => 'Consecutivo',
+            'consecutivo' => 'No Interno',
             'idEstado' => 'Estado',
             'created_by' => 'usuario',
             'updated_by' => 'updated_by',
@@ -120,7 +149,10 @@ class Traspaso extends \yii\db\ActiveRecord
             'muelle_at' => 'Fecha en muelle',
             'muelle_by' => 'Usuario en muelle',
             'idusertraspasocdsc' => 'Usuario',
-            'transferenciaerp' => 'Transferencia'
+            'transferenciaerp' => 'Transferencia',
+            'consecutivosiesa' => 'No. ERP',
+            'transferenciaerpNombre' => 'Enviado a siesa'
+
 
         ];
     }
@@ -148,7 +180,7 @@ class Traspaso extends \yii\db\ActiveRecord
     {
         return $this->transferenciaerp == 1 ? 'Enviado' : 'Sin Enviar';
     }
-    
+
     /**
      * Gets query for [[Traspasodetalles]].
      *

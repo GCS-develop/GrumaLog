@@ -39,13 +39,10 @@ use yii\helpers\ArrayHelper;
         'method' => 'get',
     ]); ?>
 
-    <!-- <?= $form->field($model, 'id') ?> -->
-
-    <!-- <?= $form->field($model, 'idCentroOperacion') ?> -->
     <div class="row">
         <div class="col-lg-2">
             <?php echo $form->field($model, 'idTipoDocumento')->dropDownList(
-                TipoDocumento::getListaDataCodigo(),
+                TipoDocumento::getListaDataCodigoTraspaso(),
                 [
                     'prompt' => ' Seleccionar tipo de documento ... ',
                     'id' => 'idTipoDocumento',
@@ -57,28 +54,48 @@ use yii\helpers\ArrayHelper;
             <?= $form->field($model, 'consecutivo')->label('Consecutivo'); ?>
         </div>
         <div class="col-lg-1">
-            <?= $form->field($model, 'id')->label('id'); ?>
+            <?= $form->field($model, 'id') ?>
         </div>
         <div class="col-lg-2">
             <?= $form->field($model, 'consecutivosiesa')->label('Consecutivo siesa'); ?>
         </div>
         <div class="col-lg-3">
-            <?= $form->field($model, 'idBodegaOrigen')->dropDownList(
-                Bodegas::getListaData(),
-                [
-                    'prompt' => ' Seleccionar bodega origen ... ',
-                    'id' => 'idBodegaOrigen',
-                ]
-            ) ?>
+            <?=
+                $form->field($model, 'idBodegaOrigen')->widget(Select2::classname(), [
+                    'data' => Bodegas::getListaData(),
+                    'value' => $model->idBodegaOrigen, // Usa lo que ya venga cargado desde el modelo
+                    'options' => [
+                        'placeholder' => 'Seleccionar bodega origen...',
+                        'multiple' => true,
+                    ],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                    ],
+                ]);
+
+            ?>
         </div>
         <div class="col-lg-3">
-            <?= $form->field($model, 'idBodegaDestino')->dropDownList(
-                Bodegas::getListaData(),
-                [
-                    'prompt' => ' Seleccionar bodega destino ... ',
-                    'id' => 'idBodegaDestino',
-                ]
-            ) ?>
+            <?=
+                $form->field($model, 'idBodegaDestino')->widget(Select2::classname(), [
+                    'data' => Bodegas::getListaData(),
+                    'value' => $model->idBodegaDestino, // Usa lo que ya venga cargado desde el modelo
+                    'options' => [
+                        'placeholder' => 'Seleccionar bodega origen...',
+                        'multiple' => true,
+                    ],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                    ],
+                ]);
+            // $form->field($model, 'idBodegaDestino')->dropDownList(
+            //     Bodegas::getListaData(),
+            //     [
+            //         'prompt' => ' Seleccionar bodega destino ... ',
+            //         'id' => 'idBodegaDestino',
+            //     ]
+            // ) 
+            ?>
         </div>
 
     </div>
@@ -112,14 +129,18 @@ use yii\helpers\ArrayHelper;
                 $form->field($model, 'fechaDesde')->widget(DatePicker::className(), [
                     'name' => 'fechadesde',
                     'language' => 'es',
-                    'options' => ['placeholder' => 'Fecha Cita Desde ...', 'disabled' => false],
+                    'options' => [
+                        'placeholder' => 'Fecha Cita Desde ...',
+                        'value' => $model->fechaDesde ?? date('Y-m-01'), // <-- aquí se establece por defecto
+                        'disabled' => false
+                    ],
                     'pluginOptions' => [
                         'autoclose' => true,
                         'format' => 'yyyy-mm-dd',
-                        // 'format' =>'yyyy-mm-dd hh:ii:ss',
                         'todayHighlight' => false
                     ]
                 ])
+
                 ?>
         </div>
 
@@ -180,10 +201,16 @@ use yii\helpers\ArrayHelper;
 
         </div>
         <div class="col-lg-3">
-            <?php echo $form->field($model, 'estadoPlanilla')->dropDownList(
-                Estadorecepcion::getListaData(),
+            <?php
+
+            $estadoOptions = Estadorecepcion::getListaData();
+            // Agregamos manualmente la opción para "Sin Estado Planilla"
+            $estadoOptions = ['__sin_estado__' => 'Sin Estado Planilla'] + $estadoOptions;
+
+            echo $form->field($model, 'estadoPlanilla')->dropDownList(
+                $estadoOptions,
                 [
-                    'prompt' => ' Seleccionar estado ... ',
+                    'prompt' => 'Seleccionar estado ...',
                     'id' => 'idEstado',
                 ]
             );

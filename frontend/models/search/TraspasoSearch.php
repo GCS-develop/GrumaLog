@@ -25,8 +25,24 @@ class TraspasoSearch extends Traspaso
     public function rules()
     {
         return [
-            [['id', 'idBodegaOrigen', 'idBodegaDestino', 'numeroCajas', 'idTipoDocumento', 'tipoMovimiento'], 'integer'],
-            [['updated_at', 'created_by', 'updated_by', 'fechaDesde', 'fechaHasta', 'estadoPlanilla', 'consecutivosiesa', 'idEstado', 'fechaRecibido'], 'safe'],
+            [['idBodegaOrigen', 'idBodegaDestino', 'idEstado'], 'each', 'rule' => ['integer']],
+            [['id', 'idTipoDocumento', 'tipoMovimiento'], 'integer'],
+
+            [
+                [
+                    'updated_at',
+                    'created_by',
+                    'updated_by',
+                    'fechaDesde',
+                    'fechaHasta',
+                    'estadoPlanilla',
+                    'consecutivosiesa',
+                    'idEstado',
+                    'fechaRecibido',
+                    'transferenciaerpNombre',
+                ],
+                'safe'
+            ],
             [['consecutivo',], 'number'],
             [['serie'], 'string', 'max' => 5],
         ];
@@ -61,6 +77,11 @@ class TraspasoSearch extends Traspaso
         $query->join('LEFT JOIN', 'userconteocdsc uc', 'dest.idUserConteo = uc.id');
         $query->join('LEFT JOIN', 'user u', 'uc.idUser = u.id');
         $query->join('LEFT JOIN', 'user ut', 'tr.created_by = ut.id');
+        $query->join('LEFT JOIN', 'user uta', 'tr.updated_by = uta.id');
+        $query->join('LEFT JOIN', 'tipodocumento tdoc', 'tdoc.id = tr.idTipoDocumento');
+        $query->join('LEFT JOIN', 'bodegas bo', 'bo.id = tr.idBodegaOrigen');
+        $query->join('LEFT JOIN', 'bodegas bd', 'bd.id = tr.idBodegaDestino');
+        $query->join('LEFT JOIN', 'estadotraspaso et', 'et.id = tr.idEstado'); // Agregando la relación
 
 
         $query->select([
@@ -77,7 +98,28 @@ class TraspasoSearch extends Traspaso
             'ds.f350_consec_docto as consecutivosiesa',
             'er.nombre as estadoPlanilla',
             'pet.fechaRecibido',
-
+            'tdoc.codigo as serie',
+            "(bo.codigo + ' - ' + bo.nombre) AS Origen",
+            "(bd.codigo + ' - ' + bd.nombre) AS Destino",
+            "(SELECT TOP 1 i.nombreProveedor
+            FROM traspasodetalle td
+            LEFT JOIN item i ON td.idItem = i.id
+            WHERE td.idTraspaso = tr.id
+          ) AS nombreProveedor",
+            'et.nombre as estadoNombre',
+            "(CASE 
+            WHEN tr.transferenciaerp = 1 THEN 'Enviado'
+            ELSE 'Sin Enviar'
+        END) AS transferenciaerpNombre",
+            "FORMAT(tr.created_at, 'yyyy-MM-dd HH:mm') AS [FechaCrea]",
+            "FORMAT(tr.updated_at, 'yyyy-MM-dd HH:mm') AS [FechaActualiza]",
+            'uta.username as userActualiza',
+            // ' tr.tipoMovimiento as tipoMovimientoNombre'
+            "(CASE 
+            WHEN tr.tipoMovimiento = 3 THEN 'CDSC'
+            WHEN tr.tipoMovimiento = 2 THEN 'Entradas'
+            ELSE 'Traspaso'
+        END) AS tipoMovimientoNombre",
         ]);
 
 
@@ -94,8 +136,7 @@ class TraspasoSearch extends Traspaso
                 AND DATEDIFF(DAY, pet.fechaPlanillaembarque, GETDATE()) > 2 
                 THEN 0 
                 ELSE 1 
-            END" => SORT_ASC,
-            'tr.created_at' => SORT_DESC
+            END" => SORT_ASC
         ]);
 
         $query->orderBy(['tr.created_at' => SORT_DESC]);
@@ -108,31 +149,36 @@ class TraspasoSearch extends Traspaso
             return $dataProvider;
         }
 
-        $this->load($params);
-        // Yii::debug($this->fechaDesde, 'fechaDesde');
-        // Yii::debug($this->fechaHasta, 'fechaHasta');
-
         // grid filtering conditions
         $query->andFilterWhere([
             'tr.id' => $this->id,
-            'tr.idBodegaOrigen' => $this->idBodegaOrigen,
-            'tr.idBodegaDestino' => $this->idBodegaDestino,
             'tr.numeroCajas' => $this->numeroCajas,
             'tr.idTipoDocumento' => $this->idTipoDocumento,
             'tr.created_by' => $this->created_by,
             'tr.created_at' => $this->created_at,
             'tr.tipoMovimiento' => $this->tipoMovimiento,
-            'er.id' => $this->estadoPlanilla,
             'tr.updated_by' => $this->updated_by,
             'ds.f350_consec_docto' => $this->consecutivosiesa
 
         ]);
 
+        if ($this->estadoPlanilla === '__sin_estado__') {
+            $query->andWhere(['pet.idEstado' => null]);
+        } elseif (!empty($this->estadoPlanilla)) {
+            $query->andWhere(['er.id' => $this->estadoPlanilla]);
+        }
+        
+
+        if (empty($this->fechaDesde)) {
+            $this->fechaDesde = date('Y-m-01');
+        }
+
+
         if ($this->fechaDesde || $this->fechaHasta) {
             // Si solo está presente fechaDesde, buscar por esa fecha exacta
             if ($this->fechaDesde && !$this->fechaHasta) {
                 $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
-                $query->andWhere(['=', new \yii\db\Expression('CAST(tr.created_at AS DATE)'), $fechaInicio]);
+                $query->andWhere(['>=', new \yii\db\Expression('CAST(tr.created_at AS DATE)'), $fechaInicio]);
             }
             // Si solo está presente fechaHasta, buscar hasta esa fecha
             elseif (!$this->fechaDesde && $this->fechaHasta) {
@@ -147,8 +193,15 @@ class TraspasoSearch extends Traspaso
             }
         }
 
-        $query->andFilterWhere(['IN', 'tr.idEstado', $this->idEstado]);
+        if (empty($this->idBodegaOrigen)) {
+            $this->idBodegaOrigen = [1, 2, 13];
+        }
 
+        $query->andFilterWhere(['IN', 'tr.idBodegaOrigen', $this->idBodegaOrigen]);
+
+        $query->andFilterWhere(['IN', 'tr.idBodegaDestino', $this->idBodegaDestino]);
+
+        $query->andFilterWhere(['IN', 'tr.idEstado', $this->idEstado]);
 
         $query->andFilterWhere(['like', 'tr.consecutivo', $this->consecutivo]);
 

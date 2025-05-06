@@ -100,5 +100,4 @@ return [
 
     ],
     'params' => $params,
-    'timeZone' => 'America/Bogota',
 ];

@@ -25,7 +25,7 @@ $usuarioCreador = $dataProvider->getModels()[0]->usuarioCreador ?? 'Desconocido'
 
 <?php
 $gridColumns = [
-    // 'id',
+    'id',
     'idPlanillaEmbarque',
     'orden',
     // 'idTraspaso',
@@ -64,7 +64,7 @@ $gridColumns = [
         },
     ],
 
-    // 'fechaPlanillaembarque',
+    //'fechaPlanillaembarque',
     // 'horaPlanillaembarque',
 
     [
@@ -72,7 +72,8 @@ $gridColumns = [
         'attribute' => 'created_at',
         'contentOptions' => ['data-cellvalue' => 'created_at'],
         'value' => function ($model) {
-            return Yii::$app->formatter->asDate($model->created_at, 'php:Y-m-d');
+            $dt = new DateTime($model->created_at); // No especificamos zona horaria
+            return $dt->format('Y-m-d'); // Solo la fecha
         },
     ],
     [
@@ -80,9 +81,11 @@ $gridColumns = [
         'attribute' => 'created_at',
         'contentOptions' => ['data-cellvalue' => 'created_at'],
         'value' => function ($model) {
-            return Yii::$app->formatter->asDate($model->created_at, 'php:H:i:s');
+            $dt = new DateTime($model->created_at); // sin zona explícita
+            return $dt->format('H:i:s');
         },
     ],
+
     [
         'attribute' => 'unidades',
         'contentOptions' => ['data-cellvalue' => 'unidades',],
@@ -100,7 +103,7 @@ $gridColumns = [
     'estado',
 
     'fechaRecibido',
-    //   'horaRecibido',
+    // 'horaRecibido',
     'usuarioRecibido',
     [
         'label' => 'Planilla',
@@ -169,7 +172,7 @@ $gridColumns = [
             <h3><?php var_dump($usuarioCreador) ?></h3>
         </div> -->
         <?= Alert::widget() ?>
-        
+
         <div class="col-lg-12 centrar">
 
 
