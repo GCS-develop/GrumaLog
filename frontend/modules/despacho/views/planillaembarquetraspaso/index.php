@@ -42,13 +42,15 @@ $gridColumns = [
             return $model->tipoDocumento ? $model->tipoDocumento : $model->tipoDocumentoInterno;
         },
     ],
-    [
-        'attribute' => 'consecutivoDocumento',
-        'contentOptions' => ['data-cellvalue' => 'consecutivoDocumento'],
-        'value' => function ($model) {
-            return $model->consecutivoDocumento ? $model->consecutivoDocumento : $model->consecutivoInterno;
-        },
-    ],
+    // [
+    //     'attribute' => 'consecutivoDocumento',
+    //     'contentOptions' => ['data-cellvalue' => 'consecutivoDocumento'],
+    //     'value' => function ($model) {
+    //         return $model->consecutivoDocumento ? $model->consecutivoDocumento : $model->consecutivoInterno;
+    //     },
+    // ],
+    'consecutivoDocumento',
+    'consecutivoInterno',
     [
         'attribute' => 'fechaTraspaso',
         'contentOptions' => ['data-cellvalue' => 'fechaTraspaso'],

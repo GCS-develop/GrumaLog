@@ -11,7 +11,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\widgets\ActiveForm;
-
+use yii\data\SqlDataProvider;
 use frontend\models\Centrooperacion;
 use frontend\models\search\ProgramacionentregamercanciaSearch;
 
@@ -91,6 +91,108 @@ class FacturaentregamercanciaController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
+
+    private function getQueryPendientes($useUsername = false)
+    {
+        $where = "(epem.nombre <> 'Anulado' and  epem.nombre <> 'Finalizado')";
+        if ($useUsername) {
+            $where .= " AND u.username LIKE :username";
+        }
+
+        return "
+            SELECT 
+                oc.consecutivo AS ConsecutivoOC, 
+                u.username AS username, 
+                eaem.nombre AS Estado_Agendaentregamercancia, 
+                epem.nombre AS Estado_programacionentregamercancia
+            FROM ordendecompra oc  
+            JOIN agendaentregamercancia aem ON aem.idOrdenCompra = oc.id
+            JOIN programacionentregamercancia pem ON pem.idAgendaEntregaMercancia = aem.id
+            JOIN conteoentregamercancia cem ON cem.idProgramacionEntregaMercancia = pem.id
+            JOIN item i ON i.id = cem.idItem
+            JOIN color c ON c.id = i.idColor
+            JOIN talla t ON t.id = i.idTalla
+            JOIN userconteo uc ON uc.id = pem.idUserConteo
+            JOIN [user] u ON u.id = uc.idUser
+            JOIN estadoagenda eaem ON eaem.id = aem.idEstado
+            JOIN estadoprogramacion epem ON epem.id = pem.idEstado
+            WHERE $where
+            GROUP BY oc.consecutivo, u.username, eaem.nombre, epem.nombre
+        ";
+    }
+
+
+
+    public function actionIndexpendientes($username = '')
+    {
+        $useUsername = !empty($username);
+        $query = $this->getQueryPendientes($useUsername);
+        $params = [];
+
+        if ($useUsername) {
+            $params[':username'] = '%' . $username . '%';
+        }
+
+        $where = "(epem.nombre <> 'Anulado' and  epem.nombre <> 'Finalizado')";
+        if ($useUsername) {
+            $where .= " AND u.username LIKE :username";
+        }
+
+        $countQuery = "
+            SELECT COUNT(*) 
+            FROM (
+                SELECT 1 AS dummy
+                FROM ordendecompra oc  
+                JOIN agendaentregamercancia aem ON aem.idOrdenCompra = oc.id
+                JOIN programacionentregamercancia pem ON pem.idAgendaEntregaMercancia = aem.id
+                JOIN conteoentregamercancia cem ON cem.idProgramacionEntregaMercancia = pem.id
+                JOIN item i ON i.id = cem.idItem
+                JOIN color c ON c.id = i.idColor
+                JOIN talla t ON t.id = i.idTalla
+                JOIN userconteo uc ON uc.id = pem.idUserConteo
+                JOIN [user] u ON u.id = uc.idUser
+                JOIN estadoagenda eaem ON eaem.id = aem.idEstado
+                JOIN estadoprogramacion epem ON epem.id = pem.idEstado
+                WHERE $where
+                GROUP BY oc.consecutivo, u.username, eaem.nombre, epem.nombre
+            ) AS sub
+        ";
+
+        $command = Yii::$app->db->createCommand($countQuery);
+        if ($useUsername) {
+            $command->bindValue(':username', $params[':username']);
+        }
+
+        $totalCount = $command->queryScalar();
+
+        $dataProvider = new SqlDataProvider([
+            'sql' => $query,
+            'params' => $params,
+            'totalCount' => $totalCount,
+            'pagination' => [
+                'pageSize' => 20,
+            ],
+            'sort' => [
+                'attributes' => [
+                    'ConsecutivoOC',
+                    'username',
+                    'Estado_Agendaentregamercancia',
+                    'Estado_programacionentregamercancia',
+                ],
+                'defaultOrder' => [
+                    'ConsecutivoOC' => SORT_ASC,
+                ]
+            ],
+        ]);
+
+        return $this->render('index_pendientes', [
+            'dataProvider' => $dataProvider,
+            'username' => $username,
+        ]);
+    }
+
+
+
 
     /**
      * Displays a single Facturaentregamercancia model.

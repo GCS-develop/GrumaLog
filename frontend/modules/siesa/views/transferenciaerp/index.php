@@ -16,8 +16,9 @@ $this->registerCss('
     }
 ');
 
-$this->registerJsFile(Yii::$app->request->baseUrl.'/js/mainDataModal.js',
-['depends' => [\yii\web\JqueryAsset::className()]]
+$this->registerJsFile(
+    Yii::$app->request->baseUrl . '/js/mainDataModal.js',
+    ['depends' => [\yii\web\JqueryAsset::className()]]
 );
 
 use frontend\models\Transferenciaerp;
@@ -42,18 +43,18 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php
-    Modal::begin([                
-        'title'=>'<h4>Subir Archivo Transferencia</h4>',
-        'id'=>'modaldata',
-        'size'=>'modal-lg',
-        'options' => [
-            'tabindex' => false  // Importante para que funcione el Select
-        ]
-    ]);
-        
-    echo "<div id='modalContentData'></div>";
-        
-    Modal::end(); 
+Modal::begin([
+    'title' => '<h4>Subir Archivo Transferencia</h4>',
+    'id' => 'modaldata',
+    'size' => 'modal-lg',
+    'options' => [
+        'tabindex' => false  // Importante para que funcione el Select
+    ]
+]);
+
+echo "<div id='modalContentData'></div>";
+
+Modal::end();
 ?>
 
 <div class="transferenciaerp-index">
@@ -65,12 +66,14 @@ $this->params['breadcrumbs'][] = $this->title;
             <?php $url = Url::to(['create']); ?>
 
             <p>
-            <?= Html::button('Registrar', 
-                        ['value'=>  $url, 'class' => 'btn btn-success btn-lg btn-create', 'id'=>'modalButtonCreate']) 
-            ?>
+                <?= Html::button(
+                    'Registrar',
+                    ['value' => $url, 'class' => 'btn btn-success btn-lg btn-create', 'id' => 'modalButtonCreate']
+                )
+                    ?>
             </p>
         </div>
-    </div>    
+    </div>
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
@@ -78,10 +81,10 @@ $this->params['breadcrumbs'][] = $this->title;
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
         'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
-		'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
-		'options' => [
-			'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
-		],
+        'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
+        'options' => [
+            'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
+        ],
 
         'columns' => [
             /*[
@@ -94,48 +97,48 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'id',
                 'format' => 'html',
-                'vAlign'=>'middle',
-                'hAlign'=>'left',
+                'vAlign' => 'middle',
+                'hAlign' => 'left',
             ],
             [
                 'attribute' => 'descripcion',
                 'format' => 'html',
-                'vAlign'=>'middle',
-                'hAlign'=>'left',
+                'vAlign' => 'middle',
+                'hAlign' => 'left',
                 'filter' => ''
             ],
 
             [
                 'attribute' => 'notas',
                 'format' => 'html',
-                'vAlign'=>'middle',
-                'hAlign'=>'left',
+                'vAlign' => 'middle',
+                'hAlign' => 'left',
                 'filter' => ''
             ],
 
             [
                 'attribute' => 'idConectorDinamico',
                 'format' => 'html',
-                'vAlign'=>'middle',
-                'hAlign'=>'left',                
-                'value' => function($model) {
-                    return $model->conectordinamico->nombreDocumento;
-                },
+                'vAlign' => 'middle',
+                'hAlign' => 'left',
+                'value' => function ($model) {
+        return $model->conectordinamico->nombreDocumento;
+    },
                 'filter' => ''
             ],
 
             [
                 'attribute' => 'documento',
                 'format' => 'html',
-                'vAlign'=>'middle',
-                'hAlign'=>'left',
+                'vAlign' => 'middle',
+                'hAlign' => 'left',
             ],
 
             [
                 'attribute' => 'numeroRegistros',
                 'format' => 'html',
-                'vAlign'=>'middle',
-                'hAlign'=>'left',
+                'vAlign' => 'middle',
+                'hAlign' => 'left',
                 'filter' => ''
             ],
 
@@ -143,20 +146,26 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'enviadoWS',
                 'label' => 'Transferencia ERP',
                 'format' => 'html',
-                'vAlign'=>'middle',
-                'hAlign'=>'left',                
-                'value' => function($model) {
-                    $estado = '';
-                    switch($model->enviadoWS){
-                        case 1:
-                            $estado = 'Generado'; break;
-                        case 0:
-                            $estado = 'Sin Generar'; break;
-                    }
-                    
-                    return $estado;
-                },
-                'filter' => ''
+                'vAlign' => 'middle',
+                'hAlign' => 'left',
+                'value' => function ($model) {
+        $estado = '';
+        switch ($model->enviadoWS) {
+            case 1:
+                $estado = 'Generado';
+                break;
+            case 0:
+                $estado = 'Sin Generar';
+                break;
+        }
+
+        return $estado;
+    },
+                'filter' => [
+                    0 => 'Sin Generar',
+                    1 => 'Generado',
+                ],
+                'filterInputOptions' => ['class' => 'form-control', 'prompt' => 'Todos'],
             ],
 
             [
@@ -173,11 +182,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'created_by',
                 'label' => 'Usuario',
                 'format' => 'html',
-                'vAlign'=>'middle',
-                'hAlign'=>'left',                
-                'value' => function($model) {
-                    return $model->usercreated->username;
-                },
+                'vAlign' => 'middle',
+                'hAlign' => 'left',
+                'value' => function ($model) {
+        return $model->usercreated->username;
+    },
                 'filter' => ''
             ],
 
@@ -185,86 +194,96 @@ $this->params['breadcrumbs'][] = $this->title;
             //'updated_by',
             [
                 'class' => ActionColumn::className(),
-                'header'=>'Acción',
+                'header' => 'Acción',
                 //'headerOptions' => ['width' => '15%'],
                 'template' => '{update} {importardataxls} {transferencia} {errorws} {logws} {delete}',
 
                 'buttons' => [
 
-                    'update' => function ($url, $model) {                                
-                        $t = Url::to([  'update', 
-                                        'id' => $model->id
-                                    ]);
+                    'update' => function ($url, $model) {
+        $t = Url::to([
+            'update',
+            'id' => $model->id
+        ]);
 
-                        return Html::button('<i class="fa fa-edit"></i>',[
-                                    'value'=> $t,
-                                    'title' => 'Actualizar datos básicos transferencia',
-                                    'class' => 'btn btn-default btn_update',
-                        ]);
-                    },
+        return Html::button('<i class="fa fa-edit"></i>', [
+            'value' => $t,
+            'title' => 'Actualizar datos básicos transferencia',
+            'class' => 'btn btn-default btn_update',
+        ]);
+    },
 
-                    'importardataxls' => function ($url, $model){                                
-                        $t = Url::to([  'importardataxls', 
-                                        'id' => $model->id,
-                                    ]);
+                    'importardataxls' => function ($url, $model) {
+        $t = Url::to([
+            'importardataxls',
+            'id' => $model->id,
+        ]);
 
-                        return Html::button('<i class="fa fa-file-excel"></i>',[
-                                    'value'=> $t,
-                                    'title' => 'Subir Archivo Transferencia',
-                                    'class' => 'btn btn-default btn_upload',
-                        ]);
-                    },
+        return Html::button('<i class="fa fa-file-excel"></i>', [
+            'value' => $t,
+            'title' => 'Subir Archivo Transferencia',
+            'class' => 'btn btn-default btn_upload',
+        ]);
+    },
 
-                    'transferencia' => function ($url, $model) {                                  
-                        return Html::a('<i class="fa fa-globe"></i>', 
-                                [   'transferencia', 'id' => $model->id], 
-                                [   'class' => 'btn btn-default',
-                                    'title' => 'Transferencia ERP',
-                                    'data' => [
-                                        'confirm' => 'Esta Seguro de Realizar Transferencia? ( ' . $model->descripcion . ' )',
-                                        'method' => 'post',
-                                    ]
-                                ]
-                        );
-                    },
+                    'transferencia' => function ($url, $model) {
+        return Html::a(
+            '<i class="fa fa-globe"></i>',
+            ['transferencia', 'id' => $model->id],
+            [
+                'class' => 'btn btn-default',
+                'title' => 'Transferencia ERP',
+                'data' => [
+                    'confirm' => 'Esta Seguro de Realizar Transferencia? ( ' . $model->descripcion . ' )',
+                    'method' => 'post',
+                ]
+            ]
+        );
+    },
 
-                    'errorws' => function ($url, $model) {                                  
-                        return Html::a('<i class="fa fa-times"></i>', 
-                                [   '/siesa/transferenciaerperror/index', 'idtransferenciaerp' => $model->id], 
-                                [   'class' => 'btn btn-default',
-                                    'title' => 'Ver Errores Ejecutar WS',
-                                ]
-                        );
-                    },
+                    'errorws' => function ($url, $model) {
+        return Html::a(
+            '<i class="fa fa-times"></i>',
+            ['/siesa/transferenciaerperror/index', 'idtransferenciaerp' => $model->id],
+            [
+                'class' => 'btn btn-default',
+                'title' => 'Ver Errores Ejecutar WS',
+            ]
+        );
+    },
 
-                    'logws' => function ($url, $model) {                                  
-                        return Html::a('<i class="fa fa-clock"></i>', 
-                                [   '/siesa/transferencialogws/index', 'idtransferenciaerp' => $model->id], 
-                                [   'class' => 'btn btn-default',
-                                    'title' => 'Ver Log Ejecutar WS',
-                                ]
-                        );
-                    },
+                    'logws' => function ($url, $model) {
+        return Html::a(
+            '<i class="fa fa-clock"></i>',
+            ['/siesa/transferencialogws/index', 'idtransferenciaerp' => $model->id],
+            [
+                'class' => 'btn btn-default',
+                'title' => 'Ver Log Ejecutar WS',
+            ]
+        );
+    },
 
 
-                    'delete' => function ($url, $model) {                                  
-                        return Html::a('<i class="fa fa-trash"></i>', 
-                                [   'delete', 'id' => $model->id], 
-                                [   'class' => 'btn btn-default',
-                                    'title' => 'Eliminar Transferencia',
-                                    'data' => [
-                                        'confirm' => 'Esta Seguro de Eliminar Transferencia? ( ' . $model->descripcion . ' )',
-                                        'method' => 'post',
-                                    ]
-                                ]
-                        );
-                    }, 
+                    'delete' => function ($url, $model) {
+        return Html::a(
+            '<i class="fa fa-trash"></i>',
+            ['delete', 'id' => $model->id],
+            [
+                'class' => 'btn btn-default',
+                'title' => 'Eliminar Transferencia',
+                'data' => [
+                    'confirm' => 'Esta Seguro de Eliminar Transferencia? ( ' . $model->descripcion . ' )',
+                    'method' => 'post',
+                ]
+            ]
+        );
+    },
 
                 ],
                 'visibleButtons' => [
                     'transferencia' => function ($model, $key, $index) {
-                return $model->origen == 'E'; // Condición para mostrar el botón
-            },
+        return $model->origen == 'E'; // Condición para mostrar el botón
+    },
                 ],
 
             ],

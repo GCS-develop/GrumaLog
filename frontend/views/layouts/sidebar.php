@@ -114,6 +114,7 @@ $baseUrl = Url::base(true);
                                 'badge' => '<span class="right badge badge-info">3</span>',
                                 'items' => [
                                     ['label' => 'Gestionar Factura', 'url' => ['/programacion/facturaentregamercancia/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Conteos Pendientes', 'url' => ['/programacion/facturaentregamercancia/indexpendientes'], 'iconStyle' => 'far'],
                                     ['label' => 'Gestionar Conteo', 'url' => ['/programacion/facturaentregamercancia/indexprogramacion'], 'iconStyle' => 'far'],
                                     ['label' => 'Legalización Conteo', 'url' => ['/programacion/facturaentregamercancia/indexlegalizaconteo'], 'iconStyle' => 'far'],
                                     ['label' => 'Conteo por Usuario', 'url' => ['/programacion/conteobylecturacodigo/indexusuario'], 'iconStyle' => 'far'],
