@@ -112,7 +112,7 @@ class Inventario extends \yii\db\ActiveRecord
             INNER JOIN t150_mc_bodegas t150 ON t400.f400_rowid_bodega = t150.f150_rowid
             LEFT JOIN t131_mc_items_barras t131 ON t400.f400_rowid_item_ext = t131.f131_rowid_item_ext
             WHERE (
-                (:codigoBodega IS NULL AND f150_id IN (210, 207)) 
+                (:codigoBodega IS NULL AND f150_id IN ( 207, 210, 16,14)) 
                 OR f150_id = :codigoBodega
             )";
 

@@ -35,16 +35,26 @@ phpunit.phar
 /.vagrant
 
 # ignore generated files
+/frontend/web
 /frontend/web/index.php
 /frontend/web/index-test.php
 /frontend/web/robots.txt
-/frontend/web/destination
+/frontend/destination
+/frontend/temp
+/frontend/web/archivos
+
+/backend/web/
 /backend/web/index.php
 /backend/web/index-test.php
 /backend/web/robots.txt
 
-/frontend/destination
-/frontend/temp
-/frontend/web/archivos
 /comprimidos
 !vendor/mdmsoft/
+
+common.zip
+console.zip
+frontend.zip
+GRUMALog.zip
+vendor.rar
+config.zip
+

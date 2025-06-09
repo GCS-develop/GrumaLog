@@ -167,7 +167,7 @@ $gridColumns = [
 
 <div class="devoluciondocumentodetalle-index">
 
-    <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
+    <?php echo $this->render('_search', ['model' => $searchModel]); ?>
 
     <div class="row">
 
@@ -212,7 +212,7 @@ $gridColumns = [
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         // 'filterModel' => $searchModel,
-
+    
         'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
         'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
         'options' => [
@@ -240,6 +240,7 @@ $gridColumns = [
 
             /*'id',
             'idDocumento',*/
+            'nombreProveedor',
             [
                 'attribute' => 'codigoBodegaSalida', // Nombre del atributo en el modelo
                 'hAlign' => 'center', // Alineación horizontal al centro
@@ -413,6 +414,7 @@ $gridColumns = [
                 'filter' => ['0' => 'NO', '1' => 'SI'],
                 'label' => 'Tiene Registro'
             ],
+
 
             /*[
                 'class' => ActionColumn::className(),

@@ -34,6 +34,7 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
                     'fechaRegistra',
                     'fechaDesde',
                     'fechaHasta',
+                    'nombreProveedor'
                 ],
                 'safe'
             ],
@@ -67,6 +68,9 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
 
         $query->join('INNER JOIN', 'devoluciondocumento dct', 'det.idDocumento = dct.id');
 
+        $query->join('LEFT JOIN', 'item i', 'det.item = i.item');
+        $query->distinct();
+
         $query->select([
             'det.id',
             'det.codigoBarras',
@@ -86,7 +90,9 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             'det.fechaRegistra',
             'det.usuarioRegistra',
             'dct.numeroDocumento',
-            'dct.codigoBodegaSalida'
+            'dct.codigoBodegaSalida',
+            'i.nombreProveedor as nombreProveedor'
+
         ]);
 
         $query->orderBy([
@@ -152,6 +158,11 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             $query->andWhere("CAST(det.fechaRegistra AS DATE) = :fecha", [':fecha' => $fecha]);
 
         }
+        if (!empty($this->nombreProveedor)) {
+            // Solo filtra por nombreProveedor si se ha ingresado un valor
+            $query->andWhere(['like', 'i.nombreProveedor', $this->nombreProveedor]);
+        }
+
 
         $query->andFilterWhere(['like', 'det.codigoBarras', $this->codigoBarras])
             ->andFilterWhere(['like', 'det.item', $this->item])

@@ -28,29 +28,39 @@ $this->params['breadcrumbs'][] = $this->title;
 
 $this->registerJs("
     $(document).ready(function() {
-        
-        $('#EliminarBtn').on('click', function() {
-            if (confirm('¿Estás seguro de que deseas eliminar los registros seleccionados?')) {
-                var ids = [];
-                $('input[name=\"selection[]\"]:checked').each(function() {
-                    ids.push($(this).val());
-                });
 
-                if (ids.length === 0) {
-                    alert('Debes seleccionar al menos un registro.');
-                    return;
-                }
+        $('#EliminarBtn').on('click', function() {
+            var ids = [];
+            $('input[name=\"selection[]\"]:checked').each(function() {
+                ids.push($(this).val());
+            });
+
+            if (ids.length === 0) {
+                alert('Debes seleccionar al menos un registro.');
+                return;
+            }
+
+            var cantidad = prompt('¿Cuántas unidades deseas eliminar por cada ítem seleccionado?');
+            cantidad = parseInt(cantidad);
+
+            if (isNaN(cantidad) || cantidad <= 0) {
+                alert('Cantidad inválida. Debe ser un número mayor a cero.');
+                return;
+            }
+
+            if (confirm('¿Estás seguro de que deseas eliminar ' + cantidad + ' unidad(es) de cada uno de los ' + ids.length + ' ítem(s) seleccionados?')) {
 
                 $.ajax({
                     url: '" . \yii\helpers\Url::to(['/traspaso/traspasodetalle/eliminar']) . "',
                     type: 'POST',
-                    data: { ids: ids },
+                    data: {
+                        ids: ids,
+                        cantidad: cantidad
+                    },
                     success: function(response) {
                         if (response.success) {
-                            alert('Registros eliminados con éxito: ' + response.message);
-                            // $.pjax.reload({container: '#my-container'});
+                            alert('Registros actualizados con éxito: ' + response.message);
                             $.pjax.reload({container: '#alert-pjax-container'});
-
                         } else {
                             alert('Error: ' + response.message);
                         }
@@ -58,19 +68,18 @@ $this->registerJs("
                     error: function(xhr) {
                         let errorMsg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Hubo un error al eliminar el registro.';
                         alert(errorMsg);
-                        // console.log(xhr.responseText);
                     }
                 });
+
             } else {
-                console.log('Cancelado.');
+                console.log('Eliminación cancelada por el usuario.');
             }
         });
 
     });
 ", \yii\web\View::POS_READY);
-
-
 ?>
+
 
 
 
@@ -110,6 +119,32 @@ $this->registerJs("
 
 
     $gridColumns = [
+        [
+            'class' => ActionColumn::className(),
+            'contentOptions' => ['data-cellvalue' => 'Accion'],
+            'header' => 'Eliminar',
+            'template' => ' {eliminarajax} ', // Define qué acciones se mostrarán como botones
+            'buttons' => [
+
+                'eliminarajax' => function ($url, $model) {
+                    $printUrl = Url::to(['eliminarajax']);
+                    return Html::a(
+                        '<i class="fa fa-trash fa-xs"></i>',
+                        '#',
+                        [
+                            'class' => 'btn btn-default disabled',
+                            'title' => 'Eliminar varios',
+                            'onclick' => "openPrintModal('{$model->id}', '{$printUrl}', '{$model->idTraspaso}')",
+                        ]
+                    );
+                },
+            ],
+            'visibleButtons' => [
+                'eliminarajax' => function ($model, $key, $index) {
+                    return $model->traspaso->estado->nombre === 'pendiente'; // Condición para mostrar el botón
+                },
+            ]
+        ],
         [
             'class' => 'kartik\grid\CheckboxColumn',
             'checkboxOptions' => function ($model, $key, $index, $column) {
@@ -372,7 +407,7 @@ $this->registerJs("
 
             <!-- Botón para cambiar el estado de los registros -->
             <?= Html::button('Eliminar', [
-                'class' => 'btn btn-danger btn-create btn-lg',
+                'class' => 'btn btn-danger btn-create btn-lg disabled',
                 'id' => 'EliminarBtn',
             ]) ?>
 
@@ -419,3 +454,78 @@ $this->registerJs("
     <?php Pjax::end(); ?>
 
 </div>
+
+
+
+
+<script src="<?= Yii::$app->request->baseUrl ?>/js/sweetalert2@11.js"></script>
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="<?= Yii::$app->request->baseUrl ?>/css/swal.css">
+
+<script>
+
+    function openPrintModal(id, url, idTraspaso) {
+        Swal.fire({
+            title: 'Digite la cantidad a eliminar',
+            text: 'Por favor, ingrese un valor antes de continuar:',
+            input: 'text',
+            inputPlaceholder: 'Escribe aquí...',
+            showCancelButton: true, buttonsStyling: false,
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Aceptar',
+            inputAttributes: {
+                step: '1',
+                min: '1'
+            },
+            input: 'number',
+            inputAttributes: {
+                min: 1
+            },
+
+            inputValidator: (value) => {
+                if (!value) {
+                    return '¡Debes ingresar un valor!';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Muestra el indicador de carga
+                Swal.fire({
+                    title: 'Eliminando...',
+                    text: 'Por favor espere mientras se procesa la solicitud.',
+                    allowOutsideClick: false,  // Desactiva hacer clic fuera de la alerta
+                    didOpen: () => {
+                        Swal.showLoading();  // Muestra el cargador
+                    }, willClose: () => {
+                        // Esto se asegura de que el modal de carga no se cierre hasta que termine la operación
+                    }
+                });
+                // Enviar el valor y el ID al controlador mediante POST
+                $.post(url, { id: id, input: result.value, idtraspaso: idTraspaso })
+                    .done(function (response) {
+                        if (response.status === 'success') {
+                            Swal.fire('¡Éxito!', response.message, 'success');
+                            $('#count').val(response.count);
+                            $('#cantidad_paquetes').val(response.cantidad_paquetes);
+                            // $.pjax.reload({ container: '#pjax-container' });
+                            $.pjax.reload({ container: '#alert-pjax-container', async: false });
+
+                        } else {
+                            Swal.fire('¡Error!', response.message, 'error');
+                        }
+                    })
+                    .fail(function () {
+                        Swal.close();  // Cierra la alerta de carga
+                        Swal.fire('¡Error!', 'Hubo un problema con la conexión.', 'error');
+                    })
+
+                // .always(function () {
+                //     // Este bloque siempre se ejecuta, sin importar si la solicitud fue exitosa o fallida
+                //     // Se cierra la alerta de carga
+                //     Swal.close(); // Cierra la alerta de carga
+                // });
+            }
+        });
+    }
+
+</script>

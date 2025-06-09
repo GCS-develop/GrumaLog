@@ -77,6 +77,11 @@ use kartik\date\DatePicker;
                 '0' => 'NO',
             ]) ?>
         </div>
+        <div class="col-lg-3">
+
+            <?php echo $form->field($model, 'nombreProveedor') ?>
+
+        </div>
 
     </div>
 

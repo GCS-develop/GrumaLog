@@ -115,9 +115,14 @@ use kartik\date\DatePicker;
 
         </div>
 
-        <div class="col-5">
+        <div class="col-3">
             <?= $form->field($model, 'consecutivoDocumento') ?>
         </div>
+
+        <div class="col-2">
+            <?= $form->field($model, 'consecutivoInterno') ?>
+        </div>
+
     </div>
 
 

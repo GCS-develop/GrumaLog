@@ -195,7 +195,7 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
                 // Si ya viene en formato de fecha, mantenerla tal cual
                 $fecha = date('Y-m-d', strtotime($valor_celda));
             }
-            
+
             $codigoBarras = null;
             $valor_celda = $sheet->getCell('R' . $fila)->getValue();
             if (!$valor_celda) {
@@ -285,8 +285,12 @@ class Devolucionimportaciondetalle extends \yii\db\ActiveRecord
 
             $model->cantidad = null;
             $valor_celda = $sheet->getCell('O' . $fila)->getValue();
+            $model->cantidad = floatval($valor_celda);
             if ($valor_celda) {
-                $model->cantidad = floatval($valor_celda);
+            } else {
+
+                $model->cantidad = 0;
+
             }
 
             $model->categoria = null;

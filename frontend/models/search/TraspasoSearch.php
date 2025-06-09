@@ -70,7 +70,18 @@ class TraspasoSearch extends Traspaso
         $query->join(
             'LEFT JOIN',
             'planillaembarquetraspaso pet',
-            'pet.id = (SELECT MAX(id) FROM planillaembarquetraspaso WHERE idTraspaso = tr.id)'
+            'pet.id = (
+                    SELECT TOP 1 id
+                    FROM planillaembarquetraspaso
+                    WHERE idTraspaso = tr.id
+                    ORDER BY 
+                        CASE 
+                            WHEN idEstado = 3 THEN 0
+                            ELSE 1
+                        END,
+                        id DESC
+                )
+                '
         );
         $query->join('LEFT JOIN', 'estadorecepcion er', 'er.id = pet.idEstado AND er.id <> 5'); // Agregando la relación
         $query->join('LEFT JOIN', 'conteocdscdestino dest', 'tr.id = dest.idTraspaso');
@@ -167,7 +178,7 @@ class TraspasoSearch extends Traspaso
         } elseif (!empty($this->estadoPlanilla)) {
             $query->andWhere(['er.id' => $this->estadoPlanilla]);
         }
-        
+
 
         if (empty($this->fechaDesde)) {
             $this->fechaDesde = date('Y-m-01');

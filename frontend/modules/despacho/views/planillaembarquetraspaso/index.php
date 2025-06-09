@@ -152,7 +152,12 @@ $gridColumns = [
                     ]
                 );
             },
-        ]
+        ],
+        'visibleButtons' => [
+            'anular' => function ($model, $key, $index) {
+                return $model->estado != 'Anulado';
+            },
+        ],
     ],
 
 ];

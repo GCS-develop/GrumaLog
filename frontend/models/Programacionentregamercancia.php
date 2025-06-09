@@ -40,7 +40,7 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
     public $nombreEstadoConteo;
     public $nombreEstadoProgramacion;
     public $idEstadoConteo;
-    
+
     /**
      * {@inheritdoc}
      */
@@ -75,11 +75,22 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['idAgendaEntregaMercancia', 'item'], 'required','message' => '{attribute} Es Un Valor Obligatorio'],
-            [['idAgendaEntregaMercancia', 'idEmpleadoLogistica', 'idEstado', 'created_by', 
-            'updated_by', 'idUserConteo', 'unidadxPaquete', 'puedeModificarEntrada'], 'integer'],
+            [['idAgendaEntregaMercancia', 'item'], 'required', 'message' => '{attribute} Es Un Valor Obligatorio'],
+            [
+                [
+                    'idAgendaEntregaMercancia',
+                    'idEmpleadoLogistica',
+                    'idEstado',
+                    'created_by',
+                    'updated_by',
+                    'idUserConteo',
+                    'unidadxPaquete',
+                    'puedeModificarEntrada'
+                ],
+                'integer'
+            ],
             [['created_at', 'updated_at', 'unidadesAsignadas'], 'safe'],
-            [['idAgendaEntregaMercancia', 'item', 'idUserConteo'], 'unique', 'targetAttribute' => ['idAgendaEntregaMercancia', 'idFacturaEntregaMercancia','item', 'idUserConteo'], 'message' => 'El Item Ya Esta Asignado al Usuario.'],
+            [['idAgendaEntregaMercancia', 'item', 'idUserConteo'], 'unique', 'targetAttribute' => ['idAgendaEntregaMercancia', 'idFacturaEntregaMercancia', 'item', 'idUserConteo'], 'message' => 'El Item Ya Esta Asignado al Usuario.'],
             [['idAgendaEntregaMercancia'], 'exist', 'skipOnError' => true, 'targetClass' => Agendaentregamercancia::class, 'targetAttribute' => ['idAgendaEntregaMercancia' => 'id']],
         ];
     }
@@ -137,21 +148,22 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
         return $this->hasOne(Userconteo::class, ['id' => 'idUserConteo']);
     }
 
-    public static function registrarItemsOC ($idagenda, $idordencompra, $idcategoria, $idfactura = null){
+    public static function registrarItemsOC($idagenda, $idordencompra, $idcategoria, $idfactura = null)
+    {
 
         $codigo = 0;
         $modelestado = Estadoprogramacion::findOne(['codigo' => $codigo]);
 
-        $listaitems = Ordendecompradetalle::listaReferenciasOrdenCompra ($idordencompra, $idcategoria);
+        $listaitems = Ordendecompradetalle::listaReferenciasOrdenCompra($idordencompra, $idcategoria);
 
-        foreach($listaitems as $item){
+        foreach ($listaitems as $item) {
             $model = Programacionentregamercancia::findOne([
-                                                    'idAgendaEntregaMercancia' => $idagenda,
-                                                    'idFacturaEntregaMercancia' => $idfactura,
-                                                    'item' => $item['item']
-                                        ]);
-            if ($model == null){
-                $model = new Programacionentregamercancia ();
+                'idAgendaEntregaMercancia' => $idagenda,
+                'idFacturaEntregaMercancia' => $idfactura,
+                'item' => $item['item']
+            ]);
+            if ($model == null) {
+                $model = new Programacionentregamercancia();
 
                 $model->idAgendaEntregaMercancia = $idagenda;
                 $model->idFacturaEntregaMercancia = $idfactura;
@@ -161,8 +173,9 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
                 $model->idEstado = $modelestado->id;
                 $model->unidadesAsignadas = $item['cantidad'];
 
-                if(!$model->save()){
-                    var_dump($model->getErrors()); die("hola");
+                if (!$model->save()) {
+                    var_dump($model->getErrors());
+                    die("hola");
                 }
 
                 /*
@@ -175,23 +188,41 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
                 }else{
                     var_dump($model->getErrors()); die("hola");
                 }*/
+                $idprogramacionentregamercancia = $model->id;
+
+                try {
+                    $ok = Conteoentregamercancia::grabarItemParaConteo(
+                        $idordencompra,
+                        $idprogramacionentregamercancia,
+                        $item['item']
+                    );
+
+                    if (!$ok) {
+                        Yii::warning("No se pudo grabar el item para conteo: OrdenCompra=$idordencompra, Item={$item['item']}");
+                    }
+                } catch (\Exception $e) {
+                    Yii::error("Excepción al grabar item para conteo: " . $e->getMessage());
+                }
+
+
+
 
             }
         }
     }
 
-    public static function asignarUserConteo ($idagenda, $iduser, $idempleadologistica, $idfactura = null)
+    public static function asignarUserConteo($idagenda, $iduser, $idempleadologistica, $idfactura = null)
     {
         $numRegistrosActualizados = 0;
         $modelestado = Estadoprogramacion::findOne(['codigo' => 1]);
 
         $models = Programacionentregamercancia::find()
-                                ->where([
-                                                        'idAgendaEntregaMercancia' => $idagenda, 
-                                                        'idFacturaEntregaMercancia' => $idfactura
-                                                    ])
-                                ->andWhere(['OR', ['idUserConteo' => null], ['idUserConteo' => '']])
-                                ->all();
+            ->where([
+                'idAgendaEntregaMercancia' => $idagenda,
+                'idFacturaEntregaMercancia' => $idfactura
+            ])
+            ->andWhere(['OR', ['idUserConteo' => null], ['idUserConteo' => '']])
+            ->all();
 
         foreach ($models as $model) {
             $model->scenario = 'scenarioUser';
@@ -203,7 +234,7 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
             $numRegistrosActualizados = $numRegistrosActualizados + 1;
         }
 
-        if ($numRegistrosActualizados > 0){
+        if ($numRegistrosActualizados > 0) {
             $modelagendaentrega = Agendaentregamercancia::findOne(['id' => $idagenda]);
 
             $codigo = 1;
@@ -216,7 +247,8 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
         return $numRegistrosActualizados;
     }
 
-    public static function totalUnidadesAsignadas ($idagenda, $item = null){
+    public static function totalUnidadesAsignadas($idagenda, $item = null)
+    {
 
         /*$total = Programacionentregamercancia::find()
                         ->select(['SUM(unidadesAsignadas) AS total'])
@@ -225,10 +257,10 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
                         ])->scalar();*/
 
         $total = Programacionentregamercancia::find()
-                                            ->where(['idAgendaEntregaMercancia' => $idagenda])
-                                            //->andWhere('idUserConteo IS NOT NULL')
-                                            ->andFilterWhere(['item' => $item])
-                                            ->sum('unidadesAsignadas');                                            
+            ->where(['idAgendaEntregaMercancia' => $idagenda])
+            //->andWhere('idUserConteo IS NOT NULL')
+            ->andFilterWhere(['item' => $item])
+            ->sum('unidadesAsignadas');
         return $total;
     }
 

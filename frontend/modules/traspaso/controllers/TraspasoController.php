@@ -4,20 +4,15 @@ namespace frontend\modules\traspaso\controllers;
 
 use Yii;
 use frontend\models\Traspaso;
-use frontend\models\Inventario;
-use frontend\models\searchTraspasoSearch;
 use frontend\models\search\TraspasoSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\widgets\ActiveForm;
 use yii\db\Expression;
-use frontend\models\Traspasodetalle;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-
-
-use Exception;
-use yii\web\BadRequestHttpException;
 
 /**
  * TraspasoController implements the CRUD actions for Traspaso model.
@@ -57,7 +52,16 @@ class TraspasoController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
+    public function actionIndex2()
+    {
+        $searchModel = new TraspasoSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
 
+        return $this->render('index2', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
     /**
      * Displays a single Traspaso model.
      * @param int $id ID
@@ -152,6 +156,69 @@ class TraspasoController extends Controller
             ]);
         }
     }
+
+    public function actionExportarExcel()
+    {
+        $searchModel = new TraspasoSearch();
+        $params = Yii::$app->request->queryParams;
+
+        // Obtener los filtros de búsqueda aplicados
+        $searchModel->load($params);
+
+        // Ejecuta el query con los filtros aplicados
+        $query = $searchModel->search($params)->query;
+
+        // Ejecutar el query directamente para obtener los datos sin paginación
+        $results = $query->all();
+
+        // Crear un nuevo objeto Spreadsheet
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Establecer los encabezados de las columnas
+        $sheet->setCellValue('A1', 'ID');
+        $sheet->setCellValue('B1', 'Consecutivo');
+        $sheet->setCellValue('C1', 'Creado Por');
+        $sheet->setCellValue('D1', 'Bodega Origen');
+        $sheet->setCellValue('E1', 'Bodega Destino');
+        $sheet->setCellValue('F1', 'Tipo Movimiento');
+        $sheet->setCellValue('G1', 'Consecutivo Siesa');
+        $sheet->setCellValue('H1', 'Estado Planilla');
+        $sheet->setCellValue('I1', 'Fecha Recibido');
+        // Añadir más columnas si es necesario
+
+        // Rellenar las filas con los datos
+        $rowNum = 2; // Comenzamos desde la segunda fila (debido a los encabezados)
+        foreach ($results as $row) {
+            $sheet->setCellValue('A' . $rowNum, $row->id);
+            $sheet->setCellValue('B' . $rowNum, $row->consecutivo);
+            $sheet->setCellValue('C' . $rowNum, $row->created_by);
+            $sheet->setCellValue('D' . $rowNum, $row->idBodegaOrigen);
+            $sheet->setCellValue('E' . $rowNum, $row->idBodegaDestino);
+            $sheet->setCellValue('F' . $rowNum, $row->tipoMovimiento);
+            $sheet->setCellValue('G' . $rowNum, $row->consecutivosiesa);
+            $sheet->setCellValue('H' . $rowNum, $row->estadoPlanilla);
+            $sheet->setCellValue('I' . $rowNum, $row->fechaRecibido);
+            // Añadir más filas si es necesario
+
+            $rowNum++;
+        }
+
+        // Crear un objeto Writer
+        $writer = new Xlsx($spreadsheet);
+
+        // Configurar el nombre del archivo y el tipo de respuesta
+        $fileName = 'traspasos_export.xlsx';
+        Yii::$app->response->getHeaders()->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        Yii::$app->response->getHeaders()->set('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+        Yii::$app->response->getHeaders()->set('Cache-Control', 'max-age=0');
+
+        // Guardar el archivo en la respuesta
+        $writer->save('php://output');
+        exit; // Asegurarse de que no se realice más procesamiento
+
+    }
+
 
     /**
      * Deletes an existing Traspaso model.
@@ -389,4 +456,34 @@ class TraspasoController extends Controller
         }
 
     }
+
+    // public function actionEjecutarExe()
+    // {
+    // $ruta = 'C:/Users/soporte/Desktop/sincronizar inventario grumasiesa.bat';
+
+    // if (file_exists($ruta)) {
+    //     $salida = shell_exec("cmd /c \"$ruta\"");
+    //     return $this->renderContent("<pre>$salida</pre>");
+    // } else {
+    //     throw new \yii\web\NotFoundHttpException("El archivo no existe.");
+    // }
+
+    // }
+
+
+    public function actionEjecutarExe()
+    {
+        // Comando completo EXACTAMENTE como en CMD
+        $comando = '"E:\laragon\bin\php\php-8.1.10-win32-vs16-x64\php.exe" E:\laragon\www\conektasiesav2\yii siesa/actualizarinventariomanual';
+
+        // Ejecutar y capturar salida (con errores)
+        $salida = shell_exec("cmd /c $comando 2>&1");
+
+        // Mostrar salida
+        return $this->renderContent("<pre>$salida</pre>");
+    }
+
+
+
+
 }

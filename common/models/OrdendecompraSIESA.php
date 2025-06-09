@@ -591,4 +591,269 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             ->queryAll();
     }
 
+    public static function obtenerDatosDocumentoContable(
+        $tipodocumento,
+        $numero,
+        $tipoconsulta
+    ) {
+
+        $sql = "
+            SELECT 
+                ctb.f350_rowid AS idContable,
+                ctb.f350_id_cia AS cia,
+                ctb.f350_id_co AS co,
+                ctb.f350_ind_estado AS idEstadoDocumento,
+                ctb.f350_id_tipo_docto AS tipoDocumento,
+                ctb.f350_consec_docto AS consecutivo,
+                ctb.f350_notas AS notas,
+                ctb.f350_total_db AS total,
+                mov.f470_rowid_item_ext AS idItem_Ext,
+                itx.f121_rowid_item AS idItem,
+                it.f120_id                      AS item             ,
+                bar.f131_id                     AS codigoBarras     ,
+                TRIM(it.f120_referencia)        AS referencia       ,
+                TRIM(it.f120_descripcion)       AS descripcion      ,
+                TRIM(it.f120_descripcion_corta) AS descripcionCorta ,
+                itx.f121_ind_estado             AS idEstadoItem     ,
+                CASE
+                WHEN
+                        itx.f121_ind_estado = 1
+                THEN
+                        'ACTIVO'
+                WHEN
+                        itx.f121_ind_estado = 0
+                THEN
+                        'INACTIVO'
+                WHEN
+                        itx.f121_ind_estado = 2
+                THEN
+                        'BLOQUEADO'
+                ELSE
+                        'DESCONOCIDO' -- Opcional, por si el campo tiene otros valores inesperados
+                END AS estadoItem
+                -- , itx.f121_id_ext1_detalle AS color
+                -- , itx.f121_id_ext2_detalle AS talla
+                ,
+                TRIM(col.f117_id)            AS idColor        ,
+                TRIM(col.f117_descripcion)   AS color          ,
+                TRIM(tl.f119_id)             AS idTalla        ,
+                TRIM(tl.f119_descripcion)    AS talla          ,
+                TRIM(itcm.f106_id)           AS idCategoria    ,
+                TRIM(itcm.f106_descripcion)  AS categoria      ,
+                TRIM(itcm1.f106_id)          AS idSubcategoria ,
+                TRIM(itcm1.f106_descripcion) AS subcategoria   ,
+                TRIM(itcm2.f106_id)          AS idProducto     ,
+                TRIM(itcm2.f106_descripcion) AS producto       ,
+                TRIM(itcm3.f106_id)          AS idMarca        ,
+                TRIM(itcm3.f106_descripcion) AS marca          ,
+                TRIM(itcm4.f106_id)          AS idProveedor    ,
+                TRIM(itcm4.f106_descripcion) AS proveedor      ,
+                it.f120_id_unidad_empaque    AS unidadEmpaque  ,
+                it.f120_id_unidad_orden      AS unidadOrden    ,
+                bod.f150_id                  AS bodega         ,
+                mov.f470_rowid               AS codigointernomovto,
+                mov.f470_cant_base           AS cantidadBase,
+                mov.f470_costo_prom_tot      AS costoPromedio
+            FROM
+                    t350_co_docto_contable ctb
+            INNER JOIN
+                    t470_cm_movto_invent mov
+            ON
+                    ctb.f350_rowid = mov.f470_rowid_docto
+            INNER JOIN
+                    t121_mc_items_extensiones itx
+            ON
+                    mov.f470_rowid_item_ext = itx.f121_rowid
+            INNER JOIN
+                    t120_mc_items it
+            ON
+                    itx.f121_rowid_item = it.f120_rowid
+            LEFT JOIN
+                    t117_mc_extensiones1_detalle col
+            ON
+                    mov.f470_id_cia          = col.f117_id_cia
+            AND     itx.f121_id_extension1   = col.f117_id_extension1
+            AND     itx.f121_id_ext1_detalle = col.f117_id
+            LEFT JOIN
+                    t119_mc_extensiones2_detalle tl
+            ON
+                    mov.f470_id_cia          = tl.f119_id_cia
+            AND     itx.f121_id_extension2   = tl.f119_id_extension2
+            AND     itx.f121_id_ext2_detalle = tl.f119_id
+            LEFT JOIN
+                    t125_mc_items_criterios itc_categoria
+            ON
+                    it.f120_rowid              = itc_categoria.f125_rowid_item
+            AND     itc_categoria.f125_id_plan = '001'
+            LEFT JOIN
+                    t106_mc_criterios_item_mayores itcm
+            ON
+                    itc_categoria.f125_id_plan           = itcm.f106_id_plan
+            AND     itc_categoria.f125_id_criterio_mayor = itcm.f106_id
+            LEFT JOIN
+                    t125_mc_items_criterios itc_subcategoria
+            ON
+                    it.f120_rowid                 = itc_subcategoria.f125_rowid_item
+            AND     itc_subcategoria.f125_id_plan = '002'
+            LEFT JOIN
+                    t106_mc_criterios_item_mayores itcm1
+            ON
+                    itc_subcategoria.f125_id_plan           = itcm1.f106_id_plan
+            AND     itc_subcategoria.f125_id_criterio_mayor = itcm1.f106_id
+            LEFT JOIN
+                    t125_mc_items_criterios itc_producto
+            ON
+                    it.f120_rowid             = itc_producto.f125_rowid_item
+            AND     itc_producto.f125_id_plan = '005'
+            LEFT JOIN
+                    t106_mc_criterios_item_mayores itcm2
+            ON
+                    itc_producto.f125_id_plan           = itcm2.f106_id_plan
+            AND     itc_producto.f125_id_criterio_mayor = itcm2.f106_id
+            LEFT JOIN
+                    t125_mc_items_criterios itc_marca
+            ON
+                    it.f120_rowid          = itc_marca.f125_rowid_item
+            AND     itc_marca.f125_id_plan = '014'
+            LEFT JOIN
+                    t106_mc_criterios_item_mayores itcm3
+            ON
+                    itc_marca.f125_id_plan           = itcm3.f106_id_plan
+            AND     itc_marca.f125_id_criterio_mayor = itcm3.f106_id
+            LEFT JOIN
+                    t125_mc_items_criterios itc_proveedor
+            ON
+                    it.f120_rowid              = itc_proveedor.f125_rowid_item
+            AND     itc_proveedor.f125_id_plan = '015'
+            LEFT JOIN
+                    t106_mc_criterios_item_mayores itcm4
+            ON
+                    itc_proveedor.f125_id_plan           = itcm4.f106_id_plan
+            AND     itc_proveedor.f125_id_criterio_mayor = itcm4.f106_id
+            LEFT JOIN
+                    t131_mc_items_barras bar
+            ON
+                    itx.f121_id_barras_principal = bar.f131_id
+            LEFT JOIN
+                    t150_mc_bodegas bod
+            ON
+                    mov.f470_id_cia       = bod.f150_id_cia
+            AND     mov.f470_rowid_bodega = bod.f150_rowid
+        ";
+
+        if ($tipodocumento) {
+            $sql = $sql . " WHERE ctb.f350_id_tipo_docto = :tipodocumento ";
+
+            if ($tipoconsulta == 'I') {
+                $query = $sql . " AND ctb.f350_notas LIKE :numero";
+                $numero = '%' . $numero . '%';
+
+            } else {
+                $query = $sql . " AND ctb.f350_consec_docto  = :numero";
+            }
+
+            return self::getDb()->createCommand($query)
+                ->bindValue(':tipodocumento', $tipodocumento)
+                ->bindValue(':numero', $numero)
+                ->queryAll();
+        } else {
+            $query = $sql . " WHERE 1 = 0 ";
+
+            return self::getDb()->createCommand($query)
+                ->queryAll();
+        }
+    }
+
+    public static function puedeSubirArchivo($tipodocumento, $numero, $origenconsulta)
+    {
+
+        if ($origenconsulta == 'I') {
+            $sql = "
+                SELECT 
+                    ctb.f350_ind_estado AS estado,
+                    COUNT(*) AS cantidad
+                FROM t350_co_docto_contable ctb
+                WHERE ctb.f350_id_tipo_docto = :tipo
+                AND ctb.f350_notas LIKE :numero
+                GROUP BY ctb.f350_ind_estado
+            ";
+
+            $command = self::getDb()->createCommand($sql)
+                ->bindValue(':tipo', $tipodocumento)
+                ->bindValue(':numero', "%$numero%");
+        } else {
+            $sql = "
+                SELECT 
+                    ctb.f350_ind_estado AS estado,
+                    COUNT(*) AS cantidad
+                FROM t350_co_docto_contable ctb
+                WHERE ctb.f350_id_tipo_docto = :tipo
+                AND ctb.f350_consec_docto = :numero
+                GROUP BY ctb.f350_ind_estado
+            ";
+
+            $command = self::getDb()->createCommand($sql)
+                ->bindValue(':tipo', $tipodocumento)
+                ->bindValue(':numero', $numero);
+        }
+        // var_dump($command->getRawSql()); die("hola");
+
+        $rows = $command->queryAll();
+
+        $estado = [
+            2 => 0, // anulados
+            1 => 0, // activos
+        ];
+
+
+
+        foreach ($rows as $row) {
+            $estado[(int) $row['estado']] = (int) $row['cantidad'];
+        }
+
+        // Caso 1: Solo hay activos → no se puede subir
+        if ($estado[1] > 0 && $estado[2] === 0) {
+            return false;
+        }
+
+        // Caso 2: Activo + Inactivo (anulado) → se puede subir
+        if ($estado[1] > 0 && $estado[2] > 0) {
+            return true;
+        }
+
+        // Caso 3: Solo inactivos → se puede subir
+        if ($estado[1] === 0 && $estado[2] > 0) {
+            return true;
+        }
+
+        // Caso 4: No existe → se puede subir
+        return true;
+    }
+
+    public static function obtenerDocumentosRepetidos()
+    {
+        $sql = "
+        SELECT 
+            f350_id_tipo_docto,  
+            f350_notas, 
+            STUFF((  
+                SELECT ', ' + CAST(sub.f350_consec_docto AS NVARCHAR(MAX))  
+                FROM t350_co_docto_contable AS sub  
+                WHERE sub.f350_notas = main.f350_notas  
+                  AND sub.f350_id_tipo_docto = main.f350_id_tipo_docto  
+                  AND sub.f350_ind_estado = 1  
+                FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS consecutivosSiesa,  
+            COUNT(*) AS cantidad  
+        FROM t350_co_docto_contable AS main  
+        WHERE f350_fecha > '2025-01-01 00:00:00.000'  
+          AND f350_notas LIKE '%=>%'  
+          AND f350_id_tipo_docto <> 'AEN' 
+          AND f350_ind_estado = 1 
+        GROUP BY f350_id_tipo_docto, f350_notas  
+        HAVING COUNT(*) > 1;
+    ";
+
+        return self::getDb()->createCommand($sql)->queryAll();
+    }
+
 }

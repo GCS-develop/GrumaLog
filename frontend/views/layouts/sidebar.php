@@ -69,9 +69,13 @@ $baseUrl = Url::base(true);
                     [
                         'label' => 'SIESA -Conectores',
                         'icon' => 'cogs',
-                        'badge' => '<span class="right badge badge-info">1</span>',
+                        'badge' => '<span class="right badge badge-info">3</span>',
                         'items' => [
                             ['label' => 'Integración ERP', 'url' => ['/siesa/transferenciaerp/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Consulta Dcto Interno', 'url' => ['/siesa/documentosiesa/indexdctointerno'], 'iconStyle' => 'far'],
+                            ['label' => 'Consulta Dcto SIESA', 'url' => ['/siesa/documentosiesa/indexdctosiesa'], 'iconStyle' => 'far'],
+                            ['label' => 'Conslta de repetidos', 'url' => ['/siesa/documentosiesa/indexdctosrepetidos'], 'iconStyle' => 'far'],
+
                         ]
                     ],
 
@@ -204,14 +208,23 @@ $baseUrl = Url::base(true);
                     [
                         'label' => 'Devoluciones',
                         'icon' => 'reply',
-                        'badge' => '<span class="right badge badge-info">1</span>',
+                        'badge' => '<span class="right badge badge-info">3</span>',
                         'items' => [
                             ['label' => 'Importar', 'url' => ['/devolucion/devolucionimportacion/index'], 'iconStyle' => 'far'],
                             ['label' => 'Registrar Documento', 'url' => ['/devolucion/devoluciondocumento/register'], 'iconStyle' => 'far'],
                             ['label' => 'Consultar', 'url' => ['/devolucion/devoluciondocumentodetalle/indexall'], 'iconStyle' => 'far'],
                         ]
                     ],
-
+                    [
+                        'label' => 'Auditoria Manual',
+                        'icon' => 'search',
+                        'badge' => '<span class="right badge badge-info">3</span>',
+                        'items' => [
+                            ['label' => 'Importar', 'url' => ['/auditoriamanual/auditoriamanualimportacion/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Registrar Documento', 'url' => ['/auditoriamanual/auditoriamanualdocumento/register'], 'iconStyle' => 'far'],
+                            ['label' => 'Consultar', 'url' => ['/auditoriamanual/auditoriamanualdocumentodetalle/indexall'], 'iconStyle' => 'far'],
+                        ]
+                    ],
                     /*[
                         'label' => 'Devoluciones',
                         'icon' => 'car',

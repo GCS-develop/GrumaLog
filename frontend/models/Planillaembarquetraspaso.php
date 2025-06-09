@@ -103,7 +103,7 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
             'codAlmacenDestino' => 'Cod. Almacén Destino',
             'almacenDestino' => 'Almacén Destino',
             'tipoDocumento' => 'Almacén tipoDocumento',
-            'consecutivoDocumento' => 'numero',
+            'consecutivoDocumento' => 'consecutivo',
             'fechaPlanillaembarque' => 'Fec.Des',
             'horaPlanillaembarque' => 'Hor.Des',
             'estado' => 'Estado',

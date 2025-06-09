@@ -33,6 +33,7 @@ class Devoluciondocumentodetalle extends \yii\db\ActiveRecord
     public $codigoBodegaSalida;
     public $fechaDesde;
     public $fechaHasta;
+    public $nombreProveedor;
 
     /**
      * {@inheritdoc}

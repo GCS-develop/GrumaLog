@@ -75,7 +75,15 @@ use yii\widgets\ActiveForm;
             <?php echo $form->field($model, 'precio') ?>
         </div>
 
-        <div class="col-4">
+        <div class="col-2">
+            <?= $form->field($model, 'oferta')->dropDownList([
+                1 => 'En oferta',
+                0 => 'Sin oferta',
+            ], ['prompt' => 'Seleccione']) ?>
+
+        </div>
+
+        <div class="col-2">
             <?php echo $form->field($model, 'proveedor') ?>
         </div>
 

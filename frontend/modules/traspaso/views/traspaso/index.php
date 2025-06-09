@@ -134,7 +134,7 @@ $this->registerJs("
 
 <?php
 Modal::begin([
-    'title' => '<h4>Datos básicos bodegas por usuario</h4>',
+    'title' => '<h4>Revisar items eliminados</h4>',
     'id' => 'modaldata',
     'size' => 'modal-lg',
     'options' => [
@@ -198,14 +198,21 @@ Modal::end();
             );
             ?>
 
-            <?php if (Yii::$app->user->id == '17'): ?>
+            <!-- <?php if (Yii::$app->user->id == '17'): ?>
 
                 <?= Html::a('Exportar Excel', ['exportar-excel'], [
                     'class' => 'btn btn-success btn-lg btn-create',
                     'target' => '_blank'
                 ]) ?>
 
-            <?php endif; ?>
+            <?php endif; ?> -->
+
+
+            <?= Html::a('Sincronizar', ['ejecutar-exe'], [
+                'class' => 'btn btn-success btn-lg btn-create',
+                'target' => '_blank'
+            ]) ?>
+
         </div>
 
 
@@ -364,8 +371,8 @@ Modal::end();
             'attribute' => 'transferenciaerp',
             'value' =>
                 function ($model) {
-    return $model->estadoTransferencia;
-},
+        return $model->estadoTransferencia;
+    },
         ],
         'estadoPlanilla',
         'fechaRecibido',
@@ -432,123 +439,139 @@ Modal::end();
             'class' => ActionColumn::className(),
             'header' => 'Acción',
             'headerOptions' => ['width' => '10%'],
-            'template' => ' {view} {update} {anular} {factura} {directo} {interno} {siesa}',
+            'template' => ' {anular} {view} {update}  {factura} {directo} {interno} {siesa} {viewTraspasodetalledelete}',
             'buttons' => [
-
+                'anular' => function ($url, $model) {
+        return Html::a(
+            '<i class="fa fa-ban"></i>',
+            ['anular', 'id' => $model->id],
+            [
+                'class' => 'btn btn-default text-danger',
+                'title' => 'Anular Registro',
+                'data' => [
+                    'confirm' => 'Esta seguro de anular este registro? ( Origen: '
+                        . $model->bodegaOrigen->nombre . ', Destino: '
+                        . $model->bodegaDestino->nombre . ', Numero de cajas: '
+                        . $model->numeroCajas . ' )',
+                    'method' => 'post',
+                ]
+            ]
+        );
+    },
                 'view' => function ($url, $model) {
-    return Html::a(
-        '<i class="fa fa-eye"></i>',
-        ['/traspaso/traspasodetalle/index', 'idtraspaso' => $model->id],
-        [
-            'title' => 'Ver',
-            'class' => 'btn btn-default btn-view',
-        ]
-    );
-},
+        return Html::a(
+            '<i class="fa fa-eye"></i>',
+            ['/traspaso/traspasodetalle/index', 'idtraspaso' => $model->id],
+            [
+                'title' => 'Ver',
+                'class' => 'btn btn-default btn-view',
+            ]
+        );
+    },
+
+                'viewTraspasodetalledelete' => function ($url, $model) {
+        $url = Url::to(['/traspaso/traspasodetalledelete/index', 'idtraspaso' => $model->id]);
+        return Html::button(
+            '<i class="fa fa-search"></i>',
+            [
+                'value' => $url,
+                'class' => 'btn btn-default btn_create',  // clase btn_create para que lo escuche tu JS
+                'title' => 'Ver detalles eliminados',
+            ]
+        );
+    },
+
+
+
+
 
                 'update' => function ($url, $model) {
-    $t = Url::to([
-        'update',
-        'id' => $model->id
-    ]);
+        $t = Url::to([
+            'update',
+            'id' => $model->id
+        ]);
 
-    return Html::button('<i class="fa fa-edit"></i>', [
-        'value' => $t,
-        'title' => 'Actualizar',
-        'class' => 'btn btn-default btn_update',
-    ]);
-},
+        return Html::button('<i class="fa fa-edit"></i>', [
+            'value' => $t,
+            'title' => 'Actualizar',
+            'class' => 'btn btn-default btn_update',
+        ]);
+    },
 
                 'factura' => function ($url, $model) {
-    return Html::a(
-        '<i class="fa fa-print"></i>',
-        ['factura', 'id' => $model->id],
-        [
-            'title' => 'Ver factura generada',
-            'class' => 'btn btn-default',
-        ]
-    );
-},
-                'directo' => function ($url, $model) {
-    return Html::a(
-        '<i class="fa fa-check"></i>',
-        ['directo', 'id' => $model->id],
-        [
-            'title' => 'Traspaso directo de tienda',
-            'class' => 'btn btn-default',
-        ]
-    );
-},
-                'interno' => function ($url, $model) {
-    return Html::a(
-        '<i class="fa fa-arrow-right"></i>',
-        ['interno', 'id' => $model->id],
-        [
-            'title' => 'Traspaso interno',
-            'class' => 'btn btn-default',
-        ]
-    );
-},
-
-                'anular' => function ($url, $model) {
-    return Html::a(
-        '<i class="fa fa-ban"></i>',
-        ['anular', 'id' => $model->id],
-        [
-            'class' => 'btn btn-default text-danger',
-            'title' => 'Anular Registro',
-            'data' => [
-                'confirm' => 'Esta seguro de anular este registro? ( Origen: '
-                    . $model->bodegaOrigen->nombre . ', Destino: '
-                    . $model->bodegaDestino->nombre . ', Numero de cajas: '
-                    . $model->numeroCajas . ' )',
-                'method' => 'post',
+        return Html::a(
+            '<i class="fa fa-print"></i>',
+            ['factura', 'id' => $model->id],
+            [
+                'title' => 'Ver factura generada',
+                'class' => 'btn btn-default',
             ]
-        ]
-    );
-},
+        );
+    },
+                'directo' => function ($url, $model) {
+        return Html::a(
+            '<i class="fa fa-check"></i>',
+            ['directo', 'id' => $model->id],
+            [
+                'title' => 'Traspaso directo de tienda',
+                'class' => 'btn btn-default',
+            ]
+        );
+    },
+                'interno' => function ($url, $model) {
+        return Html::a(
+            '<i class="fa fa-arrow-right"></i>',
+            ['interno', 'id' => $model->id],
+            [
+                'title' => 'Traspaso interno',
+                'class' => 'btn btn-default',
+            ]
+        );
+    },
+
+
 
                 'siesa' => function ($url, $model) {
-    return Html::a(
-        '<i class="fa fa-sync"></i>',
-        ['sincronizar', 'id' => $model->id],
-        [
-            'class' => 'btn btn-default',
-            'title' => 'Sincronizar Documento ERP',
-            'data' => [
-                'confirm' => 'Esta seguro de Sincronizar Este Documento? ( Origen: '
-                    . $model->bodegaOrigen->nombre . ', Destino: '
-                    . $model->bodegaDestino->nombre . ', No. Traspaso: ' . $model->id . ' )',
-                'method' => 'post',
+        return Html::a(
+            '<i class="fa fa-sync"></i>',
+            ['sincronizar', 'id' => $model->id],
+            [
+                'class' => 'btn btn-default',
+                'title' => 'Sincronizar Documento ERP',
+                'data' => [
+                    'confirm' => 'Esta seguro de Sincronizar Este Documento? ( Origen: '
+                        . $model->bodegaOrigen->nombre . ', Destino: '
+                        . $model->bodegaDestino->nombre . ', No. Traspaso: ' . $model->id . ' )',
+                    'method' => 'post',
+                ]
             ]
-        ]
-    );
-},
+        );
+    },
             ],
 
             'visibleButtons' => [
                 'update' => function ($model, $key, $index) {
-    return $model->idEstado == 0; // Condición para mostrar el botón
-},
+        return $model->idEstado == 0; // Condición para mostrar el botón
+    },
                 'detalle' => function ($model, $key, $index) {
-    return $model->idEstado == 0; // Condición para mostrar el botón
-},
+        return $model->idEstado == 0; // Condición para mostrar el botón
+    },
 
                 'anular' => function ($model, $key, $index) {
-    return $model->idEstado != 2; // Condición para mostrar el botón
-},
+        return $model->idEstado != 2; // Condición para mostrar el botón
+    },
                 'factura' => function ($model, $key, $index) {
-    return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
-},
+        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+    },
                 'siesa' => function ($model, $key, $index) {
-    return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
-},
+        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+    },
                 'directo' => function ($model, $key, $index) {
-    return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
-},
+        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+    },
                 'interno' => function ($model, $key, $index) {
-    return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
-},
+        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+    },
             ],
 
         ],

@@ -17,7 +17,7 @@ class ProductostiquetesprecioSearch extends Productostiquetesprecio
     public function rules()
     {
         return [
-            [['id', 'item', 'existencia', 'precio', 'created_by', 'updated_by'], 'integer'],
+            [['id', 'item', 'existencia', 'precio', 'created_by', 'updated_by', 'oferta'], 'integer'],
             [['descBodega', 'codigoBarra', 'descItem', 'detalleExt1', 'detalleExt2', 'proveedor', 'marca', 'referencia', 'categoria', 'subcategoria', 'created_at', 'updated_at'], 'safe'],
         ];
     }
@@ -69,6 +69,7 @@ class ProductostiquetesprecioSearch extends Productostiquetesprecio
             'item' => $this->item,
             'existencia' => $this->existencia,
             'precio' => $this->precio,
+            'oferta' => $this->oferta,
             'created_at' => $this->created_at,
             'created_by' => $this->created_by,
             'updated_at' => $this->updated_at,

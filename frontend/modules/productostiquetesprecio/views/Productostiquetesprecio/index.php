@@ -109,6 +109,13 @@ Modal::end();
                 'format' => ['currency'], // Formato de moneda
                 'contentOptions' => ['style' => 'text-align: right;'], // Opcional: alinea a la derecha
             ],
+            [
+                'attribute' => 'oferta',
+                'contentOptions' => ['style' => 'text-align: right;'], // Opcional: alinea a la derecha
+                'value' => function ($model) {
+        return $model->oferta == 1 ? 'En oferta' : ' Sin oferta ';
+    },
+            ],
             //'created_at',
             //'created_by',
             //'updated_at',

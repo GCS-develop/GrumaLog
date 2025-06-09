@@ -35,6 +35,7 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
                     'usuarioRecibido',
                     'tipoDocumento',
                     'consecutivoDocumento',
+                    'consecutivoInterno',
                     'fechaPlanillaembarque',
                     'horaPlanillaembarque',
                     'fechaTraspaso',
@@ -204,7 +205,8 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             ->andFilterWhere(['like', 'us.username', $this->usuarioRecibido])
             ->andFilterWhere(['like', 'ed.nombre', $this->estado])
             ->andFilterWhere(['like', 'td.codigo', $this->tipoDocumento])
-            ->andFilterWhere(['like', 'tr.consecutivo', $this->consecutivoDocumento])
+            ->andFilterWhere(['like', 'ds.f350_consec_docto', $this->consecutivoDocumento])
+            ->andFilterWhere(['like', 'tr.consecutivo', $this->consecutivoInterno])
             ->andFilterWhere(['like', 'pe.fechaDespacho', $this->fechaPlanillaembarque])
             ->andFilterWhere(['like', 'pe.horaDespacho', $this->horaPlanillaembarque]);
 

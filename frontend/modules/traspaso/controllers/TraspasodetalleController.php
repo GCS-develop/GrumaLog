@@ -3,6 +3,7 @@
 namespace frontend\modules\traspaso\controllers;
 
 use frontend\models\Impresora;
+use frontend\models\Inventario;
 use frontend\models\Item;
 use frontend\models\search\TraspasodetalleSearch;
 use frontend\models\Tipodocumento;
@@ -901,28 +902,39 @@ class TraspasodetalleController extends Controller
 
     public function actionEliminar()
     {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['site/login']);
+        }
+
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
         $ids = Yii::$app->request->post('ids');
+        $cantidad = (int) Yii::$app->request->post('cantidad', 0);
+
+        // return ['success' => false, 'message' => 'No se encontraron registros en estado "Pendiente" para actualizar.' . implode(',', $ids)];
 
         if (Yii::$app->request->isAjax && Yii::$app->request->post()) {
 
-            if ($ids) {
-                // Primero obtenemos los registros que están en estado "terminado"
+            if ($ids && $cantidad > 0) {
+                // Primero obtenemos los registros que están en estado "pendiente"
                 $traspasos = Traspaso::find()
-                    ->joinWith('traspasodetalles') // Asegúrate de que la relación esté definida en el modelo
-                    ->where(['traspasodetalle.id' => $ids, 'traspaso.idEstado' => 1])
+                    ->joinWith('traspasodetalles')
+                    ->where(['traspasodetalle.id' => $ids])
                     ->all();
 
-                return ['success' => false, 'message' => 'No se encontraron registros en estado "terminado" para actualizar.' . explode(',', $traspasos)];
-
-
-                var_dump($traspasos);
-                die();
-
                 // Verificar si hay registros en estado "terminado"
-                if (empty($traspasos)) {
-                    return ['success' => false, 'message' => 'No se encontraron registros en estado "terminado" para actualizar.'];
+                $idsInvalidos = [];
+                foreach ($traspasos as $traspaso) {
+                    if ($traspaso->idEstado != 0) {
+                        $idsInvalidos[] = $traspaso->id;
+                    }
+                }
+
+                if (!empty($idsInvalidos)) {
+                    return [
+                        'success' => false,
+                        'message' => 'Los siguientes registros NO están en estado "Pendiente" y no se pueden eliminar: ' . implode(', ', $idsInvalidos)
+                    ];
                 }
 
                 // Array para almacenar los errores
@@ -930,12 +942,16 @@ class TraspasodetalleController extends Controller
 
                 // Intentamos actualizar los registros
                 foreach ($traspasos as $traspaso) {
-                    // Actualizar el estado de cada registro
-                    $traspaso->idEstado = 3;  // Aquí pones el nuevo estado que deseas
+                    foreach ($traspaso->traspasodetalles as $detalle) {
+                        // Actualizar el estado de cada registro
+                        $resultado = $this->eliminarDetalle($detalle, $cantidad);
+                        if ($resultado !== true) {
+                            $errores[] = $resultado;
+                        }
 
-                    if (!$traspaso->save()) {
                         // Si algo falla, guardamos el error
-                        $errores[] = 'Error al actualizar el registro con ID ' . $traspaso->id;
+                        // $errores[] = 'Error al actualizar el registro con ID ' . $traspaso->id;
+
                     }
                 }
 
@@ -954,6 +970,239 @@ class TraspasodetalleController extends Controller
         return ['success' => false, 'message' => 'La solicitud no es válida.'];
     }
 
+    // Eliminar o actualizar un detalle
+    private function eliminarDetalle($detalle, $cantidad)
+    {
+        if (!$detalle->item) {
+            return "No se encontró el item asociado al detalle ID {$detalle->id}.";
+        }
 
+        $codigoBodega = $detalle->traspaso->bodegaOrigen->codigo;
+        $equivalencia = ($detalle->item->unidadempaque) ? $detalle->item->unidadempaque->equivalencia : 1;
+
+        // Determinar cuánto realmente se va a retornar
+        if ($cantidad >= $detalle->cantidad) {
+            // Se va a eliminar completamente el detalle
+            $cantidadARetornar = $detalle->cantidad;
+            $valoreliminacion = $cantidadARetornar * $equivalencia;
+
+            $errorInventario = $this->retornarInventario($detalle->item, $codigoBodega, $valoreliminacion);
+            if ($errorInventario !== true) {
+                return $errorInventario;
+            }
+
+            if (!$detalle->delete()) {
+                return "Error al eliminar el detalle ID {$detalle->id}.";
+            }
+
+        } else {
+            // Se va a reducir parcialmente la cantidad
+            $valoreliminacion = $cantidad * $equivalencia;
+
+            $errorInventario = $this->retornarInventario($detalle->item, $codigoBodega, $valoreliminacion);
+            if ($errorInventario !== true) {
+                return $errorInventario;
+            }
+
+            $detalle->cantidad -= $cantidad;
+            if (!$detalle->save()) {
+                return "Error al actualizar la cantidad del detalle ID {$detalle->id}.";
+            }
+        }
+
+        return true;
+    }
+
+
+
+    // Retornar inventario
+    private function retornarInventario($item, $codigoBodega, $valoreliminacion)
+    {
+        // Buscar todos los items relacionados
+        $itemsRelacionados = Item::find()
+            ->where([
+                'item' => $item->item,
+                'idTalla' => $item->idTalla,
+                'idColor' => $item->idColor,
+            ])
+            ->all();
+
+        if (!$itemsRelacionados) {
+            return "No se encontraron items relacionados para el item {$item->codigoBarras}.";
+        }
+
+        $itemIds = array_column($itemsRelacionados, 'id');
+
+        $existencia_actual = Inventario::find()
+            ->where(['item' => $item->item, 'codigoBodega' => $codigoBodega])
+            ->select(['existencia'])
+            ->scalar();
+
+        if ($existencia_actual === null) {
+            return "No existe inventario para el item {$item->codigoBarras} en la bodega $codigoBodega.";
+        }
+
+        if (($existencia_actual + $valoreliminacion) < 0) {
+            return "No se puede retornar al inventario, la existencia quedaría negativa.";
+        }
+
+        $updatedRows = Inventario::updateAll(
+            ['existencia' => new \yii\db\Expression('existencia + :equivalencia')],
+            [
+                'AND',
+                ['IN', 'idItem', $itemIds],
+                ['codigoBodega' => $codigoBodega]
+            ],
+            [':equivalencia' => $valoreliminacion]
+        );
+
+        if ($updatedRows == 0) {
+            return "Error al actualizar el inventario.";
+        }
+
+        return true;
+    }
+
+
+    public function actionEliminarajax()
+    {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['site/login']);
+        }
+
+        $request = Yii::$app->request;
+
+        if ($request->isPost) {
+            $id = $request->post('id');
+            $inputValue = $request->post('input');
+            $idtraspaso = $request->post('idtraspaso');
+
+            if (!is_numeric($inputValue) || $inputValue <= 0) {
+                return $this->asJson(['status' => 'error', 'message' => 'Cantidad inválida.']);
+            }
+
+            $model = $this->findModel($id);
+
+            if (!$model) {
+                return $this->asJson(['status' => 'error', 'message' => 'No se encontró el detalle de traspaso.']);
+            }
+
+            if (!$model->item) {
+                return $this->asJson(['status' => 'error', 'message' => 'No se encontró el item asociado.']);
+            }
+
+            // Verificar que la cantidad ingresada no sea mayor a la disponible
+            if ($inputValue > $model->cantidad) {
+                return $this->asJson(['status' => 'error', 'message' => 'La cantidad ingresada excede la cantidad disponible.']);
+            }
+
+            $codigoBarras = $model->item->codigoBarras;
+            $codigoBodega = $model->traspaso->bodegaOrigen->codigo;
+            $equivalencia = ($model->item->unidadempaque) ? $model->item->unidadempaque->equivalencia : 1;
+            $valoreliminacion = $inputValue * $equivalencia;
+
+            // Obtener existencia actual del inventario
+            $existencia_actual = Inventario::find()
+                ->where(['item' => $model->item->item, 'codigoBodega' => $codigoBodega])
+                ->select(['existencia'])
+                ->scalar();
+
+            if ($existencia_actual === null) {
+                return $this->asJson(['status' => 'error', 'message' => "No existe inventario para el item $codigoBarras en la bodega $codigoBodega"]);
+            }
+
+            // Validar que la eliminación no haga que la existencia en inventario quede negativa
+            if (($existencia_actual + $valoreliminacion) < 0) {
+                return $this->asJson(['status' => 'error', 'message' => 'No se puede eliminar, la existencia no puede ser negativa.']);
+            }
+            // 🔹 Buscar todos los items con el mismo `item`, `idTalla` y `idColor`
+            $itemsRelacionados = Item::find()
+                ->where([
+                    'item' => $model->item->item,
+                    'idTalla' => $model->item->idTalla,
+                    'idColor' => $model->item->idColor,
+                ])
+                ->all();
+
+            if (!$itemsRelacionados) {
+                return $this->asJson(['status' => 'error', 'message' => "No se encontraron otros items relacionados."]);
+            }
+
+            // 🔹 Extraer los IDs de los items relacionados
+            $itemIds = array_column($itemsRelacionados, 'id'); // Convertir objetos en array de IDs
+
+            // 🔹 Actualizar inventario sumando la cantidad eliminada
+            $updatedRows = Inventario::updateAll(
+                ['existencia' => new \yii\db\Expression('existencia + :equivalencia')],
+                [
+                    'AND',
+                    ['IN', 'idItem', $itemIds],  // 🔹 Usar `IN` correctamente
+                    ['codigoBodega' => $codigoBodega]
+                ],
+                [
+                    ':equivalencia' => $valoreliminacion,
+                ]
+            );
+
+            if ($updatedRows == 0) {
+                return $this->asJson(['status' => 'error', 'message' => 'Error al actualizar inventario.']);
+            }
+
+            // Reducir cantidad o eliminar el traspaso si se llega a cero
+
+            if ($model->cantidad > $inputValue) {
+                $model->cantidad -= $inputValue;
+
+                if (!$model->save()) {
+                    return $this->asJson([
+                        'status' => 'error',
+                        'message' => 'Error no se pudo eliminar. ' . implode(', ', array_map(function ($e) {
+                            return implode(' | ', $e);
+                        }, $model->getErrors()))
+                    ]);
+
+                }
+
+            } else {
+                if (!$model->delete()) {
+                    return $this->asJson([
+                        'status' => 'error',
+                        'message' => 'Error no se pudo eliminar. ' . implode(', ', array_map(function ($e) {
+                            return implode(' | ', $e);
+                        }, $model->getErrors()))
+                    ]);
+
+                }
+            }
+
+            // Recalcular valores después de la eliminación
+            $count = Traspasodetalle::find()
+                ->alias('td')
+                ->select([
+                    'total' => new \yii\db\Expression('SUM(
+                            CASE
+                                WHEN ue.equivalencia IS NOT NULL THEN td.cantidad * ue.equivalencia
+                                ELSE td.cantidad
+                            END
+                        )')
+                ])
+                ->innerJoin('item as it', 'td.idItem = it.id')
+                ->leftJoin('unidadEmpaque as ue', 'ue.codigo = it.unidadEmpaque')
+                ->where(['idTraspaso' => $idtraspaso])
+                ->scalar();
+
+            $cantidad_paquetes = Traspasodetalle::find()
+                ->select(['total_cantidad' => new \yii\db\Expression('SUM(cantidad)')])
+                ->where(['idTraspaso' => $idtraspaso])
+                ->scalar();
+
+            return $this->asJson([
+                'status' => 'success',
+                'message' => "Eliminado con éxito: $codigoBarras",
+                'count' => $count,
+                'cantidad_paquetes' => $cantidad_paquetes
+            ]);
+        }
+    }
 
 }

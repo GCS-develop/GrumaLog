@@ -53,6 +53,10 @@ return [
 
         'productostiquetesprecio' => [
             'class' => 'frontend\modules\productostiquetesprecio\Module',
+        ],
+
+        'auditoriamanual' => [
+            'class' => 'frontend\modules\auditoriamanual\Module',
         ]
 
     ],

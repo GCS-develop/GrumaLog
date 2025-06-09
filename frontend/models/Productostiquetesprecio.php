@@ -31,6 +31,7 @@ use yii\helpers\ArrayHelper;
  * @property string $categoria
  * @property string $subcategoria
  * @property int $precio
+ * @property int $oferta
  * @property string|null $created_at
  * @property int|null $created_by
  * @property string|null $updated_at
@@ -73,8 +74,23 @@ class Productostiquetesprecio extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['descBodega', 'item', 'descItem', 'detalleExt1', 'detalleExt2', 'existencia', 'proveedor', 'referencia', 'categoria', 'subcategoria', 'precio'], 'required'],
-            [['item', 'codigoBarra', 'existencia', 'precio', 'created_by', 'updated_by'], 'integer'],
+            [
+                [
+                    'descBodega',
+                    'item',
+                    'descItem',
+                    'detalleExt1',
+                    'detalleExt2',
+                    'existencia',
+                    'proveedor',
+                    'referencia',
+                    'categoria',
+                    'subcategoria',
+                    'precio'
+                ],
+                'required'
+            ],
+            [['item', 'codigoBarra', 'existencia', 'precio', 'created_by', 'updated_by','oferta'], 'integer'],
             [['marca', 'created_at', 'updated_at'], 'safe'],
             [['descBodega', 'descItem', 'detalleExt1', 'detalleExt2', 'proveedor', 'marca', 'referencia', 'categoria', 'subcategoria'], 'string', 'max' => 255],
         ];

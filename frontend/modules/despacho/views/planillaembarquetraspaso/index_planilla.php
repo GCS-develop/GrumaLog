@@ -14,7 +14,7 @@ use common\widgets\Alert;
 
 
 $this->title = ' Detalle de planilla: ' . $model->id . ' | usuario: ' . $model->usuario->username . ' | Sello inicial: ' . $model->sello
-    . ' |  ' . $model->estado->nombre . ' | '  . $model->fechaDespacho . ' | ' . $model->horaDespacho;
+    . ' |  ' . $model->estado->nombre . ' | ' . $model->fechaDespacho . ' | ' . $model->horaDespacho;
 
 $this->params['breadcrumbs'][] = ['label' => 'Planilla Embarque', 'url' => ['/despacho/planillaembarque/index']];
 // $this->params['breadcrumbs'][] = $this->title;
@@ -154,7 +154,12 @@ $gridColumns = [
                     ]
                 );
             },
-        ]
+        ],
+        'visibleButtons' => [
+            'anular' => function ($model, $key, $index) {
+                return $model->estado != 'Anulado';
+            },
+        ],
     ],
 ];
 
