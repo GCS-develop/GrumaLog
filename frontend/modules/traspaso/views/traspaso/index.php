@@ -134,7 +134,7 @@ $this->registerJs("
 
 <?php
 Modal::begin([
-    'title' => '<h4>Revisar items eliminados</h4>',
+    'title' => '<h4>Revisar items</h4>',
     'id' => 'modaldata',
     'size' => 'modal-lg',
     'options' => [
@@ -439,7 +439,7 @@ Modal::end();
             'class' => ActionColumn::className(),
             'header' => 'Acción',
             'headerOptions' => ['width' => '10%'],
-            'template' => ' {anular} {view} {update}  {factura} {directo} {interno} {siesa} {viewTraspasodetalledelete}',
+            'template' => ' {anular} {view} {update}  {factura} {directo} {interno} {siesa} {viewTraspasodetalledelete} ,{viewTraspasodetalleauditado}',
             'buttons' => [
                 'anular' => function ($url, $model) {
         return Html::a(
@@ -477,6 +477,18 @@ Modal::end();
                 'value' => $url,
                 'class' => 'btn btn-default btn_create',  // clase btn_create para que lo escuche tu JS
                 'title' => 'Ver detalles eliminados',
+            ]
+        );
+    },
+
+                'viewTraspasodetalleauditado' => function ($url, $model) {
+        $url = Url::to(['/traspaso/traspasodetalleauditado/index', 'idtraspaso' => $model->id]);
+        return Html::button(
+            '<i class="fa fa-clipboard-check"></i>',
+            [
+                'value' => $url,
+                'class' => 'btn btn-default btn_create ',  // clase btn_create para que lo escuche tu JS
+                'title' => 'Ver detalles auditados',
             ]
         );
     },
