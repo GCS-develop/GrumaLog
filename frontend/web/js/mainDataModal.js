@@ -1,48 +1,56 @@
-$(function (){        
+$(function () {
     // get the click of the create button
-    $('#modalButtonCreate').click(function (){
+    $('#modalButtonCreate').click(function () {
         $('#modaldata').modal('show')
-                .find('#modalContentData')
-                .load($(this).attr('value'))
+            .find('#modalContentData')
+            .load($(this).attr('value'))
     });
 });
 
-$(function(){
-    $('.btn_update').click(function(){
+$(function () {
+    $('.btn_update').click(function () {
         $('#modaldata').modal('show')
-                .find('#modalContentData')
-                .load($(this).attr('value'))
+            .find('#modalContentData')
+            .load($(this).attr('value'))
     });
 });
 
-$(function(){
-    $('.btn_create').click(function(){
+$(function () {
+    $('.btn_create').click(function () {
         $('#modaldata').modal('show')
-                .find('#modalContentData')
-                .load($(this).attr('value'))
+            .find('#modalContentData')
+            .load($(this).attr('value'))
     });
 });
 
-$(function(){
-    $('.btn_view').click(function(){
+$(function () {
+    $('.btn_view').click(function () {
         $('#modaldata').modal('show')
-                .find('#modalContentData')
-                .load($(this).attr('value'))
+            .find('#modalContentData')
+            .load($(this).attr('value'))
     });
 });
 
-$(function(){
-    $('.btn_user').click(function(){
+$(function () {
+    $('.btn_user').click(function () {
         $('#modaldatalogistica').modal('show')
-                .find('#modalContentDataLogistica')
-                .load($(this).attr('value'))
+            .find('#modalContentDataLogistica')
+            .load($(this).attr('value'))
     });
 });
 
-$(function(){
-    $('.btn_upload').click(function(){
+$(function () {
+    $('.btn_upload').click(function () {
         $('#modaldata').modal('show')
-                .find('#modalContentData')
-                .load($(this).attr('value'))
+            .find('#modalContentData')
+            .load($(this).attr('value'))
+    });
+});
+
+$(function () {
+    $('body').on('click', '#modalButtonCreateEliminados', function () {
+        $('#modaldata2').modal('show')
+            .find('#modalContentData2')
+            .load($(this).attr('value'));
     });
 });

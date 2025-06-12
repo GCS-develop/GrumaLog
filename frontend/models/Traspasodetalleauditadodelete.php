@@ -3,13 +3,13 @@
 namespace frontend\models;
 
 use Yii;
+
 use yii\web\NotFoundHttpException;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
-
 /**
- * This is the model class for table "traspasodetalledelete".
+ * This is the model class for table "traspasodetalleauditadodelete".
  *
  * @property int $id
  * @property int|null $idTraspaso
@@ -19,8 +19,11 @@ use yii\db\Expression;
  * @property int|null $created_by
  * @property string|null $updated_at
  * @property int|null $updated_by
+ *
+ * @property Item $idItem0
+ * @property Traspaso $idTraspaso0
  */
-class Traspasodetalledelete extends \yii\db\ActiveRecord
+class Traspasodetalleauditadodelete extends \yii\db\ActiveRecord
 {
     public $item;
     public $talla;
@@ -28,15 +31,26 @@ class Traspasodetalledelete extends \yii\db\ActiveRecord
     public $nombreActualizo;
     public $unidades;
     public $nombreCreo;
-
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'traspasodetalledelete';
+        return 'traspasodetalleauditadodelete';
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function rules()
+    {
+        return [
+            [['idTraspaso', 'idItem', 'cantidad', 'created_by', 'updated_by'], 'integer'],
+            [['created_at', 'updated_at'], 'safe'],
+            [['idTraspaso'], 'exist', 'skipOnError' => true, 'targetClass' => Traspaso::class, 'targetAttribute' => ['idTraspaso' => 'id']],
+            [['idItem'], 'exist', 'skipOnError' => true, 'targetClass' => Item::class, 'targetAttribute' => ['idItem' => 'id']],
+        ];
+    }
     public function behaviors()
     {
         return [
@@ -56,18 +70,6 @@ class Traspasodetalledelete extends \yii\db\ActiveRecord
             ],
         ];
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function rules()
-    {
-        return [
-            [['idTraspaso', 'idItem', 'cantidad', 'created_by', 'updated_by'], 'integer'],
-            [['created_at', 'updated_at'], 'safe'],
-        ];
-    }
-
     /**
      * {@inheritdoc}
      */
@@ -84,20 +86,13 @@ class Traspasodetalledelete extends \yii\db\ActiveRecord
             'updated_by' => 'Updated By',
         ];
     }
-    public static function findModelByIdTraspaso($idTraspaso)
-    {
-        if (($model = Traspasodetalledelete::findOne(['idTraspaso' => $idTraspaso])) !== null) {
-            return $model;
-        }
 
-        throw new NotFoundHttpException('El registro solicitado no existe.');
-    }
     /**
      * Gets query for [[IdItem0]].
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getIdItem()
+    public function getIdItem0()
     {
         return $this->hasOne(Item::class, ['id' => 'idItem']);
     }
@@ -107,9 +102,8 @@ class Traspasodetalledelete extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getIdTraspaso()
+    public function getIdTraspaso0()
     {
         return $this->hasOne(Traspaso::class, ['id' => 'idTraspaso']);
     }
-
 }

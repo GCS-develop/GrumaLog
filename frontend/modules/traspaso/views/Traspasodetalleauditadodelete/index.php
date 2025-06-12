@@ -1,25 +1,6 @@
 <?php
-$this->registerCss('
-    .mi-gridview {
-        font-size: 12px; /* Ajusta el tamaño de la fuente según sea necesario */
-        /* Otros estilos CSS según sea necesario */
-    }
 
-    .btn-create {
-        width: 300px;
-    }
-    
-    .centrar {
-        text-align: center;
-    }
-');
-
-$this->registerJsFile(
-    Yii::$app->request->baseUrl . '/js/mainDataModal.js',
-    ['depends' => [\yii\web\JqueryAsset::className()]]
-);
-
-use frontend\models\Traspasodetalledelete;
+use frontend\models\Traspasodetalleauditadodelete;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
@@ -29,15 +10,13 @@ use common\widgets\Alert;
 use yii\bootstrap4\Modal;
 
 /** @var yii\web\View $this */
-/** @var frontend\models\search\TraspasodetalledeleteSearch $searchModel */
+/** @var frontend\models\search\Traspasodetalleauditadodeletesearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Traspasodetalledeletes';
+$this->title = 'Traspasodetalleauditadodeletes';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="traspasodetalledelete-index">
-
-    <h1 class="col-log-12 centrar"> Traspaso Detalle Delete</h1>
+<div class="traspasodetalleauditadodelete-index">
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
