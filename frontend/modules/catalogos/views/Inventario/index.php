@@ -46,80 +46,79 @@ $gridColumns = [
 ];
 
 ?>
+
+<link rel="stylesheet" href="css/shared.css">
+
 <div class="inventario-index">
 
-    <!-- <p>
-        <?= Html::a('Create Inventario', ['create'], ['class' => 'btn btn-success']) ?>
-    </p> -->
+    <div class="row">
 
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
-    <?php
-    $totalCantidadSiesa = (int) Inventario::getTotalExistenciasSiesa($searchModel->codigoBodega);
-    $totalCantidadGruma = (int) Inventario::getotalExistenciasGruma($searchModel->codigoBodega);
-    ?>
-    <div class="col-lg-12 centro">
-
-
-        <?php echo ExportMenu::widget(
-            [
-                'dataProvider' => $dataProvider,
-                'columns' => $gridColumns,
-                'fontAwesome' => true,
-                'filename' => $filename,
-                'dropdownOptions' => [
-                    'label' => 'Exportar',
-                    'class' => 'btn btn-primary btn-lg btn-create ',
-                    // btn disabled',
-                ],
-                'exportConfig' => [
-                    ExportMenu::FORMAT_TEXT => false,
-                    ExportMenu::FORMAT_HTML => false,
-                    ExportMenu::FORMAT_EXCEL => false,
-                    ExportMenu::FORMAT_PDF => false,
-                    ExportMenu::FORMAT_CSV => false,
-                    ExportMenu::FORMAT_EXCEL_X => [
-                        'label' => 'Excel 2007+',
-                        'icon' => 'file-excel-o',
-                        'iconOptions' => ['class' => 'text-success btn-create'],
-                        'linkOptions' => [],
-                        'options' => ['title' => 'Microsoft Excel 2007+ (xlsx)'],
-                        'alertMsg' => 'Se va a generar un archivo en formato EXCEL 2007+ (xlsx).',
-                        'mime' => 'application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                        'extension' => 'xlsx',
-                        'writer' => ExportMenu::FORMAT_EXCEL_X
-                    ],
-                ]
-            ]
-        );
+        <?php
+        $totalCantidadSiesa = (int) Inventario::getTotalExistenciasSiesa($searchModel->codigoBodega);
+        $totalCantidadGruma = (int) Inventario::getotalExistenciasGruma($searchModel->codigoBodega);
         ?>
-    </div>
-    <?= GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
+        <div class="col-lg-12 centrar">
 
-        'beforeRow' => function ($model, $key, $index, $grid) use ($totalCantidadSiesa, $totalCantidadGruma) {
-        if ($index === 0) { // Primera fila de cada página
-            return "<tr>
+            <?php echo ExportMenu::widget(
+                [
+                    'dataProvider' => $dataProvider,
+                    'columns' => $gridColumns,
+                    'fontAwesome' => true,
+                    'filename' => $filename,
+                    'dropdownOptions' => [
+                        'label' => 'Exportar',
+                        'class' => 'btn btn-primary btn-lg btn-create ',
+                        // btn disabled',
+                    ],
+                    'exportConfig' => [
+                        ExportMenu::FORMAT_TEXT => false,
+                        ExportMenu::FORMAT_HTML => false,
+                        ExportMenu::FORMAT_EXCEL => false,
+                        ExportMenu::FORMAT_PDF => false,
+                        ExportMenu::FORMAT_CSV => false,
+                        ExportMenu::FORMAT_EXCEL_X => [
+                            'label' => 'Excel 2007+',
+                            'icon' => 'file-excel-o',
+                            'iconOptions' => ['class' => 'text-success btn-create'],
+                            'linkOptions' => [],
+                            'options' => ['title' => 'Microsoft Excel 2007+ (xlsx)'],
+                            'alertMsg' => 'Se va a generar un archivo en formato EXCEL 2007+ (xlsx).',
+                            'mime' => 'application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            'extension' => 'xlsx',
+                            'writer' => ExportMenu::FORMAT_EXCEL_X
+                        ],
+                    ]
+                ]
+            );
+            ?>
+        </div>
+    </div>
+</div>
+
+
+<?= GridView::widget([
+    'dataProvider' => $dataProvider,
+    'filterModel' => $searchModel,
+
+    'beforeRow' => function ($model, $key, $index, $grid) use ($totalCantidadSiesa, $totalCantidadGruma) {
+    if ($index === 0) { // Primera fila de cada página
+        return "<tr>
                     <td colspan='7'><strong>Gran Total</strong></td>
                     <td><strong>$totalCantidadGruma</strong></td>
                     <td><strong>$totalCantidadSiesa</strong></td>
                 </tr>";
-        }
-    },
+    }
+},
 
 
-        'showPageSummary' => true,
-        'columns' => array_merge(
-            [
-                ['class' => 'kartik\grid\SerialColumn'],
-            ],
+    'showPageSummary' => true,
+    'columns' => array_merge(
+        [
+            ['class' => 'kartik\grid\SerialColumn'],
+        ],
 
-            $gridColumns,
+        $gridColumns,
 
-        ),
+    ),
 
-    ]); ?>
-
-
-</div>
+]); ?>
