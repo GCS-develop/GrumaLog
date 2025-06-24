@@ -1,5 +1,6 @@
 <?php
-use frontend\models\Traspasodetalleauditado;
+
+use frontend\models\Traspasodetalletienda;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
@@ -12,19 +13,21 @@ use yii\widgets\ActiveForm;
 use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
-/** @var frontend\models\search\TraspasodetalleauditadoSearch $searchModel */
+/** @var frontend\models\search\TraspasodetalletiendaSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+
 
 $fecha_actual = date("Y-m-d");
 $filename = "Relacion_Traspaso_Auditado_" . $fecha_actual;
-
-// $this->title = 'Traspasodetalleauditados';
-$this->params['breadcrumbs'][] = $this->title;
 
 $this->registerJsFile(
     Yii::$app->request->baseUrl . '/js/mainDataModal.js',
     ['depends' => [\yii\web\JqueryAsset::className()]]
 );
+
+$this->title = 'Traspaso detalle tiendas';
+$this->params['breadcrumbs'][] = $this->title;
+
 
 
 $gridColumns = [
@@ -41,7 +44,7 @@ $gridColumns = [
     'talla',
     'color',
     [
-        'attribute' => 'Cantidad registros auditados',
+        'attribute' => 'Cantidad registros tienda',
         'contentOptions' => ['data-cellvalue' => 'registros',],
         'value' => function ($model) {
             return $model->cantidad;
@@ -61,7 +64,7 @@ $gridColumns = [
 
     ],
     [
-        'attribute' => 'Cantidad unidades auditados',
+        'attribute' => 'Cantidad unidades tienda',
         'contentOptions' => ['data-cellvalue' => 'registros',],
         'value' => function ($model) {
             return $model->unidades;
@@ -94,9 +97,10 @@ $gridColumns = [
 
 <link rel="stylesheet" href="css/shared.css">
 
+
 <?php
 Modal::begin([
-    'title' => '<h4>Traspaso detalle auditado ELIMINADOS</h4>',
+    'title' => '<h4>Traspaso detalle tiendas ELIMINADOS</h4>',
     'id' => 'modaldata2',
     'size' => 'modal-lg',
     'options' => [
@@ -109,10 +113,11 @@ echo "<div id='modalContentData2'></div>";
 Modal::end();
 ?>
 
-<div class="traspasodetalleauditado-index">
+<div class="traspasodetalletienda-index">
+
     <div class="row">
 
-        <h1 class="col-lg-12 centrar"> Traspaso Detalle Auditado </h1>
+        <h1 class="col-lg-12 centrar"> Traspaso Detalle Tiendas </h1>
 
         <div class="col-lg-12">
             <?php echo $this->render('_search', ['model' => $searchModel,]); ?>
@@ -121,7 +126,7 @@ Modal::end();
         <div class="col-lg-6 derecha">
             <?php
             $url = Url::to([
-                '/traspaso/traspasodetalleauditadodelete/index',
+                '/traspaso/traspasodetalletiendadelete/index',
                 'idtraspaso' => $idtraspaso
             ]);
             ?>
@@ -193,7 +198,7 @@ Modal::end();
                     }
                     return [];
                 },
-                'emptyText' => 'No se encontraron registros auditados para este traspaso.',
+                'emptyText' => 'No se encontraron registros tienda para este traspaso.',
                 'columns' => array_merge(
                     [
                         ['class' => 'kartik\grid\SerialColumn'],
@@ -205,4 +210,6 @@ Modal::end();
             ]); ?>
 
         </div>
+
+
     </div>
