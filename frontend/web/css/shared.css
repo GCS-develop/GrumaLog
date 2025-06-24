@@ -18,3 +18,26 @@
 .derecha {
     text-align: right;
 }    
+ .fila-verde {
+     background-color: #d4edda !important;
+     color: #155724 !important;
+     font-weight: bold;
+ }
+
+ .fila-roja {
+     background-color: #f8d7da !important;
+     color: #721c24 !important;
+     font-weight: bold;
+ }
+
+ table tr.fila-verde td {
+     background-color: #d4edda !important;
+     color: #155724 !important;
+     font-weight: bold;
+ }
+
+ table tr.fila-roja td {
+     background-color: #f8d7da !important;
+     color: #721c24 !important;
+     font-weight: bold;
+ }

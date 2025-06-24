@@ -704,7 +704,7 @@ class TraspasodetalleController extends Controller
             $printer->text("Direccion: " . Yii::$app->params['direccion'] . ' ' . "TEL: " . Yii::$app->params['tel'] . "\n");
             $printer->text("__________________________________________\n");
             $printer->text("SERIE: " . $serie . "   NUMERO: " . $numero_serie . "   CAJA:" . $isMobile . "\n");
-            $printer->text("FECHA:" . Yii::$app->formatter->asDatetime($model->updated_at, 'php:d-m-Y H:i:s') . "\n");
+            $printer->text("FECHA:" . date('d-m-Y H:i:s', strtotime($model->updated_at)) . "\n");
             $printer->text("ORIGEN:" . trim($model->bodegaOrigen->codigo) . ' ' . $model->bodegaOrigen->nombre . "\n");
             $printer->text("DESTINO:" . trim($model->bodegaDestino->codigo) . ' ' . $model->bodegaDestino->nombre . "\n");
             $printer->text("USUARIO:" . $model->usuario->username . "\n");

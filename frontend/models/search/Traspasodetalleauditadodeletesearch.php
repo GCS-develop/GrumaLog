@@ -24,7 +24,10 @@ class Traspasodetalleauditadodeletesearch extends Traspasodetalleauditadodelete
                     'updated_at',
                     'talla',
                     'color',
-                    'item'
+                    'item',
+                    'consecutivoSiesa',
+                    'serie',
+
                 ],
                 'safe'
             ],
@@ -61,6 +64,9 @@ class Traspasodetalleauditadodeletesearch extends Traspasodetalleauditadodelete
         $query->join('INNER JOIN', 'user uUpdate', 'uUpdate.id = tdd.updated_by');
         $query->join('INNER JOIN', 'user uCreate', 'uCreate.id = tdd.created_by');
         $query->join('LEFT JOIN', 'unidadempaque ue', 'ue.codigo = i.unidadEmpaque');
+        $query->join('LEFT JOIN', 'documentosiesa ds', 'tdd.idTraspaso = ds.idGruma');
+        $query->join('LEFT JOIN', 'traspaso tr', 'tr.id = tdd.idTraspaso');
+        $query->join('LEFT JOIN', 'tipodocumento tdoc', 'tdoc.id = tr.idTipoDocumento');
 
         // add conditions that should always apply here
 
@@ -72,6 +78,8 @@ class Traspasodetalleauditadodeletesearch extends Traspasodetalleauditadodelete
             'uUpdate.username as nombreActualizo',
             'uCreate.username as nombreCreo',
             'COALESCE(ue.equivalencia, 1) * tdd.cantidad as unidades',
+            'ds.f350_consec_docto AS consecutivoSiesa',
+            'tdoc.codigo as serie',
         ]);
 
         $dataProvider = new ActiveDataProvider([
@@ -100,7 +108,12 @@ class Traspasodetalleauditadodeletesearch extends Traspasodetalleauditadodelete
             'tdd.updated_at' => $this->updated_at,
             'tdd.updated_by' => $this->updated_by,
         ]);
-
+        if (!empty($this->consecutivoSiesa)) {
+            $query->andFilterWhere(['like', 'ds.f350_consec_docto', $this->consecutivoSiesa]);
+        }
+        if (!empty($this->serie)) {
+            $query->andFilterWhere(['like', 'tdoc.id', $this->serie]);
+        }
         return $dataProvider;
     }
 }

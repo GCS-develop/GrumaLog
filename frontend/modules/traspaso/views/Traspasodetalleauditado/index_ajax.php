@@ -37,7 +37,7 @@ use yii\widgets\Pjax;
 $fecha_actual = date("Y-m-d");
 $filename = "Relacion_Traspaso_Auditado_" . $fecha_actual;
 
-// $this->title = 'Traspasodetalleauditados';
+$this->title = 'Traspasodetalleauditados';
 $this->params['breadcrumbs'][] = $this->title;
 
 $this->registerJsFile(
@@ -49,38 +49,32 @@ $this->registerJsFile(
 $gridColumns = [
     // 'id',
     // 'idTraspaso',
-    'serie',
-    [
-        'attribute' => 'consecutivoSiesa',
-        'group' => true,
-    ],
-    'Origen',
-    'Destino',
+    'consecutivoSiesa',
     'item',
     'talla',
     'color',
-    [
-        'attribute' => 'Cantidad registros auditados',
-        'contentOptions' => ['data-cellvalue' => 'registros',],
-        'value' => function ($model) {
-            return $model->cantidad;
-        },
-        'format' => ['decimal', 0], // Formato decimal con 0 decimales,
-        'pageSummary' => true,
+    // [
+    //     'attribute' => 'Registros auditados',
+    //     'contentOptions' => ['data-cellvalue' => 'registros',],
+    //     'value' => function ($model) {
+    //         return $model->cantidad;
+    //     },
+    //     'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+    //     'pageSummary' => true,
 
-    ],
-    [
-        'attribute' => 'Cantidad registros traspaso',
-        'contentOptions' => ['data-cellvalue' => 'registros',],
-        'value' => function ($model) {
-            return $model->cantidadTraspasoRegistros;
-        },
-        'format' => ['decimal', 0], // Formato decimal con 0 decimales,
-        'pageSummary' => true,
+    // ],
+    // [
+    //     'attribute' => 'Registros traspaso',
+    //     'contentOptions' => ['data-cellvalue' => 'registros',],
+    //     'value' => function ($model) {
+    //         return $model->cantidadTraspasoRegistros;
+    //     },
+    //     'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+    //     'pageSummary' => true,
 
-    ],
+    // ],
     [
-        'attribute' => 'Cantidad unidades auditados',
+        'attribute' => 'Unidades auditados',
         'contentOptions' => ['data-cellvalue' => 'registros',],
         'value' => function ($model) {
             return $model->unidades;
@@ -90,7 +84,7 @@ $gridColumns = [
 
     ],
     [
-        'attribute' => 'Cantidad unidades traspasos',
+        'attribute' => 'Unidades traspasos',
         'contentOptions' => ['data-cellvalue' => 'registros',],
         'value' => function ($model) {
             return $model->cantidadTraspasounidades;
@@ -100,14 +94,12 @@ $gridColumns = [
 
     ],
     'diferencia',
+    // 'nombreCreo',
+    // 'created_at',
     'userTraspaso',
-    [
-        'attribute' => 'nombreCreo',
-        'group' => true,
-    ],
-    'created_at',
     'nombreActualizo',
     'updated_at',
+
 ];
 ?>
 
@@ -117,7 +109,7 @@ $gridColumns = [
 Modal::begin([
     'title' => '<h4>Traspaso detalle auditado ELIMINADOS</h4>',
     'id' => 'modaldata2',
-    'size' => 'modal-lg',
+    'size' => 'modal-xl',
     'options' => [
         'tabindex' => false  // Importante para que funcione el Select
     ]
@@ -133,11 +125,7 @@ Modal::end();
 
         <h1 class="col-lg-12 centrar"> Traspaso Detalle Auditado </h1>
 
-        <div class="col-lg-12">
-            <?php echo $this->render('_search', ['model' => $searchModel,]); ?>
-        </div>
-
-        <div class="col-lg-6 derecha">
+        <div class="col-lg-12 centrar">
             <?php
             $url = Url::to([
                 '/traspaso/traspasodetalleauditadodelete/index',
@@ -158,41 +146,8 @@ Modal::end();
             </p>
         </div>
 
-        <div class="col-lg-6 izquierda">
-            <?php echo ExportMenu::widget(
-                [
-                    'dataProvider' => $dataProvider,
-                    'columns' => $gridColumns,
-                    'fontAwesome' => true,
-                    'filename' => $filename,
-                    'dropdownOptions' => [
-                        'label' => 'Exportar',
-                        'class' => 'btn btn-primary btn-lg btn-create',
-                    ],
-                    'exportConfig' => [
-                        ExportMenu::FORMAT_TEXT => false,
-                        ExportMenu::FORMAT_HTML => false,
-                        ExportMenu::FORMAT_EXCEL => false,
-                        ExportMenu::FORMAT_PDF => false,
-                        ExportMenu::FORMAT_CSV => false,
-                        ExportMenu::FORMAT_EXCEL_X => [
-                            'label' => 'Excel 2007+',
-                            'icon' => 'file-excel-o',
-                            'iconOptions' => ['class' => 'text-success btn-create'],
-                            'linkOptions' => [],
-                            'options' => ['title' => 'Microsoft Excel 2007+ (xlsx)'],
-                            'alertMsg' => 'Se va a generar un archivo en formato EXCEL 2007+ (xlsx).',
-                            'mime' => 'application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                            'extension' => 'xlsx',
-                            'writer' => ExportMenu::FORMAT_EXCEL_X
-                        ],
-                    ]
-                ]
-            );
-            ?>
-
-        </div>
         <div class="col-lg-12">
+
             <?= GridView::widget([
                 'dataProvider' => $dataProvider,
                 // 'filterModel' => $searchModel,
@@ -202,16 +157,6 @@ Modal::end();
                 'options' => [
                     'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
                 ],
-                'rowOptions' => function ($model) {
-                    $dif = (int) $model->diferencia;
-                    if ($dif > 0) {
-                        return ['class' => 'fila-verde'];
-                    }
-                    if ($dif < 0) {
-                        return ['class' => 'fila-roja'];
-                    }
-                    return [];
-                },
                 'emptyText' => 'No se encontraron registros auditados para este traspaso.',
                 'columns' => array_merge(
                     [

@@ -136,7 +136,7 @@ $this->registerJs("
 Modal::begin([
     'title' => '<h4>Revisar items</h4>',
     'id' => 'modaldata',
-    'size' => 'modal-lg',
+    'size' => 'modal-xl',
     'options' => [
         'tabindex' => false  // Importante para que funcione el Select
     ]

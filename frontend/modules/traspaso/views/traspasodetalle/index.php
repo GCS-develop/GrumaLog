@@ -407,7 +407,7 @@ $this->registerJs("
 
             <!-- Botón para cambiar el estado de los registros -->
             <?= Html::button('Eliminar', [
-                'class' => 'btn btn-danger btn-create btn-lg disabled',
+                'class' => 'btn btn-danger btn-create btn-lg disabled d-none',
                 'id' => 'EliminarBtn',
             ]) ?>
 

@@ -219,7 +219,7 @@ $this->registerJsFile('@web/js/JsBarcode.all.min.js', ['depends' => [\yii\web\Jq
 
             <h6>
                 Fecha:
-                <?= Yii::$app->formatter->asDatetime($model->updated_at, 'php:d-m-Y H:i:s') ?>
+                <?= date('d-m-Y H:i', strtotime($model->updated_at)) ?>
             </h6>
 
             <h6>

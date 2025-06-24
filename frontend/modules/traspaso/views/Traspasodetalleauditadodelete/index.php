@@ -16,11 +16,13 @@ use yii\bootstrap4\Modal;
 $this->title = 'Traspasodetalleauditadodeletes';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+<?php \yii\widgets\Pjax::begin(['id' => 'pjax-modal-grid', 'timeout' => 10000]); ?>
+
 <div class="traspasodetalleauditadodelete-index">
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        // 'filterModel' => $searchModel,
+        'filterModel' => $searchModel,
         'showPageSummary' => true,
         'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
         'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
@@ -32,9 +34,11 @@ $this->params['breadcrumbs'][] = $this->title;
             ['class' => 'kartik\grid\SerialColumn'],
             // 'id',
             // 'idTraspaso',
+            'serie',
+            'consecutivoSiesa',
             'item',
-            'color',
             'talla',
+            'color',
             [
                 'attribute' => 'Cantidad registros',
                 'contentOptions' => ['data-cellvalue' => 'registros',],
@@ -65,3 +69,4 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 </div>
+<?php \yii\widgets\Pjax::end(); ?>

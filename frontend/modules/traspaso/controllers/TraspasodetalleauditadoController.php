@@ -39,21 +39,38 @@ class TraspasodetalleauditadoController extends Controller
      *
      * @return string
      */
-    public function actionIndex($idtraspaso)
+    public function actionIndex($idtraspaso = null)
     {
+        $searchModel = new TraspasodetalleauditadoSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams, $idtraspaso);
 
         if (Yii::$app->request->isAjax) {
-            $searchModel = new TraspasodetalleauditadoSearch();
-            $dataProvider = $searchModel->search($this->request->queryParams, $idtraspaso);
-
-            return $this->renderAjax('index', [
+            return $this->renderAjax('index_ajax', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
                 'idtraspaso' => $idtraspaso,
-
+            ]);
+        } else {
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                'idtraspaso' => $idtraspaso,
             ]);
         }
     }
+
+    public function actionIndexNovedades($idtraspaso = null)
+    {
+        $searchModel = new TraspasodetalleauditadoSearch();
+        $dataProvider = $searchModel->searchConDiferencias($this->request->queryParams, $idtraspaso);
+
+        return $this->render('index_novedades', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'idtraspaso' => $idtraspaso,
+        ]);
+    }
+
 
     /**
      * Displays a single Traspasodetalleauditado model.

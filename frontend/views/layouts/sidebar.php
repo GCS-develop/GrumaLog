@@ -168,6 +168,9 @@ $baseUrl = Url::base(true);
                             ['label' => 'Traspasos', 'url' => ['/traspaso/traspaso/index'], 'iconStyle' => 'far'],
                             ['label' => 'Detalle traspasos', 'url' => ['/traspaso/traspasodetalle/index'], 'iconStyle' => 'far'],
                             ['label' => 'Bodegas / Usuario', 'url' => ['/traspaso/traspasouserbodega/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Auditoria', 'url' => ['/traspaso/traspasodetalleauditado/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Auditoria - Novedades', 'url' => ['/traspaso/traspasodetalleauditado/index-novedades'], 'iconStyle' => 'far'],
+
 
                         ]
                     ],

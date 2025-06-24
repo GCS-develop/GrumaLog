@@ -31,6 +31,9 @@ class Traspasodetalleauditadodelete extends \yii\db\ActiveRecord
     public $nombreActualizo;
     public $unidades;
     public $nombreCreo;
+    public $consecutivoSiesa;
+    public $serie;
+
     /**
      * {@inheritdoc}
      */

@@ -29,6 +29,8 @@ use common\widgets\Alert;
 use yii\bootstrap4\Modal;
 use yii\widgets\ActiveForm;
 use yii\widgets\Pjax;
+use yii\grid\GridView as BaseGrid;
+use yii\data\ArrayDataProvider;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\TraspasodetalleauditadoSearch $searchModel */
@@ -45,6 +47,14 @@ $this->registerJsFile(
     ['depends' => [\yii\web\JqueryAsset::className()]]
 );
 
+
+
+$resumenData = Traspasodetalleauditado::resumenPorUsuarioTraspaso($idtraspaso);
+
+$dataProviderResumen = new ArrayDataProvider([
+    'allModels' => $resumenData,
+    'pagination' => false,
+]);
 
 $gridColumns = [
     // 'id',
@@ -109,6 +119,33 @@ $gridColumns = [
     'nombreActualizo',
     'updated_at',
 ];
+
+$resumenColumns = [
+    [
+        'attribute' => 'usuario',
+        'label' => 'Usuario de Traspaso',
+    ],
+    [
+        'attribute' => 'novedades_positivas',
+        'label' => 'Unidades Positivas',
+        'format' => ['decimal', 0],
+    ],
+    [
+        'attribute' => 'novedades_negativas',
+        'label' => 'Unidades Negativas',
+        'format' => ['decimal', 0],
+    ],
+    [
+        'attribute' => 'traspasos',
+        'label' => 'Traspasos Involucrados',
+    ],
+    [
+        'attribute' => 'documentosSiesa',
+        'label' => 'ID Documento SIESA',
+    ],
+
+];
+
 ?>
 
 <link rel="stylesheet" href="css/shared.css">
@@ -117,7 +154,7 @@ $gridColumns = [
 Modal::begin([
     'title' => '<h4>Traspaso detalle auditado ELIMINADOS</h4>',
     'id' => 'modaldata2',
-    'size' => 'modal-lg',
+    'size' => 'modal-xl',
     'options' => [
         'tabindex' => false  // Importante para que funcione el Select
     ]
@@ -130,11 +167,61 @@ Modal::end();
 
 <div class="traspasodetalleauditado-index">
     <div class="row">
+        <h1 class="col-lg-12 centrar"> Resumen por Usuario de Traspaso</h1>
 
-        <h1 class="col-lg-12 centrar"> Traspaso Detalle Auditado </h1>
+        <div class="col-lg-12 centrar">
+            <?php echo ExportMenu::widget(
+                [
+                    'dataProvider' => $dataProviderResumen,
+                    'columns' => $resumenColumns,
+                    'fontAwesome' => true,
+                    'filename' => $filename,
+                    'dropdownOptions' => [
+                        'label' => 'Exportar',
+                        'class' => 'btn btn-primary btn-lg btn-create',
+                    ],
+                    'exportConfig' => [
+                        ExportMenu::FORMAT_TEXT => false,
+                        ExportMenu::FORMAT_HTML => false,
+                        ExportMenu::FORMAT_EXCEL => false,
+                        ExportMenu::FORMAT_PDF => false,
+                        ExportMenu::FORMAT_CSV => false,
+                        ExportMenu::FORMAT_EXCEL_X => [
+                            'label' => 'Excel 2007+',
+                            'icon' => 'file-excel-o',
+                            'iconOptions' => ['class' => 'text-success btn-create'],
+                            'linkOptions' => [],
+                            'options' => ['title' => 'Microsoft Excel 2007+ (xlsx)'],
+                            'alertMsg' => 'Se va a generar un archivo en formato EXCEL 2007+ (xlsx).',
+                            'mime' => 'application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            'extension' => 'xlsx',
+                            'writer' => ExportMenu::FORMAT_EXCEL_X
+                        ],
+                    ]
+                ]
+            );
+            ?>
+
+        </div>
+        <div class="col-lg-12">
+            <?php
+            echo BaseGrid::widget([
+                'dataProvider' => $dataProviderResumen,
+                'columns' => array_merge(
+                    [
+                        ['class' => 'yii\grid\SerialColumn'],
+                    ],
+                    $resumenColumns
+                ),
+            ]);
+            ?>
+
+        </div>
+
+        <h1 class="col-lg-12 centrar"> Novedades del Traspaso (Diferencias) </h1>
 
         <div class="col-lg-12">
-            <?php echo $this->render('_search', ['model' => $searchModel,]); ?>
+            <?php // echo $this->render('_search', ['model' => $searchModel,]); ?>
         </div>
 
         <div class="col-lg-6 derecha">
@@ -192,6 +279,8 @@ Modal::end();
             ?>
 
         </div>
+
+
         <div class="col-lg-12">
             <?= GridView::widget([
                 'dataProvider' => $dataProvider,
@@ -224,4 +313,8 @@ Modal::end();
             ]); ?>
 
         </div>
+
+
+
     </div>
+</div>
