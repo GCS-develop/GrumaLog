@@ -51,6 +51,7 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
     public $selloSalida;
     public $conductor;
     public $orden;
+    public $consecutivoSiesaEnTienda;
     /**
      * {@inheritdoc}
      */

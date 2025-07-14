@@ -18,6 +18,9 @@ return [
         'siesa' => [
             'class' => 'backend\modules\siesa\Module',
         ],
+        'siesaconector' => [
+            'class' => 'backend\modules\siesa_conector\Module',
+        ],
     ],
     'components' => [
         'request' => [

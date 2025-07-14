@@ -1,16 +1,16 @@
 <?php
 
-namespace frontend\modules\traspasodetalletienda;
+namespace backend\modules\siesa_conector;
 
 /**
- * traspasodetalletienda module definition class
+ * siesaconector module definition class
  */
 class Module extends \yii\base\Module
 {
     /**
      * {@inheritdoc}
      */
-    public $controllerNamespace = 'frontend\modules\traspasodetalletienda\controllers';
+    public $controllerNamespace = 'backend\modules\siesa_conector\controllers';
 
     /**
      * {@inheritdoc}

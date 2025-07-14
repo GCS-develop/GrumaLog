@@ -1,11 +1,11 @@
 <?php
 
-namespace frontend\modules\traspasodetalletienda\controllers;
+namespace backend\modules\siesa_conector\controllers;
 
 use yii\web\Controller;
 
 /**
- * Default controller for the `traspasodetalletienda` module
+ * Default controller for the `siesaconector` module
  */
 class DefaultController extends Controller
 {

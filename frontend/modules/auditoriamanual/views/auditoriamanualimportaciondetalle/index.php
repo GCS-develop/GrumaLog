@@ -42,6 +42,14 @@ $this->params['breadcrumbs'][] = $this->title;
             //'idInterfase',
             'co',
             'fecha',
+            [
+                'attribute' => 'codigoBodegaSalida', // Nombre del atributo en el modelo
+                'value' => function ($model) {
+                        return $model->codigoBodegaSalida;
+                    },
+                'hAlign' => 'left', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+            ],
             'bodegaSalida',
             //'item',
             //'talla',

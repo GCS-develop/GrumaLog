@@ -86,9 +86,37 @@ $gridColumns = [
         'attribute' => 'nombreCreo',
         'group' => true,
     ],
-    'created_at',
+    // 'created_at',
+    [
+        'attribute' => 'created_at',
+        'label' => 'Fecha Crea',
+        'value' => function ($model) {
+            return substr($model->created_at, 0, 10);
+        },
+    ],
+    [
+        'attribute' => 'created_at',
+        'label' => 'Hora Crea',
+        'value' => function ($model) {
+            return substr($model->created_at, 10, 16);
+        },
+    ],
     'nombreActualizo',
-    'updated_at',
+    // 'updated_at',
+    [
+        'attribute' => 'updated_at',
+        'label' => 'Fecha Actualiza',
+        'value' => function ($model) {
+            return substr($model->updated_at, 0, 10);
+        },
+    ],
+    [
+        'attribute' => 'updated_at',
+        'label' => 'Fecha Actualiza',
+        'value' => function ($model) {
+            return substr($model->updated_at, 10, 16);
+        },
+    ],
 ];
 ?>
 

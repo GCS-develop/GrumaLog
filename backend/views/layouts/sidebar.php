@@ -80,7 +80,7 @@ $baseUrl = Url::base(true);
                             ['label' => 'Bodega - Tipo Dcto.', 'url' => ['/catalogos/bodegatipodocumento/index'], 'iconStyle' => 'far'],
                             ['label' => 'Cross Docking', 'url' => ['/catalogos/crossdocking/index'], 'iconStyle' => 'far'],
                             ['label' => 'Categoría', 'url' => ['/catalogos/categoria/index'], 'iconStyle' => 'far'],
-                            ['label' => 'Condición de Pago', 'url' => ['/catalogos/condicionpago/index'], 'iconStyle' => 'far'],                            
+                            ['label' => 'Condición de Pago', 'url' => ['/catalogos/condicionpago/index'], 'iconStyle' => 'far'],
                             ['label' => 'Estados Agenda', 'url' => ['/catalogos/estadoagenda/index'], 'iconStyle' => 'far'],
                             ['label' => 'Impresoras', 'url' => ['/catalogos/impresora'], 'iconStyle' => 'far'],
                             ['label' => 'Subcategoría', 'url' => ['/catalogos/subcategoria/index'], 'iconStyle' => 'far'],
@@ -110,6 +110,12 @@ $baseUrl = Url::base(true);
                         'badge' => '<span class="right badge badge-info">1</span>',
                         'items' => [
                             ['label' => 'Integración ERP', 'url' => ['/siesa/transferenciaerp/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Conectores', 'url' => ['/siesaconector/siesaconector/index'], 'iconStyle' => 'far'],
+                            ['label' => 'documentos', 'url' => ['/siesaconector/siesaconectordocumento/index'], 'iconStyle' => 'far'],
+
+                            ['label' => 'Campos Documentos', 'url' => ['/siesaconector/siesaconectordocumentocampo/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Campos Movimientos', 'url' => ['/siesaconector/siesaconectormovimientocampo/index'], 'iconStyle' => 'far'],
+
                         ]
                     ],
 

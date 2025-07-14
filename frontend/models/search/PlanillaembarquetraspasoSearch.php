@@ -40,6 +40,7 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
                     'horaPlanillaembarque',
                     'fechaTraspaso',
                     'horaTraspaso',
+                    'consecutivoSiesaEnTienda',
                 ],
                 'safe'
             ],
@@ -86,8 +87,10 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
         $query->join('INNER JOIN', 'user usp', 'usp.id = pet.created_by');
         // $query->join('LEFT JOIN', 'planillaembarquebodega peb', 'peb.idBodegaDestino = bd.id');
         $query->join('LEFT JOIN', 'planillaembarquebodega peb', 'peb.idBodegaDestino = bd.id AND peb.idPlanillaEmbarque = pe.id
-        
         AND peb.selloLlegada IS NOT NULL');
+        $query->join('LEFT JOIN', 'siesa_conector_documento  scd', 'tr.id = scd.id_traspaso');
+        $query->join('LEFT JOIN', 'documentosiesa dst', 'scd.id = dst.idGruma');
+
 
 
 
@@ -134,6 +137,7 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             'peb.orden AS orden',
             'pe.nombreConductor AS conductor',
 
+            'CONCAT(dst.f350_id_tipo_docto, dst.f350_consec_docto) AS consecutivoSiesaEnTienda',
             //'pet.*'
         ]);
 

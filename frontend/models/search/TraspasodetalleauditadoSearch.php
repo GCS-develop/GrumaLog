@@ -86,17 +86,16 @@ class TraspasodetalleauditadoSearch extends Traspasodetalleauditado
             'uUpdate.username as nombreActualizo',
             'uCreate.username as nombreCreo',
             'COALESCE(ue.equivalencia, 1) * tda.cantidad as unidades',
-            'td.cantidad as cantidadTraspasoRegistros',
-            'COALESCE(ue.equivalencia, 1) * td.cantidad as cantidadTraspasounidades',
-            'COALESCE(ue.equivalencia, 1) * (tda.cantidad - td.cantidad) AS diferencia',
+            'COALESCE(td.cantidad, 0) as cantidadTraspasoRegistros',
+            'COALESCE(ue.equivalencia, 1) * COALESCE(td.cantidad, 0) as cantidadTraspasounidades',
+            'COALESCE(ue.equivalencia, 1) * (tda.cantidad - COALESCE(td.cantidad, 0)) AS diferencia',
             'ds.f350_consec_docto AS consecutivoSiesa',
             'tdoc.codigo as serie',
             'uCreateT.username AS userTraspaso',
             "(bo.codigo + ' - ' + bo.nombre) AS Origen",
             "(bd.codigo + ' - ' + bd.nombre) AS Destino",
-
-
         ]);
+
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,

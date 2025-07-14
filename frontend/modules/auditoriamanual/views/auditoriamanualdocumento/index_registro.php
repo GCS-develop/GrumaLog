@@ -70,7 +70,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ['class' => 'yii\grid\SerialColumn'],
 
             //'id',
-            //'idInterfase
+            // 'idInterfase',
 
             [
                 'attribute' => 'codigoBodegaSalida', // Nombre del atributo en el modelo
