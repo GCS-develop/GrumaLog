@@ -41,6 +41,8 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
                     'fechaTraspaso',
                     'horaTraspaso',
                     'consecutivoSiesaEnTienda',
+                    'fechaDesde',
+                    'fechaHasta',
                 ],
                 'safe'
             ],
@@ -88,7 +90,10 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
         // $query->join('LEFT JOIN', 'planillaembarquebodega peb', 'peb.idBodegaDestino = bd.id');
         $query->join('LEFT JOIN', 'planillaembarquebodega peb', 'peb.idBodegaDestino = bd.id AND peb.idPlanillaEmbarque = pe.id
         AND peb.selloLlegada IS NOT NULL');
-        $query->join('LEFT JOIN', 'siesa_conector_documento  scd', 'tr.id = scd.id_traspaso');
+        // $query->join('LEFT JOIN', 'siesa_conector_documento  scd', 'tr.id = scd.id_traspaso');
+
+        $query->join('LEFT JOIN', 'siesa_conector_documento scd', 'tr.id = scd.id_traspaso');
+
         $query->join('LEFT JOIN', 'documentosiesa dst', 'scd.id = dst.idGruma');
 
 
@@ -136,8 +141,14 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
 
             'peb.orden AS orden',
             'pe.nombreConductor AS conductor',
+            'scd.id AS idDocumento',
+            "CASE 
+            WHEN dst.f350_id_tipo_docto = 'AEN' 
+            THEN CONCAT(dst.f350_id_tipo_docto, ' ', dst.f350_consec_docto) 
+            ELSE '' 
+            END AS consecutivoSiesaEnTienda",
 
-            'CONCAT(dst.f350_id_tipo_docto, dst.f350_consec_docto) AS consecutivoSiesaEnTienda',
+            // 'CONCAT(dst.f350_id_tipo_docto, dst.f350_consec_docto) AS consecutivoSiesaEnTienda',
             //'pet.*'
         ]);
 
@@ -213,6 +224,31 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             ->andFilterWhere(['like', 'tr.consecutivo', $this->consecutivoInterno])
             ->andFilterWhere(['like', 'pe.fechaDespacho', $this->fechaPlanillaembarque])
             ->andFilterWhere(['like', 'pe.horaDespacho', $this->horaPlanillaembarque]);
+
+
+        // $query->andWhere("
+        //     scd.respuesta LIKE '%\"codigo\":0%' AND scd.respuesta NOT LIKE 'Error%'
+        // ");
+
+        // $query->andWhere("dst.f350_id_tipo_docto IS NULL OR dst.f350_id_tipo_docto = 'AEN'");
+        if ($this->fechaDesde || $this->fechaHasta) {
+            // Si solo está presente fechaDesde, buscar por esa fecha exacta
+            if ($this->fechaDesde && !$this->fechaHasta) {
+                $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
+                $query->andWhere(['>=', new \yii\db\Expression('CAST(pet.created_at AS DATE)'), $fechaInicio]);
+            }
+            // Si solo está presente fechaHasta, buscar hasta esa fecha
+            elseif (!$this->fechaDesde && $this->fechaHasta) {
+                $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
+                $query->andWhere(['<=', new \yii\db\Expression('CAST(pet.created_at AS DATE)'), $fechaFin]);
+            }
+            // Si están presentes ambas, buscar entre ambas fechas
+            elseif ($this->fechaDesde && $this->fechaHasta) {
+                $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
+                $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
+                $query->andWhere(['between', new \yii\db\Expression('CAST(pet.created_at AS DATE)'), $fechaInicio, $fechaFin]);
+            }
+        }
 
         $query->orderBy([
 

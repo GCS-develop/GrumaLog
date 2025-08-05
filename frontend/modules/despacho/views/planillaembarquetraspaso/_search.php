@@ -24,7 +24,7 @@ use kartik\date\DatePicker;
 
     <div class="row">
 
-        <div class="col-lg-4">
+        <div class="col-lg-3">
             <?=
                 $form->field($model, 'fechaRecibido')->widget(DatePicker::className(), [
                     'name' => 'fecha recibo',
@@ -39,6 +39,45 @@ use kartik\date\DatePicker;
                 ?>
         </div>
 
+        <div class="col-lg-3">
+            <?=
+                $form->field($model, 'fechaDesde')->widget(DatePicker::className(), [
+                    'name' => 'fecha inicio',
+                    'language' => 'es',
+                    'options' => ['placeholder' => 'Fecha Desde ...', 'disabled' => false],
+                    'pluginOptions' => [
+                        'autoclose' => true,
+                        'format' => 'yyyy-mm-dd',
+                        'todayHighlight' => false
+                    ]
+                ])
+                ?>
+        </div>
+
+        <div class="col-lg-3">
+            <?=
+                $form->field($model, 'fechaHasta')->widget(DatePicker::className(), [
+                    'name' => 'fecha fin',
+                    'language' => 'es',
+                    'options' => ['placeholder' => 'Fecha Hasta ...', 'disabled' => false],
+                    'pluginOptions' => [
+                        'autoclose' => true,
+                        'format' => 'yyyy-mm-dd',
+                        'todayHighlight' => true
+                    ]
+                ])
+                ?>
+        </div>
+
+        <div class="col-3">
+            <?= $form->field($model, 'usuarioRecibido') ?>
+        </div>
+
+
+
+
+    </div>
+    <div class="row">
         <div class="col-3">
             <?php echo $form->field($model, 'codAlmacenOrigen')->dropDownList(
                 Bodegas::getListaDataCodigo(),
@@ -51,14 +90,6 @@ use kartik\date\DatePicker;
 
         </div>
 
-        <!-- <div class="col-4">
-            <?= $form->field($model, 'almacenOrigen') ?>
-        </div> -->
-
-        <!-- <div class="col-2">
-            <?= $form->field($model, 'codAlmacenDestino') ?>
-        </div> -->
-
         <div class="col-3">
             <?php echo $form->field($model, 'codAlmacenDestino')->dropDownList(
                 Bodegas::getListaDataCodigo(),
@@ -70,39 +101,6 @@ use kartik\date\DatePicker;
             ?>
 
         </div>
-
-        <!-- <div class="col-4">
-            <?= $form->field($model, 'almacenDestino') ?>
-        </div> -->
-
-        <div class="col-2">
-            <?php echo $form->field($model, 'idEstado')->dropDownList(
-                Estadodespacho::getListaData(),
-                [
-                    'prompt' => ' Seleccionar estado ... ',
-                    'id' => 'idEstado',
-                ]
-            );
-            ?>
-
-        </div>
-
-    </div>
-
-
-    <div class="row">
-        <div class="col-4">
-            <?= $form->field($model, 'usuarioRecibido') ?>
-        </div>
-
-        <!-- </div>
-
-    <div class="row"> -->
-
-        <!-- <div class="col-2">
-            <?= $form->field($model, 'tipoDocumento') ?>
-        </div> -->
-
         <div class="col-3">
             <?php echo $form->field($model, 'tipoDocumento')->dropDownList(
                 Tipodocumento::getListaDataCodigo2(),
@@ -116,10 +114,26 @@ use kartik\date\DatePicker;
         </div>
 
         <div class="col-3">
+            <?php echo $form->field($model, 'idEstado')->dropDownList(
+                Estadodespacho::getListaData(),
+                [
+                    'prompt' => ' Seleccionar estado ... ',
+                    'id' => 'idEstado',
+                ]
+            );
+            ?>
+
+        </div>
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-3">
             <?= $form->field($model, 'consecutivoDocumento') ?>
         </div>
 
-        <div class="col-2">
+        <div class="col-3">
             <?= $form->field($model, 'consecutivoInterno') ?>
         </div>
 

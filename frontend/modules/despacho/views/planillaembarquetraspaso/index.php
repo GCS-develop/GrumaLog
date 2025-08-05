@@ -25,6 +25,7 @@ $usuarioCreador = $dataProvider->getModels()[0]->usuarioCreador ?? 'Desconocido'
 
 <?php
 $gridColumns = [
+    'idDocumento',
     'id',
     'idPlanillaEmbarque',
     'orden',

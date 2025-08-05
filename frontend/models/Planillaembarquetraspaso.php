@@ -30,7 +30,7 @@ use Yii;
  */
 class Planillaembarquetraspaso extends \yii\db\ActiveRecord
 {
-
+    public $idDocumento;
     public $codAlmacenOrigen;
     public $almacenOrigen;
     public $codAlmacenDestino;
@@ -52,6 +52,9 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
     public $conductor;
     public $orden;
     public $consecutivoSiesaEnTienda;
+    public $fechaDesde;
+    public $fechaHasta;
+
     /**
      * {@inheritdoc}
      */
@@ -104,7 +107,7 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
             'codAlmacenDestino' => 'Cod. Almacén Destino',
             'almacenDestino' => 'Almacén Destino',
             'tipoDocumento' => 'Almacén tipoDocumento',
-            'consecutivoDocumento' => 'consecutivo',
+            'consecutivoDocumento' => 'consecutivo SIESA',
             'fechaPlanillaembarque' => 'Fec.Des',
             'horaPlanillaembarque' => 'Hor.Des',
             'estado' => 'Estado',
