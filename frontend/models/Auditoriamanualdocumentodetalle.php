@@ -29,6 +29,9 @@ use common\models\User;
  */
 class Auditoriamanualdocumentodetalle extends \yii\db\ActiveRecord
 {
+    public $co;
+    public $categoria;
+    public $proveedor;
     public $numeroDocumento;
     public $codigoBodegaSalida;
     public $fechaDesde;
@@ -73,7 +76,7 @@ class Auditoriamanualdocumentodetalle extends \yii\db\ActiveRecord
             [['idDocumento', 'codigoBarras', 'item', 'talla', 'color', 'referencia', 'itemResumen'], 'required'],
             [['idDocumento', 'created_by', 'updated_by', 'registrada', 'usuarioRegistra'], 'integer'],
             [['cantidadDevolucion', 'cantidadRegistrada'], 'number'],
-            [['item', 'created_at', 'updated_at', 'fechaRegistra','unidades'], 'safe'],
+            [['item', 'created_at', 'updated_at', 'fechaRegistra', 'unidades'], 'safe'],
             [['codigoBarras', 'talla'], 'string', 'max' => 20],
             [['color', 'referencia'], 'string', 'max' => 50],
             [['itemResumen'], 'string', 'max' => 300],
@@ -90,7 +93,7 @@ class Auditoriamanualdocumentodetalle extends \yii\db\ActiveRecord
             'id' => 'ID',
             'idDocumento' => 'Id Documento',
             'codigoBarras' => 'Código Barras',
-            'cantidadDevolucion' => 'Cantidad Devolución',
+            'cantidadDevolucion' => 'Cantidad Inicial',
             'cantidadRegistrada' => 'Cantidad Registrada',
             'item' => 'Item',
             'talla' => 'Talla',
@@ -117,6 +120,6 @@ class Auditoriamanualdocumentodetalle extends \yii\db\ActiveRecord
 
     public function getDiferencia()
     {
-        return $this->cantidadDevolucion - $this->cantidadRegistrada;
+        return $this->cantidadRegistrada - $this->cantidadDevolucion ;
     }
 }

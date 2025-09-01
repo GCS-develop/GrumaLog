@@ -13,15 +13,15 @@ use yii\bootstrap5\Html;
 
 $this->registerCssFile(Yii::$app->request->baseUrl . 'web/css/login.css');
 $this->title = 'Traspasos';
-$this->params['breadcrumbs'][] = $this->title ;
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 <link rel="stylesheet" href="css/login.css">
 <div class="site-login">
-<div class="text-center mb-5">
-  <img src="imagenes/Logo_herpo.png" alt="Login image" class="login-image">
-</div>
+    <div class="text-center mb-5">
+        <img src="imagenes/Logo_herpo.png" alt="Login image" class="login-image">
+    </div>
     <h1 class="text-center mb-5"><?= Html::encode($this->title) ?></h1>
-          <!--<p>Please fill out the following fields to login:</p>-->
+    <!--<p>Please fill out the following fields to login:</p>-->
     <div class=" row justify-content-center">
         <div class="col-lg-5">
 
@@ -34,8 +34,8 @@ $this->params['breadcrumbs'][] = $this->title ;
                     'errorOptions' => ['class' => 'invalid-feedback'],
                 ],
             ]); ?>
-           
-            <?= $form->field($model, 'username')->textInput(['autofocus' => true,'class' => 'form-control mb-3']) ?>
+
+            <?= $form->field($model, 'username')->textInput(['autofocus' => true, 'class' => 'form-control mb-3']) ?>
 
             <?= $form->field($model, 'password')->passwordInput() ?>
 
@@ -49,11 +49,22 @@ $this->params['breadcrumbs'][] = $this->title ;
                 </div>
             </div>
 
+            <div class="text-center mt-2 mb-2">
+                <?= Html::a('¿Olvidaste tu contraseña?', ['site/request-password-reset']) ?>
+            </div>
+
+            <div class="card-footer text-center py-3 bg-light">
+                <div class="small text-muted">
+                    Acceso seguro a la plataforma de gestión GES
+                </div>
+            </div>
+
             <?php ActiveForm::end(); ?>
-          <!-- <div style="color:#999;">
+            <!-- <div style="color:#999;">
                 You may login with <strong>admin/admin</strong> or <strong>demo/demo</strong>.<br>
                 To modify the username/password, please check out the code <code>app\models\User::$users</code>.
             </div> -->
         </div>
-     </div>
+    </div>
 </div>
+

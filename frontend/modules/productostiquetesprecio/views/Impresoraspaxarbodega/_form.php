@@ -18,7 +18,7 @@ use frontend\models\Bodegas;
         'enableAjaxValidation' => true,
     ]);
     ?>
-    
+
     <div class="row">
 
         <div class="col-4">
@@ -39,6 +39,8 @@ use frontend\models\Bodegas;
                     'ip' => 'ip',
                     'epl' => 'epl',
                     'recurso' => 'recurso',
+                    'termica' => 'termica',
+
                 ],
                 [
                     'prompt' => 'Seleccione el tipo...',

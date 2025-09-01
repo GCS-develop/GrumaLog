@@ -12,6 +12,7 @@ use frontend\models\Talla;
 use frontend\models\Color;
 use frontend\models\Unidadempaque;
 use frontend\models\Estadotraspaso;
+use yii\data\ArrayDataProvider;
 
 
 
@@ -192,4 +193,64 @@ class TraspasodetalleSearch extends Traspasodetalle
 
         return $dataProvider;
     }
+
+    /**
+     * Devuelve un comparativo entre los traspasos locales y lo registrado en SIESA
+     * @param array $params
+     * @param array $datosSiesa  // <- Esto viene como parámetro, no se consulta aquí
+     * @param int $idTraspaso
+     * @return \yii\data\ArrayDataProvider
+     */
+    public function searchComparativoSiesa($params, $datosSiesa, $idTraspaso)
+    {
+        $this->load($params);
+
+        // 1. Obtener datos locales agrupados
+        $local = \Yii::$app->db->createCommand("
+        SELECT 
+            i.referencia2 AS item,
+            col.descripcion AS color,
+            tl.descripcion AS talla,
+            SUM(td.cantidad) AS cantidadLocal
+        FROM traspasodetalle td
+        INNER JOIN item i ON i.id = td.idItem
+        LEFT JOIN color col ON i.idColor = col.id  -- ajustar según relaciones reales
+        LEFT JOIN talla tl ON i.idTalla = tl.id    -- ajustar según relaciones reales
+        WHERE td.idTraspaso = :id
+        GROUP BY i.referencia2, col.descripcion, tl.descripcion
+    ", [':id' => $idTraspaso])->queryAll();
+
+        // 2. Mapear datos de SIESA
+        $mapSiesa = [];
+        foreach ($datosSiesa as $s) {
+            $clave = trim($s['referencia']) . '_' . trim($s['color']) . '_' . trim($s['talla']);
+            $mapSiesa[$clave] = $s['cantidadBase'];
+        }
+
+        // 3. Comparar y construir resultados
+        $comparativo = [];
+        foreach ($local as $l) {
+            $clave = trim($l['item']) . '_' . trim($l['color']) . '_' . trim($l['talla']);
+            $cantidadSiesa = $mapSiesa[$clave] ?? 0;
+
+            $comparativo[] = [
+                'item' => $l['item'],
+                'color' => $l['color'],
+                'talla' => $l['talla'],
+                'cantidadLocal' => (float) $l['cantidadLocal'],
+                'cantidadSiesa' => (float) $cantidadSiesa,
+                'diferencia' => (float) $l['cantidadLocal'] - (float) $cantidadSiesa,
+            ];
+        }
+
+        return new \yii\data\ArrayDataProvider([
+            'allModels' => $comparativo,
+            'pagination' => false,
+            'sort' => [
+                'attributes' => ['item', 'color', 'talla', 'cantidadLocal', 'cantidadSiesa', 'diferencia'],
+            ],
+        ]);
+    }
+
+
 }

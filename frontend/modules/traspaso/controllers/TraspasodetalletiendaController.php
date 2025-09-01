@@ -57,6 +57,18 @@ class TraspasodetalletiendaController extends Controller
         }
     }
 
+    public function actionIndexNovedades($idtraspaso = null)
+    {
+        $searchModel = new TraspasodetalletiendaSearch();
+        $dataProvider = $searchModel->searchConDiferencias($this->request->queryParams, $idtraspaso);
+
+        return $this->render('index_novedades', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'idtraspaso' => $idtraspaso,
+        ]);
+    }
+
     /**
      * Displays a single Traspasodetalletienda model.
      * @param int $id ID

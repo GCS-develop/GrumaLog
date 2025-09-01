@@ -40,8 +40,14 @@ class SiesaconectordocumentoSearch extends SiesaConectorDocumento
      */
     public function search($params)
     {
-        $query = SiesaConectorDocumento::find();
+        $query = SiesaConectorDocumento::find()->alias('doct');
 
+        $query->join('LEFT JOIN', 'documentosiesa ds', 'doct.id = ds.idGruma');
+
+        $query->select([
+            'doct.*',
+            'CONCAT(ds.f350_id_tipo_docto, ds.f350_consec_docto) AS consecutivoSiesa'
+        ]);
         // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
@@ -69,6 +75,9 @@ class SiesaconectordocumentoSearch extends SiesaConectorDocumento
 
         $query->andFilterWhere(['like', 'nombre', $this->nombre])
             ->andFilterWhere(['like', 'descripcion', $this->descripcion]);
+
+        $query->orderBy(['id' => SORT_DESC]);
+        $query->andWhere("ds.f350_id_tipo_docto IS NULL OR ds.f350_id_tipo_docto = 'AEN'");
 
         return $dataProvider;
     }

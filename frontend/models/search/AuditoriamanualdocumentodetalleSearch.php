@@ -67,8 +67,15 @@ class AuditoriamanualdocumentodetalleSearch extends Auditoriamanualdocumentodeta
         }
 
         $query->join('INNER JOIN', 'auditoriamanualdocumento dct', 'det.idDocumento = dct.id');
-        $query->join('INNER JOIN', 'item i', 'i.codigoBarras = det.codigoBarras');
+        $query->join('LEFT JOIN', 'item i', 'i.codigoBarras = det.codigoBarras');
         $query->join('LEFT JOIN', 'unidadempaque ue', 'ue.codigo = i.unidadEmpaque');
+        // $query->join('INNER JOIN', 'auditoriamanualimportaciondetalle amid', 'amid.numeroDocumento = dct.numeroDocumento');
+        $query->join(
+            'INNER JOIN',
+            '(SELECT numeroDocumento, MIN(co) as co FROM auditoriamanualimportaciondetalle GROUP BY numeroDocumento) as amid',
+            'amid.numeroDocumento = dct.numeroDocumento'
+        );
+
 
         $query->select([
             'det.id',
@@ -91,6 +98,7 @@ class AuditoriamanualdocumentodetalleSearch extends Auditoriamanualdocumentodeta
             'dct.numeroDocumento',
             'dct.codigoBodegaSalida',
             'COALESCE(ue.equivalencia, 1) * det.cantidadRegistrada as unidades',
+            'amid.*',
 
         ]);
 

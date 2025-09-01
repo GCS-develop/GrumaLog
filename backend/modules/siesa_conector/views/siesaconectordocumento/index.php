@@ -39,6 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'nombre',
             'descripcion:ntext',
             'id_traspaso',
+            'consecutivoSiesa',
             'created_by',
             //'created_at',
             //'updated_by',

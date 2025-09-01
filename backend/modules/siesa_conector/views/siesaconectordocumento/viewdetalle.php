@@ -2,6 +2,8 @@
 use yii\helpers\Html;
 
 /** @var $documento app\models\SiesaConectorDocumento */
+/** @var array $movimientosAgrupados */
+
 $this->title = "Detalle de Conector: " . $documento->nombre;
 $this->params['breadcrumbs'][] = ['label' => 'Siesa Conector Documentos', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -56,43 +58,44 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 
-    <?php if (!empty($documento->movimientos)): ?>
+    <?php if (!empty($movimientosAgrupados)): ?>
         <div class="panel panel-success">
             <div class="panel-heading">
-                <h4 class="panel-title">📦 Detalles de Movimientos</h4>
+                <h4 class="panel-title">📦 Detalles de Movimientos agrupados por <code>f470_id_item</code></h4>
             </div>
             <div class="panel-body">
-                <?php foreach ($documento->movimientos as $i => $mov): ?>
+
+                <?php foreach ($movimientosAgrupados as $itemId => $movimientos): ?>
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <strong>Movimiento #<?= $i + 1 ?></strong>
+                            <strong>Item: <?= Html::encode($itemId) ?></strong> (<?= count($movimientos) ?> movimientos)
                         </div>
                         <div class="panel-body table-responsive">
                             <table class="table table-bordered table-striped table-condensed">
                                 <thead class="bg-success">
                                     <tr>
-                                        <th>Nombre campo</th>
-                                        <th>Alias</th>
-                                        <th>Valor</th>
-                                        <th>Tipo de dato</th>
+                                        <th>#</th>
+                                        <?php foreach ($documento->camposMovimiento as $campo): ?>
+                                            <th><?= Html::encode($campo->alias) ?></th>
+                                        <?php endforeach; ?>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($documento->camposMovimiento as $campo): ?>
-                                        <?php
-                                        $valor = '';
-                                        foreach ($mov->valores as $v) {
-                                            if ($v->campo_id == $campo->id) {
-                                                $valor = $v->valor;
-                                                break;
-                                            }
-                                        }
-                                        ?>
+                                    <?php foreach ($movimientos as $i => $mov): ?>
                                         <tr>
-                                            <td><?= Html::encode($campo->nombre_campo) ?></td>
-                                            <td><?= Html::encode($campo->alias) ?></td>
-                                            <td><?= Html::encode($valor) ?></td>
-                                            <td><?= Html::encode($campo->tipo_dato) ?></td>
+                                            <td><?= $i + 1 ?></td>
+                                            <?php foreach ($documento->camposMovimiento as $campo): ?>
+                                                <?php
+                                                $valor = '';
+                                                foreach ($mov->valores as $v) {
+                                                    if ($v->campo_id == $campo->id) {
+                                                        $valor = $v->valor;
+                                                        break;
+                                                    }
+                                                }
+                                                ?>
+                                                <td><?= Html::encode($valor) ?></td>
+                                            <?php endforeach; ?>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -100,6 +103,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </div>
                     </div>
                 <?php endforeach; ?>
+
             </div>
         </div>
     <?php else: ?>

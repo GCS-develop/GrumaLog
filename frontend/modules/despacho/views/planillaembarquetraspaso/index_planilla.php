@@ -56,6 +56,7 @@ $gridColumns = [
     // ],
     'consecutivoDocumento',
     'consecutivoInterno',
+    'consecutivoSiesaEnTienda',
     [
         'attribute' => 'fechaTraspaso',
         'contentOptions' => ['data-cellvalue' => 'fechaTraspaso'],

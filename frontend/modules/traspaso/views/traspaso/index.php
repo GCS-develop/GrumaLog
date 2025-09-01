@@ -576,7 +576,9 @@ Modal::end();
         return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
     },
                 'siesa' => function ($model, $key, $index) {
-        return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+        return $model->idEstado != 2 || $model->idEstado != 0; // Condición para mostrar el botón
+    
+        // return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
     },
                 'directo' => function ($model, $key, $index) {
         return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón

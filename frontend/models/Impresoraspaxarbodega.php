@@ -178,4 +178,22 @@ class Impresoraspaxarbodega extends \yii\db\ActiveRecord
             return ['mensaje' => "Impresión enviada a $impresora->recurso, correctamente!", 'error_code' => 0, 'error_message' => '', 'ok' => true];
         }
     }
+
+        public static  function  getListaDataTermica(){
+        $data = Impresoraspaxarbodega::find()
+            ->select([
+                'imp.id', // ID del registro Usertraspaso
+                "CONCAT(bod.nombre, ' - ', imp.recurso, ' - ', imp.tipo) AS nombre"
+            ])
+            ->where(['tipo'=> 'termica'])
+            ->alias('imp')
+            ->innerJoin('bodegas bod', 'imp.bodega_id = bod.id')
+            ->orderBy('bod.nombre')
+            ->asArray()
+            ->all();
+
+        // Mapear los resultados para crear un array usable en formularios
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
+    }
 }

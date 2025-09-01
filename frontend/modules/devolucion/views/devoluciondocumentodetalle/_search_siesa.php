@@ -12,7 +12,7 @@ use kartik\date\DatePicker;
 <div class="devoluciondocumentodetalle-search">
 
     <?php $form = ActiveForm::begin([
-        'action' => ['indexall'],
+        'action' => ['indexenviosiesa'],
         'method' => 'get',
     ]); ?>
 
@@ -82,17 +82,6 @@ use kartik\date\DatePicker;
             <?php echo $form->field($model, 'nombreProveedor') ?>
 
         </div>
-
-        <div class="col-lg-2">
-    <?= $form->field($model, 'tipoInventario')      // ← atributo correcto
-             ->dropDownList([
-                 ''      => 'Todos',
-                 'VMI'   => 'VMI',
-                 'FIRME' => 'FIRME',
-             ], ['prompt' => '']) ?>
-</div>
-
-
 
     </div>
 

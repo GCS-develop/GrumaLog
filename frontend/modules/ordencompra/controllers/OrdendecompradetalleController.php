@@ -2,6 +2,8 @@
 
 namespace frontend\modules\ordencompra\controllers;
 
+use common\components\PrinterService;
+use common\components\StickerGenerator;
 use frontend\models\Ordendecompra;
 use Yii;
 use frontend\models\Ordendecompradetalle;
@@ -126,8 +128,8 @@ class OrdendecompradetalleController extends Controller
         return $this->redirect(['index']);
     }
 
-    public function actionPrintitems ($idordencompra, $fecha_activacion, $iditem = null, $origen = null){
-
+    public function actionPrintitems($idordencompra, $fecha_activacion, $iditem = null, $origen = null)
+    {
         $model = new Selectimpresora();
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
@@ -135,55 +137,62 @@ class OrdendecompradetalleController extends Controller
             return ActiveForm::validate($model);
         }
 
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            if ($model->validate()) {
+                $impresora = Impresoraspaxarbodega::findOne($model->idImpresora);
 
-                if ($model->validate()) {
-
-                    $impresora = Impresoraspaxarbodega::find()->where(['id' => $model->idImpresora])->one();
-
-                    $error = 0;
-                    switch($impresora->tipo){
-                        case 'ip': 
-                        case 'recurso':
-                            break;
-                        default:
-                            $error = 1;
-                    }
-
-                    if ($error == 0){
-                        $resultado = $this->generarSticker($idordencompra, 
-                                                            $iditem, 
-                                                            $fecha_activacion, 
-                                                            $impresora, 
-                                                            $origen);
-
-                        $mensaje = $resultado['mensaje'];
-                        $codigo = $resultado['codigo'];
-
-                        if ($codigo == 0) {
-                            Yii::$app->session->setFlash('success', 'Las etiquetas han sido generadas correctamente. '. $impresora->recurso . ' (' . $impresora->ip . ')' );
-                        } else {
-                            Yii::$app->session->setFlash('error', 'Error Generando las etiquetas. '. $impresora->recurso. ' => ' . $mensaje);
-                        }
-                    }else{
-                        Yii::$app->session->setFlash('error', "Tipo de impresora no reconocido:" .  $impresora->tipo);
-                    }
+                if (!$impresora) {
+                    Yii::$app->session->setFlash('error', 'No se encontró la impresora seleccionada.');
+                    return $this->redirect(['index', 'idordencompra' => $idordencompra]);
                 }
 
-                return $this->redirect(['index', 'idordencompra' => $idordencompra]);
+                if (!in_array($impresora->tipo, ['ip', 'recurso'])) {
+                    Yii::$app->session->setFlash('error', 'Tipo de impresora no reconocido.');
+                    return $this->redirect(['index', 'idordencompra' => $idordencompra]);
+                }
+
+                $orden = Ordendecompra::findOne($idordencompra);
+                if (!$orden) {
+                    throw new NotFoundHttpException('Orden de compra no encontrada.');
+                }
+
+                $query = $orden->getPurchaseOrderItems();
+                if ($iditem !== null) {
+                    $query->andWhere(['idItem' => $iditem]);
+                }
+
+                $detalles = $query->all();
+
+                // Generar etiquetas
+                $labelContent = StickerGenerator::generar($detalles, $fecha_activacion, $origen);
+
+                /*
+                //Mostrar en pantalla (modo prueba)
+                if (YII_ENV_DEV || isset($_GET['preview'])) {
+                    return $this->renderContent('<pre>' . htmlspecialchars($labelContent) . '</pre>');
+                }
+                */
+
+                // Enviar a la impresora
+                $resultado = PrinterService::send($impresora, $labelContent);
+
+                if ($resultado['codigo'] === 0) {
+                    Yii::$app->session->setFlash('success', 'Etiquetas generadas correctamente.');
+                } else {
+                    Yii::$app->session->setFlash('error', 'Error al imprimir: ' . $resultado['mensaje']);
+                }
             }
+
+            return $this->redirect(['index', 'idordencompra' => $idordencompra]);
         }
 
         if (Yii::$app->request->isAjax) {
-            return $this->renderAjax('select_impresora', [
-                'model' => $model,
-            ]);
+            return $this->renderAjax('select_impresora', ['model' => $model]);
         }
-
     }
 
-    function generarSticker($idordencompra, $iditem, $fecha_activacion, $impresora, $origen){
+    function generarSticker($idordencompra, $iditem, $fecha_activacion, $impresora, $origen)
+    {
 
         $model = Ordendecompra::findOne(['id' => $idordencompra]);
 
@@ -192,18 +201,20 @@ class OrdendecompradetalleController extends Controller
                 'idItem' => $iditem,
             ])
             ->all(); // Obtener los datos como un arreglo
-        try{
-    
-            $labelContent = $this->imprimirSticker($fecha_activacion, 
-                                    $dataProviderDetalle,
-                                    $origen);
+        try {
+
+            $labelContent = $this->imprimirSticker(
+                $fecha_activacion,
+                $dataProviderDetalle,
+                $origen
+            );
 
             $resultado = $this->sendToPrinter($impresora, $labelContent);
-            
+
             // Cerrar conexión con la impresora
-    
+
             return $resultado;
-    
+
         } catch (\Exception $e) {
             return [
                 'mensaje' => $e->getMessage(),
@@ -213,7 +224,8 @@ class OrdendecompradetalleController extends Controller
 
     }
 
-    function imprimirSticker ($fecha_activacion, $dataProviderDetalle, $origen){
+    function imprimirSticker($fecha_activacion, $dataProviderDetalle, $origen)
+    {
 
         $labelsPerRow = 3; // Número de etiquetas por fila
         $labelWidth = 200; // Ancho de cada etiqueta
@@ -235,7 +247,7 @@ class OrdendecompradetalleController extends Controller
 
             $precio = Item::obtenerPrecioVenta($modelitem->codigoBarras, $fecha_activacion);
 
-            $stickerContent = Item::generarContenidoSticker ($modelitem, $precio, $x, $y);
+            $stickerContent = Item::generarContenidoSticker($modelitem, $precio, $x, $y);
 
             $content .= $stickerContent;
 
@@ -246,35 +258,36 @@ class OrdendecompradetalleController extends Controller
         return $content;
     }
 
-    private function sendToPrinter($impresora, $data){
+    private function sendToPrinter($impresora, $data)
+    {
         $error = 0;
 
-        $respuesta ['error_message'] = '';
-        $respuesta ['error_code'] = 0;
-        $respuesta ['ok'] = false;
+        $respuesta['error_message'] = '';
+        $respuesta['error_code'] = 0;
+        $respuesta['ok'] = false;
 
-        switch($impresora->tipo){
-            case 'ip': 
+        switch ($impresora->tipo) {
+            case 'ip':
                 $respuesta = Impresoraspaxarbodega::imprimirxip($impresora, $data);
                 break;
             case 'recurso':
                 $respuesta = Impresoraspaxarbodega::imprimirxrecurso($impresora, $data);
                 break;
         }
-        
-        if ($respuesta ['ok'] == false){
+
+        if ($respuesta['ok'] == false) {
             $error = 1;
         }
 
-        switch ($error){
+        switch ($error) {
             case 0:
                 return [
                     'mensaje' => "Sticker enviado con Éxito a la impresora",
                     'codigo' => $error
                 ];
             case 1:
-                $error_message = $respuesta ['error_message'];
-                $error_code = $respuesta ['error_code'];
+                $error_message = $respuesta['error_message'];
+                $error_code = $respuesta['error_code'];
 
                 return [
                     'mensaje' => "No se pudo conectar a la impresora, revisar que este conectada por favor!, Ip: $impresora->ip:$impresora->puerto Error: $error_message ($error_code)",

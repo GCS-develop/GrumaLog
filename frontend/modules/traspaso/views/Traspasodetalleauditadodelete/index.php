@@ -13,7 +13,7 @@ use yii\bootstrap4\Modal;
 /** @var frontend\models\search\Traspasodetalleauditadodeletesearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Traspasodetalleauditadodeletes';
+$this->title = 'Traspaso detalle auditado borrados';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php \yii\widgets\Pjax::begin(['id' => 'pjax-modal-grid', 'timeout' => 10000]); ?>
@@ -32,8 +32,8 @@ $this->params['breadcrumbs'][] = $this->title;
         'emptyText' => 'No se encontraron registros eliminados para este traspaso.',
         'columns' => [
             ['class' => 'kartik\grid\SerialColumn'],
-            // 'id',
-            // 'idTraspaso',
+            'id',
+            'idTraspaso',
             'serie',
             'consecutivoSiesa',
             'item',

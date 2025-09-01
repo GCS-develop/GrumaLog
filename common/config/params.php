@@ -1,6 +1,6 @@
 <?php
 return [
-	'bsVersion' => '4.x',
+    'bsVersion' => '4.x',
     'adminEmail' => 'admin@example.com',
     'supportEmail' => 'support@example.com',
     'senderEmail' => 'noreply@example.com',
@@ -10,17 +10,17 @@ return [
 
     'endpoints' => [
         'service' => [
-           
+
             //Produccion
-           
+
             'url' => 'https://serviciosconnekta.siesacloud.com/api/v3/ejecutarconsulta',
             'urlConector' => 'https://serviciosconnekta.siesacloud.com/api/v3/conectoresimportar',
-           
+
             //Pruebas
 
             //'url' => 'https://connektaqa.siesacloud.com/api/v3/ejecutarconsulta',
             //'urlConector' => 'https://connektaqa.siesacloud.com/api/v3/conectoresimportar',
-            
+
             'conniKey' => 'Connikey-grupomayorista-QJBYOFU3',
             'conniToken' => 'QJBYOFU3RTFVNKMWRDFRNUEWSDJSNVQ2SJNJMLU3RZJAOESZVJDLMW',
             'idCompania' => '8203',
@@ -36,4 +36,9 @@ return [
     'nit' => '900.091.175',
     'direccion' => 'Cr 32 14-25',
     'tel' => '3229200',
+
+    //mail
+    'supportEmail' => 'victorburbano@gruma.com.co',
+    'adminEmail' => 'victorburbano@gruma.com.co',
+    'senderName' => 'GRUMALOG',
 ];

@@ -298,7 +298,7 @@ class TraspasoController extends Controller
 
                 foreach ($model->traspasodetalles as $detalle) {
                     $filasAfectadas += $detalle->retornarInventario();
-                    Yii::$app->session->setFlash('success', 'Items: ' . $filasAfectadas . ' regresaron fueron regresados al inventario');
+                    Yii::$app->session->setFlash('success', $filasAfectadas . ' items fueron regresados al inventario');
                 }
 
                 Yii::$app->session->setFlash(
@@ -462,18 +462,30 @@ class TraspasoController extends Controller
     // }
 
 
+    // public function actionEjecutarExe()
+    // {
+    //     // Comando completo EXACTAMENTE como en CMD
+    //     $comando = '"E:\laragon\bin\php\php-8.1.10-win32-vs16-x64\php.exe" E:\laragon\www\conektasiesav2\yii siesa/actualizarinventariomanual';
+
+    //     // Ejecutar y capturar salida (con errores)
+    //     $salida = shell_exec("cmd /c $comando 2>&1");
+
+    //     // Mostrar salida
+    //     return $this->renderContent("<pre>$salida</pre>");
+    // }
+
     public function actionEjecutarExe()
     {
-        // Comando completo EXACTAMENTE como en CMD
-        $comando = '"E:\laragon\bin\php\php-8.1.10-win32-vs16-x64\php.exe" E:\laragon\www\conektasiesav2\yii siesa/actualizarinventariomanual';
+        $php = '"E:\laragon\bin\php\php-8.1.10-win32-vs16-x64\php.exe"';
+        $rutaProyecto = 'C:\Apache24\htdocs\conektasiesav2';
+        $comando = "$php $rutaProyecto\\yii siesa/actualizarinventariomanual";
+        // $comando = "$php $rutaProyecto\\yii siesa/actualizarinventario";
 
-        // Ejecutar y capturar salida (con errores)
-        $salida = shell_exec("cmd /c $comando 2>&1");
+        // Ejecutar en el directorio correcto
+        $salida = shell_exec("cd /d $rutaProyecto && $comando 2>&1");
 
-        // Mostrar salida
         return $this->renderContent("<pre>$salida</pre>");
     }
-
 
 
 

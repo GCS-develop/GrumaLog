@@ -39,7 +39,8 @@
         "mike42/escpos-php": "^4.0",
         "diecoding/yii2-barcode-generator": "^1.0",
         "mpdf/mpdf": "^8.2",
-        "xstreamka/yii2-mobile-detect": "*"
+        "xstreamka/yii2-mobile-detect": "*",
+        "yiisoft/yii2-swiftmailer": "^2.0"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",

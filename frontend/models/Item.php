@@ -275,29 +275,132 @@ class Item extends \yii\db\ActiveRecord
         return 0;
     }
 
-    public static function generarContenidoSticker($registro, $precio, $x, $y)
+    public static function generarContenidoSticker($registro, $precio, $x, $y, $labelWidth)
     {
+        // --- Ajuste de margen superior ---
+        $y += 30; // Mueve todo hacia abajo para evitar que el contenido quede pegado al borde superior
 
-        $lineax1 = $x + 5;
-        $lineay1 = $y + 95;
-        $lineax2 = 1;
+        // Coordenadas y espaciado personalizado
+        $codigoY = $y + 40;
+        $espacio1 = 40; // espacio entre código de barras y descripción
+        $espacio2 = 20; // espacio entre descripción y referencia
+
+        $descripcionY = $codigoY + $espacio1;
+        $referenciaY = $descripcionY + $espacio2;
+        $itemY = $referenciaY + $espacio2;
+
+        $precioUnidadX = $x + 80; // más a la derecha
+        $precioUnidadY = $itemY + 5;
+
+        $lineaFinalY = $itemY + $espacio2;
+
+        // Contenido
+        $codigo = preg_replace('/[^0-9A-Z]/', '', trim($registro->codigoBarras));
+        $descripcion = str_pad(strtoupper(substr(trim($registro->descripcion), 0, 22)), 22, ' ', STR_PAD_RIGHT);
+
+        // $referencia  = str_pad(strtoupper(substr(trim($registro->referencia), 0, 20)), 20, ' ', STR_PAD_RIGHT);
+        $referenciaCompleta = trim($registro->referencia);
+        $partes = explode('-', $referenciaCompleta);
+        if (isset($partes[1]) && strlen($partes[1]) > 0) {
+            $referenciaSoloCodigo = $partes[1];
+        } else {
+            $referenciaSoloCodigo = $referenciaCompleta;
+        }
+        $referencia = str_pad(strtoupper(substr($referenciaSoloCodigo, 0, 15)), 15, ' ', STR_PAD_RIGHT);
+
+        $color = str_pad(strtoupper(substr(trim($registro->color->nombre), 0, 10)), 10, ' ', STR_PAD_RIGHT);
+        $linea3 = $referencia . $color;
+
+        $item = strtoupper(substr(trim($registro->item), 0, 10));
+
+        $talla = str_pad(strtoupper(substr(trim($registro->talla->nombre ?? ''), 0, 8)), 8, ' ', STR_PAD_RIGHT);
+        $tallaTexto = strtoupper(trim($registro->talla->nombre ?? ''));
+
+        // Centrar dentro de 8 caracteres
+        $tallaCentrada = str_pad($tallaTexto, 8, ' ', STR_PAD_BOTH);
+
+        // Añadir 3 espacios iniciales
+        $tallaBloque = $tallaCentrada;
+
+        $equivalencia = max(1, $registro->equivalencia);
+        $preciounidad = $precio / $equivalencia;
+        $precioUnidadFormateado = '$ ' . number_format($preciounidad, 0, ',', '.');
+
+        $precioFormateado = '$ ' . number_format($precio, 0, ',', '.');
+
+        // Precio: centrado dentro del bloque de 25 caracteres (375px de ancho)
+        $precioCharWidth = 14; // Ajustado visualmente
+        $precioBlockWidth = 330; // bloque reservado más conservador
+        $precioBlockStart = $x + (15 * 15); // después de los 15 chars de la talla
+
+        $precioTextWidth = strlen($precioFormateado) * $precioCharWidth;
+        $precioX = $precioBlockStart + floor(($precioBlockWidth - $precioTextWidth) / 2);
+
+        // Posición fija para el precio
+        $precioX = $x + 95; // posición relativa dentro del bloque de 200px
+
+        $codigoTextoX = $x + 5;
+        $codigoTextoY = $y + 60;
+
+        // Generar ZPL
         $stickerContent = "
-            ^XA
+			^FO{$x},{$y}
+			^BY1.4,2.8,50
+			^B3N,N,60,N,N
+			^FD{$codigo}^FS
+			
+			^FO{$codigoTextoX},{$codigoTextoY}
+			^A0N,16,16
+			^FD{$codigo}^FS
 
-            ^FO{$x},{$y}
-            ^BY1.4,2.8,50
-            ^FT5,75
-            ^A0,50,50
-            ^B3N,N,50,Y,N
-            ^FD {$registro->codigoBarras} ^FS
+			^FO{$x},{$descripcionY}
+			^A0N,16,16
+			^FD{$descripcion}^FS
 
+			^FO{$x},{$referenciaY}
+			^A0N,16,16
+			^FD{$linea3}^FS
+			
+			^FO{$x},{$itemY}
+			^A0N,16,16
+			^FD{$item}^FS
+			
+			^FO{$precioUnidadX},{$precioUnidadY}
+			^A0N,10,10
+			^FDUnidad   a  {$precioUnidadFormateado}^FS
+			
+			^FO{$x},{$lineaFinalY}
+			^A0N,28,28
+			^FD{$tallaBloque}^FS
+			
+			^FO{$precioX},{$lineaFinalY}
+			^A0N,36,36
+			^FD{$precioFormateado}^FS
+		";
 
-            ^XZ
-        ";
+        // Añadir palabra HERPO en vertical al lado derecho del sticker
+        $verticalText = ['H', 'E', 'R', 'P', 'O'];
+        $verticalX = $x + $labelWidth - 20; // más cerca del borde
+        $verticalYStart = $y + 20;
+        $espaciadoVertical = 20;
+
+        foreach ($verticalText as $index => $letra) {
+            $letraY = $verticalYStart + ($index * $espaciadoVertical);
+            $stickerContent .= "
+				^FO{$verticalX},{$letraY}
+				^A0N,12,12
+				^FD{$letra}^FS
+			";
+        }
 
         return $stickerContent;
     }
-
+    public function getEquivalencia()
+    {
+        $codigo = $this->unidadEmpaque ?? 'UND'; // Si es null, asumir 'UND'
+        $modelo = Unidadempaque::findOne(['codigo' => $codigo]);
+        return $modelo->equivalencia ?? 1;
+    }
     public static function grabarDataDesdeSIESA($item, $color, $talla)
     {
 

@@ -13,6 +13,7 @@ use common\models\User;
  * This is the model class for table "auditoriamanualdocumento".
  *
  * @property int $id
+ * @property int $idInterfase
  * @property string $codigoBodegaSalida
  * @property string $numeroDocumento
  * @property string $fecha

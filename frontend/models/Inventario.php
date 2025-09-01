@@ -95,9 +95,10 @@ class Inventario extends \yii\db\ActiveRecord
     {
         $query = self::find();
 
-        if ($codigoBodega) {
-            $query->where(['codigoBodega' => $codigoBodega]);
+        if ($codigoBodega !== null && trim($codigoBodega) !== '') {
+            $query->andWhere(['codigoBodega' => trim($codigoBodega)]);
         }
+
 
         return $query->sum('existencia');
     }
@@ -105,33 +106,57 @@ class Inventario extends \yii\db\ActiveRecord
     public static function getTotalExistenciasSiesa($codigoBodega = null)
     {
         $codigoBodega == '' && $codigoBodega = null;
-        // Definir la consulta base
-        $sql = "
-            SELECT SUM(t400.f400_cant_existencia_1) 
-            FROM t400_cm_existencia t400
-            INNER JOIN t150_mc_bodegas t150 ON t400.f400_rowid_bodega = t150.f150_rowid
-            LEFT JOIN t131_mc_items_barras t131 ON t400.f400_rowid_item_ext = t131.f131_rowid_item_ext
-            WHERE (
-                (:codigoBodega IS NULL AND f150_id IN ( 207, 210, 16,14)) 
-                OR f150_id = :codigoBodega
-            )";
 
-        // Preparar el comando
+        $codigosLocales = self::getCodigosBodegaUnicos();
+
+        // Si no hay códigos, retornar 0 directamente
+        if (empty($codigosLocales)) {
+            return 0;
+        }
+
+        // Crear placeholders para IN (...)
+        $placeholders = [];
+        foreach ($codigosLocales as $index => $codigo) {
+            $placeholders[] = ":id{$index}";
+        }
+
+        $sql = "
+        SELECT SUM(t400.f400_cant_existencia_1) 
+        FROM t400_cm_existencia t400
+        INNER JOIN t150_mc_bodegas t150 ON t400.f400_rowid_bodega = t150.f150_rowid
+        LEFT JOIN t131_mc_items_barras t131 ON t400.f400_rowid_item_ext = t131.f131_rowid_item_ext
+        WHERE (
+            (:codigoBodega IS NULL AND f150_id IN (" . implode(',', $placeholders) . ")) 
+            OR f150_id = :codigoBodega
+        )";
+
         $command = \Yii::$app->dbSiesa->createCommand($sql);
 
-        // Si $codigoBodega no es null, asignarlo al parámetro, sino asignar null
+        // Parámetro principal
         if ($codigoBodega !== null) {
             $command->bindValue(':codigoBodega', $codigoBodega, \PDO::PARAM_INT);
         } else {
-            // Si se pasa null, el filtro debe traer 210 y 207
             $command->bindValue(':codigoBodega', null, \PDO::PARAM_NULL);
         }
 
-        // Ejecutar la consulta
+        // Agregar dinámicamente los valores para IN (...)
+        foreach ($codigosLocales as $index => $codigo) {
+            $command->bindValue(":id{$index}", $codigo, \PDO::PARAM_STR);
+        }
+
         $existencia = $command->queryScalar();
 
-        // Si no devuelve resultado, retornar 0
         return $existencia !== false ? $existencia : 0;
     }
+
+
+    public static function getCodigosBodegaUnicos()
+    {
+        return self::find()
+            ->select('codigoBodega')
+            ->distinct()
+            ->column();
+    }
+
 
 }

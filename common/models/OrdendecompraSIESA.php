@@ -361,7 +361,7 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
                 INNER JOIN t121_mc_items_extensiones itx ON itx.f121_rowid_item = it.f120_rowid
                 LEFT JOIN t131_mc_items_barras bar ON itx.f121_id_barras_principal = bar.f131_id
                 WHERE ipre.f126_id_lista_precio = :codigolistaprecios AND itx.f121_id_barras_principal IN (:codigobarras) 
-                AND FORMAT(ipre.f126_fecha_activacion, 'yyyy-MM-dd') <= :fechaactivacion
+                AND FORMAT(ipre.f126_fecha_activacion, 'yyyy-MM-dd') >= :fechaactivacion
                 ORDER BY ipre.f126_fecha_activacion DESC     
         ";
 
@@ -830,30 +830,67 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
         return true;
     }
 
+    // public static function obtenerDocumentosRepetidos()
+    // {
+
+    //     $sql = "
+    //     SELECT 
+    //         f350_id_tipo_docto,  
+    //         f350_notas, 
+    //         STUFF((  
+    //             SELECT ', ' + CAST(sub.f350_consec_docto AS NVARCHAR(MAX))  
+    //             FROM t350_co_docto_contable AS sub  
+    //             WHERE sub.f350_notas = main.f350_notas  
+    //               AND sub.f350_id_tipo_docto = main.f350_id_tipo_docto  
+    //               AND sub.f350_ind_estado = 1  
+    //             FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS consecutivosSiesa,  
+    //         COUNT(*) AS cantidad  
+    //     FROM t350_co_docto_contable AS main  
+    //     WHERE f350_fecha > '2025-01-01 00:00:00.000'  
+    //       AND f350_notas LIKE '%=>%'  
+    //       AND f350_id_tipo_docto <> 'AEN' 
+    //       AND f350_ind_estado = 1 
+    //     GROUP BY f350_id_tipo_docto, f350_notas  
+    //     HAVING COUNT(*) > 1;
+    // ";
+
+    //     return self::getDb()->createCommand($sql)->queryAll();
+    // }
     public static function obtenerDocumentosRepetidos()
     {
+        // Fecha dinámica: hace 2 meses desde hoy
+        $fechaLimite = date('Y-m-d H:i:s', strtotime('-2 months'));
+
         $sql = "
         SELECT 
-            f350_id_tipo_docto,  
-            f350_notas, 
-            STUFF((  
-                SELECT ', ' + CAST(sub.f350_consec_docto AS NVARCHAR(MAX))  
-                FROM t350_co_docto_contable AS sub  
-                WHERE sub.f350_notas = main.f350_notas  
-                  AND sub.f350_id_tipo_docto = main.f350_id_tipo_docto  
-                  AND sub.f350_ind_estado = 1  
-                FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS consecutivosSiesa,  
+            main.f350_id_tipo_docto,  
+            main.f350_id_co,
+            main.f350_notas, 
+            STUFF(
+                (
+                    SELECT ', ' + CAST(sub.f350_consec_docto AS NVARCHAR(MAX))  
+                    FROM t350_co_docto_contable AS sub  
+                    WHERE sub.f350_notas = main.f350_notas  
+                      AND sub.f350_id_tipo_docto = main.f350_id_tipo_docto  
+                      AND sub.f350_id_co = main.f350_id_co
+                      AND sub.f350_ind_estado = 1  
+                    FOR XML PATH(''), TYPE
+                ).value('.', 'NVARCHAR(MAX)'), 1, 2, ''
+            ) AS consecutivosSiesa,  
             COUNT(*) AS cantidad  
         FROM t350_co_docto_contable AS main  
-        WHERE f350_fecha > '2025-01-01 00:00:00.000'  
-          AND f350_notas LIKE '%=>%'  
-          AND f350_id_tipo_docto <> 'AEN' 
-          AND f350_ind_estado = 1 
-        GROUP BY f350_id_tipo_docto, f350_notas  
+        WHERE main.f350_fecha >= :fechaLimite
+          AND main.f350_notas LIKE '%=>%'  
+          AND main.f350_id_tipo_docto <> 'AEN' 
+          AND main.f350_ind_estado = 1 
+        GROUP BY main.f350_id_tipo_docto, main.f350_id_co, main.f350_notas  
         HAVING COUNT(*) > 1;
     ";
 
-        return self::getDb()->createCommand($sql)->queryAll();
+        return self::getDb()->createCommand($sql)
+            ->bindValue(':fechaLimite', $fechaLimite)
+            ->queryAll();
     }
+
 
 }

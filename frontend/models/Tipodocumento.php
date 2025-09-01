@@ -134,7 +134,7 @@ class Tipodocumento extends \yii\db\ActiveRecord
     {
         $data = Tipodocumento::find()
             ->select(['id', 'codigo AS nombre'])
-            ->where(['codigo' => ['3TA', '3TB']])
+            ->where(['codigo' => ['3TA', '3TB' ,'TRT','TRL']])
             ->orderBy('codigo')->asArray()->all();
         $listadata = ArrayHelper::map($data, 'id', 'nombre');
         return $listadata;

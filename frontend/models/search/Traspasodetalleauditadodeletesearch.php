@@ -82,11 +82,14 @@ class Traspasodetalleauditadodeletesearch extends Traspasodetalleauditadodelete
             'tdoc.codigo as serie',
         ]);
 
+        $query->distinct(true);
+
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
-            'pagination' => [
-                'pageSize' => '15',
-            ],
+            // 'pagination' => [
+            //     'pageSize' => '15',
+            // ],
+            'pagination' => false
         ]);
 
         $this->load($params);
@@ -99,9 +102,9 @@ class Traspasodetalleauditadodeletesearch extends Traspasodetalleauditadodelete
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'tdd.id' => $this->id,
+            // 'tdd.id' => $this->id,
             'tdd.idTraspaso' => $this->idTraspaso,
-            'tdd.idItem' => $this->idItem,
+            'i.item' => $this->item,
             'tdd.cantidad' => $this->cantidad,
             'tdd.created_at' => $this->created_at,
             'tdd.created_by' => $this->created_by,
@@ -114,6 +117,7 @@ class Traspasodetalleauditadodeletesearch extends Traspasodetalleauditadodelete
         if (!empty($this->serie)) {
             $query->andFilterWhere(['like', 'tdoc.id', $this->serie]);
         }
+
         return $dataProvider;
     }
 }

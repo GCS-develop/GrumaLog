@@ -169,23 +169,23 @@ class SiteController extends Controller
      *
      * @return mixed
      */
-    public function actionRequestPasswordReset()
-    {
-        $model = new PasswordResetRequestForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->sendEmail()) {
-                Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
+    // public function actionRequestPasswordReset()
+    // {
+    //     $model = new PasswordResetRequestForm();
+    //     if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+    //         if ($model->sendEmail()) {
+    //             Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
 
-                return $this->goHome();
-            }
+    //             return $this->goHome();
+    //         }
 
-            Yii::$app->session->setFlash('error', 'Sorry, we are unable to reset password for the provided email address.');
-        }
+    //         Yii::$app->session->setFlash('error', 'Sorry, we are unable to reset password for the provided email address.');
+    //     }
 
-        return $this->render('requestPasswordResetToken', [
-            'model' => $model,
-        ]);
-    }
+    //     return $this->render('requestPasswordResetToken', [
+    //         'model' => $model,
+    //     ]);
+    // }
 
     /**
      * Resets password.
@@ -194,24 +194,24 @@ class SiteController extends Controller
      * @return mixed
      * @throws BadRequestHttpException
      */
-    public function actionResetPassword($token)
-    {
-        try {
-            $model = new ResetPasswordForm($token);
-        } catch (InvalidArgumentException $e) {
-            throw new BadRequestHttpException($e->getMessage());
-        }
+    // public function actionResetPassword($token)
+    // {
+    //     try {
+    //         $model = new ResetPasswordForm($token);
+    //     } catch (InvalidArgumentException $e) {
+    //         throw new BadRequestHttpException($e->getMessage());
+    //     }
 
-        if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
-            Yii::$app->session->setFlash('success', 'New password saved.');
+    //     if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
+    //         Yii::$app->session->setFlash('success', 'New password saved.');
 
-            return $this->goHome();
-        }
+    //         return $this->goHome();
+    //     }
 
-        return $this->render('resetPassword', [
-            'model' => $model,
-        ]);
-    }
+    //     return $this->render('resetPassword', [
+    //         'model' => $model,
+    //     ]);
+    // }
 
     /**
      * Verify email address
@@ -256,4 +256,65 @@ class SiteController extends Controller
             'model' => $model
         ]);
     }
+
+    public function actionRequestPasswordReset()
+    {
+        $model = new \app\models\PasswordResetRequestForm();
+
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            if ($model->sendEmail()) {
+                return $this->goHome();
+            }
+        }
+
+        return $this->render('requestPasswordResetToken', ['model' => $model]);
+    }
+
+    public function actionResetPassword($token)
+    {
+        try {
+            $model = new \app\models\ResetPasswordForm($token);
+        } catch (\yii\base\InvalidParamException $e) {
+            throw new \yii\web\BadRequestHttpException($e->getMessage());
+        }
+
+        if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
+            Yii::$app->mailService->send(
+                $model->getUser()->email,
+                'Confirmación de cambio de contraseña',
+                'password-reset-success',
+                ['user' => $model->getUser()]
+            );
+            Yii::$app->session->setFlash('success', 'Contraseña restablecida. Ya puedes iniciar sesión.');
+            return $this->redirect(['site/login']);
+        }
+
+        return $this->render('resetPassword', ['model' => $model]);
+    }
+
+
+    public function actionTestMail()
+    {
+        $to = 'victordburbano@gmail.com'; // Cambia si quieres probar con otro
+        $from = 'victorburbanoherpo@gmail.com';
+
+        $result = Yii::$app->mailer->compose()
+            ->setFrom($from)
+            ->setTo($to)
+            ->setSubject('📧 Prueba de correo desde Yii2')
+            ->setTextBody("Este es un correo de prueba enviado desde Yii2 el " . date('Y-m-d H:i:s'))
+            ->send();
+
+        if ($result) {
+            Yii::info("Correo enviado correctamente a $to", 'yii\symfonymailer');
+            Yii::$app->session->setFlash('success', '✅ Correo enviado correctamente.');
+        } else {
+            Yii::info("❌ Falló el envío de correo a $to", 'yii\symfonymailer');
+            Yii::$app->session->setFlash('error', '❌ Falló el envío del correo.');
+        }
+
+        return $this->redirect(['login']);
+    }
+
+
 }

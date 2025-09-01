@@ -43,9 +43,9 @@ class InventarioSearch extends Inventario
     public function search($params)
     {
         $query = Inventario::find()->alias('inv');
-        $query->join('INNER JOIN', 'item i', 'i.id = inv.idItem');
-        $query->join('INNER JOIN', 'talla t', 't.id = i.idTalla');
-        $query->join('INNER JOIN', 'color c', 'c.id = i.idColor');
+        $query->join('LEFT JOIN', 'item i', 'i.id = inv.idItem');
+        $query->join('LEFT JOIN', 'talla t', 't.id = i.idTalla');
+        $query->join('LEFT JOIN', 'color c', 'c.id = i.idColor');
 
         $query->select([
             'inv.*',
@@ -83,7 +83,10 @@ class InventarioSearch extends Inventario
         ]);
 
         $query->andFilterWhere(['like', 'inv.codigoBarras', $this->codigoBarras])
-            ->andFilterWhere(['like', 'inv.codigoBodega', $this->codigoBodega]);
+            // ->andFilterWhere(['like', 'inv.codigoBodega', $this->codigoBodega]);
+            ->andFilterWhere(['=', 'inv.codigoBodega', $this->codigoBodega]);
+
+        // ->andFilterWhere(['like', new \yii\db\Expression('LTRIM(RTRIM(inv.codigoBodega))'), trim($this->codigoBodega)]);
 
         if (!empty($this->color)) {
             $query->andFilterWhere(['like', 'c.nombre', trim($this->color)]);

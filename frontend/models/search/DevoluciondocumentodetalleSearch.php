@@ -5,12 +5,18 @@ namespace frontend\models\search;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use frontend\models\Devoluciondocumentodetalle;
+use yii\db\Query;
 
 /**
  * DevoluciondocumentodetalleSearch represents the model behind the search form of `frontend\models\Devoluciondocumentodetalle`.
  */
 class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
 {
+    public $fechaDesde;
+    public $fechaHasta;
+    public $nombreProveedor;
+    public $tipoInventario;
+
     /**
      * {@inheritdoc}
      */
@@ -34,7 +40,8 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
                     'fechaRegistra',
                     'fechaDesde',
                     'fechaHasta',
-                    'nombreProveedor'
+                    'nombreProveedor',
+                    'tipoInventario'
                 ],
                 'safe'
             ],
@@ -47,18 +54,13 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
      */
     public function scenarios()
     {
-        // bypass scenarios() implementation in the parent class
         return Model::scenarios();
     }
 
     /**
-     * Creates data provider instance with search query applied
-     *
-     * @param array $params
-     *
-     * @return ActiveDataProvider
+     * Normal search (individual details)
      */
-    public function search($params, $iddocumento = null)
+    public function search($params, $iddocumento = null, $enviosiesa = false)
     {
         if ($iddocumento == null) {
             $query = Devoluciondocumentodetalle::find()->alias('det');
@@ -67,7 +69,6 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
         }
 
         $query->join('INNER JOIN', 'devoluciondocumento dct', 'det.idDocumento = dct.id');
-
         $query->join('LEFT JOIN', 'item i', 'det.item = i.item');
         $query->distinct();
 
@@ -91,16 +92,14 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             'det.usuarioRegistra',
             'dct.numeroDocumento',
             'dct.codigoBodegaSalida',
-            'i.nombreProveedor as nombreProveedor'
-
+            "COALESCE(i.nombreProveedor, 'Proveedor No Asignado') AS nombreProveedor",
+     
         ]);
 
         $query->orderBy([
             'dct.codigoBodegaSalida' => SORT_ASC,
             'dct.numeroDocumento' => SORT_ASC
         ]);
-
-        // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -112,12 +111,15 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
         $this->load($params);
 
         if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
-            // $query->where('0=1');
             return $dataProvider;
         }
 
-        // grid filtering conditions
+         /* 3) Filtro por VMI / FIRME --------------------------------------------------- */
+   /* if (!empty($this->tipoInventario)) {
+    $query->andWhere(['i.tipoInventario' => $this->tipoInventario]);
+}*/
+
+
         $query->andFilterWhere([
             'det.id' => $this->id,
             'det.idDocumento' => $this->idDocumento,
@@ -131,24 +133,19 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             'det.unidadMedida' => $this->unidadMedida,
             'dct.numeroDocumento' => $this->numeroDocumento,
             'dct.codigoBodegaSalida' => $this->codigoBodegaSalida,
-            // 'det.fechaRegistra' => trim($this->fechaRegistra),
+            
+            
         ]);
 
         if ($this->fechaDesde || $this->fechaHasta) {
-            // Si solo está presente fechaDesde, buscar por esa fecha exacta
-            if ($this->fechaDesde && !$this->fechaHasta) {
-                $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
+            $fechaInicio = $this->fechaDesde ? date('Y-m-d', strtotime($this->fechaDesde)) : null;
+            $fechaFin = $this->fechaHasta ? date('Y-m-d', strtotime($this->fechaHasta)) : null;
+
+            if ($fechaInicio && !$fechaFin) {
                 $query->andWhere(['>=', new \yii\db\Expression('CAST(det.fechaRegistra AS DATE)'), $fechaInicio]);
-            }
-            // Si solo está presente fechaHasta, buscar hasta esa fecha
-            elseif (!$this->fechaDesde && $this->fechaHasta) {
-                $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
+            } elseif (!$fechaInicio && $fechaFin) {
                 $query->andWhere(['<=', new \yii\db\Expression('CAST(det.fechaRegistra AS DATE)'), $fechaFin]);
-            }
-            // Si están presentes ambas, buscar entre ambas fechas
-            elseif ($this->fechaDesde && $this->fechaHasta) {
-                $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
-                $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
+            } elseif ($fechaInicio && $fechaFin) {
                 $query->andWhere(['between', new \yii\db\Expression('CAST(det.fechaRegistra AS DATE)'), $fechaInicio, $fechaFin]);
             }
         }
@@ -156,13 +153,11 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
         if (!empty($this->fechaRegistra)) {
             $fecha = date('Y-m-d', strtotime($this->fechaRegistra));
             $query->andWhere("CAST(det.fechaRegistra AS DATE) = :fecha", [':fecha' => $fecha]);
-
         }
+
         if (!empty($this->nombreProveedor)) {
-            // Solo filtra por nombreProveedor si se ha ingresado un valor
             $query->andWhere(['like', 'i.nombreProveedor', $this->nombreProveedor]);
         }
-
 
         $query->andFilterWhere(['like', 'det.codigoBarras', $this->codigoBarras])
             ->andFilterWhere(['like', 'det.item', $this->item])
@@ -171,6 +166,99 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             ->andFilterWhere(['like', 'det.referencia', $this->referencia])
             ->andFilterWhere(['like', 'det.itemResumen', $this->itemResumen]);
 
+               // ✅ Filtro de tipoInventario (post-procesamiento)
+    if (!empty($this->tipoInventario)) {
+        $models = $dataProvider->getModels();
+        $filtered = array_filter($models, function ($model) {
+            return $model->getTipoInventario() === $this->tipoInventario;
+        });
+        $dataProvider->setModels(array_values($filtered));
+        $dataProvider->setTotalCount(count($filtered));
+    }
+
         return $dataProvider;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    /**
+     * Envios IESA search (grouped by provider)
+     */
+/*public function searchenviosiesa($params)
+{
+    $query = Devoluciondocumentodetalle::find()->alias('det');
+
+    $query->where(['!=', 'det.registrada', 0]);
+
+    $query->join('INNER JOIN', 'devoluciondocumento dct', 'det.idDocumento = dct.id');
+    $query->join('LEFT JOIN', 'item i', 'det.item = i.item');
+
+    $query->select([
+        'dct.id',
+        'dct.numeroDocumento',
+        'COALESCE(i.nombreProveedor, \'Proveedor No Asignado\') AS nombreProveedor',
+        'SUM(det.cantidadDevolucion) AS cantidadDevolucion',
+        'SUM(det.cantidadRegistrada) AS cantidadRegistrada',
+        'COUNT(DISTINCT det.id) AS totalItems',
+        // Formato para SQL Server: 'YYYY-MM-DD HH:MI'
+        'CONVERT(VARCHAR(16), MIN(det.fechaRegistra), 120) AS fechaRegistra',
+    ]);
+
+    $query->groupBy(['i.nombreProveedor', 'dct.numeroDocumento',  'dct.id',]);
+    $query->orderBy(['nombreProveedor' => SORT_ASC]);
+
+    $this->load($params);
+
+    if (!$this->validate()) {
+        return new ActiveDataProvider(['query' => $query]);
+    }
+
+    if (!empty($this->nombreProveedor)) {
+        $query->andWhere(['like', 'i.nombreProveedor', $this->nombreProveedor]);
+    }
+
+    if ($this->fechaDesde || $this->fechaHasta) {
+        $fechaInicio = $this->fechaDesde ? date('Y-m-d', strtotime($this->fechaDesde)) : null;
+        $fechaFin = $this->fechaHasta ? date('Y-m-d', strtotime($this->fechaHasta)) : null;
+
+        $query->andFilterWhere([
+            'between', 
+            new \yii\db\Expression('CAST(det.fechaRegistra AS DATE)'), 
+            $fechaInicio, 
+            $fechaFin
+        ]);
+    }
+
+    return new ActiveDataProvider([
+        'query' => $query,
+        'pagination' => ['pageSize' => 50],
+        'sort' => [
+            'attributes' => [
+                'numeroDocumento',
+                'nombreProveedor',
+                'cantidadDevolucion',
+                'cantidadRegistrada',
+                'totalItems',
+                'fechaRegistra'
+            ],
+        ],
+    ]);
+}*/
 }

@@ -28,6 +28,7 @@ use yii\helpers\ArrayHelper;
  */
 class SiesaConector extends \yii\db\ActiveRecord
 {
+
     /**
      * {@inheritdoc}
      */

@@ -1,4 +1,5 @@
 <?php
+
 use frontend\models\Unidadempaque;
 
 
@@ -44,6 +45,7 @@ use kartik\grid\GridView;
 use kartik\export\ExportMenu;
 
 use common\widgets\Alert;
+use yii\bootstrap4\Modal;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\DevoluciondocumentodetalleSearch $searchModel */
@@ -52,11 +54,29 @@ use common\widgets\Alert;
 $this->title = 'Detalle';
 $this->params['breadcrumbs'][] = ['label' => 'Devolución Documentos', 'url' => ['/devolucion/devoluciondocumento/register']];
 $this->params['breadcrumbs'][] = $this->title;
+$this->registerJsFile(
+    Yii::$app->request->baseUrl . '/js/mainDataModal.js',
+    ['depends' => [\yii\web\JqueryAsset::className()]]
+);
 
 $fecha_actual = date("Y-m-d");
 $filename = "Relacion_Devoluciones_" . $fecha_actual;
 ?>
+<?php
+Modal::begin([
+    'title' => '<h4>Datos Devolución</h4>',
+    'id' => 'modaldata',
+    'size' => 'modal-lg',
+    'options' => [
+        'tabindex' => false  // Importante para que funcione el Select
+    ]
+]);
 
+// Este es el contenedor donde se cargará el contenido dinámicamente
+echo "<div id='modalContentData'></div>";
+
+Modal::end();
+?>
 <?php
 $gridColumns = [
     'codigoBodegaSalida',
@@ -153,7 +173,6 @@ $gridColumns = [
 ];
 ?>
 
-
 <div class="card">
     <div class="card-body">
 
@@ -170,8 +189,36 @@ $gridColumns = [
     <?php echo $this->render('_search', ['model' => $searchModel]); ?>
 
     <div class="row">
+        <div class="col-lg-6 derecha">
 
-        <div class="col-lg-12 centrar">
+            <!-- Botón para cambiar el estado de los registros -->
+            <?php
+            // Define the URL for the controller action
+           $url = Url::to(['/devolucion/devoluciondocumentodetalle/registrar-datos']);
+
+            // Button to open the modal
+            echo Html::button(
+                'Registrar Devoluciones',
+                [
+                    'class' => 'btn btn-success btn-lg btn-create',
+                    'id' => 'modalButtonRegistrarDevolucion',
+                    //'data-role' => 'abrir-registro-devoluciones',
+                    'value' => $url, // This can be used if you want to
+
+                    // distintivo único
+                ]
+            );
+
+            // ✅ Agregar botón de transferencias enviadas aquí
+            echo Html::a('Transferencias Enviadas', ['/devolucion/transferdevdocumentos/transferencias-enviadas'], [
+                'class' => 'btn btn-info btn-lg btn-create',
+                'style' => 'margin-left: 10px;',
+            ]);
+            ?>
+
+
+        </div>
+        <div class="col-lg-6 izquierda">
             <?php echo ExportMenu::widget(
                 [
                     'dataProvider' => $dataProvider,
@@ -206,13 +253,14 @@ $gridColumns = [
             ?>
         </div>
 
+
     </div>
 
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         // 'filterModel' => $searchModel,
-    
+
         'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
         'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
         'options' => [
@@ -222,16 +270,21 @@ $gridColumns = [
         'showPageSummary' => true,
 
         'rowOptions' => function ($model) {
-        $options = [];
+            $options = [];
 
-        if ($model->cantidadDevolucion != $model->cantidadRegistrada) {
-            $options['style'] = 'background-color: #ff4d4d; color:white; font-weight: bold;'; // Puedes cambiar el color aquí
-        }
+            if ($model->cantidadDevolucion != $model->cantidadRegistrada) {
+                $options['style'] = 'background-color: #ff4d4d; color:white; font-weight: bold;'; // Puedes cambiar el color aquí
+            }
 
-        return $options;
-    },
+            return $options;
+        },
 
         'columns' => [
+            [
+                'class' => 'kartik\grid\CheckboxColumn'
+
+            ],
+
             [
                 'class' => 'kartik\grid\SerialColumn',
                 'hAlign' => 'center', // Alineación horizontal al centro
@@ -240,7 +293,7 @@ $gridColumns = [
 
             /*'id',
             'idDocumento',*/
-            'nombreProveedor',
+            'nombreProveedor', // Nombre del atributo en el modelo
             [
                 'attribute' => 'codigoBodegaSalida', // Nombre del atributo en el modelo
                 'hAlign' => 'center', // Alineación horizontal al centro
@@ -287,19 +340,19 @@ $gridColumns = [
                 'attribute' => 'equivalencia',
                 'label' => 'Eq. UM',
                 'value' => function ($model) {
-            $equivalencia = 1;
+                    $equivalencia = 1;
 
-            if ($model->unidadempaque) {
-                $equivalencia = $model->unidadempaque->equivalencia;
-            };
-            return $equivalencia;
-        },
+                    if ($model->unidadempaque) {
+                        $equivalencia = $model->unidadempaque->equivalencia;
+                    };
+                    return $equivalencia;
+                },
                 'hAlign' => 'left', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
             ],
             //'talla',
             //'color',
-    
+
             [
                 'attribute' => 'cantidadDevolucion',
                 'label' => 'Cant. Saldo Base',
@@ -334,13 +387,13 @@ $gridColumns = [
                 'label' => 'Cant. Saldo',
                 'filter' => '',
                 'value' => function ($model) {
-            $equivalencia = 1;
+                    $equivalencia = 1;
 
-            if ($model->unidadempaque) {
-                $equivalencia = $model->unidadempaque->equivalencia;
-            };
-            return $model->cantidadDevolucion * $equivalencia;
-        },
+                    if ($model->unidadempaque) {
+                        $equivalencia = $model->unidadempaque->equivalencia;
+                    };
+                    return $model->cantidadDevolucion * $equivalencia;
+                },
                 'pageSummary' => true,
             ],
 
@@ -352,13 +405,13 @@ $gridColumns = [
                 'label' => 'Cant. Registrada',
                 'filter' => '',
                 'value' => function ($model) {
-            $equivalencia = 1;
+                    $equivalencia = 1;
 
-            if ($model->unidadempaque) {
-                $equivalencia = $model->unidadempaque->equivalencia;
-            };
-            return $model->cantidadRegistrada * $equivalencia;
-        },
+                    if ($model->unidadempaque) {
+                        $equivalencia = $model->unidadempaque->equivalencia;
+                    };
+                    return $model->cantidadRegistrada * $equivalencia;
+                },
                 'pageSummary' => true,
             ],
 
@@ -370,13 +423,13 @@ $gridColumns = [
                 // 'label' => 'Cant. Registrada',
                 'filter' => '',
                 'value' => function ($model) {
-            $equivalencia = 1;
+                    $equivalencia = 1;
 
-            if ($model->unidadempaque) {
-                $equivalencia = $model->unidadempaque->equivalencia;
-            };
-            return $model->diferencia * $equivalencia;
-        },
+                    if ($model->unidadempaque) {
+                        $equivalencia = $model->unidadempaque->equivalencia;
+                    };
+                    return $model->diferencia * $equivalencia;
+                },
                 'pageSummary' => true,
                 'label' => 'Diferencia',
             ],
@@ -387,19 +440,19 @@ $gridColumns = [
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
                 'value' => function ($model) {
-            if ($model->fechaRegistra) {
-                return substr($model->fechaRegistra, 0, 16);
-            }
+                    if ($model->fechaRegistra) {
+                        return substr($model->fechaRegistra, 0, 16);
+                    }
 
-            return '-';
-        }
+                    return '-';
+                }
             ],
 
             [
                 'attribute' => 'usuarioRegistra', // Nombre del atributo en el modelo
                 'value' => function ($model) {
-            return $model->usuarioregistra ? $model->usuarioregistra->username : ' - ';
-        },
+                    return $model->usuarioregistra ? $model->usuarioregistra->username : ' - ';
+                },
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
             ],
@@ -409,11 +462,20 @@ $gridColumns = [
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
                 'value' => function ($model) {
-            return $model->registrada == 1 ? 'SI' : 'NO';
-        },
+                    return $model->registrada == 1 ? 'SI' : 'NO';
+                },
                 'filter' => ['0' => 'NO', '1' => 'SI'],
                 'label' => 'Tiene Registro'
             ],
+
+            [
+    'label'     => 'Tipo Inv.',
+    'attribute' => 'tipoInventario',
+    'value'     => function ($model) {
+        return $model->getTipoInventario();   // tu método existente
+    },
+],
+
 
 
             /*[
@@ -427,3 +489,43 @@ $gridColumns = [
 
 
 </div>
+
+<?php
+// JavaScript para cargar el formulario en el modal al hacer clic en el botón "Registrar"
+$this->registerJs("
+    $(document).ready(function() {
+        $('#modalButtonRegistrarDevolucion').on('click', function () {
+            var idsSeleccionados = $('.kv-row-checkbox:checked').map(function () {
+                return $(this).val();
+            }).get();
+
+            if (idsSeleccionados.length === 0) {
+                alert('Por favor seleccione al menos un registro.');
+                return;
+            }
+
+            const url = '" . $url . "';
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: { id: idsSeleccionados.join(',') },
+                success: function(response) {
+                    if (response) {
+                        $('#modaldata').modal('show').find('#modalContentData').html(response);
+                    } else {
+                        alert('No se ha recibido contenido válido.');
+                    }
+                },
+                error: function() {
+                    alert('Ocurrió un error al cargar el formulario.');
+                }
+            });
+        });
+    });
+");
+
+
+
+
+?>

@@ -80,11 +80,23 @@ class Comprador extends \yii\db\ActiveRecord
         ];
     }
 
-    public static  function  getListaData(){
+    public static  function  getListaData()
+    {
         $data = Comprador::find()
-                        ->select(['id', "(CAST(documento AS VARCHAR) + ' - ' + nombre) AS nombre"])
-                        ->orderBy('nombre')->asArray()->all();
-    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
-    	return $listadata;
+            ->select(['id', "(CAST(documento AS VARCHAR) + ' - ' + nombre) AS nombre"])
+            ->orderBy('nombre')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
+    }
+
+    public static function getListaDocumentoComoClave()
+    {
+        $data = Comprador::find()
+            ->select(['documento', new \yii\db\Expression("CAST(documento AS VARCHAR) + ' - ' + nombre AS nombre")])
+            ->orderBy('nombre')
+            ->asArray()
+            ->all();
+
+        return ArrayHelper::map($data, 'documento', 'nombre');
     }
 }

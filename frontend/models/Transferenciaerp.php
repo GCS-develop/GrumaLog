@@ -252,7 +252,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
             /*if ($conta == 3){
                          var_dump($json); die("hola");
                      }
-                     
+
                      $conta = $conta + 1;
                      continue;*/
             // var_dump($json);
@@ -281,6 +281,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'idDocumento=' . $modelconector->idDocumento . '&' .
                 'nombreDocumento=' . $modelconector->nombreSIESA . '&' .
                 'validarEstructura=false';
+
 
             $headers = [
                 'conniKey: Connikey-grupomayorista-QJBYOFU3',
@@ -761,12 +762,26 @@ class Transferenciaerp extends \yii\db\ActiveRecord
             ];
 
             if (Yii::$app->user->id == '17') {
-                var_dump($url);
-                var_dump('  <----- ' . '  -------> ');
-                var_dump($headers);
-                var_dump('  <----- ' . '  -------> ');
+                echo "<pre>";
+                echo "==== URL ====\n";
+                echo $url . "\n\n";
 
-                var_dump($json);
+                echo "==== HEADERS ====\n";
+                print_r($headers);
+                echo "\n";
+
+                echo "==== JSON ====\n";
+                $jsonDecoded = json_decode($json, true); // Decodifica a array asociativo
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    echo json_encode($jsonDecoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                } else {
+                    echo "Error al decodificar JSON: " . json_last_error_msg() . "\n";
+                    echo $json; // imprime crudo por si acaso
+                }
+
+                echo "==== FIN ====\n";
+                echo "</pre>";
+
                 die("hola->entradas");
 
             }

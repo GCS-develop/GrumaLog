@@ -156,4 +156,16 @@ class TraspasodetalletiendaSearch extends Traspasodetalletienda
 
         return $dataProvider;
     }
+
+    public function searchConDiferencias($params, $idtraspaso = null)
+    {
+        $dataProvider = $this->search($params, $idtraspaso);
+        $query = $dataProvider->query;
+
+        // Filtrar solo donde haya diferencia positiva o negativa
+        $query->andWhere(['<>', new \yii\db\Expression('COALESCE(ue.equivalencia, 1) * (tdt.cantidad - td.cantidad)'), 0]);
+
+        return $dataProvider;
+    }
+
 }

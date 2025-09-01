@@ -18,6 +18,7 @@ use yii\web\BadRequestHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use common\models\OrdendecompraSIESA;
 
 /** @var yii\widgets\ActiveForm $form */
 
@@ -1204,5 +1205,36 @@ class TraspasodetalleController extends Controller
             ]);
         }
     }
+
+
+
+    public function actionComparativoSiesa($id)
+    {
+        $modelTraspaso = Traspaso::findOne($id);
+
+        // Datos para buscar en SIESA
+        $tipodocumento = $modelTraspaso->idTipoDocumento; // Ajustar si usa FK
+        $numero = $modelTraspaso->consecutivo;
+        $tipoconsulta = 'C'; // O 'I' si se consulta por nota
+
+        // Traer datos desde SIESA
+        $datosSiesa = OrdendecompraSIESA::obtenerDatosDocumentoContable(
+            $tipodocumento,
+            $numero,
+            $tipoconsulta
+        );
+
+        // SearchModel para el comparativo
+        $searchModel = new TraspasodetalletiendaSearch();
+        $dataProvider = $searchModel->searchComparativoSiesa(Yii::$app->request->queryParams, $datosSiesa, );
+
+        return $this->render('comparativo-siesa', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'modelTraspaso' => $modelTraspaso,
+        ]);
+    }
+
+
 
 }

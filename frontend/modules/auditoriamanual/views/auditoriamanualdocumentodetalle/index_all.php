@@ -238,7 +238,7 @@ $gridColumns = [
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
             ],
-
+            'co',
             'id',
             // 'idDocumento',
             [
@@ -362,7 +362,8 @@ $gridColumns = [
                 'pageSummary' => true,
             ],
             // 'unidades',
-
+            'proveedor',
+            'categoria',
 
             [
                 'attribute' => 'diferencia', // Nombre del atributo en el modelo

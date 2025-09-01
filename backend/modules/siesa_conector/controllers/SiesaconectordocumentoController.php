@@ -132,6 +132,27 @@ class SiesaconectordocumentoController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
+    // public function actionViewdetalle($id)
+    // {
+    //     $documento = SiesaConectorDocumento::find()
+    //         ->with([
+    //             'camposDocumento',
+    //             'camposMovimiento',
+    //             'valoresDocumento',
+    //             'movimientos.valores'
+    //         ])
+    //         ->where(['id' => $id])
+    //         ->one();
+
+    //     if (!$documento) {
+    //         throw new NotFoundHttpException("No se encontró el documento con ID $id.");
+    //     }
+
+    //     return $this->render('viewdetalle', [
+    //         'documento' => $documento,
+    //     ]);
+    // }
+
     public function actionViewdetalle($id)
     {
         $documento = SiesaConectorDocumento::find()
@@ -148,8 +169,27 @@ class SiesaconectordocumentoController extends Controller
             throw new NotFoundHttpException("No se encontró el documento con ID $id.");
         }
 
+        // Agrupar movimientos por el valor del campo f470_id_item
+        $movimientosAgrupados = [];
+
+        foreach ($documento->movimientos as $movimiento) {
+            $itemId = null;
+            foreach ($movimiento->valores as $valor) {
+                if ($valor->campo->nombre_campo === 'f470_id_item') {
+                    $itemId = $valor->valor;
+                    break;
+                }
+            }
+            if (!$itemId) {
+                $itemId = 'sin_item';
+            }
+
+            $movimientosAgrupados[$itemId][] = $movimiento;
+        }
+
         return $this->render('viewdetalle', [
             'documento' => $documento,
+            'movimientosAgrupados' => $movimientosAgrupados,
         ]);
     }
 

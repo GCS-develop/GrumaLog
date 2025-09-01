@@ -26,6 +26,8 @@ use yii\db\Expression;
  */
 class SiesaConectorDocumento extends \yii\db\ActiveRecord
 {
+    public $consecutivoSiesa;
+
     /**
      * {@inheritdoc}
      */
