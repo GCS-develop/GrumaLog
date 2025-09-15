@@ -313,7 +313,6 @@ class Traspaso extends \yii\db\ActiveRecord
             ->where(['td.idTraspaso' => $this->id])
             ->andWhere(['IS NOT', 'i.unidadEmpaque', null])
             ->scalar();
-
     }
 
     public function getTotalUnidades()
@@ -326,7 +325,6 @@ class Traspaso extends \yii\db\ActiveRecord
             ->leftJoin('unidadempaque ue', 'i.unidadEmpaque = ue.codigo')
             ->where(['td.idTraspaso' => $this->id])
             ->scalar();
-
     }
 
     public static function generarTraspasoDesdeTransferencia($idtransferenciaerp, $tipomovimiento = null)
@@ -367,10 +365,19 @@ class Traspaso extends \yii\db\ActiveRecord
             $traspaso->numeroCajas = $resultado['numeroCajas'];
             $traspaso->idTipoDocumento = $resultado['idTipoDocumento'];
             $traspaso->consecutivo = $resultado['consecutivo'];
+
+            // if ($resultado['idBodegaOrigen'] == 13) {
+            //     $traspaso->idEstado = 4;
+            // } else {
+            //     $traspaso->idEstado = $resultado['idEstado'];
+            // }
+
+
             $traspaso->idEstado = $resultado['idEstado'];
             $traspaso->idUltimoItem = $resultado['idUltimoItem'];
             $traspaso->transferenciaerp = $resultado['transferenciaerp'];
             $traspaso->tipoMovimiento = $resultado['tipoMovimiento'];
+
 
             if ($traspaso->save()) {
 
@@ -383,6 +390,10 @@ class Traspaso extends \yii\db\ActiveRecord
                 $bodegaentrada = $resultado['bodegaEntradaDocumento'];
 
                 self::generarTraspasoDetalle($idtransferenciaerp, $traspaso->id, $bodegasalida, $bodegaentrada, $tipomovimiento);
+
+                $traspaso->totalUnidad    = $traspaso->TotalUnidades;
+                $traspaso->totalRegistros = $traspaso->AllRecords;
+                $traspaso->save(false, ['totalUnidad', 'totalRegistros']);
             } else {
                 //var_dump($traspaso->getErrors()); die("hola");
                 break;
@@ -480,12 +491,10 @@ class Traspaso extends \yii\db\ActiveRecord
         //var_dump($traspasoSiesa); die ("STOP");
 
         $guardoDatos = Documentosiesa::grabarDatos($traspasoSiesa, $idgruma);
-
     }
 
     public function getDocumentosiesa()
     {
         return $this->hasMany(Documentosiesa::class, ['idGruma' => 'id']);
     }
-
 }
