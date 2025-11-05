@@ -366,11 +366,11 @@ class Traspaso extends \yii\db\ActiveRecord
             $traspaso->idTipoDocumento = $resultado['idTipoDocumento'];
             $traspaso->consecutivo = $resultado['consecutivo'];
 
-            // if ($resultado['idBodegaOrigen'] == 13) {
-            //     $traspaso->idEstado = 4;
-            // } else {
-            //     $traspaso->idEstado = $resultado['idEstado'];
-            // }
+            if ($resultado['idBodegaOrigen'] == 13) {
+                $traspaso->idEstado = 4;
+            } else {
+                $traspaso->idEstado = $resultado['idEstado'];
+            }
 
 
             $traspaso->idEstado = $resultado['idEstado'];
@@ -472,25 +472,100 @@ class Traspaso extends \yii\db\ActiveRecord
         }
     }
 
-    public static function sincronizarTraspaso($id)
+    // public static function sincronizarTraspaso($id)
+    // {
+
+    //     $model = Traspaso::findOne(['id' => $id]);
+    //     $tipodocumento = $model->tipodocumento->codigo;
+    //     $idgruma = $id;
+    //     $numerodocumento = $model->consecutivo;
+
+    //     $tipomovimiento = 'No. Traspaso => ';
+    //     if ($model->tipoMovimiento == 2) {
+    //         $tipomovimiento = 'Crossdocking certificado => ';
+    //     }
+
+    //     $traspasoSiesa = OrdendecompraSIESA::obtenerDatosDocumento($tipodocumento, $numerodocumento, $tipomovimiento);
+    //     Yii::trace('Buscar traspaso en siesa', __METHOD__);
+
+    //     //var_dump($traspasoSiesa); die ("STOP");
+
+    //     $guardoDatos = Documentosiesa::grabarDatos($traspasoSiesa, $idgruma);
+    // }
+
+    /**
+     * Busca el documento de SIESA asociado a un traspaso local.
+     * Retorna el payload crudo que entrega OrdendecompraSIESA::obtenerDatosDocumento()
+     * o null si algo falla. Deja trazas con Yii::trace/error.
+     */
+    public static function buscarDocumentoTraspasoEnSiesa(int $id): ?array
     {
-
         $model = Traspaso::findOne(['id' => $id]);
-        $tipodocumento = $model->tipodocumento->codigo;
-        $idgruma = $id;
-        $numerodocumento = $model->consecutivo;
-
-        $tipomovimiento = 'No. Traspaso => ';
-        if ($model->tipoMovimiento == 2) {
-            $tipomovimiento = 'Crossdocking certificado => ';
+        if (!$model) {
+            Yii::error("Traspaso #{$id} no existe.", __METHOD__);
+            return null;
         }
 
-        $traspasoSiesa = OrdendecompraSIESA::obtenerDatosDocumento($tipodocumento, $numerodocumento, $tipomovimiento);
-        Yii::trace('Buscar traspaso en siesa', __METHOD__);
+        if (!$model->tipodocumento || !$model->tipodocumento->codigo) {
+            Yii::error("Traspaso #{$id} sin tipo de documento/código.", __METHOD__);
+            return null;
+        }
 
-        //var_dump($traspasoSiesa); die ("STOP");
+        if (!$model->consecutivo) {
+            Yii::error("Traspaso #{$id} sin consecutivo.", __METHOD__);
+            return null;
+        }
 
-        $guardoDatos = Documentosiesa::grabarDatos($traspasoSiesa, $idgruma);
+        $tipodocumento   = $model->tipodocumento->codigo;
+        $numerodocumento = $model->consecutivo;
+
+        $tipomovimiento = ($model->tipoMovimiento == 2)
+            ? 'Crossdocking certificado => '
+            : 'No. Traspaso => ';
+
+        Yii::trace("Buscando en SIESA: tipo={$tipodocumento}, num={$numerodocumento}", __METHOD__);
+
+        try {
+            $traspasoSiesa = OrdendecompraSIESA::obtenerDatosDocumento($tipodocumento, $numerodocumento, $tipomovimiento);
+            return is_array($traspasoSiesa) ? $traspasoSiesa : null;
+        } catch (\Throwable $e) {
+            Yii::error("Error consultando SIESA para traspaso #{$id}: {$e->getMessage()}", __METHOD__);
+            return null;
+        }
+    }
+
+    /**
+     * Sincroniza el traspaso consumiendo el documento de SIESA.
+     * Mantiene la lógica original de grabarDatos.
+     */
+    public static function sincronizarTraspaso(int $id): array
+    {
+        $idgruma = $id;
+
+        $traspasoSiesa = self::buscarDocumentoTraspasoEnSiesa($id);
+        if ($traspasoSiesa === null) {
+            return [
+                'success' => false,
+                'message' => "No se pudo obtener el documento de SIESA para el traspaso #{$id}.",
+            ];
+        }
+
+        Yii::trace('Grabar datos de SIESA en Documentosiesa', __METHOD__);
+
+        try {
+            $guardoDatos = Documentosiesa::grabarDatos($traspasoSiesa, $idgruma);
+            return [
+                'success' => (bool)$guardoDatos,
+                'message' => $guardoDatos ? 'Sincronización exitosa.' : 'Hubo un problema al guardar los datos.',
+                'result'  => $guardoDatos,
+            ];
+        } catch (\Throwable $e) {
+            Yii::error("Error guardando datos para traspaso #{$id}: {$e->getMessage()}", __METHOD__);
+            return [
+                'success' => false,
+                'message' => 'Excepción al guardar datos: ' . $e->getMessage(),
+            ];
+        }
     }
 
     public function getDocumentosiesa()

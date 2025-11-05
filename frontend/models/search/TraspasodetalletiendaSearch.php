@@ -33,6 +33,7 @@ class TraspasodetalletiendaSearch extends Traspasodetalletienda
                     'serie',
                     'Destino',
                     'Origen',
+                    'codigoBarras',
                 ],
                 'safe',
             ],
@@ -95,6 +96,7 @@ class TraspasodetalletiendaSearch extends Traspasodetalletienda
             'uCreateT.username AS userTraspaso',
             "(bo.codigo + ' - ' + bo.nombre) AS Origen",
             "(bd.codigo + ' - ' + bd.nombre) AS Destino",
+            "i.codigoBarras AS codigoBarras",
 
 
         ]);

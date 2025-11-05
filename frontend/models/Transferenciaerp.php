@@ -143,7 +143,6 @@ class Transferenciaerp extends \yii\db\ActiveRecord
         $model->save();
 
         return $model;
-
     }
 
     public static function transferenciaSalidaWS($id)
@@ -289,6 +288,13 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'content-type' => 'application/json'
                 // Agrega aquí otros headers si es necesario
             ];
+
+            // var_dump($url);
+            // var_dump('----------------------');
+            // var_dump($headers);
+            // var_dump('----------------------');
+            // var_dump($json);
+            // die();
 
             $respuesta = Transferenciaerp::ejecutartransferenciaWS($url, $headers, $json);
 
@@ -783,7 +789,6 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 echo "</pre>";
 
                 die("hola->entradas");
-
             }
 
             $respuesta = Transferenciaerp::ejecutartransferenciaWS($url, $headers, $json);
@@ -1050,7 +1055,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
         foreach ($traspasos as $registro) {
 
             $tipodocumento = $registro['tipoDocumento'];
-            $idgruma = str_ireplace("3TB", "", $registro['numero']);
+            $idgruma = str_ireplace($tipodocumento , "", $registro['numero']);
 
             $traspasoSiesa = OrdendecompraSIESA::obtenerDatosDocumento($tipodocumento, $idgruma);
             Yii::trace('Buscar traspaso en siesa', __METHOD__);
