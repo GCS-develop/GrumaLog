@@ -28,6 +28,7 @@ use yii\grid\ActionColumn;
 use kartik\grid\GridView;
 
 use common\widgets\Alert;
+use frontend\models\Bodegas;
 use yii\bootstrap4\Modal;
 
 /** @var yii\web\View $this */
@@ -67,7 +68,7 @@ Modal::end();
                     'Registrar',
                     ['value' => $url, 'class' => 'btn btn-success btn-lg btn-create', 'id' => 'modalButtonCreate']
                 )
-                    ?>
+                ?>
             </p>
 
         </div>
@@ -85,27 +86,28 @@ Modal::end();
 
 
         'columns' => [
+
             ['class' => 'kartik\grid\SerialColumn'],
             [
-                'attribute' => 'idUserTraspaso',
+                'attribute' => 'buscarnombreusuario',
                 'group' => true,
-                'value' => function ($model) {
-        return $model->idUserTraspaso . ' - ' . $model->userTraspaso->empleadoLogistica->empleado->nombreEmpleado;
-    }
             ],
+            //
+            // [
+            //     'attribute' => 'idBodega',
+            //     'value' => function ($model) {
+            //         if ($model->bodega->tipodocumento) {
+            //             return $model->idBodega . ' - ' . $model->bodega->nombre . ' - ' . $model->bodega->tipodocumento->tipodocumento->codigo;
+            //         } else {
+            //             return $model->idBodega . ' - ' . $model->bodega->nombre . ' -  La bodega no tiene asignado un tipo documento';
+            //         }
+            //     }
+
+            // ]
             [
-                'attribute' => 'idBodega',
-                'value' => function ($model) {
-        if ($model->bodega->tipodocumento) {
-            return $model->idBodega . ' - ' . $model->bodega->nombre . ' - ' . $model->bodega->tipodocumento->tipodocumento->codigo;
-
-        } else {
-            return $model->idBodega . ' - ' . $model->bodega->nombre . ' -  La bodega no tiene asignado un tipo documento';
-
-        }
-    }
-
-
+                'attribute' => 'buscarnombrebodega',
+                //   'filter' => Bodegas::getListaData(),
+                'label' => 'Bodega',
             ],
             [
                 'attribute' => 'idEstado',
@@ -117,34 +119,34 @@ Modal::end();
                 'template' => '{update} {delete}',
                 'buttons' => [
                     'update' => function ($url, $model) {
-        $t = Url::to([
-            'update',
-            'id' => $model->id
-        ]);
+                        $t = Url::to([
+                            'update',
+                            'id' => $model->id
+                        ]);
 
-        return Html::button('<i class="fa fa-edit"></i>', [
-            'value' => $t,
-            'title' => 'Actualizar',
-            'class' => 'btn btn-default btn_update',
-        ]);
-    },
+                        return Html::button('<i class="fa fa-edit"></i>', [
+                            'value' => $t,
+                            'title' => 'Actualizar',
+                            'class' => 'btn btn-default btn_update',
+                        ]);
+                    },
 
                     'delete' => function ($url, $model) {
-        return Html::a(
-            '<i class="fa fa-trash"></i>',
-            ['delete', 'id' => $model->id],
-            [
-                'class' => 'btn btn-default',
-                'title' => 'Eliminar Categoría',
-                'data' => [
-                    'confirm' => 'Esta accion eliminara del usuario ' . $model->userTraspaso->empleadoLogistica->empleado->nombreEmpleado
-                        . ' la bodega ' . strtolower($model->bodega->nombre) .
-                        ' para eligir desde traspasos ',
-                    'method' => 'post',
-                ]
-            ]
-        );
-    },
+                        return Html::a(
+                            '<i class="fa fa-trash"></i>',
+                            ['delete', 'id' => $model->id],
+                            [
+                                'class' => 'btn btn-default',
+                                'title' => 'Eliminar Categoría',
+                                'data' => [
+                                    'confirm' => 'Esta accion eliminara del usuario ' . $model->userTraspaso->empleadoLogistica->empleado->nombreEmpleado
+                                        . ' la bodega ' . strtolower($model->bodega->nombre) .
+                                        ' para eligir desde traspasos ',
+                                    'method' => 'post',
+                                ]
+                            ]
+                        );
+                    },
                 ],
 
             ],

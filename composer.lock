@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d90b8d4cee0509020938c4baacfada07",
+    "content-hash": "9f12563ed7e3d234efb2d07d755adf82",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -3252,65 +3252,6 @@
             "time": "2023-12-11T16:03:32+00:00"
         },
         {
-            "name": "swiftmailer/swiftmailer",
-            "version": "v5.4.12",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/swiftmailer/swiftmailer.git",
-                "reference": "181b89f18a90f8925ef805f950d47a7190e9b950"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/swiftmailer/swiftmailer/zipball/181b89f18a90f8925ef805f950d47a7190e9b950",
-                "reference": "181b89f18a90f8925ef805f950d47a7190e9b950",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.3"
-            },
-            "require-dev": {
-                "mockery/mockery": "~0.9.1",
-                "symfony/phpunit-bridge": "~3.2"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "5.4-dev"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "lib/swift_required.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Chris Corbyn"
-                },
-                {
-                    "name": "Fabien Potencier",
-                    "email": "fabien@symfony.com"
-                }
-            ],
-            "description": "Swiftmailer, free feature-rich PHP mailer",
-            "homepage": "https://swiftmailer.symfony.com",
-            "keywords": [
-                "email",
-                "mail",
-                "mailer"
-            ],
-            "support": {
-                "issues": "https://github.com/swiftmailer/swiftmailer/issues",
-                "source": "https://github.com/swiftmailer/swiftmailer/tree/v5.4.12"
-            },
-            "abandoned": "symfony/mailer",
-            "time": "2018-07-31T09:26:32+00:00"
-        },
-        {
             "name": "symfony/deprecation-contracts",
             "version": "v3.4.0",
             "source": {
@@ -3535,16 +3476,16 @@
         },
         {
             "name": "symfony/mailer",
-            "version": "v6.4.4",
+            "version": "v6.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/mailer.git",
-                "reference": "791c5d31a8204cf3db0c66faab70282307f4376b"
+                "reference": "ca8dcf8892cdc5b4358ecf2528429bb5e706f7ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/mailer/zipball/791c5d31a8204cf3db0c66faab70282307f4376b",
-                "reference": "791c5d31a8204cf3db0c66faab70282307f4376b",
+                "url": "https://api.github.com/repos/symfony/mailer/zipball/ca8dcf8892cdc5b4358ecf2528429bb5e706f7ba",
+                "reference": "ca8dcf8892cdc5b4358ecf2528429bb5e706f7ba",
                 "shasum": ""
             },
             "require": {
@@ -3595,7 +3536,7 @@
             "description": "Helps sending emails",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/mailer/tree/v6.4.4"
+                "source": "https://github.com/symfony/mailer/tree/v6.4.0"
             },
             "funding": [
                 {
@@ -3611,7 +3552,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-02-03T21:33:47+00:00"
+            "time": "2023-11-12T18:02:22+00:00"
         },
         {
             "name": "symfony/mime",
@@ -5084,74 +5025,17 @@
             "time": "2017-11-25T15:32:29+00:00"
         },
         {
-            "name": "yiisoft/yii2-swiftmailer",
-            "version": "2.0.7",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/yiisoft/yii2-swiftmailer.git",
-                "reference": "8a03a62cbcb82e7697d3002eb43a8d2637f566ec"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-swiftmailer/zipball/8a03a62cbcb82e7697d3002eb43a8d2637f566ec",
-                "reference": "8a03a62cbcb82e7697d3002eb43a8d2637f566ec",
-                "shasum": ""
-            },
-            "require": {
-                "swiftmailer/swiftmailer": "~5.0",
-                "yiisoft/yii2": "~2.0.4"
-            },
-            "type": "yii2-extension",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "2.0.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "yii\\swiftmailer\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "BSD-3-Clause"
-            ],
-            "authors": [
-                {
-                    "name": "Paul Klimov",
-                    "email": "klimov.paul@gmail.com"
-                }
-            ],
-            "description": "The SwiftMailer integration for the Yii framework",
-            "keywords": [
-                "email",
-                "mail",
-                "mailer",
-                "swift",
-                "swiftmailer",
-                "yii2"
-            ],
-            "support": {
-                "forum": "http://www.yiiframework.com/forum/",
-                "irc": "irc://irc.freenode.net/yii",
-                "issues": "https://github.com/yiisoft/yii2-swiftmailer/issues",
-                "source": "https://github.com/yiisoft/yii2-swiftmailer",
-                "wiki": "http://www.yiiframework.com/wiki/"
-            },
-            "time": "2017-05-01T08:29:00+00:00"
-        },
-        {
             "name": "yiisoft/yii2-symfonymailer",
-            "version": "2.0.4",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/yiisoft/yii2-symfonymailer.git",
-                "reference": "82f5902551a160633c4734b5096977ce76a809d9"
+                "reference": "0941beb44ee05040b30bbebf4ca2eb63bf1415cd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-symfonymailer/zipball/82f5902551a160633c4734b5096977ce76a809d9",
-                "reference": "82f5902551a160633c4734b5096977ce76a809d9",
+                "url": "https://api.github.com/repos/yiisoft/yii2-symfonymailer/zipball/0941beb44ee05040b30bbebf4ca2eb63bf1415cd",
+                "reference": "0941beb44ee05040b30bbebf4ca2eb63bf1415cd",
                 "shasum": ""
             },
             "require": {
@@ -5213,7 +5097,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-09-04T10:48:21+00:00"
+            "time": "2021-12-30T10:09:38+00:00"
         }
     ],
     "packages-dev": [

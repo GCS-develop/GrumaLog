@@ -26,7 +26,7 @@ use yii\db\Expression;
  */
 class Traspasodetalletienda extends \yii\db\ActiveRecord
 {
-
+    public $codigoBarras;
     public $item;
     public $talla;
     public $color;
@@ -35,6 +35,8 @@ class Traspasodetalletienda extends \yii\db\ActiveRecord
     public $nombreCreo;
     public $fechaDesde;
     public $fechaHasta;
+    public $cantidadRegistrosTienda; // nuevo: conteo de filas tienda por grupo
+
     public $cantidadTraspasoRegistros;
     public $cantidadTraspasounidades;
     public $diferencia;
@@ -80,6 +82,7 @@ class Traspasodetalletienda extends \yii\db\ActiveRecord
             [['idTraspaso', 'idItem', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'required'],
             [['idTraspaso', 'idItem', 'cantidad', 'idDocumentosiesa', 'created_by', 'updated_by'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
+            [['unidades', 'cantidadTraspasoRegistros', 'cantidadTraspasounidades', 'diferencia', 'cantidadRegistrosTienda'], 'number'], // ← aquí
             [['idTraspaso'], 'exist', 'skipOnError' => true, 'targetClass' => Traspaso::class, 'targetAttribute' => ['idTraspaso' => 'id']],
             [['idItem'], 'exist', 'skipOnError' => true, 'targetClass' => Item::class, 'targetAttribute' => ['idItem' => 'id']],
         ];
@@ -123,7 +126,7 @@ class Traspasodetalletienda extends \yii\db\ActiveRecord
         return $this->hasOne(Traspaso::class, ['id' => 'idTraspaso']);
     }
 
-    
+
     public static function resumenPorUsuarioTraspaso($idtraspaso = null)
     {
         $params = [];

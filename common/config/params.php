@@ -1,11 +1,13 @@
 <?php
 return [
     'bsVersion' => '4.x',
-    'adminEmail' => 'admin@example.com',
-    'supportEmail' => 'support@example.com',
-    'senderEmail' => 'noreply@example.com',
-    'senderName' => 'Example.com mailer',
-    'user.passwordResetTokenExpire' => 3600,
+    'adminEmail' => 'victorburbanoherpo@gmail.com',
+    'supportEmail' => 'victorburbanoherpo@gmail.com',
+    'senderEmail' => 'victorburbanoherpo@gmail.com',
+    'senderName' => 'Victor Burbano',
+    'passwordResetTokenExpire' => 3600, // 1 hora
+    'user.passwordResetTokenExpire' => 3600, // 1 hora
+    'timeZone' => 'America/Bogota',
     'user.passwordMinLength' => 8,
 
     'endpoints' => [

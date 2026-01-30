@@ -6,13 +6,13 @@ use frontend\models\Item;
 
 class StickerGenerator
 {
-	
-	public static function generar($detalles, $fecha_activacion, $origen, $labelsPerRow = 3, $labelWidth = 220, $labelHeight = 170)
+
+	public static function generar($detalles, $fecha_activacion, $origen, $labelsPerRow = 3, $labelWidth = 220, $labelHeight = 170, $cantidad = null)
 	{
 		$count = 0;
 		$horizontalGap = 50;
 		$content = '';
-		
+
 		// Lista completa de stickers a imprimir (según cantidad)
 		$stickers = [];
 
@@ -21,7 +21,12 @@ class StickerGenerator
 			if (!$item) continue;
 
 			$precio = Item::obtenerPrecioVenta($item->codigoBarras, $fecha_activacion);
-			$cantidad = (int) $detalle->cantidadPedida;
+
+			if ($cantidad > 0) {
+				$cantidad = (int) $cantidad;
+			} else {
+				$cantidad = (int) $detalle->cantidadPedida;
+			}
 
 			for ($i = 0; $i < $cantidad; $i++) {
 				$stickers[] = ['item' => $item, 'precio' => $precio];
@@ -60,7 +65,7 @@ class StickerGenerator
 		return $content;
 	}
 
-	 public static function generar1 ($detalles, $fecha_activacion, $origen, $labelsPerRow = 3, $labelWidth = 220, $labelHeight = 170)
+	public static function generar1($detalles, $fecha_activacion, $origen, $labelsPerRow = 3, $labelWidth = 220, $labelHeight = 170)
 	{
 		$count = 0;
 		$horizontalGap = 50;
@@ -88,5 +93,4 @@ class StickerGenerator
 		$content .= "^XZ\n"; // cierre único de bloque
 		return $content;
 	}
-
 }

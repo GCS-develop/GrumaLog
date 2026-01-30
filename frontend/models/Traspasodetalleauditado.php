@@ -2,11 +2,13 @@
 
 namespace frontend\models;
 
+use common\models\User;
 use Yii;
 use yii\web\NotFoundHttpException;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
+
 /**
  * This is the model class for table "traspasodetalleauditado".
  *
@@ -110,7 +112,7 @@ class Traspasodetalleauditado extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getIdItem0()
+    public function getItem()
     {
         return $this->hasOne(Item::class, ['id' => 'idItem']);
     }
@@ -120,11 +122,10 @@ class Traspasodetalleauditado extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getIdTraspaso0()
+    public function getTraspaso()
     {
         return $this->hasOne(Traspaso::class, ['id' => 'idTraspaso']);
     }
-
     public static function findModelByIdTraspaso($idTraspaso)
     {
         if (($model = Traspasodetalleauditado::findOne(['idTraspaso' => $idTraspaso])) !== null) {
@@ -208,7 +209,16 @@ class Traspasodetalleauditado extends \yii\db\ActiveRecord
     ", $params)->queryAll();
     }
 
+    // Usuario que creó el registro
+    public function getUsuariocreated()
+    {
+        // Tabla user: id  <—>  created_by
+        return $this->hasOne(User::class, ['id' => 'created_by']);
+    }
 
-
-
+    // (opcional) si también quieres updated_by:
+    public function getUsuarioupdated()
+    {
+        return $this->hasOne(User::class, ['id' => 'updated_by']);
+    }
 }

@@ -238,9 +238,26 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return $this->hasOne(Bodegas::class, ['id' => 'idBodegaRecibir']);
     }
+
+    public function getBodegadespachar()
+    {
+        return $this->hasOne(Bodegas::class, ['id' => 'idBodegaDespachar']);
+    }
     public function getNombreBodegaRecibir()
     {
         return $this->bodegarecibir ? $this->bodegarecibir->nombre : '-';
     }
-
+    public function getNombreBodegaDespachar()
+    {
+        return $this->bodegadespachar ? $this->bodegadespachar->nombre : '1-';
+    }
+    public static function getCodigoCOUsuario($idUser)
+    {
+        return trim((new \yii\db\Query())
+            ->select('bo.codigo')
+            ->from('user us')
+            ->innerJoin('bodegas bo', 'us.idBodegaRecibir = bo.id')
+            ->where(['us.id' => $idUser])
+            ->scalar());
+    }
 }

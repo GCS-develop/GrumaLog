@@ -104,7 +104,7 @@ class Bodegas extends \yii\db\ActiveRecord
         return $listadata;
     }
 
-    public static function getListaDataCEDI()
+   /* public static function getListaDataCEDI()
     {
         $data = Bodegas::find()
             ->select(['id', 'nombre'])
@@ -112,7 +112,7 @@ class Bodegas extends \yii\db\ActiveRecord
             ->where(['cedi' => 1]);
         $listadata = ArrayHelper::map($data, 'id', 'nombre');
         return $listadata;
-    }
+    }*/
 
     public static function getListaDataId($allowedCodes = [])
     {

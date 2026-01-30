@@ -56,118 +56,220 @@ class TraspasodetalletiendaSearch extends Traspasodetalletienda
      *
      * @return ActiveDataProvider
      */
+
     public function search($params, $idtraspaso = null)
     {
-        if ($idtraspaso == null) {
-            $query = Traspasodetalletienda::find()->alias('tdt');
-        } else {
-            $query = Traspasodetalletienda::find()->where(['tdt.idTraspaso' => $idtraspaso])->alias('tdt');
+        $q = (new \yii\db\Query());
+
+        // === Subconsulta: TRASPASO (esperados) por grupo ===
+        $tdgSql = "
+        SELECT
+            td.idTraspaso,
+            i0.item,
+            i0.idTalla,
+            i0.idColor,
+            SUM(ISNULL(td.cantidad,0))                               AS cantEsperadaRegistrosGrupo,
+            SUM(ISNULL(ue0.equivalencia,1) * ISNULL(td.cantidad,0))  AS cantEsperadaUnidadesGrupo
+        FROM traspasodetalle td
+        INNER JOIN item i0 ON i0.id = td.idItem
+        LEFT JOIN unidadempaque ue0 ON ue0.codigo = i0.unidadEmpaque
+        GROUP BY td.idTraspaso, i0.item, i0.idTalla, i0.idColor
+    ";
+
+        // === Subconsulta: DOCUMENTOSIESA agregada a 1 fila por idGruma (evita fan-out/duplicados) ===
+        $dsAggSql = "
+        SELECT idGruma, MIN(f350_consec_docto) AS f350_consec_docto
+        FROM documentosiesa
+        GROUP BY idGruma
+    ";
+
+        // === FROM + JOINs base (solo tablas que NO dupliquen) ===
+        $q->from(['tdt' => 'traspasodetalletienda'])
+            ->innerJoin(['i'    => 'item'],           'i.id = tdt.idItem')
+            ->innerJoin(['t'    => 'talla'],          't.id = i.idTalla')
+            ->innerJoin(['c'    => 'color'],          'c.id = i.idColor')
+            ->leftJoin(['ue'   => 'unidadempaque'],  'ue.codigo = i.unidadEmpaque')
+            // usar documentosiesa agregado (1 x idGruma)
+            ->leftJoin(['ds'   => new \yii\db\Expression("($dsAggSql)")], 'tdt.idTraspaso = ds.idGruma')
+            ->leftJoin(['tr'   => 'traspaso'],       'tr.id = tdt.idTraspaso')
+            ->leftJoin(['tdoc' => 'tipodocumento'],  'tdoc.id = tr.idTipoDocumento')
+            ->leftJoin(['bo'   => 'bodegas'],        'bo.id = tr.idBodegaOrigen')
+            ->leftJoin(['bd'   => 'bodegas'],        'bd.id = tr.idBodegaDestino')
+            ->leftJoin(['uCreateT' => 'user'],       'uCreateT.id = tr.created_by')
+            // usuarios de detalle (se agregan con MIN/MAX para no romper el GROUP BY)
+            ->leftJoin(['uUpdate' => 'user'],        'uUpdate.id = tdt.updated_by')
+            ->leftJoin(['uCreate' => 'user'],        'uCreate.id = tdt.created_by')
+            // totales esperados del traspaso
+            ->leftJoin(
+                ['tdg' => new \yii\db\Expression("($tdgSql)")],
+                'tdg.idTraspaso = tdt.idTraspaso
+             AND tdg.item    = i.item
+             AND tdg.idTalla = i.idTalla
+             AND tdg.idColor = i.idColor'
+            );
+
+        if ($idtraspaso !== null) {
+            $q->andWhere(['tdt.idTraspaso' => $idtraspaso]);
         }
 
-        $query->join('INNER JOIN', 'item i', 'i.id = tdt.iditem');
-        $query->join('INNER JOIN', 'talla t', 't.id = i.idTalla');
-        $query->join('INNER JOIN', 'color c', 'c.id = i.idColor');
-        $query->join('INNER JOIN', 'user uUpdate', 'uUpdate.id = tdt.updated_by');
-        $query->join('INNER JOIN', 'user uCreate', 'uCreate.id = tdt.created_by');
-        $query->join('LEFT JOIN', 'unidadempaque ue', 'ue.codigo = i.unidadEmpaque');
-        $query->join('LEFT JOIN', 'traspasodetalle td', 'td.idTraspaso = tdt.idTraspaso AND td.idItem = tdt.idItem');
-        $query->join('LEFT JOIN', 'documentosiesa ds', 'tdt.idTraspaso = ds.idGruma');
-        $query->join('LEFT JOIN', 'traspaso tr', 'tr.id = tdt.idTraspaso');
-        $query->join('LEFT JOIN', 'user uCreateT', 'uCreateT.id = tr.created_by');
-        $query->join('LEFT JOIN', 'tipodocumento tdoc', 'tdoc.id = tr.idTipoDocumento');
-        $query->join('LEFT JOIN', 'bodegas bo', 'bo.id = tr.idBodegaOrigen');
-        $query->join('LEFT JOIN', 'bodegas bd', 'bd.id = tr.idBodegaDestino');
+        // === SELECT agregado por grupo (item+talla+color) ===
+        $q->select([
+            // Claves del grupo
+            'tdt.idTraspaso',
+            'item'    => 'i.item',
+            'idTalla' => 'i.idTalla',
+            'idColor' => 'i.idColor',
+            'talla'   => 't.codigo',
+            'color'   => 'c.nombre',
 
-        // add conditions that should always apply here
+            // Cabecera (agregadas con MIN/MAX para no romper el GROUP BY)
+            'serie'            => 'tdoc.codigo',
+            'consecutivoSiesa' => 'ds.f350_consec_docto',
+            'Origen'           => new \yii\db\Expression("(bo.codigo + ' - ' + bo.nombre)"),
+            'Destino'          => new \yii\db\Expression("(bd.codigo + ' - ' + bd.nombre)"),
+            'userTraspaso'     => 'uCreateT.username',
+            'nombreCreo'       => new \yii\db\Expression('MIN(uCreate.username)'),
+            'created_at'       => new \yii\db\Expression('MIN(tdt.created_at)'),
+            'nombreActualizo'  => new \yii\db\Expression('MAX(uUpdate.username)'),
+            'updated_at'       => new \yii\db\Expression('MAX(tdt.updated_at)'),
 
-        $query->select([
-            'tdt.*',
-            'i.item as item',
-            'c.nombre as color',
-            't.codigo as talla',
-            'uUpdate.username as nombreActualizo',
-            'uCreate.username as nombreCreo',
-            'COALESCE(ue.equivalencia, 1) * tdt.cantidad as unidades',
-            'td.cantidad as cantidadTraspasoRegistros',
-            'COALESCE(ue.equivalencia, 1) * td.cantidad as cantidadTraspasounidades',
-            'COALESCE(ue.equivalencia, 1) * (tdt.cantidad - td.cantidad) AS diferencia',
-            'ds.f350_consec_docto AS consecutivoSiesa',
-            'tdoc.codigo as serie',
-            'uCreateT.username AS userTraspaso',
-            "(bo.codigo + ' - ' + bo.nombre) AS Origen",
-            "(bd.codigo + ' - ' + bd.nombre) AS Destino",
-            "i.codigoBarras AS codigoBarras",
+            // TIENDA: totales del grupo
+            'cantidadRegistrosTienda' => new \yii\db\Expression('SUM(ISNULL(tdt.cantidad,0))'),
+            'unidades'                => new \yii\db\Expression('SUM(ISNULL(ue.equivalencia,1) * ISNULL(tdt.cantidad,0))'),
 
+            // TRASPASO: totales esperados (ya vienen agrupados en tdg)
+            'cantidadTraspasoRegistros' => new \yii\db\Expression('ISNULL(tdg.cantEsperadaRegistrosGrupo,0)'),
+            'cantidadTraspasounidades'  => new \yii\db\Expression('ISNULL(tdg.cantEsperadaUnidadesGrupo,0)'),
 
-        ]);
+            // Diferencia en unidades
+            'diferencia' => new \yii\db\Expression('
+            SUM(ISNULL(ue.equivalencia,1) * ISNULL(tdt.cantidad,0))
+            - ISNULL(tdg.cantEsperadaUnidadesGrupo,0)
+        '),
 
-        $dataProvider = new ActiveDataProvider([
-            'query' => $query,
-            'pagination' => [
-                'pageSize' => '100',
+            // Códigos de barras concatenados (TIENDA ∪ TRASPASO) por grupo
+            'codigoBarras' => new \yii\db\Expression("
+            (
+              SELECT STUFF((
+                  SELECT DISTINCT ' | ' + U.codigoBarras
+                  FROM (
+                      SELECT i1.codigoBarras
+                      FROM traspasodetalletienda t1
+                      JOIN item i1 ON i1.id = t1.idItem
+                      WHERE t1.idTraspaso = tdt.idTraspaso
+                        AND i1.item    = i.item
+                        AND i1.idTalla = i.idTalla
+                        AND i1.idColor = i.idColor
+                      UNION
+                      SELECT i3.codigoBarras
+                      FROM traspasodetalle d3
+                      JOIN item i3 ON i3.id = d3.idItem
+                      WHERE d3.idTraspaso = tdt.idTraspaso
+                        AND i3.item    = i.item
+                        AND i3.idTalla = i.idTalla
+                        AND i3.idColor = i.idColor
+                  ) AS U
+                  FOR XML PATH(''), TYPE
+              ).value('.', 'nvarchar(max)'), 1, 3, '')
+            )
+        "),
+        ])
+            ->groupBy([
+                'tdt.idTraspaso',
+                'i.item',
+                'i.idTalla',
+                'i.idColor',
+                't.codigo',
+                'c.nombre',
+                'tdoc.codigo',
+                'ds.f350_consec_docto',
+                'bo.codigo',
+                'bo.nombre',
+                'bd.codigo',
+                'bd.nombre',
+                'uCreateT.username',
+                'tdg.cantEsperadaRegistrosGrupo',
+                'tdg.cantEsperadaUnidadesGrupo',
+            ]);
+        // IMPORTANTE: NO poner ->orderBy aquí (lo maneja el DataProvider) para evitar ORDER BY duplicado.
+
+        // === Filtros del formulario (manteniendo tu lógica) ===
+        $this->load($params);
+        if ($this->validate()) {
+            if (!empty($this->consecutivoSiesa)) {
+                $q->andWhere(['like', 'ds.f350_consec_docto', $this->consecutivoSiesa]);
+            }
+            if (!empty($this->serie)) {
+                // filtra por el código visible (serie)
+                $q->andWhere(['like', 'tdoc.codigo', $this->serie]);
+            }
+
+            // Usar la fecha del detalle (tdt.created_at) para no perder registros
+            if ($this->fechaDesde || $this->fechaHasta) {
+                $campoFecha = new \yii\db\Expression('CAST(tdt.created_at AS DATE)');
+                if ($this->fechaDesde && !$this->fechaHasta) {
+                    $q->andWhere(['>=', $campoFecha, date('Y-m-d', strtotime($this->fechaDesde))]);
+                } elseif (!$this->fechaDesde && $this->fechaHasta) {
+                    $q->andWhere(['<=', $campoFecha, date('Y-m-d', strtotime($this->fechaHasta))]);
+                } else {
+                    $q->andWhere([
+                        'between',
+                        $campoFecha,
+                        date('Y-m-d', strtotime($this->fechaDesde)),
+                        date('Y-m-d', strtotime($this->fechaHasta)),
+                    ]);
+                }
+            }
+        }
+
+        // DataProvider (modo array) + tu ordenamiento
+        $dataProvider = new \yii\data\ActiveDataProvider([
+            'query' => $q,
+            'pagination' => ['pageSize' => 100],
+            'sort' => [
+                'attributes' => [
+                    'serie',
+                    'consecutivoSiesa',
+                    'Origen',
+                    'Destino',
+                    'item',
+                    'talla',
+                    'color',
+                    'cantidadRegistrosTienda',
+                    'cantidadTraspasoRegistros',
+                    'unidades',
+                    'cantidadTraspasounidades',
+                    'diferencia',
+                    'userTraspaso',
+                    'nombreCreo',
+                    'created_at',
+                    'nombreActualizo',
+                    'updated_at',
+                ],
+                'defaultOrder' => ['item' => SORT_ASC, 'talla' => SORT_ASC, 'color' => SORT_ASC],
             ],
         ]);
 
-        $this->load($params);
-
-        if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
-            // $query->where('0=1');
-            return $dataProvider;
-        }
-
-        // grid filtering conditions
-        $query->andFilterWhere([
-            'id' => $this->id,
-            'idTraspaso' => $this->idTraspaso,
-            'idItem' => $this->idItem,
-            'cantidad' => $this->cantidad,
-            'idDocumentosiesa' => $this->idDocumentosiesa,
-            'created_at' => $this->created_at,
-            'created_by' => $this->created_by,
-            'updated_at' => $this->updated_at,
-            'updated_by' => $this->updated_by,
-        ]);
-
-        if (!empty($this->consecutivoSiesa)) {
-            $query->andFilterWhere(['like', 'ds.f350_consec_docto', $this->consecutivoSiesa]);
-        }
-        if (!empty($this->serie)) {
-            $query->andFilterWhere(['like', 'tdoc.id', $this->serie]);
-        }
-
-        if ($this->fechaDesde || $this->fechaHasta) {
-            // Si solo está presente fechaDesde, buscar por esa fecha exacta
-            if ($this->fechaDesde && !$this->fechaHasta) {
-                $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
-                $query->andWhere(['>=', new \yii\db\Expression('CAST(tdt.created_at AS DATE)'), $fechaInicio]);
-            }
-            // Si solo está presente fechaHasta, buscar hasta esa fecha
-            elseif (!$this->fechaDesde && $this->fechaHasta) {
-                $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
-                $query->andWhere(['<=', new \yii\db\Expression('CAST(tdt.created_at AS DATE)'), $fechaFin]);
-            }
-            // Si están presentes ambas, buscar entre ambas fechas
-            elseif ($this->fechaDesde && $this->fechaHasta) {
-                $fechaInicio = date('Y-m-d', strtotime($this->fechaDesde));
-                $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
-                $query->andWhere(['between', new \yii\db\Expression('CAST(tdt.created_at AS DATE)'), $fechaInicio, $fechaFin]);
-            }
-        }
-        $query->orderBy(['tdt.created_by' => SORT_ASC]); // ✅ Correcto
-
         return $dataProvider;
     }
+
+
+
 
     public function searchConDiferencias($params, $idtraspaso = null)
     {
+        // Reutiliza el armado completo (agrupado) de search()
         $dataProvider = $this->search($params, $idtraspaso);
-        $query = $dataProvider->query;
 
-        // Filtrar solo donde haya diferencia positiva o negativa
-        $query->andWhere(['<>', new \yii\db\Expression('COALESCE(ue.equivalencia, 1) * (tdt.cantidad - td.cantidad)'), 0]);
+        /** @var \yii\db\Query $q */
+        $q = $dataProvider->query;
+
+        // Filtra sólo grupos con diferencia <> 0 usando HAVING sobre la expresión agregada
+        $q->andHaving(new \yii\db\Expression("
+        SUM(ISNULL(ue.equivalencia,1) * ISNULL(tdt.cantidad,0))
+        - ISNULL(tdg.cantEsperadaUnidadesGrupo,0) <> 0
+    "));
 
         return $dataProvider;
     }
-
 }

@@ -41,7 +41,7 @@ class TraspasouserbodegaController extends Controller
     public function actionIndex()
     {
         $searchModel = new TraspasouserbodegaSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -149,7 +149,8 @@ class TraspasouserbodegaController extends Controller
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($id){
+    public function actionDelete($id)
+    {
 
         $model = $this->findModel($id);
 

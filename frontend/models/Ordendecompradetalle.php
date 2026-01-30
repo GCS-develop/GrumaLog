@@ -1,6 +1,7 @@
 <?php
 
 namespace frontend\models;
+use frontend\models\Ordendecompra;
 
 use Yii;
 use yii\behaviors\BlameableBehavior;
@@ -110,7 +111,7 @@ class Ordendecompradetalle extends \yii\db\ActiveRecord
      */
     public function getOrdenCompra()
     {
-        return $this->hasOne(Ordencompra::class, ['id' => 'idOrdenCompra']);
+        return $this->hasOne(Ordendecompra::class, ['id' => 'idOrdenCompra']);
     }
 
     public function getItem()

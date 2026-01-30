@@ -6,7 +6,11 @@ use frontend\models\Inventario;
 use frontend\models\search\InventarioSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use Yii;
+use yii\web\BadRequestHttpException;
 use yii\filters\VerbFilter;
+use yii\helpers\Html;
+use common\components\SiesaSyncService;
 
 /**
  * InventarioController implements the CRUD actions for Inventario model.
@@ -25,6 +29,7 @@ class InventarioController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'sincronizar-inventario' => ['POST'],
                     ],
                 ],
             ]
@@ -130,5 +135,24 @@ class InventarioController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionSincronizarInventario()
+    {
+        $codigoBodega = Yii::$app->request->post('InventarioSearch')['codigoBodega'] ?? null;
+        if (empty($codigoBodega)) {
+            throw new \yii\web\BadRequestHttpException('Debe seleccionar una bodega para sincronizar.');
+        }
+
+        $syncItemsActivo = (int)\frontend\models\Parametroscontrol::getValorparametro('SYNC_ITEMS_SIESA') === 1;
+
+        $svc = new SiesaSyncService('E:\laragon\bin\php\php-8.1.10-win32-vs16-x64\php.exe', 'C:\Apache24\htdocs\conektasiesav2');
+
+
+        $r = $svc->syncInventarioBodega((int)$codigoBodega, $syncItemsActivo);
+
+        return $this->renderContent(
+            '<pre style="white-space:pre-wrap;">' . \yii\helpers\Html::encode($r['log'] ?? ($r['error'] ?? '')) . '</pre>'
+        );
     }
 }

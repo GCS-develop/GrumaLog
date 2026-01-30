@@ -1,5 +1,6 @@
 <?php
 
+use frontend\models\Bodegas;
 use frontend\models\Inventario;
 use frontend\models\Item;
 use yii\helpers\Html;
@@ -7,6 +8,10 @@ use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use kartik\grid\GridView;
 use kartik\export\ExportMenu;
+use yii\bootstrap5\Modal;
+use yii\widgets\ActiveForm;
+use yii\helpers\ArrayHelper;
+
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\InventarioSearch $searchModel */
@@ -49,7 +54,7 @@ $gridColumns = [
 
 <link rel="stylesheet" href="css/shared.css">
 
-<div class="inventario-index">
+<div class="inventario-index mb-3">
 
     <div class="row">
 
@@ -57,7 +62,7 @@ $gridColumns = [
         $totalCantidadSiesa = (int) Inventario::getTotalExistenciasSiesa($searchModel->codigoBodega);
         $totalCantidadGruma = (int) Inventario::getotalExistenciasGruma($searchModel->codigoBodega);
         ?>
-        <div class="col-lg-12 centrar">
+        <div class="col-lg-6 derecha">
 
             <?php echo ExportMenu::widget(
                 [
@@ -92,6 +97,18 @@ $gridColumns = [
             );
             ?>
         </div>
+
+        <div class="col-lg-6 izquierda">
+            <!-- Botón Sincronizar (abre modal) -->
+            <?= Html::button('Sincronizar', [
+                'class' => 'btn btn-success btn-lg btn-create',
+                'data-bs-toggle' => 'modal',
+                'data-bs-target' => '#modalSyncInventario',
+            ]) ?>
+        </div>
+
+
+
     </div>
 </div>
 
@@ -101,14 +118,14 @@ $gridColumns = [
     'filterModel' => $searchModel,
 
     'beforeRow' => function ($model, $key, $index, $grid) use ($totalCantidadSiesa, $totalCantidadGruma) {
-    if ($index === 0) { // Primera fila de cada página
-        return "<tr>
+        if ($index === 0) { // Primera fila de cada página
+            return "<tr>
                     <td colspan='7'><strong>Gran Total</strong></td>
                     <td><strong>$totalCantidadGruma</strong></td>
                     <td><strong>$totalCantidadSiesa</strong></td>
                 </tr>";
-    }
-},
+        }
+    },
 
 
     'showPageSummary' => true,
@@ -122,3 +139,39 @@ $gridColumns = [
     ),
 
 ]); ?>
+
+
+
+<?php Modal::begin([
+    'title' => '<strong>Sincronizar inventario por bodega</strong>',
+    'id' => 'modalSyncInventario',
+    'size' => Modal::SIZE_DEFAULT,
+]); ?>
+
+<?php $form = ActiveForm::begin([
+    'action' => ['inventario/sincronizar-inventario'],
+    'method' => 'post',
+]); ?>
+
+<?= $form->field($searchModel, 'codigoBodega')->dropDownList(
+    Bodegas::getListaDataCodigo(),
+    ['prompt' => 'Seleccione una bodega...']
+)->label('Bodega a sincronizar') ?>
+
+<div class="d-flex justify-content-end gap-2">
+    <?= Html::button('Cancelar', [
+        'class' => 'btn btn-secondary',
+        'data-bs-dismiss' => 'modal'
+    ]) ?>
+
+    <?= Html::submitButton('Ejecutar sincronización', [
+        'class' => 'btn btn-primary',
+        'data' => [
+            'confirm' => '¿Confirmas ejecutar la sincronización para la bodega seleccionada?',
+            'method' => 'post',
+        ],
+    ]) ?>
+</div>
+
+<?php ActiveForm::end(); ?>
+<?php Modal::end(); ?>

@@ -126,7 +126,6 @@ class Item extends \yii\db\ActiveRecord
     public function getUnidadempaque()
     {
         return $this->hasOne(Unidadempaque::class, ['codigo' => 'unidadEmpaque']);
-
     }
 
     public function getUnidadorden()
@@ -300,6 +299,8 @@ class Item extends \yii\db\ActiveRecord
 
         // $referencia  = str_pad(strtoupper(substr(trim($registro->referencia), 0, 20)), 20, ' ', STR_PAD_RIGHT);
         $referenciaCompleta = trim($registro->referencia);
+        // var_dump($referenciaCompleta);
+
         $partes = explode('-', $referenciaCompleta);
         if (isset($partes[1]) && strlen($partes[1]) > 0) {
             $referenciaSoloCodigo = $partes[1];
@@ -307,7 +308,8 @@ class Item extends \yii\db\ActiveRecord
             $referenciaSoloCodigo = $referenciaCompleta;
         }
         $referencia = str_pad(strtoupper(substr($referenciaSoloCodigo, 0, 15)), 15, ' ', STR_PAD_RIGHT);
-
+        // var_dump($referencia);
+        // die('hola');
         $color = str_pad(strtoupper(substr(trim($registro->color->nombre), 0, 10)), 10, ' ', STR_PAD_RIGHT);
         $linea3 = $referencia . $color;
 
@@ -522,5 +524,4 @@ class Item extends \yii\db\ActiveRecord
 
         return $existencia;
     }
-
 }

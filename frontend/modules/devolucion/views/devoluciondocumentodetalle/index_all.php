@@ -80,6 +80,7 @@ Modal::end();
 <?php
 $gridColumns = [
     'codigoBodegaSalida',
+    'bodegaSalida.nombreBodega',
     'numeroDocumento',
     'codigoBarras',
     'item',
@@ -293,10 +294,23 @@ $gridColumns = [
 
             /*'id',
             'idDocumento',*/
-            'nombreProveedor', // Nombre del atributo en el modelo
+           [
+    'attribute' => 'nombreProveedor',
+    'label' => 'Proveedor',
+    'value' => function ($model) {
+        return $model->nombreProveedor ?? 'Proveedor No Asignado';
+    },
+    'filter' => true, // habilita el filtro en la cabecera
+],
             [
                 'attribute' => 'codigoBodegaSalida', // Nombre del atributo en el modelo
                 'hAlign' => 'center', // Alineación horizontal al centro
+                'vAlign' => 'middle', // Alineación vertical al centro
+            ],
+            [
+                'attribute' => 'nombreBodegaSalida', // Nombre del atributo en el modelo
+                'label' => 'Nombre Bodega',
+                'hAlign' => 'left', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
             ],
 
@@ -491,7 +505,6 @@ $gridColumns = [
 </div>
 
 <?php
-// JavaScript para cargar el formulario en el modal al hacer clic en el botón "Registrar"
 $this->registerJs("
     $(document).ready(function() {
         $('#modalButtonRegistrarDevolucion').on('click', function () {
@@ -506,10 +519,15 @@ $this->registerJs("
 
             const url = '" . $url . "';
 
+            // ✅ ahora mandamos los IDs por POST para abrir el form en el modal
             $.ajax({
                 url: url,
-                type: 'GET',
-                data: { id: idsSeleccionados.join(',') },
+                type: 'POST',
+                data: {
+    ids_json: JSON.stringify(idsSeleccionados),
+    '" . Yii::$app->request->csrfParam . "': '" . Yii::$app->request->getCsrfToken() . "'
+},
+
                 success: function(response) {
                     if (response) {
                         $('#modaldata').modal('show').find('#modalContentData').html(response);
@@ -517,15 +535,13 @@ $this->registerJs("
                         alert('No se ha recibido contenido válido.');
                     }
                 },
-                error: function() {
-                    alert('Ocurrió un error al cargar el formulario.');
+                error: function(xhr) {
+                    alert('Ocurrió un error al cargar el formulario: ' + xhr.status);
                 }
             });
         });
     });
 ");
-
-
-
-
 ?>
+
+

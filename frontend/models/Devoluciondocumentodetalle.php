@@ -8,6 +8,7 @@ use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 
 use common\models\User;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "devoluciondocumentodetalle".
@@ -127,50 +128,41 @@ class Devoluciondocumentodetalle extends \yii\db\ActiveRecord
 
 
     public function getTransferdevdocumento()
-{
-    // Establecer la relación inversa
-    return $this->hasOne(Transferdevdocumentos::class, ['id' => 'id_devoluciondocumento']);
-}
+    {
+        // Establecer la relación inversa
+        return $this->hasOne(Transferdevdocumentos::class, ['id' => 'id_devoluciondocumento']);
+    }
 
 
-public function getCosto(): ?float
-{
-    $ean = (string)$this->codigoBarras; // asegúrate que no venga null
+    public function getCosto(): ?float
+    {
+        $ean = (string)$this->codigoBarras;
 
-    $sql = "
-        WITH UltimoCosto AS (
-            SELECT 
-                it.f131_id AS EAN,
-                exis.f400_costo_prom_uni AS Costo,
-                ROW_NUMBER() OVER (
-                    PARTITION BY it.f131_id
-                    ORDER BY d.f126_fecha_activacion DESC
-                ) AS RowNum
-            FROM t120_mc_items a
-            JOIN t121_mc_items_extensiones b ON a.f120_rowid = b.f121_rowid_item
-            JOIN t400_cm_existencia exis     ON exis.f400_rowid_item_ext = b.f121_rowid
-            JOIN t126_mc_items_precios d     ON d.f126_rowid_item = a.f120_rowid
-            JOIN t131_mc_items_barras it     ON b.f121_rowid = it.f131_rowid_item_ext
-            WHERE exis.f400_rowid_bodega = 6
-        )
-        SELECT Costo 
-        FROM UltimoCosto 
-        WHERE RowNum = 1 AND EAN = :ean
+        $sql = "
+        SELECT 
+            CAST(SUM(a.f_costo_prom_tot_ins) / NULLIF(SUM(a.f_cant_existencia_actual),0) AS DECIMAL(18,6)) AS Costo
+        FROM BI_T400_1 a
+        JOIN t121_mc_items_extensiones b ON a.f_rowid_item_ext = b.f121_rowid
+        JOIN t120_mc_items c ON a.f_rowid_item = c.f120_rowid
+        JOIN t131_mc_items_barras it ON b.f121_rowid = it.f131_rowid_item_ext
+        WHERE a.f_id_bodega = '214'
+          AND a.f_cant_existencia_actual > 0
+          AND a.f_parametro_biable = '1'
+          AND it.f131_id = :ean
     ";
 
-    $valor = Yii::$app->dbSiesa
-        ->createCommand($sql, [':ean' => $ean])
-        ->queryScalar();
+        $valor = Yii::$app->dbSiesa
+            ->createCommand($sql, [':ean' => $ean])
+            ->queryScalar();
 
-    // <- AQUÍ: normalizamos. Si no hay filas, regresa null (no 0).
-    return ($valor !== false && $valor !== null) ? (float)$valor : null;
-}
-
+        return ($valor !== false && $valor !== null) ? (float)$valor : null;
+    }
 
 
-public function getTipoInventario(): string
-{
-    $sql = "
+
+    public function getTipoInventario(): string
+    {
+        $sql = "
         SELECT IC.f125_id_criterio_mayor
         FROM   t125_mc_items_criterios   IC
         JOIN   t120_mc_items             I  ON I.f120_rowid      = IC.f125_rowid_item
@@ -179,16 +171,74 @@ public function getTipoInventario(): string
           AND  IE.f121_id_barras_principal = :ean
     ";
 
-    $criterio = Yii::$app->dbSiesa
-                 ->createCommand($sql)
-                 ->bindValue(':ean', $this->codigoBarras)
-                 ->queryScalar();
+        $criterio = Yii::$app->dbSiesa
+            ->createCommand($sql)
+            ->bindValue(':ean', $this->codigoBarras)
+            ->queryScalar();
 
-    return match ($criterio) {
-        '0001' => 'VMI',
-        '0002' => 'FIRME',
-        default => 'N/A',
-    };
+        return match ($criterio) {
+            '0001' => 'VMI',
+            '0002' => 'FIRME',
+            default => 'N/A',
+        };
+    }
+
+    public function getImportacionDetalle()
+    {
+        return $this->hasOne(Devolucionimportaciondetalle::class, [
+            'codigoBarras' => 'codigoBarras',
+            'numeroDocumento' => 'numeroDocumento', // 👈 así evitas que mezcle con otro documento
+        ]);
+    }
+
+    public function getNombreProveedor()
+    {
+        // Si existe relación, devuelve el proveedor de la importación
+        return $this->importacionDetalle?->proveedor ?? 'Proveedor No Asignado';
+    }
+
+    public static function getListaDataUsuarioRegistra(): array
+    {
+        $rows = User::find()
+            ->alias('u')
+            ->innerJoin(Devoluciondocumentodetalle::tableName() . ' dd', 'dd.usuarioRegistra = u.id')
+            ->select(['u.id', 'u.username AS nombre'])   // cambia 'nombre' si prefieres nombres/apellidos
+            ->distinct()
+            ->orderBy(['nombre' => SORT_ASC])
+            ->asArray()
+            ->all();
+
+        return ArrayHelper::map($rows, 'id', 'nombre'); // id => username
+    }
+
+
+/*public function getBodega()
+{
+    // Si en tu tabla usas el ID
+    //return $this->hasOne(Bodegas::class, ['id' => 'idBodega']);
+
+    // O si usas el código (ajústalo según tu caso real)
+     return $this->hasOne(Bodegas::class, ['codigo' => 'codigoBodegaSalida']);
+}
+*/
+
+public function getDocumento()
+{
+    // Relación con la cabecera del documento
+    return $this->hasOne(Devoluciondocumento::class, ['id' => 'idDocumento']);
+}
+
+public function getBodegaSalida()
+{
+    // Relación con la tabla bodegas a través del documento cabecera
+    return $this->hasOne(Bodegas::class, ['codigo' => 'codigoBodegaSalida'])
+                ->via('documento');
+}
+
+public function getNombreBodega()
+{
+    // Devuelve el nombre de la bodega o texto si no existe
+    return $this->bodegaSalida->nombre ?? 'Bodega No Asignada';
 }
 
 

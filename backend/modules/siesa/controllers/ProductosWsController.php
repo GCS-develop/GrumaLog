@@ -52,13 +52,24 @@ class ProductosWsController extends Controller
 
     public function actionSincronizarerp($item = null)
     {
-        $respuesta = ProductosWs::sincronizarERP($item);
+        // Normaliza
+        $item = is_string($item) ? trim($item) : $item;
 
-        if ($respuesta){
-            Yii::$app->session->setFlash('success', 'Sincronización ha finalizado correctamente.');
-        }else{
-            Yii::$app->session->setFlash('error', 'Sincronización ha fallado.');
+        // Si no llega item, no sincronices (evita falso "OK")
+        if ($item === null || $item === '') {
+            Yii::$app->session->setFlash('error', 'Debe indicar un Item para sincronizar. El parámetro "item" llegó vacío.');
+            return $this->redirect(['index']);
         }
+
+        $resp = ProductosWs::sincronizarERP($item);
+
+        if (!empty($resp['ok'])) {
+            $msg = $resp['message'] ?: 'Sincronización ha finalizado correctamente.';
+            Yii::$app->session->setFlash('success', $msg);
+        } else {
+            Yii::$app->session->setFlash('error', $resp['message'] ?? 'Sincronización ha fallado.');
+        }
+
         return $this->redirect(['index']);
     }
 }

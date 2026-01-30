@@ -31,8 +31,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 $gridColumns = [
-    // 'id',
-    // 'idTraspaso',
     'serie',
     [
         'attribute' => 'consecutivoSiesa',
@@ -44,55 +42,74 @@ $gridColumns = [
     'talla',
     'color',
     [
-        'attribute' => 'Cantidad registros tienda',
-        'contentOptions' => ['data-cellvalue' => 'registros',],
-        'value' => function ($model) {
-            return $model->cantidad;
-        },
-        'format' => ['decimal', 0], // Formato decimal con 0 decimales,
-        'pageSummary' => true,
-
+        'attribute' => 'codigoBarras',
+        'label' => 'Códigos de barras',
+        'value' => fn($m) => $m['codigoBarras'] ?? null,
+        'format' => 'ntext',
+        'contentOptions' => ['style' => 'max-width:420px; white-space:normal;'],
     ],
     [
-        'attribute' => 'Cantidad registros traspaso',
-        'contentOptions' => ['data-cellvalue' => 'registros',],
-        'value' => function ($model) {
-            return $model->cantidadTraspasoRegistros;
-        },
-        'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+        'attribute' => 'cantidadRegistrosTienda',
+        'label' => 'Cantidad registros tienda',
+        'value' => fn($m) => $m['cantidadRegistrosTienda'] ?? 0,
+        'format' => ['decimal', 0],
         'pageSummary' => true,
-
     ],
     [
-        'attribute' => 'Cantidad unidades tienda',
-        'contentOptions' => ['data-cellvalue' => 'registros',],
-        'value' => function ($model) {
-            return $model->unidades;
-        },
-        'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+        'attribute' => 'cantidadTraspasoRegistros',
+        'label' => 'Cantidad registros traspaso',
+        'value' => fn($m) => $m['cantidadTraspasoRegistros'] ?? 0,
+        'format' => ['decimal', 0],
         'pageSummary' => true,
-
     ],
     [
-        'attribute' => 'Cantidad unidades traspasos',
-        'contentOptions' => ['data-cellvalue' => 'registros',],
-        'value' => function ($model) {
-            return $model->cantidadTraspasounidades;
-        },
-        'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+        'attribute' => 'unidades',
+        'label' => 'Cantidad unidades tienda',
+        'value' => fn($m) => $m['unidades'] ?? 0,
+        'format' => ['decimal', 0],
         'pageSummary' => true,
-
     ],
-    'diferencia',
-    'userTraspaso',
+    [
+        'attribute' => 'cantidadTraspasounidades',
+        'label' => 'Cantidad unidades traspasos',
+        'value' => fn($m) => $m['cantidadTraspasounidades'] ?? 0,
+        'format' => ['decimal', 0],
+        'pageSummary' => true,
+    ],
+    [
+        'attribute' => 'diferencia',
+        'label' => 'Diferencia',
+        'value' => fn($m) => $m['diferencia'] ?? 0,
+        'format' => ['decimal', 0],
+        'pageSummary' => true,
+    ],
+    [
+        'attribute' => 'userTraspaso',
+        'value' => fn($m) => $m['userTraspaso'] ?? null,
+    ],
     [
         'attribute' => 'nombreCreo',
         'group' => true,
+        'value' => fn($m) => $m['nombreCreo'] ?? null,
     ],
-    'created_at',
-    'nombreActualizo',
-    'updated_at',
+    [
+        'attribute' => 'created_at',
+        'value' => fn($m) => $m['created_at'] ?? null,
+        'format' => 'datetime',
+    ],
+    [
+        'attribute' => 'nombreActualizo',
+        'value' => fn($m) => $m['nombreActualizo'] ?? null,
+    ],
+    [
+        'attribute' => 'updated_at',
+        'value' => fn($m) => $m['updated_at'] ?? null,
+        'format' => 'datetime',
+    ],
 ];
+
+
+
 ?>
 
 <link rel="stylesheet" href="css/shared.css">
@@ -140,7 +157,7 @@ Modal::end();
                         'id' => 'modalButtonCreateEliminados'
                     ]
                 )
-                    ?>
+                ?>
             </p>
         </div>
 
@@ -189,7 +206,7 @@ Modal::end();
                     'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
                 ],
                 'rowOptions' => function ($model) {
-                    $dif = (int) $model->diferencia;
+                    $dif = (int)(is_array($model) ? ($model['diferencia'] ?? 0) : ($model->diferencia ?? 0));
                     if ($dif > 0) {
                         return ['class' => 'fila-verde'];
                     }

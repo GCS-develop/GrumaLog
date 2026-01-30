@@ -87,11 +87,13 @@ class TraspasodetalleSearch extends Traspasodetalle
         $query->join('INNER JOIN', 'talla t', 't.id = i.idTalla');
         $query->join('INNER JOIN', 'color c', 'c.id = i.idColor');
         $query->join('INNER JOIN', 'estadotraspaso e', 'e.id = tr.idestado');
-        $query->join(
-            'LEFT JOIN',
-            'planillaembarquetraspaso pet',
-            'pet.id = (SELECT MAX(id) FROM planillaembarquetraspaso WHERE idTraspaso = tr.id)'
-        );
+        // $query->join(
+        //     'LEFT JOIN',
+        //     'planillaembarquetraspaso pet',
+        //     'pet.id = (SELECT MAX(id) FROM planillaembarquetraspaso WHERE idTraspaso = tr.id)'
+        // );
+        $query->join('LEFT JOIN', 'planillaembarquetraspaso pet', 'pet.idTraspaso = tr.id');
+
         $query->join('LEFT JOIN', 'estadorecepcion er', 'er.id = pet.idEstado AND er.id <> 5'); // Agregando la relación
 
         // $query->join('INNER JOIN', 'unidadempaque ue', 'ue.id = i.unidadEmpaque');
@@ -251,6 +253,4 @@ class TraspasodetalleSearch extends Traspasodetalle
             ],
         ]);
     }
-
-
 }

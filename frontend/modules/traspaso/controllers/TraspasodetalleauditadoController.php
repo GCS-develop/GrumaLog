@@ -1,6 +1,8 @@
 <?php
 
 namespace frontend\modules\traspaso\controllers;
+
+use common\components\TraspasoDetalleAuditadoService;
 use Yii;
 
 use frontend\models\Traspasodetalleauditado;
@@ -10,6 +12,11 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\widgets\ActiveForm;
 use yii\db\Expression;
+use yii\web\Response;
+use yii\web\BadRequestHttpException;
+use yii\data\ActiveDataProvider;
+use yii\db\Query;
+
 
 /**
  * TraspasodetalleauditadoController implements the CRUD actions for Traspasodetalleauditado model.
@@ -28,6 +35,9 @@ class TraspasodetalleauditadoController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'purge-traspaso' => ['POST'],
+                        'delete-zeros-by-user' => ['POST'],
+
                     ],
                 ],
             ]
@@ -155,5 +165,95 @@ class TraspasodetalleauditadoController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    /**
+     * Lista TODOS los traspasos que tienen traspasodetalleauditado.
+     * Muestra totales (registros y unidades) y acciones.
+     */
+
+    public function actionIndexAgrupado($idtraspaso = null)
+    {
+        $searchModel  = new TraspasodetalleauditadoSearch();
+        $dataProvider = $searchModel->searchAgrupadoPorUsuario($this->request->queryParams, $idtraspaso);
+
+        return $this->render('index_agrupado', [
+            'searchModel'  => $searchModel,
+            'dataProvider' => $dataProvider,
+            'idtraspaso'   => $idtraspaso,
+        ]);
+    }
+
+    /**
+     * Borra SOLO lo auditado por $creadorUserId en el traspaso $idtraspaso,
+     * guardando historial en *_delete con el usuario actual (ejecutor).
+     */
+    public function actionDeleteByUser($idtraspaso, $creadorUserId)
+    {
+        $ejecutor = (int)Yii::$app->user->id;
+        if (!$ejecutor) {
+            throw new \yii\web\BadRequestHttpException('Sesión inválida.');
+        }
+
+        /** @var TraspasoDetalleAuditadoService $svc */
+        $svc = Yii::createObject(TraspasoDetalleAuditadoService::class);
+        [$ins, $del] = $svc->purgeByTraspasoAndCreador((int)$idtraspaso, (int)$creadorUserId, $ejecutor);
+
+        if ($del > 0) {
+            Yii::$app->session->setFlash('success', "Se borraron $del registros y se archivaron $ins en historial.");
+        } else {
+            Yii::$app->session->setFlash('info', 'No había registros para ese usuario en este traspaso.');
+        }
+
+        // Volver al listado agrupado manteniendo filtros si vienen por GET
+        return $this->redirect(array_merge(['index-agrupado'], Yii::$app->request->get()));
+    }
+
+    public function actionArchiveZerosByUser($idtraspaso, $creadorUserId)
+    {
+        $ejecutor = (int)Yii::$app->user->id;
+        if (!$ejecutor) {
+            throw new \yii\web\BadRequestHttpException('Sesión inválida.');
+        }
+
+        /** @var \common\components\TraspasoDetalleAuditadoService $svc */
+        $svc = Yii::createObject(\common\components\TraspasoDetalleAuditadoService::class);
+        $inserted = $svc->archiveZerosByTraspasoAndCreador((int)$idtraspaso, (int)$creadorUserId, $ejecutor);
+
+        Yii::$app->session->setFlash(
+            $inserted > 0 ? 'success' : 'info',
+            $inserted > 0
+                ? "Archivados $inserted registros (cantidad = 0) de ese usuario."
+                : "No había registros con cantidad = 0 para archivar (o ya estaban en historial)."
+        );
+
+        // Volver al listado agrupado conservando filtros actuales
+        return $this->redirect(array_merge(
+            ['/traspaso/traspasodetalleauditado/index-agrupado'],
+            Yii::$app->request->get()
+        ));
+    }
+
+    public function actionDeleteZerosByUser($idtraspaso, $creadorUserId)
+    {
+        $ejecutor = (int)\Yii::$app->user->id;
+        if (!$ejecutor) {
+            throw new \yii\web\BadRequestHttpException('Sesión inválida.');
+        }
+
+        /** @var \common\components\TraspasoDetalleAuditadoService $svc */
+        $svc = \Yii::createObject(\common\components\TraspasoDetalleAuditadoService::class);
+        [$ins, $del] = $svc->deleteZerosByTraspasoAndCreador((int)$idtraspaso, (int)$creadorUserId, $ejecutor);
+
+        if ($del > 0) {
+            \Yii::$app->session->setFlash('success', "Archivados: $ins. Borrados: $del (cantidad = 0).");
+        } else {
+            \Yii::$app->session->setFlash('info', 'No había registros con cantidad = 0 para borrar.');
+        }
+
+        return $this->redirect(array_merge(
+            ['/traspaso/traspasodetalleauditado/index-agrupado'],
+            \Yii::$app->request->get()
+        ));
     }
 }

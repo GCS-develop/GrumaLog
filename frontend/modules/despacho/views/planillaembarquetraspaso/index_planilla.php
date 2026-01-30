@@ -108,6 +108,12 @@ $gridColumns = [
         'pageSummary' => true,
     ],
     'conductor',
+    [
+        'attribute' => 'trasladoOrigenDestino',
+        'value' => function ($model) {
+            return $model->trasladoOrigenDestinoNombre;
+        },
+    ],
     'estado',
 
     'fechaRecibido',
@@ -235,18 +241,18 @@ $gridColumns = [
             'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
         ],
         'rowOptions' => function ($model) {
-        $classes = [];
-        if ($model->estado === 'Recibido') {
-            $classes[] = 'text-success';
-        }
-        if ($model->estado === 'Anulado') {
-            $classes[] = 'text-danger';
-        }
-        if ($model->estado === 'Sin Enviar') {
-            $classes[] = 'text-primary';
-        }
-        return ['class' => implode(' ', $classes)];
-    },
+            $classes = [];
+            if ($model->estado === 'Recibido') {
+                $classes[] = 'text-success';
+            }
+            if ($model->estado === 'Anulado') {
+                $classes[] = 'text-danger';
+            }
+            if ($model->estado === 'Sin Enviar') {
+                $classes[] = 'text-primary';
+            }
+            return ['class' => implode(' ', $classes)];
+        },
 
         'columns' => array_merge(
             [

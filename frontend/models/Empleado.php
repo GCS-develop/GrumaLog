@@ -158,4 +158,23 @@ class Empleado extends \yii\db\ActiveRecord
     	$listadata = ArrayHelper::map($data, 'id', 'nombre');
     	return $listadata;
     }
+
+
+public static function getCodigoCOUsuario($idUser)
+{
+    return (new \yii\db\Query())
+        ->select('co.codigo')
+        ->from('empleado em')
+        ->innerJoin('user us', 'em.id = us.idEmpleado')
+        ->innerJoin('centrooperacion co', 'em.idCO = co.id')
+        ->where(['us.id' => $idUser])
+        ->scalar();
+}
+
+
+
+
+
+
+
 }

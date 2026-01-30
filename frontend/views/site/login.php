@@ -9,10 +9,10 @@
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 
-
+use common\widgets\Alert;
 
 $this->registerCssFile(Yii::$app->request->baseUrl . 'web/css/login.css');
-$this->title = 'Traspasos';
+$this->title = 'GrumaLog';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <link rel="stylesheet" href="css/login.css">
@@ -20,6 +20,11 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="text-center mb-5">
         <img src="imagenes/Logo_herpo.png" alt="Login image" class="login-image">
     </div>
+
+    <?= Alert::widget() ?>
+
+
+
     <h1 class="text-center mb-5"><?= Html::encode($this->title) ?></h1>
     <!--<p>Please fill out the following fields to login:</p>-->
     <div class=" row justify-content-center">
@@ -43,11 +48,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 'template' => "<div class=\"custom-control custom-checkbox mb-3\">{input} {label}</div>\n<div class=\"col-lg-8\">{error}</div>",
             ]) ?>
 
-            <div class="form-group">
+            <div class="form-group" align="center">
                 <div class="d-grid gap-2">
-                    <?= Html::submitButton('Ingresar', ['class' => 'btn btn-primary', 'name' => 'login-button']) ?>
+                    <?= Html::submitButton('Ingresar', ['class' => 'btn btn-primary btn-lg btn-create', 'name' => 'login-button']) ?>
                 </div>
             </div>
+
+
 
             <div class="text-center mt-2 mb-2">
                 <?= Html::a('¿Olvidaste tu contraseña?', ['site/request-password-reset']) ?>
@@ -55,9 +62,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <div class="card-footer text-center py-3 bg-light">
                 <div class="small text-muted">
-                    Acceso seguro a la plataforma de gestión GES
+                    Acceso seguro a la plataforma GrumaLog
                 </div>
             </div>
+
 
             <?php ActiveForm::end(); ?>
             <!-- <div style="color:#999;">
@@ -67,4 +75,3 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
-

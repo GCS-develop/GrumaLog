@@ -6,16 +6,15 @@ use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use frontend\models\Devoluciondocumentodetalle;
 use yii\db\Query;
+use frontend\models\Bodegas;
 
-/**
- * DevoluciondocumentodetalleSearch represents the model behind the search form of `frontend\models\Devoluciondocumentodetalle`.
- */
 class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
 {
     public $fechaDesde;
     public $fechaHasta;
     public $nombreProveedor;
     public $tipoInventario;
+    public $nombreBodega; // 👈 añadimos este atributo para la búsqueda
 
     /**
      * {@inheritdoc}
@@ -41,7 +40,9 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
                     'fechaDesde',
                     'fechaHasta',
                     'nombreProveedor',
-                    'tipoInventario'
+                    'tipoInventario',
+                    'usuarioRegistra',
+                    'nombreBodega', // 👈 nueva regla safe
                 ],
                 'safe'
             ],
@@ -49,27 +50,39 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function scenarios()
     {
         return Model::scenarios();
     }
 
     /**
-     * Normal search (individual details)
+     * Search principal
      */
     public function search($params, $iddocumento = null, $enviosiesa = false)
     {
         if ($iddocumento == null) {
-            $query = Devoluciondocumentodetalle::find()->alias('det');
+            $query = Devoluciondocumentodetalle::find()
+                ->alias('det')
+                ->with(['bodegaSalida', 'unidadempaque', 'usuarioregistra']);
         } else {
-            $query = Devoluciondocumentodetalle::find()->alias('det')->where(['idDocumento' => $iddocumento]);
+            $query = Devoluciondocumentodetalle::find()
+                ->alias('det')
+                ->with(['bodegaSalida', 'unidadempaque', 'usuarioregistra'])
+                ->where(['idDocumento' => $iddocumento]);
         }
 
+        // Joins adicionales
         $query->join('INNER JOIN', 'devoluciondocumento dct', 'det.idDocumento = dct.id');
         $query->join('LEFT JOIN', 'item i', 'det.item = i.item');
+        $query->join(
+            'LEFT JOIN',
+            'devolucionimportaciondetalle did',
+            'det.codigoBarras = did.codigoBarras AND dct.numeroDocumento = did.numeroDocumento'
+        );
+        $query->join('LEFT JOIN', 'bodegas b', 'b.codigo = dct.codigoBodegaSalida');
+
+
+
         $query->distinct();
 
         $query->select([
@@ -92,8 +105,13 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             'det.usuarioRegistra',
             'dct.numeroDocumento',
             'dct.codigoBodegaSalida',
-            "COALESCE(i.nombreProveedor, 'Proveedor No Asignado') AS nombreProveedor",
-     
+            'b.nombre AS nombreBodega', // 👈 nombre de la bodega
+            // Proveedor
+            "COALESCE(
+                i.nombreProveedor,
+                LTRIM(SUBSTRING(did.proveedor, CHARINDEX('-', did.proveedor) + 1, LEN(did.proveedor))),
+                'Proveedor No Asignado'
+            ) AS nombreProveedor",
         ]);
 
         $query->orderBy([
@@ -103,9 +121,7 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
-            'pagination' => [
-                'pageSize' => 50,
-            ],
+            'pagination' => ['pageSize' => 50],
         ]);
 
         $this->load($params);
@@ -114,12 +130,7 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             return $dataProvider;
         }
 
-         /* 3) Filtro por VMI / FIRME --------------------------------------------------- */
-   /* if (!empty($this->tipoInventario)) {
-    $query->andWhere(['i.tipoInventario' => $this->tipoInventario]);
-}*/
-
-
+        // Filtros básicos
         $query->andFilterWhere([
             'det.id' => $this->id,
             'det.idDocumento' => $this->idDocumento,
@@ -133,10 +144,9 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             'det.unidadMedida' => $this->unidadMedida,
             'dct.numeroDocumento' => $this->numeroDocumento,
             'dct.codigoBodegaSalida' => $this->codigoBodegaSalida,
-            
-            
         ]);
 
+        // Filtro por fechas
         if ($this->fechaDesde || $this->fechaHasta) {
             $fechaInicio = $this->fechaDesde ? date('Y-m-d', strtotime($this->fechaDesde)) : null;
             $fechaFin = $this->fechaHasta ? date('Y-m-d', strtotime($this->fechaHasta)) : null;
@@ -155,10 +165,21 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             $query->andWhere("CAST(det.fechaRegistra AS DATE) = :fecha", [':fecha' => $fecha]);
         }
 
+        // Filtro por proveedor
         if (!empty($this->nombreProveedor)) {
-            $query->andWhere(['like', 'i.nombreProveedor', $this->nombreProveedor]);
+            $query->andWhere([
+                'or',
+                ['like', 'i.nombreProveedor', $this->nombreProveedor],
+                ['like', "LTRIM(SUBSTRING(did.proveedor, CHARINDEX('-', did.proveedor) + 1, LEN(did.proveedor)))", $this->nombreProveedor],
+            ]);
         }
 
+        // Filtro por bodega
+        if (!empty($this->nombreBodega)) {
+            $query->andFilterWhere(['like', 'b.nombre', $this->nombreBodega]);
+        }
+
+        // Filtros adicionales
         $query->andFilterWhere(['like', 'det.codigoBarras', $this->codigoBarras])
             ->andFilterWhere(['like', 'det.item', $this->item])
             ->andFilterWhere(['like', 'det.talla', $this->talla])
@@ -166,99 +187,20 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             ->andFilterWhere(['like', 'det.referencia', $this->referencia])
             ->andFilterWhere(['like', 'det.itemResumen', $this->itemResumen]);
 
-               // ✅ Filtro de tipoInventario (post-procesamiento)
-    if (!empty($this->tipoInventario)) {
-        $models = $dataProvider->getModels();
-        $filtered = array_filter($models, function ($model) {
-            return $model->getTipoInventario() === $this->tipoInventario;
-        });
-        $dataProvider->setModels(array_values($filtered));
-        $dataProvider->setTotalCount(count($filtered));
-    }
+        if (!empty($this->usuarioRegistra)) {
+            $query->andFilterWhere(['IN', 'det.usuarioRegistra', $this->usuarioRegistra]);
+        }
+
+        // Filtro de tipoInventario (post-procesamiento)
+        if (!empty($this->tipoInventario)) {
+            $models = $dataProvider->getModels();
+            $filtered = array_filter($models, function ($model) {
+                return $model->getTipoInventario() === $this->tipoInventario;
+            });
+            $dataProvider->setModels(array_values($filtered));
+            $dataProvider->setTotalCount(count($filtered));
+        }
 
         return $dataProvider;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    /**
-     * Envios IESA search (grouped by provider)
-     */
-/*public function searchenviosiesa($params)
-{
-    $query = Devoluciondocumentodetalle::find()->alias('det');
-
-    $query->where(['!=', 'det.registrada', 0]);
-
-    $query->join('INNER JOIN', 'devoluciondocumento dct', 'det.idDocumento = dct.id');
-    $query->join('LEFT JOIN', 'item i', 'det.item = i.item');
-
-    $query->select([
-        'dct.id',
-        'dct.numeroDocumento',
-        'COALESCE(i.nombreProveedor, \'Proveedor No Asignado\') AS nombreProveedor',
-        'SUM(det.cantidadDevolucion) AS cantidadDevolucion',
-        'SUM(det.cantidadRegistrada) AS cantidadRegistrada',
-        'COUNT(DISTINCT det.id) AS totalItems',
-        // Formato para SQL Server: 'YYYY-MM-DD HH:MI'
-        'CONVERT(VARCHAR(16), MIN(det.fechaRegistra), 120) AS fechaRegistra',
-    ]);
-
-    $query->groupBy(['i.nombreProveedor', 'dct.numeroDocumento',  'dct.id',]);
-    $query->orderBy(['nombreProveedor' => SORT_ASC]);
-
-    $this->load($params);
-
-    if (!$this->validate()) {
-        return new ActiveDataProvider(['query' => $query]);
-    }
-
-    if (!empty($this->nombreProveedor)) {
-        $query->andWhere(['like', 'i.nombreProveedor', $this->nombreProveedor]);
-    }
-
-    if ($this->fechaDesde || $this->fechaHasta) {
-        $fechaInicio = $this->fechaDesde ? date('Y-m-d', strtotime($this->fechaDesde)) : null;
-        $fechaFin = $this->fechaHasta ? date('Y-m-d', strtotime($this->fechaHasta)) : null;
-
-        $query->andFilterWhere([
-            'between', 
-            new \yii\db\Expression('CAST(det.fechaRegistra AS DATE)'), 
-            $fechaInicio, 
-            $fechaFin
-        ]);
-    }
-
-    return new ActiveDataProvider([
-        'query' => $query,
-        'pagination' => ['pageSize' => 50],
-        'sort' => [
-            'attributes' => [
-                'numeroDocumento',
-                'nombreProveedor',
-                'cantidadDevolucion',
-                'cantidadRegistrada',
-                'totalItems',
-                'fechaRegistra'
-            ],
-        ],
-    ]);
-}*/
 }

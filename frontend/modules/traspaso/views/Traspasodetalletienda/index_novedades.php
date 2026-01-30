@@ -18,6 +18,7 @@ $this->registerJsFile(
     Yii::$app->request->baseUrl . '/js/mainDataModal.js',
     ['depends' => [\yii\web\JqueryAsset::className()]]
 );
+
 use frontend\models\Traspasodetalletienda;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -57,8 +58,6 @@ $dataProviderResumen = new ArrayDataProvider([
 ]);
 
 $gridColumns = [
-    // 'id',
-    // 'idTraspaso',
     'serie',
     [
         'attribute' => 'consecutivoSiesa',
@@ -69,56 +68,57 @@ $gridColumns = [
     'item',
     'talla',
     'color',
-    [
-        'attribute' => 'Cantidad registros tiendas',
-        'contentOptions' => ['data-cellvalue' => 'registros',],
-        'value' => function ($model) {
-            return $model->cantidad;
-        },
-        'format' => ['decimal', 0], // Formato decimal con 0 decimales,
-        'pageSummary' => true,
 
+    // TIENDA
+    [
+        'attribute' => 'cantidadRegistrosTienda',
+        'label' => 'Cantidad registros tiendas',
+        'value' => fn($m) => is_array($m) ? ($m['cantidadRegistrosTienda'] ?? 0) : ($m->cantidadRegistrosTienda ?? 0),
+        'format' => ['decimal', 0],
+        'pageSummary' => true,
+    ],
+    // TRASPASO
+    [
+        'attribute' => 'cantidadTraspasoRegistros',
+        'label' => 'Cantidad registros traspaso',
+        'format' => ['decimal', 0],
+        'pageSummary' => true,
     ],
     [
-        'attribute' => 'Cantidad registros traspaso',
-        'contentOptions' => ['data-cellvalue' => 'registros',],
-        'value' => function ($model) {
-            return $model->cantidadTraspasoRegistros;
-        },
-        'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+        'attribute' => 'unidades',
+        'label' => 'Cantidad unidades tiendas',
+        'format' => ['decimal', 0],
         'pageSummary' => true,
-
     ],
     [
-        'attribute' => 'Cantidad unidades tiendas',
-        'contentOptions' => ['data-cellvalue' => 'registros',],
-        'value' => function ($model) {
-            return $model->unidades;
-        },
-        'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+        'attribute' => 'cantidadTraspasounidades',
+        'label' => 'Cantidad unidades traspasos',
+        'format' => ['decimal', 0],
         'pageSummary' => true,
-
     ],
     [
-        'attribute' => 'Cantidad unidades traspasos',
-        'contentOptions' => ['data-cellvalue' => 'registros',],
-        'value' => function ($model) {
-            return $model->cantidadTraspasounidades;
-        },
-        'format' => ['decimal', 0], // Formato decimal con 0 decimales,
+        'attribute' => 'diferencia',
+        'label' => 'Diferencia',
+        'format' => ['decimal', 0],
         'pageSummary' => true,
-
     ],
-    'diferencia',
+
     'userTraspaso',
     [
         'attribute' => 'nombreCreo',
         'group' => true,
     ],
-    'created_at',
+    [
+        'attribute' => 'created_at',
+        'format' => 'datetime',
+    ],
     'nombreActualizo',
-    'updated_at',
+    [
+        'attribute' => 'updated_at',
+        'format' => 'datetime',
+    ],
 ];
+
 
 $resumenColumns = [
     [
@@ -221,7 +221,8 @@ Modal::end();
         <h1 class="col-lg-12 centrar"> Novedades del Traspaso (Diferencias) </h1>
 
         <div class="col-lg-12">
-            <?php // echo $this->render('_search', ['model' => $searchModel,]); ?>
+            <?php // echo $this->render('_search', ['model' => $searchModel,]); 
+            ?>
         </div>
 
         <div class="col-lg-6 derecha">
@@ -241,7 +242,7 @@ Modal::end();
                         'id' => 'modalButtonCreateEliminados'
                     ]
                 )
-                    ?>
+                ?>
             </p>
         </div>
 
@@ -292,15 +293,12 @@ Modal::end();
                     'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
                 ],
                 'rowOptions' => function ($model) {
-                    $dif = (int) $model->diferencia;
-                    if ($dif > 0) {
-                        return ['class' => 'fila-verde'];
-                    }
-                    if ($dif < 0) {
-                        return ['class' => 'fila-roja'];
-                    }
+                    $dif = (int)(is_array($model) ? ($model['diferencia'] ?? 0) : ($model->diferencia ?? 0));
+                    if ($dif > 0) return ['class' => 'fila-verde'];
+                    if ($dif < 0) return ['class' => 'fila-roja'];
                     return [];
                 },
+
                 'emptyText' => 'No se encontraron registros tiendas para este traspaso.',
                 'columns' => array_merge(
                     [

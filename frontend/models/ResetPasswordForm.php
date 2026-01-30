@@ -64,4 +64,10 @@ class ResetPasswordForm extends Model
 
         return $user->save(false);
     }
+
+    /** 👇 AÑADIR ESTO */
+    public function getUser(): User
+    {
+        return $this->_user;
+    }
 }

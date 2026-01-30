@@ -1,8 +1,10 @@
 <?php
 
+use frontend\models\Devoluciondocumentodetalle;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use kartik\date\DatePicker;
+use kartik\select2\Select2;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\DevoluciondocumentodetalleSearch $model */
@@ -39,35 +41,51 @@ use kartik\date\DatePicker;
     </div>
 
     <div class="row">
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?=
-                $form->field($model, 'fechaDesde')->widget(DatePicker::className(), [
-                    'name' => 'fechadesde',
-                    'language' => 'es',
-                    'options' => ['placeholder' => 'Fecha Cita Desde ...', 'disabled' => false],
-                    'pluginOptions' => [
-                        'autoclose' => true,
-                        'format' => 'yyyy-mm-dd',
-                        // 'format' =>'yyyy-mm-dd hh:ii:ss',
-                        'todayHighlight' => false
-                    ]
-                ])
-                ?>
+            $form->field($model, 'fechaDesde')->widget(DatePicker::className(), [
+                'name' => 'fechadesde',
+                'language' => 'es',
+                'options' => ['placeholder' => 'Fecha Cita Desde ...', 'disabled' => false],
+                'pluginOptions' => [
+                    'autoclose' => true,
+                    'format' => 'yyyy-mm-dd',
+                    // 'format' =>'yyyy-mm-dd hh:ii:ss',
+                    'todayHighlight' => false
+                ]
+            ])
+            ?>
         </div>
 
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?=
-                $form->field($model, 'fechaHasta')->widget(DatePicker::className(), [
-                    'name' => 'fechahasta',
-                    'language' => 'es',
-                    'options' => ['placeholder' => 'Fecha Cita Hasta ...', 'disabled' => false],
-                    'pluginOptions' => [
-                        'autoclose' => true,
-                        'format' => 'yyyy-mm-dd',
-                        'todayHighlight' => true
-                    ]
-                ])
-                ?>
+            $form->field($model, 'fechaHasta')->widget(DatePicker::className(), [
+                'name' => 'fechahasta',
+                'language' => 'es',
+                'options' => ['placeholder' => 'Fecha Cita Hasta ...', 'disabled' => false],
+                'pluginOptions' => [
+                    'autoclose' => true,
+                    'format' => 'yyyy-mm-dd',
+                    'todayHighlight' => true
+                ]
+            ])
+            ?>
+        </div>
+
+
+        <div class="col-3">
+
+            <?php echo $form->field($model, 'nombreProveedor') ?>
+
+        </div>
+
+        <div class="col-2">
+            <?= $form->field($model, 'tipoInventario')      // ← atributo correcto
+                ->dropDownList([
+                    ''      => 'Todos',
+                    'VMI'   => 'VMI',
+                    'FIRME' => 'FIRME',
+                ], ['prompt' => '']) ?>
         </div>
 
         <div class="col-lg-1">
@@ -77,43 +95,49 @@ use kartik\date\DatePicker;
                 '0' => 'NO',
             ]) ?>
         </div>
-        <div class="col-lg-3">
-
-            <?php echo $form->field($model, 'nombreProveedor') ?>
-
-        </div>
 
         <div class="col-lg-2">
-    <?= $form->field($model, 'tipoInventario')      // ← atributo correcto
-             ->dropDownList([
-                 ''      => 'Todos',
-                 'VMI'   => 'VMI',
-                 'FIRME' => 'FIRME',
-             ], ['prompt' => '']) ?>
-</div>
-
+            <?=
+            $form->field($model, 'usuarioRegistra')->widget(Select2::classname(), [
+                'data' => Devoluciondocumentodetalle::getListaDataUsuarioRegistra(),
+                // 'value' => $model->idBodegaOrigen, // Usa lo que ya venga cargado desde el modelo
+                'options' => [
+                    'placeholder' => 'Seleccionar usuario registra...',
+                    'multiple' => true,
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+            ]);
+            ?>
+        </div>
 
 
     </div>
 
+    <?php // echo $form->field($model, 'talla') 
+    ?>
 
+    <?php // echo $form->field($model, 'color') 
+    ?>
 
+    <?php // echo $form->field($model, 'referencia') 
+    ?>
 
-    <?php // echo $form->field($model, 'talla') ?>
+    <?php // echo $form->field($model, 'itemResumen') 
+    ?>
 
-    <?php // echo $form->field($model, 'color') ?>
+    <?php // echo $form->field($model, 'created_at') 
+    ?>
 
-    <?php // echo $form->field($model, 'referencia') ?>
+    <?php // echo $form->field($model, 'created_by') 
+    ?>
 
-    <?php // echo $form->field($model, 'itemResumen') ?>
+    <?php // echo $form->field($model, 'updated_at') 
+    ?>
 
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
+    <?php // echo $form->field($model, 'updated_by') 
+    ?>
 
     <div class="form-group centrar">
         <?= Html::submitButton('Buscar', ['class' => 'btn btn-primary btn-lg btn-create']) ?>

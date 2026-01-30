@@ -40,6 +40,8 @@ class TraspasoSearch extends Traspaso
                     'idEstado',
                     'fechaRecibido',
                     'transferenciaerpNombre',
+                    'reciboMasivo',
+                    'consecutivoSiesaEnTienda',
                 ],
                 'safe'
             ],
@@ -83,7 +85,8 @@ class TraspasoSearch extends Traspaso
                 )
                 '
         );
-        $query->join('LEFT JOIN', 'estadorecepcion er', 'er.id = pet.idEstado AND er.id <> 5'); // Agregando la relación
+        // $query->join('LEFT JOIN', 'estadorecepcion er', 'er.id = pet.idEstado AND er.id <> 5'); // Agregando la relación
+        $query->join('LEFT JOIN', 'Estadodocumentoplanilla er', 'er.id = pet.idEstado'); // Agregando la relación
         $query->join('LEFT JOIN', 'conteocdscdestino dest', 'tr.id = dest.idTraspaso');
         $query->join('LEFT JOIN', 'userconteocdsc uc', 'dest.idUserConteo = uc.id');
         $query->join('LEFT JOIN', 'user u', 'uc.idUser = u.id');
@@ -169,7 +172,9 @@ class TraspasoSearch extends Traspaso
             'tr.created_at' => $this->created_at,
             'tr.tipoMovimiento' => $this->tipoMovimiento,
             'tr.updated_by' => $this->updated_by,
-            'ds.f350_consec_docto' => $this->consecutivosiesa
+            'tr.reciboMasivo' => $this->reciboMasivo,
+            'ds.f350_consec_docto' => $this->consecutivosiesa,
+
 
         ]);
 
@@ -250,7 +255,5 @@ class TraspasoSearch extends Traspaso
         }
 
         return $dataProvider;
-
     }
-
 }

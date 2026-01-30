@@ -23,13 +23,16 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'idEstado') ?>
 
-    <!-- <?= $form->field($model, 'created_at') ?> -->
+    <?= $form->field($model, 'buscarnombreusuario') ?>
 
-    <?php // echo $form->field($model, 'created_by') ?>
+    <?php // echo $form->field($model, 'created_by') 
+    ?>
 
-    <?php // echo $form->field($model, 'updated_at') ?>
+    <?php // echo $form->field($model, 'updated_at') 
+    ?>
 
-    <?php // echo $form->field($model, 'updated_by') ?>
+    <?php // echo $form->field($model, 'updated_by') 
+    ?>
 
     <div class="form-group">
         <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>

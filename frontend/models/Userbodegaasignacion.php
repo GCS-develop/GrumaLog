@@ -132,4 +132,11 @@ class Userbodegaasignacion extends \yii\db\ActiveRecord
     	$listadata = ArrayHelper::map($data, 'id', 'nombre');
     	return $listadata;
     }
+
+
+
+
+
+
+
 }

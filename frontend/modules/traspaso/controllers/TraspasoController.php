@@ -94,7 +94,6 @@ class TraspasoController extends Controller
                 }
 
                 return $this->redirect(Yii::$app->request->referrer ?: ['index']);
-
             }
         } else {
             $model->loadDefaultValues();
@@ -235,7 +234,6 @@ class TraspasoController extends Controller
         }
 
         return $this->redirect(Yii::$app->request->referrer ?: ['index']);
-
     }
 
     public function actionSincronizar($id)
@@ -244,7 +242,6 @@ class TraspasoController extends Controller
         Traspaso::sincronizarTraspaso($id);
 
         return $this->redirect(Yii::$app->request->referrer ?: ['index']);
-
     }
 
     /**
@@ -267,13 +264,12 @@ class TraspasoController extends Controller
     {
         $model = $this->findModel($id);
         $filasAfectadas = 0;
+        $unidsPedido     = 0;
 
         if ($model->idEstado === 2) {
 
             Yii::$app->session->setFlash('warning', 'No puedes anular en este estado!');
             return $this->redirect(Yii::$app->request->referrer ?: ['index']);
-
-
         }
 
         $existeEnPlanilla = $model->ultimaplanillaembarquetraspaso ? $model->ultimaplanillaembarquetraspaso->estadoPlanillaNoAnulado : false;
@@ -288,32 +284,45 @@ class TraspasoController extends Controller
         }
 
         if ($this->request->isPost) {
-
+            $valid = $model->validarPertenenciaItemsPedido();
+            if (!$valid['ok']) {
+                $lineas = array_map(
+                    fn($x) => "· Item {$x['idItem']} (cant {$x['cantidad']})",
+                    $valid['noPertenecen']
+                );
+                Yii::$app->session->addFlash(
+                    'warning',
+                    "Hay ítems del traspaso que NO pertenecen al pedido #{$model->idPedido} (bodega destino {$model->bodegaDestino->nombre}):\n" . implode("\n", $lineas)
+                );
+                return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+            }
             $model->anula_at = new Expression('GETDATE()');
             $model->anula_by = Yii::$app->user->id;
 
             $model->idEstado = 2;
 
+
             if ($model->save()) {
 
                 foreach ($model->traspasodetalles as $detalle) {
                     $filasAfectadas += $detalle->retornarInventario();
-                    Yii::$app->session->setFlash('success', $filasAfectadas . ' items fueron regresados al inventario');
+                    $unidsPedido    += (int)$detalle->retornarPedidoAR(); // ahora devuelve UNIDADES
                 }
 
-                Yii::$app->session->setFlash(
-                    'info',
+                Yii::$app->session->addFlash('info', 'Items: ' . $filasAfectadas . ' regresaron fueron regresados al inventario');
+                Yii::$app->session->addFlash('info',    "Pedido: {$unidsPedido} unidades revertidas en unidadesRecibidas.");
+
+                Yii::$app->session->addFlash(
+                    'success',
                     'Traspaso anulado con éxito! ' .
-                    $model->tipodocumento->codigo .
-                    (isset($model->codigoerp) ? $model->codigoerp->f350_consec_docto : ' interno: ' . $model->consecutivo)
+                        $model->tipodocumento->codigo .
+                        (isset($model->codigoerp) ? $model->codigoerp->f350_consec_docto : ' interno: ' . $model->consecutivo)
                 );
 
                 return $this->redirect(Yii::$app->request->referrer ?: ['index']);
-
             } else {
 
                 Yii::$app->session->setFlash('error', 'Ups!, ocurrio un problema con : ' . $model);
-
             }
         }
     }
@@ -325,8 +334,6 @@ class TraspasoController extends Controller
 
             Yii::$app->session->setFlash('warning', 'No puedes imprimir en este estado!');
             return $this->redirect(Yii::$app->request->referrer ?: ['index']);
-
-
         }
 
         return $this->redirect(['/traspaso/traspasodetalle/print', 'idtraspaso' => $model->id]);
@@ -400,22 +407,15 @@ class TraspasoController extends Controller
 
                 Yii::$app->session->setFlash('success', 'Estado cambiado!');
                 return $this->redirect(Yii::$app->request->referrer ?: ['index']);
-
-
             } else {
 
                 Yii::$app->session->setFlash('error', 'Ups!, ocurrio un problema');
-
             }
-
         } else {
 
             Yii::$app->session->setFlash('warning', 'No puedes cambiar a ' . $model->estado->nombre . ' desde este estado!');
             return $this->redirect(Yii::$app->request->referrer ?: ['index']);
-
-
         }
-
     }
 
     public function actionInterno($id)
@@ -430,22 +430,15 @@ class TraspasoController extends Controller
 
                 Yii::$app->session->setFlash('success', 'Estado cambiado!');
                 return $this->redirect(Yii::$app->request->referrer ?: ['index']);
-
-
             } else {
 
                 Yii::$app->session->setFlash('error', 'Ups!, ocurrio un problema');
-
             }
-
         } else {
 
             Yii::$app->session->setFlash('warning', 'No puedes cambiar a ' . $model->estado->nombre . ' desde este estado!');
             return $this->redirect(Yii::$app->request->referrer ?: ['index']);
-
-
         }
-
     }
 
     // public function actionEjecutarExe()
@@ -486,7 +479,4 @@ class TraspasoController extends Controller
 
         return $this->renderContent("<pre>$salida</pre>");
     }
-
-
-
 }

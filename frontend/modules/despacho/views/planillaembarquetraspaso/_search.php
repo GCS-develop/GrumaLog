@@ -1,6 +1,7 @@
 <?php
 
 use frontend\models\Bodegas;
+use frontend\models\Estadodocumentoplanilla;
 use frontend\models\Planillaembarquetraspaso;
 use frontend\models\Tipodocumento;
 use yii\helpers\Html;
@@ -26,47 +27,47 @@ use kartik\date\DatePicker;
 
         <div class="col-lg-3">
             <?=
-                $form->field($model, 'fechaRecibido')->widget(DatePicker::className(), [
-                    'name' => 'fecha recibo',
-                    'language' => 'es',
-                    'options' => ['placeholder' => 'Fecha recibo ...', 'disabled' => false],
-                    'pluginOptions' => [
-                        'autoclose' => true,
-                        'format' => 'yyyy-mm-dd',
-                        'todayHighlight' => false
-                    ]
-                ])
-                ?>
+            $form->field($model, 'fechaRecibido')->widget(DatePicker::className(), [
+                'name' => 'fecha recibo',
+                'language' => 'es',
+                'options' => ['placeholder' => 'Fecha recibo ...', 'disabled' => false],
+                'pluginOptions' => [
+                    'autoclose' => true,
+                    'format' => 'yyyy-mm-dd',
+                    'todayHighlight' => false
+                ]
+            ])
+            ?>
         </div>
 
         <div class="col-lg-3">
             <?=
-                $form->field($model, 'fechaDesde')->widget(DatePicker::className(), [
-                    'name' => 'fecha inicio',
-                    'language' => 'es',
-                    'options' => ['placeholder' => 'Fecha Desde ...', 'disabled' => false],
-                    'pluginOptions' => [
-                        'autoclose' => true,
-                        'format' => 'yyyy-mm-dd',
-                        'todayHighlight' => false
-                    ]
-                ])
-                ?>
+            $form->field($model, 'fechaDesde')->widget(DatePicker::className(), [
+                'name' => 'fecha inicio',
+                'language' => 'es',
+                'options' => ['placeholder' => 'Fecha Desde ...', 'disabled' => false],
+                'pluginOptions' => [
+                    'autoclose' => true,
+                    'format' => 'yyyy-mm-dd',
+                    'todayHighlight' => false
+                ]
+            ])
+            ?>
         </div>
 
         <div class="col-lg-3">
             <?=
-                $form->field($model, 'fechaHasta')->widget(DatePicker::className(), [
-                    'name' => 'fecha fin',
-                    'language' => 'es',
-                    'options' => ['placeholder' => 'Fecha Hasta ...', 'disabled' => false],
-                    'pluginOptions' => [
-                        'autoclose' => true,
-                        'format' => 'yyyy-mm-dd',
-                        'todayHighlight' => true
-                    ]
-                ])
-                ?>
+            $form->field($model, 'fechaHasta')->widget(DatePicker::className(), [
+                'name' => 'fecha fin',
+                'language' => 'es',
+                'options' => ['placeholder' => 'Fecha Hasta ...', 'disabled' => false],
+                'pluginOptions' => [
+                    'autoclose' => true,
+                    'format' => 'yyyy-mm-dd',
+                    'todayHighlight' => true
+                ]
+            ])
+            ?>
         </div>
 
         <div class="col-3">
@@ -115,7 +116,8 @@ use kartik\date\DatePicker;
 
         <div class="col-3">
             <?php echo $form->field($model, 'idEstado')->dropDownList(
-                Estadodespacho::getListaData(),
+                // Estadodespacho::getListaData(),
+                Estadodocumentoplanilla::getListaData(),
                 [
                     'prompt' => ' Seleccionar estado ... ',
                     'id' => 'idEstado',

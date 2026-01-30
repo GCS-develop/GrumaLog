@@ -24,24 +24,34 @@ use frontend\models\Impresoraspaxarbodega;
 <div class="impresora-form">
 
     <?php $form = ActiveForm::begin([
-                    'id' => 'modal-form-impresora',
-                    'enableAjaxValidation' => true,
-                ]); 
+        'id' => 'modal-form-impresora',
+        'enableAjaxValidation' => true,
+    ]);
     ?>
 
     <div class="row">
+
+        <?php echo $form->field($model, 'cantidad_stickers')->textInput([
+            'type' => 'number',
+            'min' => 1
+        ]); ?>
+
+
+
+
+
         <div class="col-lg-12">
             <?= $form->field($model, 'idImpresora')->widget(Select2::classname(), [
-                    'data' => Impresoraspaxarbodega::getListaData(),
-                    'options' => [
-                        'placeholder' => 'Impresora ...', 
-                        'multiple' => false,
-                        'id' => 'id-impresora',
-                    ],
-                    'pluginOptions' => [
-                        'allowClear' => true
-                    ],
-                ]);    
+                'data' => Impresoraspaxarbodega::getListaData(),
+                'options' => [
+                    'placeholder' => 'Impresora ...',
+                    'multiple' => false,
+                    'id' => 'id-impresora',
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true
+                ],
+            ]);
             ?>
         </div>
 

@@ -58,6 +58,7 @@ class Traspaso extends \yii\db\ActiveRecord
     public $FechaActualiza;
     public $userActualiza;
     public $tipoMovimientoNombre;
+    public  $consecutivoSiesaEnTienda;
 
 
     /**
@@ -93,6 +94,7 @@ class Traspaso extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            ['consecutivo', 'safe'],
             [['idBodegaOrigen', 'idBodegaDestino'], 'required'],
             [
                 [
@@ -106,7 +108,8 @@ class Traspaso extends \yii\db\ActiveRecord
                     'updated_by',
                     'tipoMovimiento',
                     'totalUnidad',
-                    'totalRegistros'
+                    'totalRegistros',
+                    'reciboMasivo',
                 ],
                 'integer'
             ],
@@ -211,6 +214,12 @@ class Traspaso extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Documentosiesa::class, ['idGruma' => 'id'])->orderBy(['id' => SORT_DESC]);
     }
+
+    // public function getUltimaplanillaembarquetraspaso()
+    // {
+    //     return $this->hasOne(Planillaembarquetraspaso::class, ['idTraspaso' => 'id'])
+    //         ->orderBy(['id' => SORT_DESC]);
+    // }
 
     public function getUltimaplanillaembarquetraspaso()
     {
@@ -372,8 +381,6 @@ class Traspaso extends \yii\db\ActiveRecord
                 $traspaso->idEstado = $resultado['idEstado'];
             }
 
-
-            $traspaso->idEstado = $resultado['idEstado'];
             $traspaso->idUltimoItem = $resultado['idUltimoItem'];
             $traspaso->transferenciaerp = $resultado['transferenciaerp'];
             $traspaso->tipoMovimiento = $resultado['tipoMovimiento'];
@@ -571,5 +578,92 @@ class Traspaso extends \yii\db\ActiveRecord
     public function getDocumentosiesa()
     {
         return $this->hasMany(Documentosiesa::class, ['idGruma' => 'id']);
+    }
+
+    /**
+     * Valida que TODOS los items del traspaso pertenezcan al pedido del traspaso
+     * (match por: idPedido, idItem, idBodegaDestino == idBodega del pedidodetalle).
+     *
+     * @return array ['ok' => bool, 'noPertenecen' => [['idItem'=>int,'cantidad'=>int], ...]]
+     */
+    public function validarPertenenciaItemsPedido(): array
+    {
+        // Si no hay pedido asociado, no se valida nada
+        if (empty($this->idPedido)) {
+            return ['ok' => true, 'noPertenecen' => []];
+        }
+
+        /**
+         * 1) Items del traspaso
+         *    Se obtienen item (codigo), talla y color desde dbo.item
+         */
+        $itemsTraspaso = (new Query())
+            ->from(['td' => Traspasodetalle::tableName()])
+            ->innerJoin(['i' => 'dbo.item'], 'i.id = td.idItem')
+            ->select([
+                'item'     => 'i.item',
+                'idTalla'  => 'i.idTalla',
+                'idColor'  => 'i.idColor',
+                'cantidad' => new \yii\db\Expression('SUM(td.cantidad)')
+            ])
+            ->where(['td.idTraspaso' => (int)$this->id])
+            ->groupBy(['i.item', 'i.idTalla', 'i.idColor'])
+            ->all();
+
+        if (empty($itemsTraspaso)) {
+            return ['ok' => true, 'noPertenecen' => []];
+        }
+
+        /**
+         * 2) Items validos del pedido (misma bodega destino)
+         */
+        $itemsPedido = (new Query())
+            ->from(['pd' => Pedidodetalle::tableName()])
+            ->innerJoin(['i' => 'dbo.item'], 'i.id = pd.idItem')
+            ->select([
+                'item'    => 'i.item',
+                'idTalla' => 'i.idTalla',
+                'idColor' => 'i.idColor',
+            ])
+            ->distinct()
+            ->where([
+                'pd.idPedido' => (int)$this->idPedido,
+                'pd.idBodega' => (int)$this->idBodegaDestino,
+            ])
+            ->all();
+
+        /**
+         * 3) Se construyen claves logicas: item-talla-color
+         */
+        $clavesPedido = array_fill_keys(
+            array_map(
+                fn($r) => $r['item'] . '-' . $r['idTalla'] . '-' . $r['idColor'],
+                $itemsPedido
+            ),
+            true
+        );
+
+        /**
+         * 4) Diferencia: lo que esta en el traspaso pero NO en el pedido
+         */
+        $noPertenecen = [];
+
+        foreach ($itemsTraspaso as $row) {
+            $key = $row['item'] . '-' . $row['idTalla'] . '-' . $row['idColor'];
+
+            if (!isset($clavesPedido[$key])) {
+                $noPertenecen[] = [
+                    'item'     => $row['item'],
+                    'idTalla'  => (int)$row['idTalla'],
+                    'idColor'  => (int)$row['idColor'],
+                    'cantidad' => (int)$row['cantidad'],
+                ];
+            }
+        }
+
+        return [
+            'ok'           => empty($noPertenecen),
+            'noPertenecen' => $noPertenecen,
+        ];
     }
 }

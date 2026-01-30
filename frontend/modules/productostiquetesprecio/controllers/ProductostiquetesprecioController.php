@@ -286,6 +286,7 @@ class ProductostiquetesprecioController extends Controller
             if ($epl) {
                 // Generar etiqueta en formato EPL.
                 $contenido .= "A{$x},{$y},0,7,1,1,N,\"" . number_format($modelo->precio ?? 0, 0, ',', '.') . "\"\n";
+                // $contenido .= "^FO{1},{$y}^A0N,25,25^FD{$modelo->codigoBarra}^FS\n";
                 // Ajustar posición.
                 $y += $incrementoY;
 
@@ -745,6 +746,9 @@ class ProductostiquetesprecioController extends Controller
             ]);
         }
     }
+
+    // En tu mismo controlador donde está imprimirEtiquetas()
+
 
 }
 

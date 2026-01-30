@@ -73,6 +73,8 @@ class AgendapresupuestoSearch extends Agendapresupuesto
 
         $query->andFilterWhere(['like', 'observacion', $this->observacion]);
 
+        $query->orderBy(['created_at' => SORT_DESC]);
+
         return $dataProvider;
     }
 }

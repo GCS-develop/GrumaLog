@@ -1,6 +1,7 @@
 <?php
 use frontend\models\Estadodespacho;
 use frontend\models\Vehiculo;
+use frontend\models\Bodegas;
 
 $this->registerCss('
 
@@ -105,6 +106,17 @@ use frontend\models\Transportadora;
         </div>
 
         <div class="col-lg-2">
+            <?php echo $form->field($model, 'Codigobodegaorigen')->dropDownList(
+                Bodegas::getListaData(),
+                [
+                    'prompt' => 'Seleccionar bodega',
+                    'id' => 'Codigo bodega origen',
+                ]
+            );
+            ?>
+        </div>
+
+        <div class="col-lg-2">
             <?php echo $form->field($model, 'nombreConductor') ?>
         </div>
 
@@ -128,10 +140,10 @@ use frontend\models\Transportadora;
         <div class="col-lg-2">
             <?php echo $form->field($model, 'id') ?>
         </div>
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?php echo $form->field($model, 'numeroDocumento') ?>
         </div>
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <?php echo $form->field($model, 'numeroDocumentoInterno') ?>
         </div>
     </div>

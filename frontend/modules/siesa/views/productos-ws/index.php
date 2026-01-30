@@ -39,9 +39,9 @@ if (isset($params["ProductosWsSearch"]["Item"])) {
 
     <?php echo $this->render('_search', ['model' => $searchModel]); ?>
 
-    <p align="center">
+    <!-- <p align="center">
         <?= Html::a('Sincronizar ERP', ['sincronizarerp', 'item' => $item], ['class' => 'btn btn-success btn-lg btn-create']) ?>
-    </p>    
+    </p>     -->
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,

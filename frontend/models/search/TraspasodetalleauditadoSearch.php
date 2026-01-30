@@ -11,6 +11,8 @@ use frontend\models\Traspasodetalleauditado;
  */
 class TraspasodetalleauditadoSearch extends Traspasodetalleauditado
 {
+    /** 🔎 Para filtrar por username del creador en el agrupado */
+    public $creador;
     /**
      * {@inheritdoc}
      */
@@ -33,6 +35,7 @@ class TraspasodetalleauditadoSearch extends Traspasodetalleauditado
                     'serie',
                     'Destino',
                     'Origen',
+                    'creador',
                 ],
                 'safe',
             ],
@@ -166,4 +169,124 @@ class TraspasodetalleauditadoSearch extends Traspasodetalleauditado
         return $dataProvider;
     }
 
+    /**
+     * Lista agrupada por (idTraspaso, created_by) con totales,
+     * filtrable por idTraspaso, consecutivo Siesa, serie, creador.
+     */
+    public function searchAgrupadoPorUsuario(array $params, ?int $idtraspaso = null): \yii\data\ActiveDataProvider
+    {
+        $q = (new \yii\db\Query())
+            ->from(['tda' => 'traspasodetalleauditado'])
+            ->join('LEFT JOIN', ['tr' => 'traspaso'], 'tr.id = tda.idTraspaso')
+            ->join('LEFT JOIN', ['tdoc' => 'tipodocumento'], 'tdoc.id = tr.idTipoDocumento')
+            ->join('LEFT JOIN', ['ds' => 'documentosiesa'], 'tda.idTraspaso = ds.idGruma')
+            ->join('LEFT JOIN', ['bo' => 'bodegas'], 'bo.id = tr.idBodegaOrigen')
+            ->join('LEFT JOIN', ['bd' => 'bodegas'], 'bd.id = tr.idBodegaDestino')
+            ->join('LEFT JOIN', ['i' => 'item'], 'i.id = tda.idItem')
+            ->join('LEFT JOIN', ['ue' => 'unidadempaque'], 'ue.codigo = i.unidadEmpaque')
+            ->join('LEFT JOIN', ['uCrea' => 'user'], 'uCrea.id = tda.created_by') // ✅ para filtrar por username
+            ->select([
+                'idTraspaso'       => 'tda.idTraspaso',
+                'created_by'       => 'tda.created_by',
+                'total_registros'  => 'COUNT(1)',
+                'total_unidades'   => 'SUM(COALESCE(ue.equivalencia,1) * tda.cantidad)',
+                'consecutivoSiesa' => 'ds.f350_consec_docto',
+                'serie'            => 'tdoc.codigo',
+                'Origen'           => "(bo.codigo + ' - ' + bo.nombre)",
+                'Destino'          => "(bd.codigo + ' - ' + bd.nombre)",
+                'primera'          => 'MIN(tda.created_at)',
+                'ultima'           => 'MAX(tda.created_at)',
+                'creador'          => 'uCrea.username', // ✅ alias visible/filtrable/sortable
+            ])
+            ->groupBy([
+                'tda.idTraspaso',
+                'tda.created_by',
+                'tdoc.codigo',
+                'ds.f350_consec_docto',
+                'bo.codigo',
+                'bo.nombre',
+                'bd.codigo',
+                'bd.nombre',
+                'uCrea.username',
+            ]);
+        // ⚠️ sin ->orderBy() aquí
+
+        if ($idtraspaso) {
+            $q->andWhere(['tda.idTraspaso' => (int)$idtraspaso]);
+        }
+
+        $dp = new \yii\data\ActiveDataProvider([
+            'query' => $q,
+            'pagination' => ['pageSize' => 50],
+            'sort' => [
+                'attributes' => [
+                    'idTraspaso' => [
+                        'asc'  => ['tda.idTraspaso' => SORT_ASC],
+                        'desc' => ['tda.idTraspaso' => SORT_DESC],
+                    ],
+                    'created_by' => [
+                        'asc'  => ['tda.created_by' => SORT_ASC],
+                        'desc' => ['tda.created_by' => SORT_DESC],
+                    ],
+                    'consecutivoSiesa' => [
+                        'asc'  => ['ds.f350_consec_docto' => SORT_ASC],
+                        'desc' => ['ds.f350_consec_docto' => SORT_DESC],
+                    ],
+                    'serie' => [
+                        'asc'  => ['tdoc.codigo' => SORT_ASC],
+                        'desc' => ['tdoc.codigo' => SORT_DESC],
+                    ],
+                    'Origen' => [
+                        'asc'  => [new \yii\db\Expression("(bo.codigo + ' - ' + bo.nombre) ASC")],
+                        'desc' => [new \yii\db\Expression("(bo.codigo + ' - ' + bo.nombre) DESC")],
+                    ],
+                    'Destino' => [
+                        'asc'  => [new \yii\db\Expression("(bd.codigo + ' - ' + bd.nombre) ASC")],
+                        'desc' => [new \yii\db\Expression("(bd.codigo + ' - ' + bd.nombre) DESC")],
+                    ],
+                    'total_registros' => [
+                        'asc'  => [new \yii\db\Expression('COUNT(1) ASC')],
+                        'desc' => [new \yii\db\Expression('COUNT(1) DESC')],
+                    ],
+                    'total_unidades' => [
+                        'asc'  => [new \yii\db\Expression('SUM(COALESCE(ue.equivalencia,1) * tda.cantidad) ASC')],
+                        'desc' => [new \yii\db\Expression('SUM(COALESCE(ue.equivalencia,1) * tda.cantidad) DESC')],
+                    ],
+                    'primera' => [
+                        'asc'  => [new \yii\db\Expression('MIN(tda.created_at) ASC')],
+                        'desc' => [new \yii\db\Expression('MIN(tda.created_at) DESC')],
+                    ],
+                    'ultima' => [
+                        'asc'  => [new \yii\db\Expression('MAX(tda.created_at) ASC')],
+                        'desc' => [new \yii\db\Expression('MAX(tda.created_at) DESC')],
+                    ],
+                    'creador' => [ // ✅ sort por username
+                        'asc'  => ['uCrea.username' => SORT_ASC],
+                        'desc' => ['uCrea.username' => SORT_DESC],
+                    ],
+                ],
+                'defaultOrder' => [
+                    'idTraspaso' => SORT_DESC,
+                    'created_by' => SORT_ASC,
+                ],
+            ],
+        ]);
+
+        $this->load($params);
+        if (!$this->validate()) return $dp;
+
+        // Filtros
+        $q->andFilterWhere(['tda.idTraspaso' => $this->idTraspaso]);
+        if (!empty($this->consecutivoSiesa)) {
+            $q->andFilterWhere(['like', 'ds.f350_consec_docto', $this->consecutivoSiesa]);
+        }
+        if (!empty($this->serie)) {
+            $q->andFilterWhere(['like', 'tdoc.codigo', $this->serie]);
+        }
+        if (!empty($this->creador)) {
+            $q->andFilterWhere(['like', 'uCrea.username', $this->creador]); // ✅ filtro por username
+        }
+
+        return $dp;
+    }
 }

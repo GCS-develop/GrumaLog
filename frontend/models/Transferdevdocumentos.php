@@ -70,25 +70,40 @@ class Transferdevdocumentos extends \yii\db\ActiveRecord
         ];
     }
 
-
-            public function beforeSave($insert)
+public function beforeSave($insert)
 {
     if (parent::beforeSave($insert)) {
-        // ✅ Formatear fecha_documento a YYYYMMDD solo si viene en formato YYYY-MM-DD
-        if (!empty($this->fecha_documento) && strpos($this->fecha_documento, '-') !== false) {
-            $this->fecha_documento = str_replace('-', '', $this->fecha_documento);
+
+        // ✅ Formatear fecha_documento como texto AAAAMMDD
+        if (!empty($this->fecha_documento)) {
+            if (strpos($this->fecha_documento, '-') !== false) {
+                // Convierte de YYYY-MM-DD a YYYYMMDD
+                $this->fecha_documento = str_replace('-', '', $this->fecha_documento);
+            }
+            // Forzar que siempre sea string
+            $this->fecha_documento = (string)$this->fecha_documento;
         }
 
-        // Si es un nuevo registro, asignar el usuario y la fecha de envío
+        // ✅ Manejo de fecha_envio (datetime en SQL Server)
         if ($insert) {
-            $this->usuario_envio = Yii::$app->user->id; // Asignar el usuario que está realizando el envío
-            $this->fecha_envio = date('Y-m-d H:i:s'); // Asignar la fecha y hora actual
+            $this->usuario_envio = Yii::$app->user->id;
+            // Siempre en formato compatible con SQL Server
+            $this->fecha_envio = date('Ymd H:i:s');
+        } elseif (!empty($this->fecha_envio)) {
+            // Si ya trae valor, forzar formato
+            $this->fecha_envio = date('Ymd H:i:s', strtotime($this->fecha_envio));
+        }
+
+        // ✅ Manejo de fecha_anulacion (datetime en SQL Server)
+        if (!empty($this->fecha_anulacion)) {
+            $this->fecha_anulacion = date('Ymd H:i:s', strtotime($this->fecha_anulacion));
         }
 
         return true;
     }
     return false;
 }
+
 
 
 

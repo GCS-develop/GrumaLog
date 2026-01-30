@@ -18,7 +18,7 @@ class TraspasouserbodegaSearch extends Traspasouserbodega
     {
         return [
             [['id', 'idUserTraspaso', 'idBodega', 'idEstado', 'created_by', 'updated_by'], 'integer'],
-            [['created_at', 'updated_at'], 'safe'],
+            [['created_at', 'updated_at', 'buscarnombreusuario', 'buscarnombrebodega'], 'safe'],
         ];
     }
 
@@ -40,9 +40,19 @@ class TraspasouserbodegaSearch extends Traspasouserbodega
      */
     public function search($params)
     {
-        $query = Traspasouserbodega::find();
+        $query = Traspasouserbodega::find()->alias('tub');
+        $query->join('INNER JOIN', 'usertraspaso ut', 'ut.id = tub.idUserTraspaso'); // Agregando la relación
+        $query->join('INNER JOIN', 'user u', 'ut.idUser = u.id');
+        $query->join('INNER JOIN', 'bodegas b', 'b.id = tub.idBodega');
 
-        // add conditions that should always apply here
+
+        // add conditions that should always apply hereFF
+        $query->select([
+            'tub.*',
+            'u.username AS buscarnombreusuario',
+            'concat(b.codigo ,b.nombre) AS buscarnombrebodega',
+
+        ]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -58,17 +68,22 @@ class TraspasouserbodegaSearch extends Traspasouserbodega
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
-            'idUserTraspaso' => $this->idUserTraspaso,
-            'idBodega' => $this->idBodega,
-            'idEstado' => $this->idEstado,
-            'created_at' => $this->created_at,
-            'created_by' => $this->created_by,
-            'updated_at' => $this->updated_at,
-            'updated_by' => $this->updated_by,
+            'tub.id' => $this->id,
+            'tub.idUserTraspaso' => $this->idUserTraspaso,
+            'tub.idBodega' => $this->idBodega,
+            'tub.idEstado' => $this->idEstado,
+            'tub.created_at' => $this->created_at,
+            'tub.created_by' => $this->created_by,
+            'tub.updated_at' => $this->updated_at,
+            'tub.updated_by' => $this->updated_by,
         ]);
 
-        $query->orderBy(['idUserTraspaso' => SORT_ASC]);
+        $query->andFilterWhere(['like', 'u.username', $this->buscarnombreusuario]);
+        $query->andFilterWhere(['like', 'b.nombre', $this->buscarnombrebodega]);
+
+
+
+        $query->orderBy(['u.username' => SORT_ASC]);
 
         return $dataProvider;
     }

@@ -8,6 +8,7 @@ $params = array_merge(
 
 return [
     'id' => 'app-frontend',
+    'name' => 'GRUMALOG',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'controllerNamespace' => 'frontend\controllers',
@@ -57,24 +58,59 @@ return [
 
         'auditoriamanual' => [
             'class' => 'frontend\modules\auditoriamanual\Module',
-        ]
+        ],
+        'contabilidad' => [
+            'class' => 'frontend\modules\contabilidad\Module',
+        ],
 
+        'distribucion' => [
+            'class' => 'frontend\modules\distribucion\Module',
+        ],
+        'hunter' => [
+            'class' => 'frontend\modules\hunter\Module',
+        ],
+        'grumascanmarcacion' => [
+            'class' => 'frontend\modules\grumascanmarcacion\Module',
+        ],
     ],
 
     'components' => [
+        'user' => [
+            'identityClass' => \common\models\User::class,
+            'enableAutoLogin' => true,
+            'loginUrl' => ['site/login'],     // 👈 fuerza login de Site
+            'identityCookie' => ['name' => '_identity-frontend', 'httpOnly' => true],
+        ],
+        'view' => [
+            'theme' => [
+                'pathMap' => [
+                    '@mdm/admin/views' => '@frontend/views/admin',
+                    '@mdm/admin/mail'  => '@common/mail',
+                ],
+            ],
+        ],
+
         'formatter' => [
             'class' => 'yii\i18n\Formatter',
             'locale' => 'es-CO', // Ajusta a tu localización (español - Colombia)
             'currencyCode' => 'COP', // Código de moneda (Peso Colombiano)
         ],
+        // 'request' => [
+        //     'csrfParam' => '_csrf-frontend',
+        // ],
         'request' => [
             'csrfParam' => '_csrf-frontend',
+            'parsers' => [
+                'application/json' => 'yii\web\JsonParser',
+                'text/json'        => 'yii\web\JsonParser',
+            ],
         ],
-        'user' => [
-            'identityClass' => 'common\models\User',
-            'enableAutoLogin' => true,
-            'identityCookie' => ['name' => '_identity-frontend', 'httpOnly' => true],
-        ],
+
+        // 'user' => [
+        //     'identityClass' => 'common\models\User',
+        //     'enableAutoLogin' => true,
+        //     'identityCookie' => ['name' => '_identity-frontend', 'httpOnly' => true],
+        // ],
         'session' => [
             // this is the name of the session cookie used for login on the frontend
             'name' => 'advanced-frontend',
@@ -82,12 +118,25 @@ return [
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [
+
+                // 🔴 Log general (errores y warnings)
                 [
                     'class' => \yii\log\FileTarget::class,
                     'levels' => ['error', 'warning'],
                 ],
+
+                // 📦 Log específico de inventario / SIESA
+                [
+                    'class' => \yii\log\FileTarget::class,
+                    'levels' => ['info', 'warning', 'error'],
+                    'categories' => ['inventario'],
+                    'logFile' => '@runtime/logs/inventario-' . date('Y-m-d') . '.log',
+                    'logVars' => [], // evita ruido de $_GET $_POST
+                ],
+
             ],
         ],
+
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],

@@ -116,19 +116,20 @@ $gridColumns = [
         },
         'format' => ['decimal', 0], // Formato decimal con 0 decimales
     ],
+    
     'cantidad',
-
+    'fecha_activacion',
 
     /*'id',
     'idOrdenCompra',
     'idItem',
     'idCategoria',
     'idSubcategoria',*/
-    // 'cantidadPedida',
-    // 'cantidadEntrada',
+    'cantidadPedida',
+    'cantidadEntrada',
     // 'cantidadPendiente',
-    //'fechaEntrega',
-    //'unidadPaquete',
+    'fechaEntrega',
+    'unidadPaquete',
     //'nroPaquetes',
     //'bodega',
     //'codigointernomovto',
@@ -209,7 +210,7 @@ Modal::end();
                     'Imprimir Stckers',
                     ['value' => $url, 'class' => 'btn btn-success btn-lg btn-create', 'id' => 'modalButtonCreate']
                 )
-                    ?>
+                ?>
             </p>
         </div>
         <div class="col-lg-6 izquierda">
@@ -247,12 +248,13 @@ Modal::end();
         </div>
     </div>
 
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+    <?php // echo $this->render('_search', ['model' => $searchModel]); 
+    ?>
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         //'filterModel' => $searchModel,
-    
+
         'summary' => 'Mostrando {begin} - {end} de {totalCount} resultados',
         'formatter' => ['class' => 'yii\i18n\Formatter', 'nullDisplay' => '-'],
         'options' => [

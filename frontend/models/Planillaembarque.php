@@ -46,6 +46,10 @@ class Planillaembarque extends \yii\db\ActiveRecord
     public $fechaHasta;
     public $numeroDocumento;
     public $numeroDocumentoInterno;
+
+    public $Codigobodegaorigen;
+
+
     /**
      * {@inheritdoc}
      */
@@ -73,6 +77,7 @@ class Planillaembarque extends \yii\db\ActiveRecord
             [
                 [
                     'fechaDespacho',
+                    'Codigobodegaorigen',
                     'created_at',
                     'updated_at',
                     'flotaPropia',
@@ -125,7 +130,7 @@ class Planillaembarque extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => 'Numero de planilla',
+            'id' => 'Id',
             'fechaDespacho' => 'Fecha',
             'horaDespacho' => 'Hora',
             'idTransportadora' => 'Transportadora',
@@ -133,6 +138,7 @@ class Planillaembarque extends \yii\db\ActiveRecord
             'placa' => 'Placa',
             'idConductor' => 'Conductor',
             'nombreConductor' => 'Nombre Conductor',
+            'Codigobodegaorigen' => 'Codigo Bodega Origen',
             'sello' => 'Sello',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
@@ -146,6 +152,12 @@ class Planillaembarque extends \yii\db\ActiveRecord
     public function getTransportadora()
     {
         return $this->hasOne(Transportadora::class, ['id' => 'idTransportadora']);
+
+    }
+
+    public function getCodigoBodegaOrigen()
+    {
+        return $this->hasOne(Bodegas::class, ['codigo' => 'Codigobodegaorigen']);
     }
 
     public function getVehiculo()

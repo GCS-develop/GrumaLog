@@ -165,13 +165,51 @@ $baseUrl = Url::base(true);
                         'badge' => '<span class="right badge badge-info">1</span>',
                         'items' => [
                             ['label' => 'Usuarios', 'url' => ['/nomina/usertraspaso/index'], 'iconStyle' => 'far'],
+
                             ['label' => 'Traspasos', 'url' => ['/traspaso/traspaso/index'], 'iconStyle' => 'far'],
                             ['label' => 'Detalle traspasos', 'url' => ['/traspaso/traspasodetalle/index'], 'iconStyle' => 'far'],
                             ['label' => 'Bodegas / Usuario', 'url' => ['/traspaso/traspasouserbodega/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Traspaso Auditado', 'url' => ['/traspaso/traspasodetalleauditado/index-agrupado'], 'iconStyle' => 'far'],
+
                             ['label' => 'Auditoria', 'url' => ['/traspaso/traspasodetalleauditado/index'], 'iconStyle' => 'far'],
                             ['label' => 'Auditoria - Novedades', 'url' => ['/traspaso/traspasodetalleauditado/index-novedades'], 'iconStyle' => 'far'],
                             ['label' => 'Tiendas', 'url' => ['/traspaso/traspasodetalletienda/index'], 'iconStyle' => 'far'],
                             ['label' => 'Tiendas - Novedades', 'url' => ['/traspaso/traspasodetalletienda/index-novedades'], 'iconStyle' => 'far'],
+
+
+                        ]
+                    ],
+
+                    [
+                        'label' => 'Dashboard',
+                        'icon' => 'chart-line',
+                        'iconStyle' => 'fas',
+                        'badge' => '<span class="right badge badge-info">3</span>',
+                        'items' => [
+
+                            // ✅ Dashboard: ruta correcta + active controlado
+                            [
+                                'label' => 'Dashboard Traspasos',
+                                'url' => ['/traspaso/traspasodashboard/index'],
+                                'iconStyle' => 'far',
+                                'active' => (
+                                    Yii::$app->controller->module
+                                    && Yii::$app->controller->module->id === 'traspaso'
+                                    && Yii::$app->controller->id === 'traspasodashboard'
+                                    // si quieres que solo sea activo en index, descomenta:
+                                    // && Yii::$app->controller->action->id === 'index'
+                                ),
+                            ],
+                            [
+                                'label' => 'Dashboard Traspasos (Audit)',
+                                'url'   => ['/traspaso/traspasoauditdashboard/index'],
+                                'iconStyle' => 'far',
+                                'active' => (
+                                    Yii::$app->controller->module
+                                    && Yii::$app->controller->module->id === 'traspaso'
+                                    && Yii::$app->controller->id === 'traspasoauditdashboard'
+                                ),
+                            ],
 
 
                         ]
@@ -194,7 +232,7 @@ $baseUrl = Url::base(true);
                             //     //     ['label' => 'planillaembarque', 'url' => ['/despacho/planillaembarque/index'], 'iconStyle' => 'far'],
                             //     // ],
                             // ],
-            
+
                             [
                                 // 'label' => 'Catálogos',
                                 'label' => 'Config',
@@ -244,17 +282,65 @@ $baseUrl = Url::base(true);
                             ],
                         ]
                     ],*/
+                    [
+                        'label' => 'Distribución',
+                        'icon' => 'box',
+                        'badge' => '<span class="right badge badge-info">1</span>',
+                        'items' => [
+                            ['label' => 'Pedido - Desde Archivo', 'url' => ['/distribucion/pedido/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Pedido por tienda', 'url' => ['/distribucion/pedidodetalle/index-macro'], 'iconStyle' => 'far'],
+                            ['label' => 'Consolidado', 'url' => ['/distribucion/pedidodetalle/index-consolidado'], 'iconStyle' => 'far'],
+                            ['label' => 'Detalle de Distribución', 'url' => ['/distribucion/pedidodetalle/indexdetalledistribucion'], 'iconStyle' => 'far'],
+
+                        ]
+                    ],
+                    [
+                        'label' => 'Toma Fisica',
+                        'icon' => 'boxes',
+                        'badge' => '<span class="right badge badge-info">2</span>',
+                        'items' => [
+                            ['label' => 'Impresion marcación', 'url' => ['/grumascanmarcacion/grumascanmarcacion/indeximprecion'], 'iconStyle' => 'far'],
+                            ['label' => 'Asignar marcación', 'url' => ['/grumascanmarcacion/grumascanmarcacion/usar-sticker'], 'iconStyle' => 'far'],
+                            ['label' => 'Ver marcaciones', 'url' => ['/grumascanmarcacion/grumascanmarcacion/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Ver mapa', 'url' => ['/grumascanmarcacion/grumascanmarcacion/mapa'], 'iconStyle' => 'far'],
+                            ['label' => 'Conteos', 'url' => ['/grumascanmarcacion/grumascanconteo/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Conteo manual', 'url' => ['/grumascanmarcacion/grumascanconteomanual/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Consolidado', 'url' => ['/grumascanmarcacion/reporte-conteos/consolidado'], 'iconStyle' => 'far'],
+                            ['label' => 'Exportar INV Físico', 'url' => ['/grumascanmarcacion/grumascanconteodetalle/export-fisico'], 'iconStyle' => 'far'],
+                            [
+                                'label' => 'Enviar a Siesa',
+                                'url' => ['/grumascanmarcacion/envio-fisico/preview'],
+                                'iconStyle' => 'far',
+                            ],
+
+                        ]
+                    ],
+                    [
+                        'label' => 'Contabilidad',
+                        'icon' => 'calculator',
+                        'badge' => '<span class="right badge badge-info">1</span>',
+                        'items' => [
+                            ['label' => 'Gastos Tiendas', 'url' => ['/contabilidad/gastotiendas/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Facturas de Consignacion VMI', 'url' => ['/contabilidad/conciliacion/index-log'], 'iconStyle' => 'far'],
+                            ['label' => 'Notas de Consignacion VMI', 'url' => ['/contabilidad/devolucionmercancia/enviados'], 'iconStyle' => 'far'],
+                            ['label' => 'Reporte Créditos Empleados', 'url' => ['/contabilidad/reporte-creditos-empleados/index'], 'iconStyle' => 'far'],
+                        ]
+                    ],
 
                     [
                         'label' => 'Ventas',
                         'icon' => 'dollar-sign',
                         'badge' => '<span class="right badge badge-info">1</span>',
                         'items' => [
-                            ['label' => 'Config. Impresoras paxar', 'url' => ['/productostiquetesprecio/impresoraspaxarbodega/index'], 'iconStyle' => 'far'],
                             ['label' => 'Impresion de precios', 'url' => ['/productostiquetesprecio/productostiquetesprecio/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Solo Precio', 'url' => ['/siesa/inventarios-ws/index-print'], 'iconStyle' => 'far'],
                             ['label' => 'Analisis de venta', 'url' => ['/ventas/analisisventa/index'], 'iconStyle' => 'far'],
                             ['label' => 'Consulta', 'url' => ['/ventas/factura/index'], 'iconStyle' => 'far'],
                             ['label' => 'Cotización Precio', 'url' => ['/ventas/cotizacionprecio/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Productos', 'url' => ['/siesa/productos-ws/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Proveedores', 'url' => ['/siesa/proveedores-ws/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Inventarios', 'url' => ['/siesa/inventarios-ws/index'], 'iconStyle' => 'far'],
+
                         ]
                     ],
 
@@ -277,6 +363,7 @@ $baseUrl = Url::base(true);
                             ['label' => 'Talla', 'url' => ['/catalogos/talla/index'], 'iconStyle' => 'far'],
                             ['label' => 'Color', 'url' => ['/catalogos/color/index'], 'iconStyle' => 'far'],
                             ['label' => 'Bodega - Tipo Dcto.', 'url' => ['/catalogos/bodegatipodocumento/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Tipos de Dcto.', 'url' => ['/catalogos/tipodocumento/index'], 'iconStyle' => 'far'],
                             ['label' => 'Cross Docking', 'url' => ['/catalogos/crossdocking/index'], 'iconStyle' => 'far'],
                             ['label' => 'Categoría', 'url' => ['/catalogos/categoria/index'], 'iconStyle' => 'far'],
                             ['label' => 'Estados Agenda', 'url' => ['/catalogos/estadoagenda/index'], 'iconStyle' => 'far'],
@@ -287,7 +374,7 @@ $baseUrl = Url::base(true);
                     ],
 
                     //['label' => 'Simple Link', 'icon' => 'th', 'badge' => '<span class="right badge badge-danger">New</span>'],
-            
+
                     ['label' => 'Ingreso Sistema', 'header' => true],
                     ['label' => 'Login', 'url' => ['/admin/user/login'], 'icon' => 'user', 'visible' => Yii::$app->user->isGuest],
 

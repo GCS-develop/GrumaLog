@@ -15,6 +15,9 @@ use frontend\models\PasswordResetRequestForm;
 use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
 use frontend\models\ContactForm;
+use yii\web\Response;
+use yii\widgets\ActiveForm;
+
 
 /**
  * Site controller
@@ -257,34 +260,68 @@ class SiteController extends Controller
         ]);
     }
 
+    // public function actionRequestPasswordReset()
+    // {
+    //     $model = new PasswordResetRequestForm();
+    //     if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+    //         if ($model->sendEmail()) {
+    //             Yii::$app->session->setFlash('success', 'Revisa tu correo para continuar.');
+    //             return $this->goHome();
+    //         }
+    //         Yii::$app->session->setFlash('error', 'No se pudo enviar el correo a esa dirección.');
+    //     }
+    //     return $this->render('requestPasswordResetToken', ['model' => $model]);
+    // }
     public function actionRequestPasswordReset()
     {
-        $model = new \app\models\PasswordResetRequestForm();
+        $model = new PasswordResetRequestForm();
 
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->sendEmail()) {
-                return $this->goHome();
+        if ($model->load(Yii::$app->request->post())) {
+
+            // 1) Si es la llamada de VALIDACIÓN AJAX del ActiveForm:
+            if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ActiveForm::validate($model); // 👈 SOLO valida, NO envía correo
+            }
+
+            // 2) Submit normal (cuando el usuario da Enviar y pasa validación):
+            if ($model->validate()) {
+                if ($model->sendEmail()) {
+                    Yii::$app->session->remove('__returnUrl'); // evita salto al admin
+                    Yii::$app->session->setFlash('success', 'Te enviamos un correo con instrucciones para restablecer tu contraseña.');
+                    return $this->redirect(['site/login']);
+                }
+                Yii::$app->session->setFlash('error', 'No se pudo enviar el correo a esa dirección.');
             }
         }
 
         return $this->render('requestPasswordResetToken', ['model' => $model]);
     }
-
     public function actionResetPassword($token)
     {
         try {
-            $model = new \app\models\ResetPasswordForm($token);
+            $model = new ResetPasswordForm($token);
         } catch (\yii\base\InvalidParamException $e) {
             throw new \yii\web\BadRequestHttpException($e->getMessage());
         }
 
         if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
-            Yii::$app->mailService->send(
-                $model->getUser()->email,
-                'Confirmación de cambio de contraseña',
-                'password-reset-success',
-                ['user' => $model->getUser()]
-            );
+
+            Yii::$app->session->remove('__returnUrl');
+
+            // correo de confirmación
+            $user = $model->getUser();
+            try {
+                Yii::$app->mailService->send(
+                    $user->email,
+                    'Confirmación de cambio de contraseña',
+                    ['html' => 'password-reset-success-html', 'text' => 'password-reset-success-text'],
+                    ['user' => $user]
+                );
+            } catch (\Throwable $e) {
+                Yii::warning('No se pudo enviar confirmación de cambio de clave: ' . $e->getMessage(), 'mail');
+            }
+
             Yii::$app->session->setFlash('success', 'Contraseña restablecida. Ya puedes iniciar sesión.');
             return $this->redirect(['site/login']);
         }
@@ -315,6 +352,4 @@ class SiteController extends Controller
 
         return $this->redirect(['login']);
     }
-
-
 }

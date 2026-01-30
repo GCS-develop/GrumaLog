@@ -407,5 +407,46 @@ class Traspasodetalle extends \yii\db\ActiveRecord
     }
 
 
+    public function retornarPedidoAR(): int
+    {
+        try {
+            $traspaso = $this->traspaso ?? null;
+            $item     = $this->item ?? null;
+            if (!$traspaso || !$item) return 0;
 
+            $idPedido        = (int)($traspaso->idPedido ?? 0);
+            $idBodegaDest    = (int)($traspaso->idBodegaDestino ?? 0);
+            $cantidadAnulada = (int)($this->getCantidadUnidades() ?? 0);
+            if ($idPedido <= 0 || $idBodegaDest <= 0 || $cantidadAnulada <= 0) return 0;
+
+            // 1) Todos los códigos/barcodes del MISMO ítem (misma ref + talla + color)
+            $itemIds = $this->getItemsRelaciones();   // array<int> de IDs
+            if (empty($itemIds)) return 0;
+
+            // 2) (Recomendado) Tope para no dejar ninguna fila negativa
+            $minRecibidas = (int) Pedidodetalle::find()
+                ->where(['idPedido' => $idPedido, 'idBodega' => $idBodegaDest])
+                ->andWhere(['idItem' => $itemIds])
+                ->min('unidadesRecibidas');
+
+            $quita = max(0, min($cantidadAnulada, $minRecibidas));
+            if ($quita === 0) return 0;
+
+            // 3) Restar la MISMA cantidad a CADA fila relacionada
+            Pedidodetalle::updateAllCounters(
+                ['unidadesRecibidas' => -$quita],
+                [
+                    'idPedido' => $idPedido,
+                    'idBodega' => $idBodegaDest,
+                    'idItem'   => $itemIds,
+                ]
+            );
+
+            // 🔁 Regla de negocio: reporta la cantidad del ÍTEM (no multiplicada por códigos)
+            return $quita;
+        } catch (\Throwable $e) {
+            Yii::error('retornarPedidoAR(): ' . $e->getMessage(), __METHOD__);
+            return 0;
+        }
+    }
 }

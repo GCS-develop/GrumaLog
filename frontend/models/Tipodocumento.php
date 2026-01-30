@@ -29,7 +29,6 @@ class Tipodocumento extends \yii\db\ActiveRecord
     {
         return 'tipodocumento';
     }
-
     public function behaviors()
     {
         return [
@@ -58,6 +57,7 @@ class Tipodocumento extends \yii\db\ActiveRecord
         return [
             [['created_at', 'updated_at'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
+            [['requierePedido','permite_cantidad_manual'], 'boolean'],
             [['codigo'], 'string', 'max' => 5],
             [['nombre'], 'string', 'max' => 50],
         ];
@@ -134,11 +134,9 @@ class Tipodocumento extends \yii\db\ActiveRecord
     {
         $data = Tipodocumento::find()
             ->select(['id', 'codigo AS nombre'])
-            ->where(['codigo' => ['3TA', '3TB' ,'TRT','TRL']])
+            ->where(['codigo' => ['3TA', '3TB', 'TRT', 'TRL', '2TL']])
             ->orderBy('codigo')->asArray()->all();
         $listadata = ArrayHelper::map($data, 'id', 'nombre');
         return $listadata;
     }
-
-
 }

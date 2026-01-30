@@ -13,6 +13,8 @@ class Selectimpresora extends Model
 
     public $idImpresora;
 
+    public $cantidad_stickers;
+
     /**
      * {@inheritdoc}
      */
@@ -21,6 +23,8 @@ class Selectimpresora extends Model
         return [
             [['idImpresora'], 'required',
             'message' => '{attribute} Es Un Valor Obligatorio'],
+
+            ['cantidad_stickers', 'integer', 'min' => 1],
         ];
     }
 

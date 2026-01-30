@@ -22,6 +22,19 @@ return [
 	],
 
 	'components' => [
+		'mailer' => [
+			'class' => \yii\symfonymailer\Mailer::class,
+			'viewPath' => '@common/mail',
+			'useFileTransport' => false,
+			'transport' => [
+				'dsn' => 'smtp://victorburbanoherpo@gmail.com:xytoljmrivzfltjy@smtp.gmail.com:587',
+			],
+		],
+		'mailService' => [
+			'class' => 'common\components\MailService',
+		],
+
+
 		'cache' => [
 			'class' => \yii\caching\FileCache::class,
 		],
@@ -30,10 +43,21 @@ return [
 			'class' => 'yii\rbac\DbManager', // or use 'yii\rbac\PhpManager'
 		],
 
-		'user' => [
-			//'class' => 'mdm\admin\models\User',
-			'identityClass' => 'mdm\admin\models\User',
-			'loginUrl' => ['admin/user/login'],
+		// 'user' => [
+		// 	//'class' => 'mdm\admin\models\User',
+		// 	'identityClass' => 'mdm\admin\models\User',
+		// 	'loginUrl' => ['admin/user/login'],
+		// ],
+
+		'log' => [
+			'traceLevel' => YII_DEBUG ? 3 : 0,
+			'targets' => [
+				[
+					'class' => 'yii\log\FileTarget',
+					'levels' => ['error', 'warning'],   // 👈 qué tipos de mensajes se guardan
+					'logFile' => '@runtime/logs/app.log',
+				],
+			],
 		],
 		'mailService' => [
 			'class' => 'common\components\MailService',
@@ -44,6 +68,7 @@ return [
 		'class' => 'mdm\admin\components\AccessControl',
 		'allowActions' => [
 			'site/*',
+			'hunter/hunter-api/*',
 			//'admin/*',
 			'gii/*',
 			//'catalogos/*',

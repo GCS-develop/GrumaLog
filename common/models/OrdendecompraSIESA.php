@@ -361,15 +361,38 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
                 INNER JOIN t121_mc_items_extensiones itx ON itx.f121_rowid_item = it.f120_rowid
                 LEFT JOIN t131_mc_items_barras bar ON itx.f121_id_barras_principal = bar.f131_id
                 WHERE ipre.f126_id_lista_precio = :codigolistaprecios AND itx.f121_id_barras_principal IN (:codigobarras) 
-                AND FORMAT(ipre.f126_fecha_activacion, 'yyyy-MM-dd') >= :fechaactivacion
+                AND FORMAT(ipre.f126_fecha_activacion, 'yyyy-MM-dd') <= :fechaactivacion
                 ORDER BY ipre.f126_fecha_activacion DESC     
         ";
+
+        $command = self::getDb()->createCommand($sql)
+            ->bindValue(':codigolistaprecios', $codigolistaprecios)
+            ->bindValue(':codigobarras', $codigobarras)
+            ->bindValue(':fechaactivacion', $fechaactivacion);
+
+        if ($codigobarras == '9933645116311') {
+            echo "<pre>SQL ejecutado:\n" . $command->getRawSql() . "</pre>";
+            $resultado = $command->queryAll();
+            $count = count($resultado);
+            echo "Cantidad de registros: " . count($resultado);
+        }
 
         return self::getDb()->createCommand($sql)
             ->bindValue('codigolistaprecios', $codigolistaprecios)
             ->bindValue(':codigobarras', $codigobarras)
             ->bindValue(':fechaactivacion', $fechaactivacion)
             ->queryAll();
+
+        /*
+		if ($codigobarras == '9933645116311') {
+			echo "<pre>Resultado del primer query:\n";
+			print_r($resultado);
+			echo "Tipo codigobarras: " . gettype($codigobarras) . "\n";
+			echo "Valor: " . $codigobarras . "\n";
+			echo "<pre>SQL ejecutado:\n" . $command->getRawSql() . "</pre>";
+			echo "</pre>";
+		}
+		*/
     }
 
     public static function obtenerDatosDocumento($tipodocumento, $numerodocumento, $tipomovimiento = null)
@@ -388,6 +411,7 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             f350_id_co, 
             f350_id_tipo_docto,
             f350_consec_docto, 
+            f350_ind_estado,
             :tipodocumento AS tipoDocumento, 
             :numerodocumento AS numeroDocumento
             FROM t350_co_docto_contable
@@ -417,7 +441,6 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             ->bindValue(':numerodocumento', $numerodocumento)
             ->bindValue(':pattern', $pattern)
             ->queryAll();
-
     }
     public static function obtenerTallaPorCodigo($codigoTalla)
     {
@@ -747,7 +770,6 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             if ($tipoconsulta == 'I') {
                 $query = $sql . " AND ctb.f350_notas LIKE :numero";
                 $numero = '%' . $numero . '%';
-
             } else {
                 $query = $sql . " AND ctb.f350_consec_docto  = :numero";
             }
@@ -891,6 +913,4 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             ->bindValue(':fechaLimite', $fechaLimite)
             ->queryAll();
     }
-
-
 }

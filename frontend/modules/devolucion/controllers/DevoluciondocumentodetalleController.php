@@ -115,92 +115,207 @@ class DevoluciondocumentodetalleController extends Controller
     }
 
 
- public function actionRegistrarDatos($id)
+/*public function actionRegistrarDatos($id = null)
 {
-    if ($id === null) {
-    throw new \yii\web\BadRequestHttpException('El parámetro "id" es obligatorio.');
-}
+    $request = Yii::$app->request;
 
-    if ($id === null) {
-        Yii::$app->session->setFlash('error', 'ID inválido.');
-        return $this->redirect(['index']);
+    // ✅ Siempre esperamos JSON en respuestas Ajax
+    if ($request->isAjax) {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
     }
 
-    $ids = explode(',', $id);
-    $modelBase = new Transferdevdocumentos();
+    // Recibir ids seleccionados (POST o fallback GET)
+    $ids = $request->post('ids', []);
+    if (empty($ids) && $id !== null) {
+        $ids = explode(',', $id);
+    }
 
-    // Validación AJAX
-    if (Yii::$app->request->isAjax && $modelBase->load(Yii::$app->request->post())) {
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    if (empty($ids)) {
+        return ['success' => false, 'message' => 'Debe seleccionar al menos un registro.'];
+    }
+
+    $modelBase = new \frontend\models\Transferdevdocumentos();
+
+    // 🔹 Validación Ajax
+    if ($request->isAjax && $modelBase->load($request->post())) {
         return \yii\widgets\ActiveForm::validate($modelBase);
     }
 
-    // Si se envió el formulario
-    if (Yii::$app->request->isPost && $modelBase->load(Yii::$app->request->post())) {
+    // 🔹 Guardado (submit del formulario)
+    if ($request->isPost && $modelBase->load($request->post())) {
         $guardados = 0;
         $errores = 0;
-        $ultimoDocumentoId = null;
 
-        // Obtener el nuevo ID de transferencia secuencial
-        $ultimoIdTransferencia = Transferdevdocumentos::find()->max('id_transferencia');
+        // Consecutivo de transferencia
+        $ultimoIdTransferencia = \frontend\models\Transferdevdocumentos::find()->max('id_transferencia');
         $nuevoIdTransferencia = $ultimoIdTransferencia ? $ultimoIdTransferencia + 1 : 1;
 
         foreach ($ids as $devolucionId) {
-            $detalle = Devoluciondocumentodetalle::findOne($devolucionId);
+            $detalle = \frontend\models\Devoluciondocumentodetalle::findOne($devolucionId);
             if (!$detalle) {
-                Yii::warning("No se encontró el detalle con ID $devolucionId", __METHOD__);
                 $errores++;
                 continue;
             }
 
-            $nuevo = new Transferdevdocumentos();
+            $nuevo = new \frontend\models\Transferdevdocumentos();
             $nuevo->attributes = $modelBase->attributes;
             $nuevo->id_devoluciondocumento = $devolucionId;
-            $nuevo->id_transferencia = $nuevoIdTransferencia; // Asignar mismo ID de grupo
-            $nuevo->fecha_documento = date('Ymd'); // Fecha con formato YYYYMMDD para campo CHAR(8)
+            $nuevo->id_transferencia = $nuevoIdTransferencia;
+            $nuevo->fecha_documento = date('Ymd'); // YYYYMMDD
 
-
-            // Validación antes de guardar
-            if ($nuevo->validate()) {
-                if ($nuevo->save()) {
-                    Yii::info("Transferencia guardada para ID $devolucionId con ID Transferencia {$nuevo->id}", __METHOD__);
-                    $guardados++;
-                    $ultimoDocumentoId = $nuevo->id;
-                } else {
-                    Yii::error("Error al guardar transferencia para ID $devolucionId: " . print_r($nuevo->errors, true), __METHOD__);
-                    $errores++;
-                }
+            if ($nuevo->validate() && $nuevo->save()) {
+                $guardados++;
             } else {
-                Yii::error("Errores de validación para el detalle $devolucionId: " . print_r($nuevo->errors, true), __METHOD__);
                 $errores++;
             }
         }
 
-        // Mensajes de resultado
-        if ($guardados > 0 && $errores === 0) {
-            Yii::$app->session->setFlash('success', "$guardados transferencias registradas correctamente (Transferencia #$nuevoIdTransferencia).");
-        } elseif ($guardados > 0 && $errores > 0) {
-            Yii::$app->session->setFlash('warning', "$guardados transferencias guardadas, $errores con errores.");
-        } else {
-            Yii::$app->session->setFlash('error', "No se pudo guardar ninguna transferencia.");
+        if ($request->isAjax) {
+            return [
+                'success' => $errores === 0,
+                'message' => $errores === 0
+                    ? "$guardados transferencias registradas correctamente (Transferencia #$nuevoIdTransferencia)."
+                    : "$guardados guardadas, $errores con errores.",
+            ];
         }
 
-        // Redirigir si se guardó al menos un registro
-        if ($ultimoDocumentoId !== null) {
-            return $this->redirect(['/devolucion/transferdevdocumentos/viewtransferenciaocerp', 'id' => $nuevoIdTransferencia]);
+        // Fallback si no es Ajax
+        if ($errores === 0) {
+            Yii::$app->session->setFlash('success', "$guardados transferencias registradas correctamente.");
         } else {
-            return $this->redirect(['index']);
+            Yii::$app->session->setFlash('warning', "$guardados guardadas, $errores con errores.");
         }
+        return $this->redirect(['/devolucion/transferdevdocumentos/viewtransferenciaocerp', 'id' => $nuevoIdTransferencia]);
     }
 
-    // Renderizar formulario inicial
-    $devolucion = Devoluciondocumentodetalle::findOne($ids[0]);
+    // 🔹 Render inicial del modal (GET con ids[])
+    $devolucion = \frontend\models\Devoluciondocumentodetalle::findOne($ids[0]);
+
     return $this->renderAjax('@frontend/modules/devolucion/views/Transferdevdocumentos/_form', [
         'model' => $modelBase,
         'devolucion' => $devolucion,
         'ids' => $ids,
     ]);
+}*/
+
+
+public function actionRegistrarDatos($id = null)
+{
+    $request = Yii::$app->request;
+
+    if ($request->isAjax) {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    }
+
+    // ✅ Recibir los IDs comprimidos en JSON
+    $idsJson = $request->post('ids_json', null);
+    if ($idsJson) {
+        $ids = json_decode($idsJson, true) ?: [];
+    } else {
+        // Fallback: ids en array o string separado por comas
+        $ids = $request->post('ids', []);
+        if (empty($ids) && $id !== null) {
+            $ids = explode(',', $id);
+        }
+        if (is_string($ids)) {
+            $ids = array_filter(array_map('trim', explode(',', $ids)));
+        }
+    }
+
+    if (empty($ids)) {
+        return ['success' => false, 'message' => 'Debe seleccionar al menos un registro.'];
+    }
+
+    $modelBase = new \frontend\models\Transferdevdocumentos();
+
+    // 🔹 Validación AJAX
+    if ($request->isAjax && $modelBase->load($request->post())) {
+        return \yii\widgets\ActiveForm::validate($modelBase);
+    }
+
+    // 🔹 Guardado
+    if ($request->isPost && $modelBase->load($request->post())) {
+        $guardados = 0;
+        $errores   = 0;
+
+        $ultimo = \frontend\models\Transferdevdocumentos::find()->max('id_transferencia');
+        $nuevoIdTransferencia = $ultimo ? ((int)$ultimo + 1) : 1;
+
+        $cabecera = new \frontend\models\Transferdevdocumentos();
+        $cabecera->attributes       = $modelBase->attributes;
+        $cabecera->id_transferencia = $nuevoIdTransferencia;
+        $cabecera->fecha_documento  = date('Ymd');
+        $cabecera->estado_envio     = 0;
+
+        if ($cabecera->save()) {
+            foreach ($ids as $devolucionId) {
+                $detalleOrigen = \frontend\models\Devoluciondocumentodetalle::findOne((int)$devolucionId);
+                if (!$detalleOrigen) {
+                    $errores++;
+                    continue;
+                }
+
+                $det = new \frontend\models\Transferdevdetalle();
+                $det->id_transferencia       = $nuevoIdTransferencia;
+                $det->id_devoluciondocumento = $detalleOrigen->id;
+                $det->codigoBarras           = $detalleOrigen->codigoBarras;
+                $det->cantidadDevolucion     = (int)$detalleOrigen->cantidadDevolucion;
+                $det->cantidadRegistrada     = (int)$detalleOrigen->cantidadRegistrada;
+                $det->item                   = $detalleOrigen->item;
+                $det->talla                  = $detalleOrigen->talla;
+                $det->color                  = $detalleOrigen->color;
+                $det->referencia             = $detalleOrigen->referencia;
+                $det->itemResumen            = $detalleOrigen->itemResumen;
+                $det->unidadMedida           = $detalleOrigen->unidadMedida;
+                $det->registrada             = $detalleOrigen->registrada;
+                // calcular costo desde el detalle origen
+$costo = $detalleOrigen->getCosto();
+
+// si viene null o <= 0, asignamos 1 como valor de seguridad
+$det->costo = ($costo !== null && $costo > 0) ? $costo : 1;
+
+                // 🔹 Aquí calculamos Eq. UM igual que en index_all
+                    $equivalencia = 1;
+                    if ($detalleOrigen->unidadempaque) {
+                        $equivalencia = $detalleOrigen->unidadempaque->equivalencia;
+                    }
+                    $det->eq_um = (int)$equivalencia;
+                $det->created_at             = new \yii\db\Expression('GETDATE()');
+                $det->created_by             = Yii::$app->user->id;
+
+                if ($det->save()) {
+                    $guardados++;
+                } else {
+                    Yii::error($det->getErrors(), __METHOD__);
+                    $errores++;
+                }
+            }
+        }
+
+        if ($request->isAjax) {
+            return [
+                'success' => $errores === 0,
+                'message' => $errores === 0
+                    ? "$guardados ítems registrados en la transferencia #$nuevoIdTransferencia."
+                    : "$guardados guardados, $errores con errores.",
+            ];
+        }
+
+        return $this->redirect([
+            '/devolucion/transferdevdocumentos/viewtransferenciaocerp',
+            'id' => $nuevoIdTransferencia
+        ]);
+    }
+
+    $devolucion = \frontend\models\Devoluciondocumentodetalle::findOne($ids[0]);
+
+    return $this->renderAjax('@frontend/modules/devolucion/views/Transferdevdocumentos/_form', [
+        'model'      => $modelBase,
+        'devolucion' => $devolucion,
+        'ids'        => $ids,
+    ]);
 }
+
 
 
 

@@ -2,6 +2,7 @@
 
 namespace backend\modules\siesa_conector\controllers;
 
+use Yii;
 use frontend\models\SiesaConectorDocumento;
 use frontend\models\search\SiesaconectordocumentoSearch;
 use yii\web\Controller;
@@ -193,6 +194,30 @@ class SiesaconectordocumentoController extends Controller
         ]);
     }
 
+    public function actionBuscarAen($id)
+    {
+        $model = SiesaConectorDocumento::findOne($id);
 
+        if (!$model) {
+            Yii::$app->session->setFlash('error', 'No se encontró el conector.');
+            return $this->redirect(['index']);
+        }
 
+        $aen = $model->vincularAenConDocumentosiesa();
+
+        if (!$aen) {
+            $msg = $model->hasErrors()
+                ? reset($model->firstErrors)
+                : 'No se pudo vincular el AEN.';
+            Yii::$app->session->setFlash('error', $msg);
+            return $this->redirect(['index']);
+        }
+
+        Yii::$app->session->setFlash(
+            'success',
+            "AEN encontrado y grabado: {$aen['tipo_aen']} {$aen['consec_aen']} (CO {$aen['co_aen']})"
+        );
+
+        return $this->redirect(['index']);
+    }
 }

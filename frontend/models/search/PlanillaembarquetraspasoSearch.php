@@ -43,6 +43,7 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
                     'consecutivoSiesaEnTienda',
                     'fechaDesde',
                     'fechaHasta',
+                    'trasladoOrigenDestino',
                 ],
                 'safe'
             ],
@@ -79,7 +80,9 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
         $query->join('INNER JOIN', 'bodegas bo', 'pet.idBodegaOrigen = bo.id');
         $query->join('INNER JOIN', 'bodegas bd', 'pet.idBodegaDestino = bd.id');
         $query->join('INNER JOIN', 'tipodocumento td', 'tr.idTipoDocumento = td.id');
-        $query->join('INNER JOIN', 'estadodespacho ed', 'ed.id = pet.idEstado');
+        // $query->join('INNER JOIN', 'estadodespacho ed', 'ed.id = pet.idEstado');
+        $query->join('LEFT JOIN', 'Estadodocumentoplanilla edp', 'edp.id = pet.idEstado');
+
         $query->join('LEFT JOIN', 'documentosiesa ds', 'tr.id = ds.idGruma');
         $query->join('LEFT JOIN', 'user us', 'pet.idUsuarioRecibido = us.id');
 
@@ -108,7 +111,7 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             'pet.unidadesEmp',
             'pet.fechaRecibido',
             'pet.created_at',
-
+            'pet.trasladoOrigenDestino',
             'pe.fechaDespacho AS fechaPlanillaembarque',
             'pe.horaDespacho AS horaPlanillaembarque',
 
@@ -118,7 +121,7 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
 
             'us.username AS usuarioRecibido',
 
-            'ed.nombre AS estado',
+            'edp.nombre AS estado',
 
             'bo.codigo AS codAlmacenOrigen',
             'bo.nombre AS almacenOrigen',
@@ -200,7 +203,8 @@ class PlanillaembarquetraspasoSearch extends Planillaembarquetraspaso
             'bd.codigo' => $this->codAlmacenDestino,
 
             // 'us.username' => $this->usuarioRecibido,
-            'ed.nombre' => $this->estado,
+            'edp.nombre' => $this->estado,
+
             'td.codigo' => $this->tipoDocumento,
             // 'tr.consecutivo' => $this->consecutivoDocumento,
             'pe.fechaDespacho' => $this->fechaPlanillaembarque,

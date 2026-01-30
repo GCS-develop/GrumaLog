@@ -70,7 +70,19 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
     {
         return [
             [['idPlanillaEmbarque', 'idTraspaso', 'idBodegaOrigen', 'idBodegaDestino', 'unidades', 'unidadesEmp', 'sello', 'fechaRecibido', 'idUsuarioRecibido', 'idEstado', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'required'],
-            [['idPlanillaEmbarque', 'idTraspaso', 'idBodegaOrigen', 'idBodegaDestino', 'unidades', 'unidadesEmp', 'idUsuarioRecibido', 'idEstado', 'created_by', 'updated_by'], 'integer'],
+            [[
+                'idPlanillaEmbarque',
+                'idTraspaso',
+                'idBodegaOrigen',
+                'idBodegaDestino',
+                'unidades',
+                'unidadesEmp',
+                'idUsuarioRecibido',
+                'idEstado',
+                'created_by',
+                'updated_by',
+                'trasladoOrigenDestino',
+            ], 'integer'],
             [['sello'], 'number'],
             [['fechaRecibido', 'created_at', 'updated_at'], 'safe'],
             [['idPlanillaEmbarque'], 'exist', 'skipOnError' => true, 'targetClass' => Planillaembarque::class, 'targetAttribute' => ['idPlanillaEmbarque' => 'id']],
@@ -177,5 +189,15 @@ class Planillaembarquetraspaso extends \yii\db\ActiveRecord
         return $this->hasOne(Documentosiesa::class, ['idGruma' => 'idTraspaso']);
     }
 
-
+    public function getTrasladoOrigenDestinoNombre()
+    {
+        switch ($this->trasladoOrigenDestino) {
+            case '1':
+                return 'Transito Cedi';
+            case '2':
+                return 'Tienda a Tienda';
+            default:
+                return 'Despachado Cedi';
+        }
+    }
 }

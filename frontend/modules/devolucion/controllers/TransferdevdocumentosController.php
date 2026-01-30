@@ -11,6 +11,12 @@ use yii;
 use yii\data\ActiveDataProvider;
 use frontend\models\Devoluciondocumentodetalle;
 
+
+use frontend\models\Transferdevdetalle;
+
+
+
+
 class TransferdevdocumentosController extends Controller
 {
     /**
@@ -161,7 +167,7 @@ class TransferdevdocumentosController extends Controller
         ]);
     }
 
-    public function actionViewtransferenciaocerp($id)
+   /* old---- public function actionViewtransferenciaocerp($id)
     {
         // Obtener todos los documentos asociados al id_transferencia
         $documentos = Transferdevdocumentos::find()
@@ -189,90 +195,146 @@ class TransferdevdocumentosController extends Controller
             'documento' => $documento,   // Solo uno como referencia
             'detalles' => $detalles,     // Todos los detalles relacionados
         ]);
+    }*/
+        
+    /**
+ * Vista de una transferencia con cabecera y detalles.
+ */
+public function actionViewtransferenciaocerp($id)
+{
+    // 🔹 Buscar la cabecera de la transferencia
+    $documento = Transferdevdocumentos::findOne(['id_transferencia' => $id]);
+
+    if ($documento === null) {
+        throw new NotFoundHttpException("No se encontró la transferencia #$id");
     }
 
-    public function actionEjecutarTransferencia($id)
-    {
-        $transferencias = Transferdevdocumentos::find()
-            ->where(['id_transferencia' => $id])
-            ->all();
+    // 🔹 Query con JOIN a cabecera
+    $query = Transferdevdetalle::find()
+        ->alias('td')
+        ->select([
+            'td.*',
+            't.centro_operacion',
+            't.tipo_documento',
+            't.consecutivo_documento',
+            't.fecha_documento',
+            't.tercero_proveedor',
+            't.notas',
+            't.sucursal_proveedor',
+            't.comprador',
+            't.consignacion',
+            't.motivo'
+        ])
+        ->innerJoin('transferdevdocumentos t', 't.id_transferencia = td.id_transferencia')
+        ->where(['td.id_transferencia' => $id])
+        ->orderBy(['td.id' => SORT_ASC]);
 
-        if (empty($transferencias)) {
-            Yii::$app->session->setFlash('error', 'No se encontraron datos de transferencia.');
-            return $this->redirect(['viewtransferenciaocerp', 'id' => $id]);
-        }
+    $detalles = new ActiveDataProvider([
+        'query' => $query,
+        'pagination' => false, // traer todo
+    ]);
 
-         if ($transferencias[0]->estado_envio === 'enviado') {
+    return $this->render('index_transferenciaocerp', [
+        'documento' => $documento,
+        'detalles'  => $detalles,
+    ]);
+}
+
+
+/**
+ * Eliminar un detalle de transferdevdetalle.
+ */
+public function actionDeleteDetalle($id, $id_transferencia)
+{
+    $detalle = Transferdevdetalle::findOne($id);
+
+    if ($detalle === null) {
+        Yii::$app->session->setFlash('error', 'El detalle no existe.');
+    } else {
+        $detalle->delete();
+        Yii::$app->session->setFlash('success', 'Detalle eliminado correctamente.');
+    }
+
+    // 🔁 Redirige de vuelta a la vista de la transferencia
+    return $this->redirect(['viewtransferenciaocerp', 'id' => $id_transferencia]);
+}
+
+
+
+ public function actionEjecutarTransferencia($id)
+{
+    $transferencias = Transferdevdocumentos::find()
+        ->where(['id_transferencia' => $id])
+        ->all();
+
+    if (empty($transferencias)) {
+        Yii::$app->session->setFlash('error', 'No se encontraron datos de transferencia.');
+        return $this->redirect(['viewtransferenciaocerp', 'id' => $id]);
+    }
+
+    if ($transferencias[0]->estado_envio == 1) { // 🔹 tu estado_envio es numérico
         Yii::$app->session->setFlash('warning', 'Esta transferencia ya fue enviada a Siesa.');
         return $this->redirect(['viewtransferenciaocerp', 'id' => $id]);
-
-        
     }
 
-        // Obtener los id_devoluciondocumento de las transferencias
-        $idsDevoluciones = array_column($transferencias, 'id_devoluciondocumento');
+    // 🔹 Traer detalles correctos (por id_transferencia)
+    $detalles = \frontend\models\Transferdevdetalle::find()
+        ->where(['id_transferencia' => $id])
+        ->all();
 
-        // Obtener detalles de devolución relacionados con esos documentos
-        $detalles = \frontend\models\Devoluciondocumentodetalle::find()
-            ->where(['id' => $idsDevoluciones])  // <-- nota: asegúrate que sea 'id_documento'
-            ->all();
-
-        if (empty($detalles)) {
-            Yii::$app->session->setFlash('error', 'No se encontraron detalles para la transferencia.');
-            return $this->redirect(['viewtransferenciaocerp', 'id' => $id]);
-        }
-
-
-
-        // Extraer información general (Documentos)
-        $doc = $transferencias[0]; // Documento cabecera
-        $json = [
-            "Documentos" => [[
-                "CENTRO DE OPERACION" => $doc->centro_operacion,
-                "TIPO DE DOCUMENTO" => $doc->tipo_documento,
-                "CONSECUTIVO DOCUMENTO" => $doc->consecutivo_documento,
-                "FECHA DEL DOCUMENTO AAAMMDD" => $doc->fecha_documento,
-                "TERCERO PROVEEDOR" => (string)$doc->tercero_proveedor,
-                "NOTAS" => $doc->notas,
-                "SUCURSAL PROVEEDOR" => $doc->sucursal_proveedor,
-                "COMPRADOR" => (string)$doc->comprador,
-                "CONSIGNACION" => (string)$doc->consignacion
-            ]],
-            "Movimientos" => []
-        ];
-
-        // Recorrer los detalles para armar la sección "Movimientos"
-        foreach ($detalles as $detalle) {
-
-    // Cálculo de equivalencia
-    $equivalencia = 1;
-    if ($detalle->unidadempaque && $detalle->unidadempaque->equivalencia > 0) {
-        $equivalencia = $detalle->unidadempaque->equivalencia;
+    if (empty($detalles)) {
+        Yii::$app->session->setFlash('error', 'No se encontraron detalles para la transferencia.');
+        return $this->redirect(['viewtransferenciaocerp', 'id' => $id]);
     }
 
-    // Calcular cantidad en unidades (no en paquetes)
-    $cantidadBase = $detalle->cantidadRegistrada * $equivalencia;
-
-    // Costo unitario en base a UND
-    $costoUnitario = $detalle->getCosto();
-
-    // Valor bruto (ya multiplicado por cantidad)
-    $valorBruto = number_format(round($cantidadBase * $costoUnitario), 2, '.', '');
-
-    $json["Movimientos"][] = [
-        "CENTRO DE OPERACION" => $doc->centro_operacion,
-        "TIPO DE DOCUMENTO" => $doc->tipo_documento,
-        "BODEGA" => '214',
-        "MOTIVO" => $doc->motivo,
-        "CENTRO DE OPERACION MOVIMIENTO" => $doc->centro_operacion,
-        "UNIDAD DE MEDIDA" => "UND",  // ← forzado a unidad siempre
-        "CANTIDAD BASE" => number_format($cantidadBase, 2, '.', ''),  // ← cantidad real
-        "VALOR BRUTO" => $valorBruto,
-        "ITEMS" => $detalle->item,
-        "COLOR" => $detalle->color,
-        "TALLA" => $detalle->talla
+    // Extraer información general (Documentos)
+    $doc = $transferencias[0]; // Documento cabecera
+    $json = [
+        "Documentos" => [[
+            "CENTRO DE OPERACION" => $doc->centro_operacion,
+            "TIPO DE DOCUMENTO" => $doc->tipo_documento,
+            "CONSECUTIVO DOCUMENTO" => $doc->consecutivo_documento,
+            "FECHA DEL DOCUMENTO AAAMMDD" => $doc->fecha_documento,
+            "TERCERO PROVEEDOR" => (string)$doc->tercero_proveedor,
+            "NOTAS" => $doc->notas,
+            "SUCURSAL PROVEEDOR" => $doc->sucursal_proveedor,
+            "COMPRADOR" => (string)$doc->comprador,
+            "CONSIGNACION" => (string)$doc->consignacion
+        ]],
+        "Movimientos" => []
     ];
-}
+
+    // Recorrer los detalles para armar la sección "Movimientos"
+    foreach ($detalles as $detalle) {
+        // 🔹 usar eq_um ya guardado
+        $factor = (int)($detalle->eq_um ?: 1);
+
+        // Calcular cantidad base
+        $cantidadBase = (int)($detalle->cantidadRegistrada * $factor);
+
+        // Costo unitario
+        $costoUnitario = $detalle->getCosto();
+
+        // Valor bruto truncado (sin decimales, sin redondear)
+        $valorBruto = $costoUnitario !== null
+            ? (string)intval($cantidadBase * $costoUnitario)
+            : "0";
+
+        $json["Movimientos"][] = [
+            "CENTRO DE OPERACION" => $doc->centro_operacion,
+            "TIPO DE DOCUMENTO" => $doc->tipo_documento,
+            "BODEGA" => '214',
+            "MOTIVO" => $doc->motivo,
+            "CENTRO DE OPERACION MOVIMIENTO" => $doc->centro_operacion,
+            "UNIDAD DE MEDIDA" => "UND",  // 🔹 siempre UND
+            "CANTIDAD BASE" => (string)$cantidadBase,
+            "VALOR BRUTO" => $valorBruto,
+            "ITEMS" => $detalle->item,
+            "COLOR" => $detalle->color,
+            "TALLA" => $detalle->talla,
+        ];
+    
+    }
 
        //* // 👉 Mostrar el JSON en pantalla para depuración
     /*header('Content-Type: application/json');
@@ -357,43 +419,30 @@ class TransferdevdocumentosController extends Controller
 }
 
 
- public function actionVerTransferencia($id)
+public function actionVerTransferencia($id)
 {
-    // 1. Obtener los documentos asociados a la transferencia
-    $documentos = Transferdevdocumentos::find()
-        ->where(['id_transferencia' => $id])
-        ->all();
+    // 1. Obtener el documento cabecera
+    $documento = Transferdevdocumentos::findOne(['id_transferencia' => $id]);
 
-    if (empty($documentos)) {
-        throw new NotFoundHttpException("No se encontraron documentos para la transferencia #$id");
+    if ($documento === null) {
+        throw new NotFoundHttpException("No se encontró la transferencia #$id");
     }
 
-    // 2. Tomar uno como referencia para el encabezado
-    $documento = $documentos[0];
-
-    // 3. ActiveDataProvider optimizado para la vista
+    // 2. Usar Transferdevdetalle como base para los ítems
     $dataProvider = new ActiveDataProvider([
-        'query' => Devoluciondocumentodetalle::find()
-            ->select(['devoluciondocumentodetalle.id', 'cantidadRegistrada', 'item', 'talla', 'color', 'codigoBarras'])
-            ->innerJoin('transferdevdocumentos t', 't.id_devoluciondocumento = devoluciondocumentodetalle.id')
-            ->where(['t.id_transferencia' => $id])
-            ->orderBy(['devoluciondocumentodetalle.id' => SORT_ASC]),
-        'pagination' => false, // importante para totales y envío a Siesa
+        'query' => \frontend\models\Transferdevdetalle::find()
+            ->where(['id_transferencia' => $id])
+            ->orderBy(['id' => SORT_ASC]),
+        'pagination' => false, // mostrar todos los ítems
     ]);
 
-    // 4. Obtener los modelos del DataProvider para sumar cantidades
-    $detalles = $dataProvider->getModels();
-
-    // 5. Calcular la suma total de cantidadRegistrada
-    $totalCantidad = array_sum(array_column($detalles, 'cantidadRegistrada'));
-
-    // 6. Renderizar la vista
+    // 3. Renderizar la vista
     return $this->render('index_transferenciaocerp', [
         'documento' => $documento,
         'detalles' => $dataProvider,
-        'totalCantidad' => $totalCantidad,
     ]);
 }
+
 
 
     // Editar la transferencia

@@ -128,7 +128,7 @@ class OrdendecompradetalleController extends Controller
         return $this->redirect(['index']);
     }
 
-    public function actionPrintitems($idordencompra, $fecha_activacion, $iditem = null, $origen = null)
+    public function actionPrintitems($idordencompra, $fecha_activacion, $iditem = null, $origen = null, $cantidad = null)
     {
         $model = new Selectimpresora();
 
@@ -138,6 +138,10 @@ class OrdendecompradetalleController extends Controller
         }
 
         if ($this->request->isPost && $model->load($this->request->post())) {
+
+            $cantidad = $model->cantidad_stickers;
+
+
             if ($model->validate()) {
                 $impresora = Impresoraspaxarbodega::findOne($model->idImpresora);
 
@@ -164,7 +168,7 @@ class OrdendecompradetalleController extends Controller
                 $detalles = $query->all();
 
                 // Generar etiquetas
-                $labelContent = StickerGenerator::generar($detalles, $fecha_activacion, $origen);
+                $labelContent = StickerGenerator::generar($detalles, $fecha_activacion, $origen, 3, 220, 170, $cantidad);
 
                 /*
                 //Mostrar en pantalla (modo prueba)
@@ -214,14 +218,12 @@ class OrdendecompradetalleController extends Controller
             // Cerrar conexión con la impresora
 
             return $resultado;
-
         } catch (\Exception $e) {
             return [
                 'mensaje' => $e->getMessage(),
                 'codigo' => -2
             ];
         }
-
     }
 
     function imprimirSticker($fecha_activacion, $dataProviderDetalle, $origen)
@@ -247,12 +249,11 @@ class OrdendecompradetalleController extends Controller
 
             $precio = Item::obtenerPrecioVenta($modelitem->codigoBarras, $fecha_activacion);
 
-            $stickerContent = Item::generarContenidoSticker($modelitem, $precio, $x, $y);
+            $stickerContent = Item::generarContenidoSticker($modelitem, $precio, $x, $y, $labelWidth);
 
             $content .= $stickerContent;
 
             $count++;
-
         }
 
         return $content;
@@ -299,7 +300,6 @@ class OrdendecompradetalleController extends Controller
                     'codigo' => -1
                 ];
         }
-
     }
 
     /**

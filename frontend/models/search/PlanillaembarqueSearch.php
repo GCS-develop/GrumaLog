@@ -17,7 +17,7 @@ class PlanillaembarqueSearch extends Planillaembarque
     public function rules()
     {
         return [
-            [['id', 'idTransportadora', 'idVehiculo', 'idConductor', 'idEstado', 'created_by', 'updated_by'], 'integer'],
+            [['id', 'idTransportadora', 'idVehiculo',  'idConductor', 'idEstado', 'created_by', 'updated_by'], 'integer'],
             [
                 [
                     'fechaDespacho',
@@ -31,7 +31,9 @@ class PlanillaembarqueSearch extends Planillaembarque
                     'fechaDesde',
                     'fechaHasta',
                     'numeroDocumento',
-                    'numeroDocumentoInterno'
+                    'consecutivo',
+                    'numeroDocumentoInterno',
+                    'Codigobodegaorigen'
                 ],
                 'safe'
             ],
@@ -99,6 +101,7 @@ class PlanillaembarqueSearch extends Planillaembarque
             'pe.created_by' => $this->created_by,
             'pe.updated_at' => $this->updated_at,
             'pe.updated_by' => $this->updated_by,
+            'pe.idBodegaDespacho' => $this->Codigobodegaorigen,
         ]);
 
         $query->andFilterWhere(['like', 'pe.horaDespacho', $this->horaDespacho])
@@ -123,7 +126,8 @@ class PlanillaembarqueSearch extends Planillaembarque
                 $fechaFin = date('Y-m-d', strtotime($this->fechaHasta));
                 $query->andWhere(['between', new \yii\db\Expression('CAST(pe.fechaDespacho AS DATE)'), $fechaInicio, $fechaFin]);
             }
-        }
+        } 
+        
 
         if (!empty($this->numeroDocumento)) {
             $query->andWhere(['like', 'ds.f350_consec_docto', $this->numeroDocumento]);

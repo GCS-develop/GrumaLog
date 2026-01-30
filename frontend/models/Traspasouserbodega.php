@@ -22,6 +22,11 @@ use yii\db\Expression;
  */
 class Traspasouserbodega extends \yii\db\ActiveRecord
 {
+
+    public $buscarnombreusuario;
+
+    public $buscarnombrebodega;
+
     /**
      * {@inheritdoc}
      */
@@ -100,17 +105,16 @@ class Traspasouserbodega extends \yii\db\ActiveRecord
     public static function getListaData()
     {
         $data = Traspasouserbodega::find()
-                        ->select(['bo.id', "(bo.codigo + ' - ' + bo.nombre) AS nombre"])
-                        ->alias('tub')
-                        ->distinct()
-                        ->join('INNER JOIN', 'bodegas bo', 'tub.idBodega = bo.id')
-                        ->join('INNER JOIN', 'usertraspaso ust', 'tub.idUserTraspaso = ust.id')
-                        ->join('INNER JOIN', 'user us', 'ust.idUser = us.id')
-                        ->join('INNER JOIN', 'Bodegatipodocumento tpo', 'bo.id = tpo.idBodega')
-                        ->where(['tub.idEstado' => 1, 'us.status' => 10, 'us.id' => Yii::$app->user->id])
-                        ->orderBy('bo.id')->asArray()->all();
-    	$listadata = ArrayHelper::map($data, 'id', 'nombre');
-    	return $listadata;
+            ->select(['bo.id', "(bo.codigo + ' - ' + bo.nombre) AS nombre"])
+            ->alias('tub')
+            ->distinct()
+            ->join('INNER JOIN', 'bodegas bo', 'tub.idBodega = bo.id')
+            ->join('INNER JOIN', 'usertraspaso ust', 'tub.idUserTraspaso = ust.id')
+            ->join('INNER JOIN', 'user us', 'ust.idUser = us.id')
+            ->join('INNER JOIN', 'Bodegatipodocumento tpo', 'bo.id = tpo.idBodega')
+            ->where(['tub.idEstado' => 1, 'us.status' => 10, 'us.id' => Yii::$app->user->id])
+            ->orderBy('bo.id')->asArray()->all();
+        $listadata = ArrayHelper::map($data, 'id', 'nombre');
+        return $listadata;
     }
-
 }
