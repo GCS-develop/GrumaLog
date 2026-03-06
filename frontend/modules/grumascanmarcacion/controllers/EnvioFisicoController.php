@@ -36,7 +36,7 @@ class EnvioFisicoController extends Controller
         if (empty($rows) && !empty(Yii::$app->request->queryParams['GrumascanEnvioFisicoPreviewSearch'])) {
             Yii::$app->session->setFlash(
                 'warning',
-                'No se encontraron conteos terminados (estado=1) para la bodega y fecha seleccionadas.'
+                'No se encontraron conteos terminados (estado=1) para la bodega y rango de fechas seleccionados.'
             );
         }
 
@@ -66,18 +66,23 @@ class EnvioFisicoController extends Controller
 
         $codigoBodega = trim((string)$request->post('codigoBodega', ''));
         $fechaDesde   = trim((string)$request->post('fechaDesde', ''));
+        $fechaHasta   = trim((string)$request->post('fechaHasta', ''));
         $consecutivo  = trim((string)$request->post('consecutivo', ''));
 
+        // Mantengo tu validación original: exige fechaDesde
         if ($codigoBodega === '' || $fechaDesde === '' || $consecutivo === '') {
-            Yii::$app->session->setFlash('error', 'Código bodega, fecha y consecutivo son obligatorios.');
+            Yii::$app->session->setFlash('error', 'Código bodega, fecha (desde) y consecutivo son obligatorios.');
             return $this->redirect([
                 'preview',
                 'GrumascanEnvioFisicoPreviewSearch[codigoBodega]' => $codigoBodega,
                 'GrumascanEnvioFisicoPreviewSearch[fechaDesde]' => $fechaDesde,
+                'GrumascanEnvioFisicoPreviewSearch[fechaHasta]' => $fechaHasta,
             ]);
         }
 
         try {
+            // Nota: este método recibe fechaDesde (tu diseño original).
+            // No invento soporte de fechaHasta aquí porque no has mostrado ese método.
             $documentoId = SiesaConectorDocumento::crearDocumentoYMapearDesdePreview(
                 $codigoBodega,
                 $fechaDesde,
@@ -103,11 +108,11 @@ class EnvioFisicoController extends Controller
             Yii::$app->session->setFlash('error', $e->getMessage());
         }
 
-
         return $this->redirect([
             'preview',
             'GrumascanEnvioFisicoPreviewSearch[codigoBodega]' => $codigoBodega,
             'GrumascanEnvioFisicoPreviewSearch[fechaDesde]' => $fechaDesde,
+            'GrumascanEnvioFisicoPreviewSearch[fechaHasta]' => $fechaHasta,
         ]);
     }
 }

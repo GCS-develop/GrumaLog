@@ -274,6 +274,19 @@ class Item extends \yii\db\ActiveRecord
         return 0;
     }
 
+    public static function obtenerPrecioVenta2($codigoEAN, $fecha_activacion)
+    {
+        ///obtiene el ultimo precio de venta pedido por fannor
+        $resultado = OrdendecompraSIESA::obtenerDatosPrecioVenta2($codigoEAN, $fecha_activacion, '001');
+        if (!empty($resultado)) {
+            foreach ($resultado as $dato) {
+                return $dato['f126_precio'];
+            }
+        }
+
+        return 0;
+    }
+
     public static function generarContenidoSticker($registro, $precio, $x, $y, $labelWidth)
     {
         // --- Ajuste de margen superior ---

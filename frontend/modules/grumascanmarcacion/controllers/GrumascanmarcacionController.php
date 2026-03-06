@@ -9,6 +9,8 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii;
 // use frontend\models\Impresora;
+use frontend\models\forms\GrumascanMarcacionBulkUseForm;
+use yii\db\Expression;
 use frontend\models\Impresoraspaxarbodega as impresora;
 use frontend\models\forms\GrumascanMarcacionPrintForm;
 use common\components\MarcacionStickerPrinter;
@@ -347,6 +349,72 @@ class GrumascanmarcacionController extends Controller
         return $this->render('mapa', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+        ]);
+    }
+
+
+    public function actionUsarStickerMasivo()
+    {
+        $form = new GrumascanMarcacionBulkUseForm();
+
+        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
+
+            $db = Yii::$app->db;
+            $tx = $db->beginTransaction();
+
+            try {
+                $userId = Yii::$app->user->id ?? null;
+
+                $set = [
+                    'idbodega'    => (int)$form->idbodega,
+                    'ubicacion'   => $form->ubicacion,
+                    'seccion'     => $form->seccion,
+                    'updated_at'  => new Expression('GETDATE()'),
+                    'updated_by'  => $userId,
+                ];
+
+                $where = ['between', 'id', (int)$form->desde, (int)$form->hasta];
+
+                // Si NO quiere sobrescribir → solo los que estén sin bodega
+                if (!(bool)$form->sobrescribir) {
+                    $where = ['and', $where, ['is', 'idbodega', null]];
+                }
+
+                $rows = $db->createCommand()
+                    ->update('grumascanmarcacion', $set, $where)
+                    ->execute();
+
+                $tx->commit();
+
+                if ($rows > 0) {
+                    Yii::$app->session->setFlash(
+                        'success',
+                        "Asignación masiva OK. Registros afectados: {$rows}. Usuario: {$userId}"
+                    );
+                } else {
+                    Yii::$app->session->setFlash(
+                        'warning',
+                        'No se actualizó ningún registro. Verifique el rango o el estado actual.'
+                    );
+                }
+
+                return $this->refresh();
+            } catch (\Throwable $e) {
+
+                $tx->rollBack();
+                Yii::error($e->getMessage(), __METHOD__);
+
+                Yii::$app->session->setFlash(
+                    'error',
+                    'Error en la asignación masiva: ' . $e->getMessage()
+                );
+
+                return $this->refresh();
+            }
+        }
+
+        return $this->render('usar-sticker-masivo', [
+            'model' => $form,
         ]);
     }
 }

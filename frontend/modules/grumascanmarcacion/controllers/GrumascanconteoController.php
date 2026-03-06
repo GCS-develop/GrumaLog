@@ -7,6 +7,8 @@ use frontend\models\search\GrumascanconteoSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\db\Expression;
+use Yii;
 
 /**
  * GrumascanconteoController implements the CRUD actions for Grumascanconteo model.
@@ -25,6 +27,8 @@ class GrumascanconteoController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'anular' => ['POST'],
+                        'desanular' => ['POST'],
                     ],
                 ],
             ]
@@ -130,5 +134,65 @@ class GrumascanconteoController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionAnular($id)
+    {
+        $model = $this->findModel($id);
+
+        // Solo se puede anular si está terminado (1)
+        if ((int)$model->idestado !== 1) {
+            Yii::$app->session->setFlash('warning', 'Solo se puede anular un conteo en estado TERMINADO (1).');
+            return $this->redirect(['index']);
+        }
+
+        $model->idestado = 2; // Anulado
+
+        // Auditoría (si existen estas columnas)
+        if ($model->hasAttribute('updated_at')) {
+            $model->updated_at = new Expression('GETDATE()'); // SQL Server
+        }
+        if ($model->hasAttribute('updated_by')) {
+            $model->updated_by = Yii::$app->user->id ?? null;
+        }
+
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', "Conteo #{$model->id} anulado correctamente (estado 2).");
+        } else {
+            $errors = $model->getFirstErrors();
+            Yii::$app->session->setFlash('error', 'No se pudo anular: ' . json_encode($errors, JSON_UNESCAPED_UNICODE));
+        }
+
+        return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+    }
+
+    public function actionDesanular($id)
+    {
+        $model = $this->findModel($id);
+
+        // Solo se puede desanular si está anulado (2)
+        if ((int)$model->idestado !== 2) {
+            Yii::$app->session->setFlash('warning', 'Solo se puede desanular un conteo en estado ANULADO (2).');
+            return $this->redirect(['index']);
+        }
+
+        $model->idestado = 1; // Volver a Terminado
+
+        // Auditoría (si existen estas columnas)
+        if ($model->hasAttribute('updated_at')) {
+            $model->updated_at = new Expression('GETDATE()'); // SQL Server
+        }
+        if ($model->hasAttribute('updated_by')) {
+            $model->updated_by = Yii::$app->user->id ?? null;
+        }
+
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', "Conteo #{$model->id} desanulado correctamente (vuelve a estado 1).");
+        } else {
+            $errors = $model->getFirstErrors();
+            Yii::$app->session->setFlash('error', 'No se pudo desanular: ' . json_encode($errors, JSON_UNESCAPED_UNICODE));
+        }
+
+        return $this->redirect(Yii::$app->request->referrer ?: ['index']);
     }
 }

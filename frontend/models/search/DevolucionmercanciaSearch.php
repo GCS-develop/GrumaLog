@@ -11,12 +11,14 @@ class DevolucionmercanciaSearch extends Model
     public $tipo_documento;
     public $consecutivo;
     public $bodega;
+    public $proveedor;
 
     public function rules()
     {
         return [
             [['fecha_inicio', 'fecha_fin'], 'safe'],
-            [['tipo_documento', 'consecutivo', 'bodega'], 'string'],
+            [['tipo_documento', 'consecutivo', 'bodega', 'proveedor'], 'string'],
         ];
     }
 }
+

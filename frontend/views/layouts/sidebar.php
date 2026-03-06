@@ -301,6 +301,16 @@ $baseUrl = Url::base(true);
                         'items' => [
                             ['label' => 'Impresion marcación', 'url' => ['/grumascanmarcacion/grumascanmarcacion/indeximprecion'], 'iconStyle' => 'far'],
                             ['label' => 'Asignar marcación', 'url' => ['/grumascanmarcacion/grumascanmarcacion/usar-sticker'], 'iconStyle' => 'far'],
+                            [
+                                'label' => 'Asignar marcación masiva',
+                                'url' => ['/grumascanmarcacion/grumascanmarcacion/usar-sticker-masivo'],
+                                'iconStyle' => 'far'
+                            ],
+                            [
+                                'label' => 'Ranking Operarios',
+                                'url' => ['/grumascanmarcacion/ranking-operarios/index'],
+                                'iconStyle' => 'far'
+                            ],
                             ['label' => 'Ver marcaciones', 'url' => ['/grumascanmarcacion/grumascanmarcacion/index'], 'iconStyle' => 'far'],
                             ['label' => 'Ver mapa', 'url' => ['/grumascanmarcacion/grumascanmarcacion/mapa'], 'iconStyle' => 'far'],
                             ['label' => 'Conteos', 'url' => ['/grumascanmarcacion/grumascanconteo/index'], 'iconStyle' => 'far'],
@@ -332,8 +342,9 @@ $baseUrl = Url::base(true);
                         'icon' => 'dollar-sign',
                         'badge' => '<span class="right badge badge-info">1</span>',
                         'items' => [
-                            ['label' => 'Impresion de precios', 'url' => ['/productostiquetesprecio/productostiquetesprecio/index'], 'iconStyle' => 'far'],
-                            ['label' => 'Solo Precio', 'url' => ['/siesa/inventarios-ws/index-print'], 'iconStyle' => 'far'],
+                            // ['label' => 'Impresion de precios', 'url' => ['/productostiquetesprecio/productostiquetesprecio/index'], 'iconStyle' => 'far'],
+                            // ['label' => 'Solo Precio', 'url' => ['/siesa/inventarios-ws/index-print'], 'iconStyle' => 'far'],
+                            ['label' => 'Solo Precio', 'url' => ['/ventas/preciosiesa/index'], 'iconStyle' => 'far'],
                             ['label' => 'Analisis de venta', 'url' => ['/ventas/analisisventa/index'], 'iconStyle' => 'far'],
                             ['label' => 'Consulta', 'url' => ['/ventas/factura/index'], 'iconStyle' => 'far'],
                             ['label' => 'Cotización Precio', 'url' => ['/ventas/cotizacionprecio/index'], 'iconStyle' => 'far'],

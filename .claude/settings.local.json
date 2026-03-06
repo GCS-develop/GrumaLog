@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(///192.168.2.20/c$/Apache24/htdocs/GRUMALog/frontend/modules/grumascanmarcacion/**)",
+      "Read(///192.168.2.20/c$/Apache24/htdocs/GRUMALog/**)"
+    ]
+  }
+}

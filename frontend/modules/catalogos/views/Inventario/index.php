@@ -11,6 +11,8 @@ use kartik\export\ExportMenu;
 use yii\bootstrap5\Modal;
 use yii\widgets\ActiveForm;
 use yii\helpers\ArrayHelper;
+use common\widgets\Alert;
+
 
 
 /** @var yii\web\View $this */
@@ -59,9 +61,11 @@ $gridColumns = [
     <div class="row">
 
         <?php
-        $totalCantidadSiesa = (int) Inventario::getTotalExistenciasSiesa($searchModel->codigoBodega);
-        $totalCantidadGruma = (int) Inventario::getotalExistenciasGruma($searchModel->codigoBodega);
-        ?>
+        $totalCantidadSiesaBruto = (int) Inventario::getTotalExistenciasSiesa($searchModel->codigoBodega);
+        $totalCantidadGrumaBruto = (int) Inventario::getotalExistenciasGruma($searchModel->codigoBodega);
+
+        $totalCantidadSiesaReal = (int) Inventario::getTotalExistenciasSiesaReal($searchModel->codigoBodega);
+        $totalCantidadGrumaReal = (int) Inventario::getotalExistenciasGrumaReal($searchModel->codigoBodega);        ?>
         <div class="col-lg-6 derecha">
 
             <?php echo ExportMenu::widget(
@@ -112,18 +116,30 @@ $gridColumns = [
     </div>
 </div>
 
+<?= Alert::widget() ?>
 
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
     'filterModel' => $searchModel,
 
-    'beforeRow' => function ($model, $key, $index, $grid) use ($totalCantidadSiesa, $totalCantidadGruma) {
-        if ($index === 0) { // Primera fila de cada página
-            return "<tr>
-                    <td colspan='7'><strong>Gran Total</strong></td>
-                    <td><strong>$totalCantidadGruma</strong></td>
-                    <td><strong>$totalCantidadSiesa</strong></td>
-                </tr>";
+    'beforeRow' => function ($model, $key, $index, $grid) use (
+        $totalCantidadSiesaBruto,
+        $totalCantidadGrumaBruto,
+        $totalCantidadSiesaReal,
+        $totalCantidadGrumaReal
+    ) {
+        if ($index === 0) {
+            return "
+        <tr>
+            <td colspan='7'><strong>Gran Total (BRUTO - por EAN)</strong></td>
+            <td><strong>{$totalCantidadGrumaBruto}</strong></td>
+            <td><strong>{$totalCantidadSiesaBruto}</strong></td>
+        </tr>
+        <tr>
+            <td colspan='7'><strong>Gran Total (REAL - por SKU)</strong></td>
+            <td><strong>{$totalCantidadGrumaReal}</strong></td>
+            <td><strong>{$totalCantidadSiesaReal}</strong></td>
+        </tr>";
         }
     },
 

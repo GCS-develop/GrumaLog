@@ -61,6 +61,12 @@ $this->title = "Detalle del Documento VMI #".$cab->id;
             'class'=>'btn btn-primary',
             'id'=>'btnReenviar'
         ]) ?>
+        <?php if ($cab->estado === 'error'): ?>
+          <?= Html::button('Anular', [
+              'class' => 'btn btn-danger',
+              'id' => 'btnAnular'
+          ]) ?>
+        <?php endif; ?>
         <?= Html::a('Volver a la lista', ['index-log'], ['class'=>'btn btn-default']) ?>
       </div>
 
@@ -139,6 +145,7 @@ $this->title = "Detalle del Documento VMI #".$cab->id;
 
 <?php
 $reenviarUrl = Url::to(['reenviar', 'id' => $cab->id]);
+$anularUrl = Url::to(['reenviar', 'id' => $cab->id, 'anular' => 1]);
 $redirectUrl = Url::to(['index-log']);
 $csrf = Yii::$app->request->getCsrfToken();
 $js = <<<JS
@@ -169,6 +176,33 @@ jQuery('#btnReenviar').on('click', function(e){
       })
       .finally(() => {
           btn.prop('disabled', false).text('Reenviar a Siesa');
+      });
+});
+
+jQuery('#btnAnular').on('click', function(e){
+    e.preventDefault();
+    if (!confirm('¿Seguro que deseas anular este documento?')) return;
+
+    var btn = jQuery(this);
+    btn.prop('disabled', true).text('Anulando...');
+
+    fetch('$anularUrl', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-CSRF-Token': '$csrf'
+        }
+    }).then(r => r.json())
+      .then(res => {
+          alert(res.success ? 'Documento anulado correctamente' : 'Error al anular: ' + (res.mensaje || ''));
+          window.location.href = '$redirectUrl';
+      })
+      .catch(() => {
+          alert('Error inesperado al anular.');
+          window.location.href = '$redirectUrl';
+      })
+      .finally(() => {
+          btn.prop('disabled', false).text('Anular');
       });
 });
 JS;

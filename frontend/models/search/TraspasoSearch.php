@@ -9,6 +9,7 @@ use frontend\models\Traspaso;
 use frontend\models\Tipodocumento;
 use common\models\User;
 use yii\helpers\ArrayHelper;
+use yii\db\Expression;
 
 /**
  * TraspasoSearch represents the model behind the search form of `app\models\Traspaso`.
@@ -69,6 +70,19 @@ class TraspasoSearch extends Traspaso
     {
         $query = Traspaso::find()->alias('tr');
         $query->join('left JOIN', 'documentosiesa ds', 'tr.id = ds.idGruma');
+        //     $query->join(
+        //         'LEFT JOIN',
+        //         'planillaembarquetraspaso pet',
+        //         'pet.id = (
+        //     SELECT TOP 1 p.id
+        //     FROM planillaembarquetraspaso p
+        //     WHERE p.idTraspaso = tr.id
+        //     ORDER BY p.id DESC
+        // )
+        // AND pet.idEstado <> 3'
+        //     );  
+        // se supone que si esta anulado en planilla no lo muestro aca
+
         $query->join(
             'LEFT JOIN',
             'planillaembarquetraspaso pet',
@@ -77,11 +91,11 @@ class TraspasoSearch extends Traspaso
                     FROM planillaembarquetraspaso
                     WHERE idTraspaso = tr.id
                     ORDER BY 
+                        id DESC,
                         CASE 
                             WHEN idEstado = 3 THEN 0
                             ELSE 1
-                        END,
-                        id DESC
+                        END
                 )
                 '
         );
@@ -140,7 +154,7 @@ class TraspasoSearch extends Traspaso
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'pagination' => [
-                'pageSize' => '20',
+                'pageSize' => '10',
             ],
 
         ]);

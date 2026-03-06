@@ -22,6 +22,7 @@ Modal::begin([
 <?= Html::beginForm(['terminar'], 'post', ['id' => 'formConsecutivo']); ?>
 <?= Html::hiddenInput('codigoBodega', (string)$searchModel->codigoBodega); ?>
 <?= Html::hiddenInput('fechaDesde', (string)$searchModel->fechaDesde); ?>
+<?= Html::hiddenInput('fechaHasta', (string)$searchModel->fechaHasta); ?>
 <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
 
 <div class="text-muted small mb-2">
@@ -50,14 +51,10 @@ Modal::begin([
     <div class="d-flex justify-content-end">
         <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Cancelar</button>
 
-        <!-- Paso 1: guardar/confirmar consecutivo (por ahora solo POST a terminar) -->
         <button type="submit" class="btn btn-success mr-2" id="btnContinuar">
             <span class="btn-text">Continuar</span>
             <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
         </button>
-
-
-
     </div>
 <?php endif; ?>
 

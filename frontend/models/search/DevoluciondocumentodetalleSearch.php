@@ -79,7 +79,12 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
             'devolucionimportaciondetalle did',
             'det.codigoBarras = did.codigoBarras AND dct.numeroDocumento = did.numeroDocumento'
         );
-        $query->join('LEFT JOIN', 'bodegas b', 'b.codigo = dct.codigoBodegaSalida');
+        $query->join(
+    'LEFT JOIN',
+    'bodegas b',
+    "b.codigo = RIGHT('000' + CAST(dct.codigoBodegaSalida AS VARCHAR(3)), 3)"
+);
+
 
 
 
@@ -113,6 +118,9 @@ class DevoluciondocumentodetalleSearch extends Devoluciondocumentodetalle
                 'Proveedor No Asignado'
             ) AS nombreProveedor",
         ]);
+
+        $query->asArray(false);
+
 
         $query->orderBy([
             'dct.codigoBodegaSalida' => SORT_ASC,

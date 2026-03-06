@@ -2,6 +2,7 @@
 
 namespace frontend\modules\traspaso\controllers;
 
+use Codeception\Module\Yii2;
 use Yii;
 use frontend\models\Traspaso;
 use frontend\models\search\TraspasoSearch;
@@ -46,6 +47,8 @@ class TraspasoController extends Controller
     {
         $searchModel = new TraspasoSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+
+        Yii::$app->session['traspasoIndexUrl'] = Yii::$app->request->url;
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -106,6 +109,74 @@ class TraspasoController extends Controller
         }
     }
 
+
+    // public function actionRetornar($id)
+    // {
+    //     $model = $this->findModel($id);
+
+    //     if ($model->bodegaOrigen->cedi === 1 && $model->idEstado == 6) {
+
+    //         $model->idEstado = 3; // Retorna al estado "Muelle"
+    //         $model->anula_at = null; // Limpiar la fecha de anulación
+    //         $model->anula_by = null; // Limpiar el usuario que anuló
+
+
+    //     } elseif ($model->bodegaOrigen->cedi === 0 && $model->idEstado == 6) {
+
+    //         $model->idEstado = 1; // Retorna al estado "Terminado"
+    //         $model->anula_at = null; // Limpiar la fecha de anulación
+    //         $model->anula_by = null; // Limpiar el usuario que anuló
+    //     }
+
+    //     if ($model->save()) {
+
+    //         Yii::$app->session->setFlash('success', 'El traspaso se retorno a estado ' . $model->estado->nombre . ' correctamente.');
+    //     } else {
+
+    //         Yii::$app->session->setFlash('error', 'Hubo un error al intentar retornar el traspaso. Por favor, inténtalo de nuevo.');
+    //     }
+
+    //     return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+    // }
+
+    public function actionRetornar($id)
+    {
+        $model = $this->findModel($id);
+
+        $verificarAEN = $model->verificarEstadoAEN();
+
+        if (!empty($verificarAEN)) {
+            Yii::$app->session->setFlash('warning', 'No se puede retornar el traspaso porque tiene un AEN activo.');
+            return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+        }
+
+        if ($model->bodegaOrigen->cedi === 1 && $model->idEstado == 6) {
+
+            $model->idEstado = 3; // Retorna al estado "Muelle"
+            $model->anula_at = null; // Limpiar la fecha de anulación
+            $model->anula_by = null; // Limpiar el usuario que anuló
+
+
+        } elseif ($model->bodegaOrigen->cedi === 0 && $model->idEstado == 6) {
+
+            $model->idEstado = 1; // Retorna al estado "Terminado"
+            $model->anula_at = null; // Limpiar la fecha de anulación
+            $model->anula_by = null; // Limpiar el usuario que anuló
+        }
+
+        if ($model->save()) {
+
+            Yii::$app->session->setFlash('success', 'El traspaso se retorno a estado ' . $model->estado->nombre . ' correctamente.');
+        } else {
+
+            Yii::$app->session->setFlash('error', 'Hubo un error al intentar retornar el traspaso. Por favor, inténtalo de nuevo.');
+        }
+
+        return $this->redirect(Yii::$app->session['traspasoIndexUrl'] ?? ['index']);
+    }
+
+
+
     /**
      * Updates an existing Traspaso model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -146,6 +217,43 @@ class TraspasoController extends Controller
             ]);
         }
     }
+
+    public function verificarEstadoAEN($id)
+    {
+        $model = $this->findModel($id);
+
+        $verificarAEN = $model->verificarEstadoAEN();
+
+        if (!empty($verificarAEN)) {
+            Yii::$app->session->setFlash('warning', 'No se puede retornar el traspaso porque tiene un AEN activo.');
+            return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+        }
+
+        // if ($model->bodegaOrigen->cedi === 1 && $model->idEstado == 6) {
+
+        //     $model->idEstado = 3; // Retorna al estado "Muelle"
+        //     $model->anula_at = null; // Limpiar la fecha de anulación
+        //     $model->anula_by = null; // Limpiar el usuario que anuló
+
+
+        // } elseif ($model->bodegaOrigen->cedi === 0 && $model->idEstado == 6) {
+
+        //     $model->idEstado = 1; // Retorna al estado "Terminado"
+        //     $model->anula_at = null; // Limpiar la fecha de anulación
+        //     $model->anula_by = null; // Limpiar el usuario que anuló
+        // }
+
+        if ($model->save()) {
+
+            Yii::$app->session->setFlash('success', 'El traspaso se retorno a estado ' . $model->estado->nombre . ' correctamente.');
+        } else {
+
+            Yii::$app->session->setFlash('error', 'Hubo un error al intentar retornar el traspaso. Por favor, inténtalo de nuevo.');
+        }
+
+        return $this->redirect(Yii::$app->request->referrer ?: ['index']);
+    }
+
 
     public function actionExportarExcel()
     {
@@ -330,8 +438,7 @@ class TraspasoController extends Controller
     public function actionFactura($id)
     {
         $model = $this->findModel($id);
-        if ($model->idEstado !== 1 && $model->idEstado !== 3) {
-
+        if ($model->idEstado == 0) {
             Yii::$app->session->setFlash('warning', 'No puedes imprimir en este estado!');
             return $this->redirect(Yii::$app->request->referrer ?: ['index']);
         }
@@ -353,7 +460,10 @@ class TraspasoController extends Controller
 
             if ($ids) {
                 // Primero obtenemos los registros que están en estado "terminado"
-                $traspasos = Traspaso::find()->where(['id' => $ids, 'idEstado' => 1])->all();
+                $traspasos = Traspaso::find()
+                    ->where(['id' => $ids])
+                    ->andWhere(['in', 'idEstado', [1, 4]])
+                    ->all();
 
                 // Verificar si hay registros en estado "terminado"
                 if (empty($traspasos)) {

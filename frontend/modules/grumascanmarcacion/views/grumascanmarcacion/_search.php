@@ -1,5 +1,7 @@
 <?php
 
+use frontend\models\Grumascanestado;
+use kartik\select2\Select2;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
@@ -15,25 +17,75 @@ use yii\widgets\ActiveForm;
         'method' => 'get',
     ]); ?>
 
-    <?= $form->field($model, 'id') ?>
+    <div class="row">
 
-    <?= $form->field($model, 'idbodega') ?>
+        <div class="col-3">
+            <?= $form->field($model, 'id') ?>
+        </div>
 
-    <?= $form->field($model, 'ubicacion') ?>
+        <div class="col-3">
+            <?= $form->field($model, 'idbodega')->label('Bodega')->widget(Select2::class, [
+                'data' => $model->getListaBodegas(),
+                'options' => [
+                    'placeholder' => 'Seleccionar bodega...',
+                    'multiple' => true,
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+            ]) ?>
+        </div>
 
-    <?= $form->field($model, 'seccion') ?>
+        <div class="col-3">
+            <?= $form->field($model, 'ubicacion')->label('Ubicación')->widget(Select2::class, [
+                'data' => $model->getListaUbicaciones(),
+                'options' => [
+                    'placeholder' => 'Seleccionar ubicación...',
+                    'multiple' => true,
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+            ]) ?>
+        </div>
 
-    <?= $form->field($model, 'created_at') ?>
+        <div class="col-3">
+            <?= $form->field($model, 'seccion')->label('Sección')->widget(Select2::class, [
+                'data' => $model->getListaSecciones(),
+                'options' => [
+                    'placeholder' => 'Seleccionar sección...',
+                    'multiple' => true,
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+            ]) ?>
+        </div>
 
-    <?php // echo $form->field($model, 'created_by') ?>
+        <div class="col-3">
+            <?= $form->field($model, 'created_at')->textInput([
+                'placeholder' => 'YYYY-MM-DD',
+            ]) ?>
+        </div>
 
-    <?php // echo $form->field($model, 'updated_at') ?>
+        <div class="col-3">
+            <?= $form->field($model, 'estado')->label('Estado')->widget(Select2::class, [
+                'data' => ['3' => 'Sin conteo'] + Grumascanestado::getListaData(),
+                'options' => [
+                    'placeholder' => 'Seleccionar estado...',
+                    'multiple' => true,
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+            ]) ?>
+        </div>
 
-    <?php // echo $form->field($model, 'updated_by') ?>
+    </div>
 
-    <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
+    <div class="form-group text-center mt-3">
+        <?= Html::submitButton('Buscar', ['class' => 'btn btn-primary']) ?>
+        <?= Html::a('Limpiar', ['index'], ['class' => 'btn btn-outline-secondary ms-2']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

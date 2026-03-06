@@ -286,7 +286,7 @@ Modal::end();
         [
             'class' => 'kartik\grid\CheckboxColumn',
             'checkboxOptions' => function ($model, $key, $index, $column) {
-                return ($model->estado->nombre === 'terminado')
+                return (($model->estado->nombre === 'terminado') || ($model->estado->nombre === 'directo tienda'))
                     ? ['value' => $model->id, 'name' => 'seleccionar[]']
                     : ['style' => 'display:none']; // Oculta el checkbox si el estado no es 'Terminado'
             },
@@ -295,7 +295,10 @@ Modal::end();
             },
         ],
 
-        'id',
+
+
+
+        // 'id',
         // 'tipodocumento',
         [
             'attribute' => 'idTipoDocumento',
@@ -375,13 +378,13 @@ Modal::end();
                 return $model->estado->nombre;
             },
         ],
-        [
-            'attribute' => 'transferenciaerp',
-            'value' =>
-            function ($model) {
-                return $model->estadoTransferencia;
-            },
-        ],
+        // [
+        //     'attribute' => 'transferenciaerp',
+        //     'value' =>
+        //     function ($model) {
+        //         return $model->estadoTransferencia;
+        //     },
+        // ],
         'estadoPlanilla',
         [
             'attribute' => 'reciboMasivo',
@@ -449,11 +452,12 @@ Modal::end();
                 return $model->muelle_by ? $model->muelle_by . '-' . $model->muelleByUser->username : ' - ';
             },
         ],
+
         [
             'class' => ActionColumn::className(),
             'header' => 'Acción',
             'headerOptions' => ['width' => '10%'],
-            'template' => ' {anular} {view} {update}  {factura} {directo} {interno} {siesa} {viewTraspasodetalledelete} ,{viewTraspasodetalleauditado}',
+            'template' => '{retornar} {anular} {view} {update}  {factura} {directo} {interno} {siesa} {viewTraspasodetalledelete} ,{viewTraspasodetalleauditado}',
             'buttons' => [
                 'anular' => function ($url, $model) {
                     return Html::a(
@@ -472,12 +476,31 @@ Modal::end();
                         ]
                     );
                 },
+
+                'retornar' => function ($url, $model) {
+                    return Html::a(
+                        '<i class="fa fa-undo"></i>',
+                        ['retornar', 'id' => $model->id],
+                        [
+                            'class' => 'btn btn-default text-secondary',
+                            'title' => 'Retornar a estado anterior',
+                            'data' => [
+                                'confirm' => '¿Está seguro de retornar el estado de este traspaso' . '? ( Origen: '
+                                    . $model->bodegaOrigen->nombre . ', Destino: '
+                                    . $model->bodegaDestino->nombre . ', Numero de cajas: '
+                                    . $model->numeroCajas . ' )',
+                                'method' => 'post',
+                            ]
+                        ]
+                    );
+                },
+
                 'view' => function ($url, $model) {
                     return Html::a(
                         '<i class="fa fa-eye"></i>',
                         ['/traspaso/traspasodetalle/index', 'idtraspaso' => $model->id],
                         [
-                            'title' => 'Ver',
+                            'title' => 'Ver detalles',
                             'class' => 'btn btn-default btn-view',
                         ]
                     );
@@ -506,10 +529,6 @@ Modal::end();
                         ]
                     );
                 },
-
-
-
-
 
                 'update' => function ($url, $model) {
                     $t = Url::to([
@@ -586,9 +605,9 @@ Modal::end();
                 'anular' => function ($model, $key, $index) {
                     return $model->idEstado != 2; // Condición para mostrar el botón
                 },
-                'factura' => function ($model, $key, $index) {
-                    return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
-                },
+                // 'factura' => function ($model, $key, $index) {
+                //     return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
+                // },
                 'siesa' => function ($model, $key, $index) {
                     return $model->idEstado != 2 || $model->idEstado != 0; // Condición para mostrar el botón
 
@@ -600,6 +619,11 @@ Modal::end();
                 'interno' => function ($model, $key, $index) {
                     return $model->idEstado == 1 || $model->idEstado == 3; // Condición para mostrar el botón
                 },
+
+                'retornar' => function ($model, $key, $index) {
+                    return $model->idEstado == 6; //Condicion para mostrar el boton
+                },
+
             ],
 
         ],

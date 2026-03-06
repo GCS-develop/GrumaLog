@@ -205,7 +205,7 @@ class PlanillaembarquetraspasoController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($model->idEstado === 3) {
+        if ($model->idEstado === 7) {
             Yii::$app->session->setFlash('danger', 'No puedes anular porque ya está recibido!');
             return $this->redirect(Yii::$app->request->referrer ?: ['index']);
         }

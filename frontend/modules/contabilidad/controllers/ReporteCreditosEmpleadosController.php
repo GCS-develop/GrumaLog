@@ -148,7 +148,7 @@ if ($indice >= 0 && $indice < count($fechasCuotas)) {
             $sheet->setCellValue("D{$fila}", 570);
             $sheet->setCellValue("E{$fila}", 1);
             $sheet->setCellValue("F{$fila}", 1);
-            $sheet->setCellValue("M{$fila}", $row['UNIDAD_DE_NEGOCIO']);
+           // $sheet->setCellValue("M{$fila}", $row['UNIDAD_DE_NEGOCIO']);
             $sheet->setCellValue("N{$fila}", $row['TIPO_DOCUMENTO_CRUCE']);
             $sheet->setCellValue("O{$fila}", $row['NUMERO_DOCUMENTO_CRUCE']);
             $sheet->setCellValue("P{$fila}", $row['NUMERO_CUOTA_CRUCE']);
@@ -158,7 +158,9 @@ if ($indice >= 0 && $indice < count($fechasCuotas)) {
             $sheet->setCellValue("T{$fila}", (float)$row['VALOR']);
             $sheet->setCellValue("U{$fila}", 0);
             $sheet->setCellValue("V{$fila}", 0);
-            $sheet->setCellValue("J{$fila}", 0);
+            //$sheet->setCellValue("J{$fila}", $row['CENTRO_OPERACION']  );
+           // $sheet->setCellValue("K{$fila}", $row['CENTRO_COSTOS']  );
+            $sheet->setCellValue("L{$fila}", ''  );
             $sheet->setCellValue("X{$fila}", 1);
             $sheet->setCellValue("Y{$fila}", $row['ID_TERCERO']);
             $sheet->setCellValue("Z{$fila}", $row['SUCURSAL_CLIENTE']);

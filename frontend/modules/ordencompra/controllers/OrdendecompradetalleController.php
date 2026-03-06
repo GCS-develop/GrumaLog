@@ -247,7 +247,7 @@ class OrdendecompradetalleController extends Controller
 
             $modelitem = Item::findOne(['id' => $detalle->idItem]);
 
-            $precio = Item::obtenerPrecioVenta($modelitem->codigoBarras, $fecha_activacion);
+            $precio = Item::obtenerPrecioVenta2($modelitem->codigoBarras, $fecha_activacion);
 
             $stickerContent = Item::generarContenidoSticker($modelitem, $precio, $x, $y, $labelWidth);
 

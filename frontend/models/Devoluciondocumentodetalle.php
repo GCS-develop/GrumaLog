@@ -31,6 +31,7 @@ use yii\helpers\ArrayHelper;
 class Devoluciondocumentodetalle extends \yii\db\ActiveRecord
 {
     public $numeroDocumento;
+    public $nombreBodega;   // <-- agrégalo
     public $codigoBodegaSalida;
     public $fechaDesde;
     public $fechaHasta;
@@ -237,11 +238,8 @@ public function getBodegaSalida()
 
 public function getNombreBodega()
 {
-    // Devuelve el nombre de la bodega o texto si no existe
-    return $this->bodegaSalida->nombre ?? 'Bodega No Asignada';
+    return $this->nombreBodega ?? 'Bodega No Asignada';
 }
-
-
 
 
 }

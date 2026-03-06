@@ -22,13 +22,17 @@ class StickerGenerator
 
 			$precio = Item::obtenerPrecioVenta($item->codigoBarras, $fecha_activacion);
 
-			if ($cantidad > 0) {
-				$cantidad = (int) $cantidad;
-			} else {
-				$cantidad = (int) $detalle->cantidadPedida;
-			}
+			$CantidadDetalle = $cantidad > 0 ? (int) $cantidad : (int) $detalle->cantidadPedida; 
 
-			for ($i = 0; $i < $cantidad; $i++) {
+			// if ($cantidad > 0) {
+			// 	$cantidad = (int) $cantidad;
+			// } else {
+			// 	$cantidad = (int) $detalle->cantidadPedida;
+			// }
+
+			$ImprimirCantidad [] = $CantidadDetalle;
+
+			for ($i = 0; $i < $CantidadDetalle; $i++) {
 				$stickers[] = ['item' => $item, 'precio' => $precio];
 			}
 		}

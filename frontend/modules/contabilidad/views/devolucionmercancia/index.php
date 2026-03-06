@@ -13,9 +13,15 @@ $this->title = 'Consulta de Devoluciones de Mercancía';
 <h1><?= Html::encode($this->title) ?></h1>
 
 <div class="devolucionmercancia-search card card-body mb-3">
-    <?php $form = ActiveForm::begin(['method' => 'get']); ?>
+    <?php $form = ActiveForm::begin([
+        'method' => 'get',
+        'options' => ['class' => 'mb-0'],
+    ]); ?>
 
     <div class="row">
+        <div class="col-12">
+            <h5 class="mb-3">Filtros</h5>
+        </div>
         <div class="col-md-3">
             <?= $form->field($model, 'fecha_inicio')->input('date') ?>
         </div>
@@ -23,34 +29,37 @@ $this->title = 'Consulta de Devoluciones de Mercancía';
             <?= $form->field($model, 'fecha_fin')->input('date') ?>
         </div>
         <div class="col-md-3">
-            <?= $form->field($model, 'tipo_documento')->textInput(['value' => '2CV']) ?>
+            <?= $form->field($model, 'tipo_documento')->textInput([
+                'maxlength' => 3,
+                'placeholder' => 'Ej: 2EC',
+                'style' => 'text-transform: uppercase;',
+            ]) ?>
         </div>
         <div class="col-md-3">
-            <?= $form->field($model, 'consecutivo')->textInput() ?>
+            <?= $form->field($model, 'consecutivo')->textInput([
+                'placeholder' => 'Ej: 1669',
+            ]) ?>
+        </div>
+        <div class="col-md-3">
+            <?= $form->field($model, 'bodega')->textInput([
+                'placeholder' => 'Ej: 214',
+            ]) ?>
+        </div>
+        <div class="col-md-9 d-flex align-items-end">
+            <div class="form-group mb-3">
+                <?= Html::submitButton('Buscar', ['class' => 'btn btn-primary']) ?>
+                <?= Html::a('Limpiar', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+                <?= Html::a(
+                    'Ajustar Existencias',
+                    array_merge(['index', 'ajustar' => 1], Yii::$app->request->get()),
+                    ['class' => 'btn btn-warning']
+                ) ?>
+                <?php if (!empty($data)): ?>
+                    <?= Html::a('Generar Documento', ['generar'], ['class' => 'btn btn-success']) ?>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
-
-
-    <div class="row">
-    <div class="col-md-3">
-        <?= $form->field($model, 'bodega')->textInput(['value' => '']) ?>
-    </div>
-    <div class="col-md-3 align-self-end">
-        <div class="form-group">
-            <?= Html::submitButton('Buscar', ['class' => 'btn btn-primary btn-block']) ?>
-            <?= Html::a('Limpiar', ['index'], ['class' => 'btn btn-secondary btn-block']) ?>
-            <?= Html::a(
-                'Ajustar Existencias',
-                array_merge(['index', 'ajustar' => 1], Yii::$app->request->get()),
-                ['class' => 'btn btn-warning btn-block']
-            ) ?>
-            <?php if (!empty($data)): ?>
-                <?= Html::a('Generar Documento', ['generar'], ['class' => 'btn btn-success btn-block']) ?>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
-
 
     <?php ActiveForm::end(); ?>
 </div>

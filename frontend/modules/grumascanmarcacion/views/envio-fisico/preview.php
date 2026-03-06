@@ -27,6 +27,9 @@ $this->title = 'Preview Envío Físico (Consolidado)';
     <?php endif; ?>
 
     <div class="card mb-3">
+        <div class="text-muted small mt-2">
+            Consolidado por <strong>Item + Color + Talla</strong>. Cantidad convertida a <strong>UNIDAD</strong> usando equivalencia de <strong>unidadempaque</strong>.
+        </div>
         <div class="card-body">
             <?php $form = ActiveForm::begin([
                 'method' => 'get',
@@ -34,18 +37,18 @@ $this->title = 'Preview Envío Físico (Consolidado)';
             ]); ?>
 
             <div class="row g-2">
-                <div class="col-md-3">
+                <div class="col-2">
                     <?= $form->field($searchModel, 'codigoBodega')->textInput([
                         'placeholder' => 'Ej: 210',
                         'autocomplete' => 'off',
                     ]) ?>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-2">
                     <?= $form->field($searchModel, 'fechaDesde')->widget(DatePicker::class, [
                         'language' => 'es',
                         'options' => [
-                            'placeholder' => 'Fecha ...',
+                            'placeholder' => 'Desde ...',
                             'autocomplete' => 'off'
                         ],
                         'pluginOptions' => [
@@ -56,11 +59,26 @@ $this->title = 'Preview Envío Físico (Consolidado)';
                     ]) ?>
                 </div>
 
-                <div class="col-md-3 d-flex align-items-end">
+                <div class="col-2">
+                    <?= $form->field($searchModel, 'fechaHasta')->widget(DatePicker::class, [
+                        'language' => 'es',
+                        'options' => [
+                            'placeholder' => 'Hasta ...',
+                            'autocomplete' => 'off'
+                        ],
+                        'pluginOptions' => [
+                            'autoclose' => true,
+                            'format' => 'yyyy-mm-dd',
+                            'todayHighlight' => true,
+                        ],
+                    ]) ?>
+                </div>
+
+                <div class="col-2 d-flex align-items-end">
                     <?= Html::submitButton('Previsualizar', ['class' => 'btn btn-primary w-100']) ?>
                 </div>
 
-                <div class="col-md-3 d-flex align-items-end">
+                <div class="col-2 d-flex align-items-end">
                     <?php
                     $lineas = (int)($totales['lineas'] ?? 0);
                     $disabled = $lineas === 0;
@@ -79,9 +97,7 @@ $this->title = 'Preview Envío Físico (Consolidado)';
 
             <?php ActiveForm::end(); ?>
 
-            <div class="text-muted small mt-2">
-                Consolidado por <strong>Item + Color + Talla</strong>. Cantidad convertida a <strong>UNIDAD</strong> usando equivalencia de <strong>unidadempaque</strong>.
-            </div>
+
         </div>
     </div>
 
@@ -109,7 +125,7 @@ $this->title = 'Preview Envío Físico (Consolidado)';
 
                 <?php if ((int)($totales['lineas'] ?? 0) === 0): ?>
                     <div class="alert alert-warning mt-3 mb-0">
-                        No se encontraron conteos <strong>terminados</strong> (estado=1) para la bodega y fecha seleccionadas.
+                        No se encontraron conteos <strong>terminados</strong> (estado=1) para la bodega y rango de fechas seleccionados.
                     </div>
                 <?php endif; ?>
             </div>

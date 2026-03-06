@@ -1,14 +1,49 @@
 <?php
 use yii\helpers\Html;
+use yii\widgets\ActiveForm;
 
-$this->title = 'Documentos de Devolución Mercancía Enviados';
+$this->title = 'Documentos de Devolucion Mercancia Enviados';
+$f = $filtros ?? [];
 ?>
 <div class="devolucionmercancia-enviados">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
     <div class="mb-3">
-        <?= Html::a('➕ Crear nuevo documento', ['index'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('+ Crear nuevo documento', ['index'], ['class' => 'btn btn-success']) ?>
+    </div>
+
+    <div class="card card-body mb-3">
+        <?php $form = ActiveForm::begin(['method' => 'get', 'action' => ['enviados']]); ?>
+        <div class="row">
+            <div class="col-md-2">
+                <label class="control-label">ID</label>
+                <input type="text" name="id" class="form-control" value="<?= Html::encode($f['id'] ?? '') ?>">
+            </div>
+            <div class="col-md-2">
+                <label class="control-label">Tipo Documento</label>
+                <input type="text" name="tipo_documento" class="form-control" value="<?= Html::encode($f['tipo_documento'] ?? '') ?>">
+            </div>
+            <div class="col-md-2">
+                <label class="control-label">Proveedor (NIT)</label>
+                <input type="text" name="proveedor" class="form-control" value="<?= Html::encode($f['proveedor'] ?? '') ?>">
+            </div>
+            <div class="col-md-2">
+                <label class="control-label">Estado</label>
+                <select name="estado" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="enviado" <?= (($f['estado'] ?? '') === 'enviado') ? 'selected' : '' ?>>Enviado</option>
+                    <option value="pendiente" <?= (($f['estado'] ?? '') === 'pendiente') ? 'selected' : '' ?>>Pendiente</option>
+                    <option value="procesando" <?= (($f['estado'] ?? '') === 'procesando') ? 'selected' : '' ?>>Procesando</option>
+                    <option value="error" <?= (($f['estado'] ?? '') === 'error') ? 'selected' : '' ?>>Error</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <?= Html::submitButton('Filtrar', ['class' => 'btn btn-primary']) ?>
+                <?= Html::a('Limpiar', ['enviados'], ['class' => 'btn btn-outline-secondary']) ?>
+            </div>
+        </div>
+        <?php ActiveForm::end(); ?>
     </div>
 
     <?php if (!empty($documentos)): ?>
@@ -17,13 +52,13 @@ $this->title = 'Documentos de Devolución Mercancía Enviados';
                 <tr>
                     <th>ID</th>
                     <th>Tipo Documento</th>
-                   
                     <th>NIT Tercero</th>
+                    <th>Nombre Proveedor</th>
                     <th>Fecha Documento</th>
                     <th class="text-right">Valor</th>
                     <th>Estado</th>
                     <th>Creado</th>
-                    <th>Última actualización</th>
+                    <th>Ultima actualizacion</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -32,8 +67,8 @@ $this->title = 'Documentos de Devolución Mercancía Enviados';
                     <tr>
                         <td><?= $doc['id'] ?></td>
                         <td><?= Html::encode($doc['tipo_documento']) ?></td>
-                   
                         <td><?= Html::encode($doc['nit_tercero']) ?></td>
+                        <td><?= Html::encode($doc['proveedor_nombre'] ?? '') ?></td>
                         <td><?= Html::encode($doc['fecha_documento']) ?></td>
                         <td class="text-right">$ <?= number_format($doc['valor_documento'], 0, ',', '.') ?></td>
                         <td>
@@ -59,7 +94,7 @@ $this->title = 'Documentos de Devolución Mercancía Enviados';
                                         'class' => 'btn btn-sm btn-danger',
                                         'data' => [
                                             'method' => 'post',
-                                            'confirm' => '¿Está seguro de reenviar este documento a Siesa?',
+                                            'confirm' => 'Esta seguro de reenviar este documento a Siesa?',
                                         ],
                                     ]
                                 ) ?>
@@ -71,7 +106,7 @@ $this->title = 'Documentos de Devolución Mercancía Enviados';
         </table>
     <?php else: ?>
         <div class="alert alert-info">
-            No hay documentos generados todavía.
+            No hay documentos generados todavia.
         </div>
     <?php endif; ?>
 </div>

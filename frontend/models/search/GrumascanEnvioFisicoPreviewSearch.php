@@ -9,17 +9,21 @@ use frontend\models\Grumascanconteodetalle;
 class GrumascanEnvioFisicoPreviewSearch extends Model
 {
     public $codigoBodega;  // ej: 210
-    public $fechaDesde;    // YYYY-MM-DD (desde DatePicker)
+    public $fechaDesde;    // YYYY-MM-DD
+    public $fechaHasta;    // YYYY-MM-DD
 
     private $_lastCommand = null;
 
     public function rules(): array
     {
         return [
-            [['codigoBodega', 'fechaDesde'], 'required'],
-            ['codigoBodega', 'string', 'max' => 10],
-            ['codigoBodega', 'trim'],
-            ['fechaDesde', 'date', 'format' => 'php:Y-m-d'],
+            [['codigoBodega'], 'required'],
+            [['codigoBodega'], 'string', 'max' => 10],
+            [['codigoBodega'], 'trim'],
+
+            // Fechas opcionales (pero validadas si vienen)
+            [['fechaDesde', 'fechaHasta'], 'trim'],
+            [['fechaDesde', 'fechaHasta'], 'date', 'format' => 'php:Y-m-d'],
         ];
     }
 
@@ -27,18 +31,9 @@ class GrumascanEnvioFisicoPreviewSearch extends Model
     {
         return [
             'codigoBodega' => 'Código bodega',
-            'fechaDesde'   => 'Fecha (día)',
+            'fechaDesde'   => 'Fecha desde',
+            'fechaHasta'   => 'Fecha hasta',
         ];
-    }
-
-    /**
-     * Rango de fecha INVARIANTE para SQL Server: YYYYMMDD (style 112).
-     */
-    private function getDateRangeSafeYmd(): array
-    {
-        $ymd = str_replace('-', '', $this->fechaDesde); // 20260109
-        $ymdNext = date('Ymd', strtotime($this->fechaDesde . ' +1 day')); // 20260110
-        return [$ymd, $ymdNext];
     }
 
     private function buildQuery()
@@ -65,13 +60,13 @@ class GrumascanEnvioFisicoPreviewSearch extends Model
         $cantidadUnidad = new Expression("SUM(det.cantidad * {$factor})");
 
         $query->select([
-            'bodega_nombre'   => 'b.nombre',
-            'bodega_codigo'   => 'b.codigo',
-            'item'            => 'i.item',
-            'color'           => 'c.codigo',
-            'talla'           => 't.codigo',
-            'cantidad_unidad' => $cantidadUnidad,
-            'cantidad_paquetes' => 'det.cantidad',
+            'bodega_nombre'     => 'b.nombre',
+            'bodega_codigo'     => 'b.codigo',
+            'item'              => 'i.item',
+            'color'             => 'c.codigo',
+            'talla'             => 't.codigo',
+            'cantidad_unidad'   => $cantidadUnidad,
+            'cantidad_paquetes' => 'det.cantidad', // lo dejo igual para no alterar tu salida actual
         ]);
 
         // Terminado (estado=1)
@@ -91,13 +86,14 @@ class GrumascanEnvioFisicoPreviewSearch extends Model
         if (!$this->validate()) {
             return [
                 'rows' => [],
-                'totales' => ['lineas' => 0, 'total_unidades' => 0],
+                'totales' => ['lineas' => 0, 'total_unidades' => 0, 'total_paquetes' => 0],
                 'errors' => $this->getErrors(),
             ];
         }
 
         $codigo = trim((string)$this->codigoBodega);
-        [$desdeYmd, $hastaYmd] = $this->getDateRangeSafeYmd();
+        $desde  = trim((string)$this->fechaDesde);
+        $hasta  = trim((string)$this->fechaHasta);
 
         $query = $this->buildQuery();
 
@@ -105,19 +101,32 @@ class GrumascanEnvioFisicoPreviewSearch extends Model
         $query->andWhere(new Expression('LTRIM(RTRIM(b.codigo)) = :cod', [':cod' => $codigo]));
 
         /**
-         * FILTRO FECHA INVARIANTE:
-         * Usamos CONVERT(datetime, :param, 112) donde :param es YYYYMMDD.
+         * ✅ FILTRO FECHA ESTÁNDAR TIPO GRUMASCAN (SQL Server)
+         * - Ignora hora: CAST(con.created_at AS DATE)
+         * - desde solo: >=
+         * - hasta solo: <=
+         * - ambas: BETWEEN inclusive
+         * - vacías: no filtra
          */
-        $query->andWhere(new Expression(
-            "con.created_at >= CONVERT(datetime, :desde, 112)",
-            [':desde' => $desdeYmd]
-        ));
-        $query->andWhere(new Expression(
-            "con.created_at <  CONVERT(datetime, :hasta, 112)",
-            [':hasta' => $hastaYmd]
-        ));
+        if ($desde !== '' && $hasta !== '') {
+            $query->andWhere(new Expression(
+                "CAST(con.created_at AS DATE) BETWEEN :desde AND :hasta",
+                [':desde' => $desde, ':hasta' => $hasta]
+            ));
+        } elseif ($desde !== '') {
+            $query->andWhere(new Expression(
+                "CAST(con.created_at AS DATE) >= :desde",
+                [':desde' => $desde]
+            ));
+        } elseif ($hasta !== '') {
+            $query->andWhere(new Expression(
+                "CAST(con.created_at AS DATE) <= :hasta",
+                [':hasta' => $hasta]
+            ));
+        }
+        // si ambas vacías -> no aplica filtro
 
-        // Consolidado por SKU lógico
+        // Consolidado por SKU lógico (lo dejo igual a tu versión)
         $query->groupBy([
             'b.nombre',
             'b.codigo',
@@ -133,7 +142,6 @@ class GrumascanEnvioFisicoPreviewSearch extends Model
             't.codigo' => SORT_ASC,
         ]);
 
-        // Guardar command (por si necesitas debug)
         $cmd = $query->createCommand();
         $this->_lastCommand = $cmd;
 
@@ -152,20 +160,16 @@ class GrumascanEnvioFisicoPreviewSearch extends Model
                 'lineas' => count($rows),
                 'total_unidades' => $sum,
                 'total_paquetes' => $paq,
-
             ],
             'errors' => [],
             'debug' => [
                 'codigo' => $codigo,
-                'desdeYmd' => $desdeYmd,
-                'hastaYmd' => $hastaYmd,
+                'fechaDesde' => $desde,
+                'fechaHasta' => $hasta,
             ],
         ];
     }
 
-    /**
-     * Debug opcional: SQL con parámetros ya interpolados.
-     */
     public function debugSql(): array
     {
         if ($this->_lastCommand === null) {

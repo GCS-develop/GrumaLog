@@ -80,7 +80,7 @@ Modal::end();
 <?php
 $gridColumns = [
     'codigoBodegaSalida',
-    'bodegaSalida.nombreBodega',
+    'nombreBodega',
     'numeroDocumento',
     'codigoBarras',
     'item',
@@ -88,7 +88,6 @@ $gridColumns = [
     'color',
     'referencia',
     'itemResumen',
-
     'unidadMedida',
 
     [
@@ -307,12 +306,13 @@ $gridColumns = [
                 'hAlign' => 'center', // Alineación horizontal al centro
                 'vAlign' => 'middle', // Alineación vertical al centro
             ],
-            [
-                'attribute' => 'nombreBodegaSalida', // Nombre del atributo en el modelo
-                'label' => 'Nombre Bodega',
-                'hAlign' => 'left', // Alineación horizontal al centro
-                'vAlign' => 'middle', // Alineación vertical al centro
-            ],
+      [
+    'attribute' => 'nombreBodega',
+    'label' => 'Nombre Bodega',
+    'value' => fn($model) => $model->nombreBodega ?? '-',
+],
+
+
 
             [
                 'attribute' => 'numeroDocumento', // Nombre del atributo en el modelo

@@ -69,6 +69,10 @@ return [
 		'allowActions' => [
 			'site/*',
 			'hunter/hunter-api/*',
+			'contabilidad/conciliacion/*',
+			'/contabilidad/conciliacion/*',
+			'contabilidad/conciliacion/anular',
+			'contabilidad/conciliacion/cancel',
 			//'admin/*',
 			'gii/*',
 			//'catalogos/*',

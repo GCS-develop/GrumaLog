@@ -57,10 +57,19 @@ class Tipodocumento extends \yii\db\ActiveRecord
         return [
             [['created_at', 'updated_at'], 'safe'],
             [['created_by', 'updated_by'], 'integer'],
-            [['requierePedido','permite_cantidad_manual'], 'boolean'],
+            [['requierePedido', 'permite_cantidad_manual'], 'boolean'],
             [['codigo'], 'string', 'max' => 5],
             [['nombre'], 'string', 'max' => 50],
         ];
+    }
+
+    public static function getListaDataCodigoTraspasoKey()
+    {
+        $data = Tipodocumento::find()
+            ->select(['codigo', 'codigo AS nombre'])
+            ->where(['codigo' => ['3TA', '3TB', 'TRT', 'TRL', '2TL']])
+            ->orderBy('codigo')->asArray()->all();
+        return ArrayHelper::map($data, 'codigo', 'nombre');
     }
 
     /**

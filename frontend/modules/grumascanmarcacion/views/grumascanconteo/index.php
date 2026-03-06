@@ -75,12 +75,44 @@ $this->params['breadcrumbs'][] = $this->title;
             //'created_by',
             //'updated_at',
             //'updated_by',
-            // [
-            //     'class' => ActionColumn::className(),
-            //     'urlCreator' => function ($action, Grumascanconteo $model, $key, $index, $column) {
-            //         return Url::toRoute([$action, 'id' => $model->id]);
-            //     }
-            // ],
+            [
+                'class' => ActionColumn::class,
+                'template' => '{anular} {desanular}',
+                'buttons' => [
+                    'anular' => function ($url, $model) {
+                        // Mostrar botón solo si estado = 1 (Terminado)
+                        if ((int)$model->idestado !== 1) return '';
+
+                        return Html::a(
+                            'Anular',
+                            ['anular', 'id' => $model->id],
+                            [
+                                'class' => 'btn btn-danger btn-xs',
+                                'data' => [
+                                    'method' => 'post',
+                                    'confirm' => "¿Seguro que deseas ANULAR el conteo #{$model->id}?\nPasará a estado 2.",
+                                ],
+                            ]
+                        );
+                    },
+                    'desanular' => function ($url, $model) {
+                        // Mostrar botón solo si estado = 2 (Anulado)
+                        if ((int)$model->idestado !== 2) return '';
+
+                        return Html::a(
+                            'Desanular',
+                            ['desanular', 'id' => $model->id],
+                            [
+                                'class' => 'btn btn-warning btn-xs',
+                                'data' => [
+                                    'method' => 'post',
+                                    'confirm' => "¿Seguro que deseas DESANULAR el conteo #{$model->id}?\nVolverá a estado 1.",
+                                ],
+                            ]
+                        );
+                    },
+                ],
+            ],
         ],
     ]); ?>
 

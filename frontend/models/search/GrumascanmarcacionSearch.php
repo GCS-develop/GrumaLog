@@ -5,56 +5,47 @@ namespace frontend\models\search;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use frontend\models\Grumascanmarcacion;
+use yii\db\Query;
 
-/**
- * GrumascanmarcacionSearch represents the model behind the search form of `frontend\models\Grumascanmarcacion`.
- */
 class GrumascanmarcacionSearch extends Grumascanmarcacion
 {
-    /**
-     * {@inheritdoc}
-     */
+    // ✅ permitir arrays (Select2 multiple)
+    public $idbodega;
+    public $ubicacion;
+    public $seccion;
+    public $estado;
+
     public function rules()
     {
         return [
-            [['id', 'idbodega', 'created_by', 'updated_by', 'idconteo'], 'integer'],
-            [['ubicacion', 'seccion', 'created_at', 'updated_at', 'estado'], 'safe'],
+            [['id', 'created_by', 'updated_by', 'idconteo'], 'integer'],
+            [['created_at', 'updated_at'], 'safe'],
+            [['idbodega', 'ubicacion', 'seccion', 'estado'], 'safe'], // ✅ arrays
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function scenarios()
     {
-        // bypass scenarios() implementation in the parent class
         return Model::scenarios();
     }
 
-    /**
-     * Creates data provider instance with search query applied
-     *
-     * @param array $params
-     *
-     * @return ActiveDataProvider
-     */
     public function search($params, $id = null)
     {
-        if ($id == null) {
-            $query = Grumascanmarcacion::find()->alias('gsm');
-        } else {
-            $query = Grumascanmarcacion::find()->where(['gsm.id' => $id])->alias('gsm');
+        $query = Grumascanmarcacion::find()->alias('gsm');
+
+        if ($id !== null) {
+            $query->andWhere(['gsm.id' => (int)$id]);
         }
 
         $query->join('LEFT JOIN', 'grumascanconteo gsc', 'gsm.id = gsc.idmarcacion');
         $query->join('LEFT JOIN', 'grumascanestado gse', 'gse.id = gsc.idestado');
-        // add conditions that should always apply here
+
         $query->select([
             'gsm.*',
             'gsc.id AS idconteo',
             'gse.nombre AS estado',
-
         ]);
+
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
@@ -62,36 +53,108 @@ class GrumascanmarcacionSearch extends Grumascanmarcacion
         $this->load($params);
 
         if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
-            // $query->where('0=1');
             return $dataProvider;
         }
 
-        // grid filtering conditions
         $query->andFilterWhere([
             'gsm.id' => $this->id,
-            'gsm.idbodega' => $this->idbodega,
             'gsm.created_at' => $this->created_at,
             'gsm.created_by' => $this->created_by,
             'gsm.updated_at' => $this->updated_at,
             'gsm.updated_by' => $this->updated_by,
             'gsc.id' => $this->idconteo,
         ]);
-        // ✅ filtro estado (arregla el 0)
-        if ($this->estado !== null && $this->estado !== '') {
-            if ((string)$this->estado === '3') {
-                // Sin conteo
-                $query->andWhere(['gsc.id' => null]);
-            } else {
-                // Estado específico (incluye 0)
-                $query->andWhere(['gse.id' => (int)$this->estado]);
+
+        // ✅ bodegas multiple IN
+        if (!empty($this->idbodega)) {
+            $bodegas = array_values(array_filter((array)$this->idbodega, fn($v) => (string)$v !== ''));
+            if ($bodegas) {
+                $query->andWhere(['in', 'gsm.idbodega', array_map('intval', $bodegas)]);
             }
         }
 
-        $query->andFilterWhere(['like', 'ubicacion', $this->ubicacion])
-            ->andFilterWhere(['like', 'seccion', $this->seccion]);
+        // ✅ ubicaciones multiple IN (exact)
+        if (!empty($this->ubicacion)) {
+            $ubic = array_values(array_filter((array)$this->ubicacion, fn($v) => trim((string)$v) !== ''));
+            if ($ubic) {
+                $query->andWhere(['in', 'gsm.ubicacion', $ubic]);
+            }
+        }
 
+        // ✅ secciones multiple IN (exact)
+        if (!empty($this->seccion)) {
+            $sec = array_values(array_filter((array)$this->seccion, fn($v) => trim((string)$v) !== ''));
+            if ($sec) {
+                $query->andWhere(['in', 'gsm.seccion', $sec]);
+            }
+        }
+
+        // ✅ estado multiple con "3 = Sin conteo"
+        if (!empty($this->estado)) {
+            $estados = (array)$this->estado;
+
+            $incluyeSinConteo = in_array('3', $estados, true);
+            $idsEstados = array_values(array_filter($estados, fn($v) => (string)$v !== '3' && (string)$v !== ''));
+
+            if ($incluyeSinConteo && !empty($idsEstados)) {
+                $query->andWhere([
+                    'or',
+                    ['gsc.id' => null],
+                    ['in', 'gse.id', array_map('intval', $idsEstados)],
+                ]);
+            } elseif ($incluyeSinConteo) {
+                $query->andWhere(['gsc.id' => null]);
+            } else {
+                $query->andWhere(['in', 'gse.id', array_map('intval', $idsEstados)]);
+            }
+        }
 
         return $dataProvider;
+    }
+
+    /**
+     * Listas para Select2 (ajusta si tu tabla/modelo de bodega tiene otro nombre)
+     */
+    public function getListaBodegas(): array
+    {
+        // ✅ AJUSTA: si tienes tabla bodega con id/nombre:
+        // return \yii\helpers\ArrayHelper::map(\frontend\models\Bodega::find()->orderBy('nombre')->all(), 'id', 'nombre');
+
+        // Fallback genérico (si no tienes modelo Bodega a mano)
+        return (new Query())
+            ->from('bodegas')
+            ->select(['nombre', 'id'])
+            ->orderBy(['nombre' => SORT_ASC])
+            ->indexBy('id')
+            ->column();
+    }
+
+    public function getListaUbicaciones(): array
+    {
+        $rows = (new Query())
+            ->from(['gsm' => 'grumascanmarcacion'])
+            ->select(['ubicacion'])
+            ->distinct()
+            ->where(['not', ['ubicacion' => null]])
+            ->andWhere(['<>', 'ubicacion', ''])
+            ->orderBy(['ubicacion' => SORT_ASC])
+            ->column();
+
+        // value => value
+        return array_combine($rows, $rows) ?: [];
+    }
+
+    public function getListaSecciones(): array
+    {
+        $rows = (new Query())
+            ->from(['gsm' => 'grumascanmarcacion'])
+            ->select(['seccion'])
+            ->distinct()
+            ->where(['not', ['seccion' => null]])
+            ->andWhere(['<>', 'seccion', ''])
+            ->orderBy(['seccion' => SORT_ASC])
+            ->column();
+
+        return array_combine($rows, $rows) ?: [];
     }
 }

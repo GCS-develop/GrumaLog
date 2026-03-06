@@ -75,6 +75,9 @@ return [
     ],
 
     'components' => [
+        'siesaPrecio' => [
+            'class' => \common\components\SiesaPrecioService::class,
+        ],
         'user' => [
             'identityClass' => \common\models\User::class,
             'enableAutoLogin' => true,

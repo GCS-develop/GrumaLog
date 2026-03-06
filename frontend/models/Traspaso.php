@@ -165,6 +165,13 @@ class Traspaso extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
+
+    public static function getDbSiesa()
+    {
+        return Yii::$app->dbSiesa; // Usa la conexión definida como dbsiesa
+    }
+
+
     public function getBodegaDestino()
     {
         return $this->hasOne(Bodegas::class, ['id' => 'idBodegaDestino']);
@@ -307,6 +314,46 @@ class Traspaso extends \yii\db\ActiveRecord
             ->where(['td.idTraspaso' => $this->id])
             ->andWhere(['IS NOT', 'i.unidadEmpaque', null])
             ->scalar();
+    }
+
+    public function verificarEstadoAEN()
+    {
+        $tipodocumento = $this->tipodocumento->codigo ?? null;
+        $consecutivo   = $this->consecutivo;
+        $IdCO = $this->bodegaDestino->codigo ?? null;
+
+        // $sql = "SELECT TOP 1
+        //         f350_rowid,
+        //         f350_id_tipo_docto,
+        //         f350_consec_docto,
+        //         f350_rowid_movto_entidad,
+        //         f350_ind_estado,
+        //         f350_notas
+        //         FROM GRUMALOG.dbo.t350_co_docto_contable
+        //         WHERE f350_id_cia = 7
+        //         AND f350_id_tipo_docto = :idTipoDocumento
+        //         AND f350_id_co = :idCO
+        //         AND f350_consec_docto = :consecutivo
+        //         ORDER BY f350_consec_docto DESC";
+
+        $sql = "SELECT top 1
+        f350_rowid,f350_id_tipo_docto,
+        f350_consec_docto,
+        f350_rowid_movto_entidad,f350_ind_estado,
+        f350_notas
+        FROM t350_co_docto_contable
+        WHERE f350_id_cia = 7
+        AND	f350_ind_estado = 1
+        AND f350_id_tipo_docto = :idTipoDocumento
+        AND f350_id_co = :idCO
+        AND f350_notas LIKE :consecutivo
+        order by f350_consec_docto desc";
+
+        return self::getDbSiesa()->createCommand($sql)
+            ->bindValue(':idCO', $IdCO)
+            ->bindValue(':idTipoDocumento', $tipodocumento)
+            ->bindValue(':consecutivo', $consecutivo)
+            ->queryAll();
     }
 
 

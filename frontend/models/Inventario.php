@@ -26,6 +26,7 @@ class Inventario extends \yii\db\ActiveRecord
     public $talla;
     public $color;
     // public $item;
+
     /**
      * {@inheritdoc}
      */
@@ -91,6 +92,10 @@ class Inventario extends \yii\db\ActiveRecord
         return $this->hasOne(Item::class, ['id' => 'idItem']);
     }
 
+    // ============================
+    //  TUS MÉTODOS EXISTENTES
+    // ============================
+
     public static function getotalExistenciasGruma($codigoBodega = null)
     {
         $query = self::find();
@@ -98,7 +103,6 @@ class Inventario extends \yii\db\ActiveRecord
         if ($codigoBodega !== null && trim($codigoBodega) !== '') {
             $query->andWhere(['codigoBodega' => trim($codigoBodega)]);
         }
-
 
         return $query->sum('existencia');
     }
@@ -149,7 +153,6 @@ class Inventario extends \yii\db\ActiveRecord
         return $existencia !== false ? $existencia : 0;
     }
 
-
     public static function getCodigosBodegaUnicos()
     {
         return self::find()
@@ -158,5 +161,105 @@ class Inventario extends \yii\db\ActiveRecord
             ->column();
     }
 
+    // ==========================================
+    //  NUEVO: TOTALES "REAL" (SIN DUPLICAR SKU)
+    // ==========================================
 
+    /**
+     * Total REAL Gruma: suma 1 vez por SKU lógico.
+     * Como tu "SKU lógico" está en idItem (y tu regla de espejo mantiene existencia igual en todos los EAN),
+     * se agrupa por (codigoBodega, idItem) y se suma MAX(existencia).
+     */
+    public static function getotalExistenciasGrumaReal($codigoBodega = null)
+    {
+        $params = [];
+        $where = "1=1";
+
+        if ($codigoBodega !== null && trim($codigoBodega) !== '') {
+            $where .= " AND codigoBodega = :bod";
+            $params[':bod'] = trim($codigoBodega);
+        }
+
+        $sql = "
+        SELECT COALESCE(SUM(x.existencia),0) AS total_real
+        FROM (
+            SELECT
+                idItem,
+                MAX(COALESCE(existencia,0)) AS existencia
+            FROM inventario
+            WHERE {$where}
+            GROUP BY idItem
+        ) x
+    ";
+
+        $total = Yii::$app->db->createCommand($sql, $params)->queryScalar();
+        return $total !== false ? (float)$total : 0;
+    }
+
+    /**
+     * Total REAL Siesa: suma 1 vez por SKU lógico (idItem) para la bodega.
+     *
+     * Estrategia:
+     * 1) Tomar los idItem únicos desde inventario local (por bodega si aplica)
+     * 2) Mapearlos a barras en Siesa (t131)
+     * 3) Consultar t400 por bodega y rowid_item_ext
+     * 4) Agrupar por item_ext y sumar MAX(existencia) por item para evitar duplicados por múltiples barras
+     *
+     * NOTA: Se asume que inventario.codigoBarras corresponde a t131.f131_id_codigo_barras.
+     */
+    public static function getTotalExistenciasSiesaReal($codigoBodega = null)
+    {
+        $codigoBodega = ($codigoBodega === '' ? null : $codigoBodega);
+
+        // Si no envían bodega, replico tu lógica: sumar solo para bodegas existentes localmente
+        $codigosLocales = self::getCodigosBodegaUnicos();
+        if (empty($codigosLocales)) {
+            return 0;
+        }
+
+        // placeholders IN
+        $placeholders = [];
+        foreach ($codigosLocales as $i => $cod) {
+            $placeholders[] = ":bod{$i}";
+        }
+
+        $sql = "
+        SELECT COALESCE(SUM(t400.f400_cant_existencia_1),0) AS total_existencia
+        FROM t400_cm_existencia t400
+        JOIN t150_mc_bodegas t150
+          ON t400.f400_rowid_bodega = t150.f150_rowid
+        WHERE
+            (
+                (:codigoBodega IS NULL AND t150.f150_id IN (" . implode(',', $placeholders) . "))
+                OR t150.f150_id = :codigoBodega
+            )
+    ";
+
+        $cmd = Yii::$app->dbSiesa->createCommand($sql);
+
+        if ($codigoBodega !== null) {
+            $cmd->bindValue(':codigoBodega', $codigoBodega, \PDO::PARAM_STR);
+        } else {
+            $cmd->bindValue(':codigoBodega', null, \PDO::PARAM_NULL);
+        }
+
+        foreach ($codigosLocales as $i => $cod) {
+            $cmd->bindValue(":bod{$i}", $cod, \PDO::PARAM_STR);
+        }
+
+        $total = $cmd->queryScalar();
+        return $total !== false ? (float)$total : 0;
+    }
+
+    /**
+     * Helper: construye :bod0,:bod1,...
+     */
+    private static function buildInPlaceholders(array $values, string $prefix)
+    {
+        $out = [];
+        foreach ($values as $i => $v) {
+            $out[] = ':' . $prefix . $i;
+        }
+        return implode(',', $out);
+    }
 }

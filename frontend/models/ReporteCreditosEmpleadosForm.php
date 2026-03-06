@@ -75,9 +75,10 @@ class ReporteCreditosEmpleadosForm extends Model
    private function baseSql()
 {
     return <<<SQL
-SELECT DISTINCT 
+SELECT 
     T.f200_nit AS ID_TERCERO,
     T.f200_razon_social AS RAZON_SOCIAL,
+    E.F284_ID AS CENTRO_COSTOS,
     SA.f353_id_sucursal AS SUCURSAL_CLIENTE,
     SA.F353_ID_CO_CRUCE AS CENTRO_OPERACION,
     SA.F353_ID_UN_CRUCE AS UNIDAD_DE_NEGOCIO,
@@ -87,23 +88,25 @@ SELECT DISTINCT
     SA.f353_id_cond_pago AS CONDICION_PAGO,
     SA.F353_TOTAL_DB AS VALOR,
     SA.F353_FECHA AS FECHA,
-
     COUNT(*) OVER (
-        PARTITION BY 
-            SA.f353_id_tipo_docto_cruce,
-            SA.F353_CONSEC_DOCTO_CRUCE
+        PARTITION BY SA.f353_id_tipo_docto_cruce, SA.F353_CONSEC_DOCTO_CRUCE
     ) AS NUM_CUOTAS
-
 FROM t353_co_saldo_abierto AS SA
 INNER JOIN t200_mm_terceros AS T 
     ON SA.f353_rowid_tercero = T.f200_rowid
-
+INNER JOIN (
+    SELECT F200_NIT, MAX(F284_ID) AS F284_ID
+    FROM BI_W0550
+    GROUP BY F200_NIT
+) E ON E.F200_NIT = T.f200_nit
 WHERE 
     SA.F353_FECHA >= :fini
     AND SA.F353_FECHA < DATEADD(day, 1, :ffin)
     AND SA.f353_rowid_auxiliar = 20805
     AND SA.f353_ind_anticipo = 0
     AND SA.F353_TOTAL_CR = 0
+   AND SA.f353_id_tipo_docto_cruce <> 'NC'
+
 SQL;
 }
 
@@ -229,6 +232,7 @@ WHERE
     AND SA.f353_rowid_auxiliar = 20805
     AND SA.f353_ind_anticipo = 0
     AND SA.F353_TOTAL_CR = 0
+    AND SA.f353_id_tipo_docto_cruce <> 'NC'
 {$filtersSql}
 SQL;
 

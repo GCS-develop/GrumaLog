@@ -19,10 +19,11 @@ use yii\widgets\ActiveForm;
    <div class="row">
         <div class="col-lg-3">
             <?php echo $form->field($model, 'serie')->dropDownList(
-                Tipodocumento::getListaDataCodigoTraspaso(),
+                Tipodocumento::getListaDataCodigoTraspasoKey(),
                 [
                     'prompt' => ' Seleccionar tipo de documento ... ',
                     'id' => 'idTipoDocumento',
+                    
                 ]
             )->label('serie');
             ?>

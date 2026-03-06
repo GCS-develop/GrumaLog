@@ -92,7 +92,7 @@ class Bodegas extends \yii\db\ActiveRecord
         $data = Bodegas::find()
             ->select(['codigo', "(codigo + ' - ' + nombre) AS nombre"])
             ->asArray()->all();
-        $listadata = ArrayHelper::map($data, 'codigo' , 'nombre');
+        $listadata = ArrayHelper::map($data, 'codigo', 'nombre');
         return $listadata;
     }
     public static function getListaData()
@@ -104,7 +104,7 @@ class Bodegas extends \yii\db\ActiveRecord
         return $listadata;
     }
 
-   /* public static function getListaDataCEDI()
+    /* public static function getListaDataCEDI()
     {
         $data = Bodegas::find()
             ->select(['id', 'nombre'])
@@ -130,6 +130,9 @@ class Bodegas extends \yii\db\ActiveRecord
 
     public function getImpresorapaxar()
     {
-        return $this->hasOne(Impresoraspaxarbodega::class, ['bodega_id' => 'id']);
+        return $this->hasOne(
+            Impresoraspaxarbodega::class,
+            ['bodega_id' => 'id']
+        )->andWhere(['<>', 'tipo', 'termica']);
     }
 }

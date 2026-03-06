@@ -33,7 +33,6 @@ class ConciliacionController extends Controller
                 'actions' => [
                     'finalize' => ['POST'],
                     'cancel'   => ['POST'],
-                    'anular'   => ['POST'],
                     'export'   => ['POST'],
                 ],
             ],
@@ -483,45 +482,6 @@ public function actionReenviar($id)
         throw new \yii\web\NotFoundHttpException("No existe el documento $id");
     }
 
-    $anular = (int)Yii::$app->request->get('anular', Yii::$app->request->post('anular', 0)) === 1;
-    if ($anular) {
-        if ((string)$doc->estado !== 'error') {
-            $result = [
-                'success' => false,
-                'id' => $doc->id,
-                'estado' => $doc->estado,
-                'fecha_realizado' => Yii::$app->formatter->asDatetime($doc->fecha_realizado, 'php:Y-m-d H:i'),
-                'mensaje' => 'Solo se pueden anular documentos en estado error.',
-            ];
-            if (Yii::$app->request->isAjax) {
-                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-                return $result;
-            }
-            Yii::$app->session->setFlash('warning', $result['mensaje']);
-            return $this->redirect(['view-log', 'id' => $doc->id]);
-        }
-
-        $doc->estado = 'anulado';
-        $doc->fecha_realizado = new \yii\db\Expression('GETDATE()');
-        $ok = $doc->save(false, ['estado', 'fecha_realizado']);
-
-        $result = [
-            'success' => $ok,
-            'id' => $doc->id,
-            'estado' => $doc->estado,
-            'fecha_realizado' => $this->safeFormatDatetime($doc->fecha_realizado),
-            'mensaje' => $ok ? 'Documento anulado.' : 'No se pudo anular el documento.',
-        ];
-
-        if (Yii::$app->request->isAjax) {
-            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-            return $result;
-        }
-
-        Yii::$app->session->setFlash($ok ? 'success' : 'error', $result['mensaje']);
-        return $this->redirect(['view-log', 'id' => $doc->id]);
-    }
-
     $result = $this->enviarASiesa($doc, $doc->items, true);
 
     if (Yii::$app->request->isAjax) {
@@ -530,62 +490,6 @@ public function actionReenviar($id)
     }
 
     return $this->redirect(['view-log', 'id' => $doc->id]);
-}
-
-public function actionCancel($id)
-{
-    $doc = LogFactVmi::findOne((int)$id);
-
-    if (!$doc) {
-        if (Yii::$app->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'success' => false,
-                'id' => (int)$id,
-                'estado' => 'no encontrado',
-                'mensaje' => "No existe el documento $id",
-            ];
-        }
-        throw new \yii\web\NotFoundHttpException("No existe el documento $id");
-    }
-
-    if ((string)$doc->estado !== 'error') {
-        $msg = 'Solo se pueden anular documentos en estado error.';
-        if (Yii::$app->request->isAjax) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'success' => false,
-                'id' => $doc->id,
-                'estado' => $doc->estado,
-                'mensaje' => $msg,
-            ];
-        }
-        Yii::$app->session->setFlash('warning', $msg);
-        return $this->redirect(['view-log', 'id' => $doc->id]);
-    }
-
-    $doc->estado = 'anulado';
-    $doc->fecha_realizado = new \yii\db\Expression('GETDATE()');
-    $ok = $doc->save(false, ['estado', 'fecha_realizado']);
-
-    if (Yii::$app->request->isAjax) {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        return [
-            'success' => $ok,
-            'id' => $doc->id,
-            'estado' => $doc->estado,
-            'fecha_realizado' => Yii::$app->formatter->asDatetime($doc->fecha_realizado, 'php:Y-m-d H:i'),
-            'mensaje' => $ok ? 'Documento anulado.' : 'No se pudo anular el documento.',
-        ];
-    }
-
-    Yii::$app->session->setFlash($ok ? 'success' : 'error', $ok ? 'Documento anulado.' : 'No se pudo anular el documento.');
-    return $this->redirect(['view-log', 'id' => $doc->id]);
-}
-
-public function actionAnular($id)
-{
-    return $this->actionCancel($id);
 }
 
 /**
@@ -597,27 +501,9 @@ private function formatResult($doc, $result)
         'success' => $result['success'],
         'id' => $doc->id,
         'estado' => $doc->estado,
-        'fecha_realizado' => $this->safeFormatDatetime($doc->fecha_realizado),
+        'fecha_realizado' => Yii::$app->formatter->asDatetime($doc->fecha_realizado, 'php:Y-m-d H:i'),
         'mensaje' => $result['mensaje'] ?? null,
     ];
-}
-
-private function safeFormatDatetime($value): ?string
-{
-    if ($value instanceof \yii\db\Expression) {
-        return date('Y-m-d H:i');
-    }
-
-    $raw = trim((string)$value);
-    if ($raw === '' || strtoupper($raw) === 'GETDATE()') {
-        return date('Y-m-d H:i');
-    }
-
-    try {
-        return Yii::$app->formatter->asDatetime($value, 'php:Y-m-d H:i');
-    } catch (\Throwable $e) {
-        return date('Y-m-d H:i');
-    }
 }
 
 
@@ -658,25 +544,14 @@ private function enviarASiesa(\frontend\models\LogFactVmi $doc, $items = [], $ac
         }
     }
 
-    // === 2) Ajustar contra existencias actuales de consignación ===
-    $existMap = $this->getExistenciaConsignacionMap(array_values($agrupados));
-
-    // === 3) Normalizar totales sin decimales ===
+    // === 2) Normalizar totales sin decimales ===
     $itemsFinal = [];
     $totCant  = 0;
     $totCosto = 0;
 
     foreach ($agrupados as $n) {
-        $cantidadSolicitada = (int)$n['cantidad'];
+        $cantidad = (int)$n['cantidad'];
         $pu       = (int)$n['precio_unitario'];
-        $stockKey = implode('|', [
-            trim((string)$n['item']),
-            trim((string)$n['extension1']),
-            trim((string)$n['extension2']),
-            $this->normalizeBodegaId($n['bodega']),
-        ]);
-        $cantidadDisponible = (int)($existMap[$stockKey] ?? 0);
-        $cantidad = min($cantidadSolicitada, $cantidadDisponible);
         $costoTot = (int) floor($cantidad * $pu);
 
         if ($cantidad <= 0 || $pu <= 0) continue;
@@ -690,22 +565,7 @@ private function enviarASiesa(\frontend\models\LogFactVmi $doc, $items = [], $ac
         $totCosto    += $costoTot;
     }
 
-    if (empty($itemsFinal)) {
-        $doc->estado          = 'error';
-        $doc->error_msg       = 'No hay líneas válidas para enviar después del ajuste por existencias en consignación.';
-        $doc->json_enviado    = json_encode([], JSON_UNESCAPED_UNICODE);
-        $doc->fecha_realizado = new \yii\db\Expression('GETDATE()');
-        $doc->save(false);
-
-        return [
-            'success' => false,
-            'estado'  => 'error',
-            'mensaje' => $doc->error_msg,
-            'logId'   => $doc->id,
-        ];
-    }
-
-    // === 4) Armar JSON (solo enteros) ===
+    // === 3) Armar JSON (solo enteros) ===
     $json = [
         "Relación saldos por ítem V.3" => [],
         "Documentos" => [],
@@ -753,7 +613,7 @@ private function enviarASiesa(\frontend\models\LogFactVmi $doc, $items = [], $ac
         "fecha pronto pago"                  => $doc->fecha_doc ? date('Ymd', strtotime("+15 days", strtotime($doc->fecha_doc))) : '',
     ];
 
-    // === 5) Envío a Siesa ===
+    // === 4) Envío a Siesa ===
     $estadoLog = 'error';
     $responseContent = null;
 
@@ -784,7 +644,7 @@ private function enviarASiesa(\frontend\models\LogFactVmi $doc, $items = [], $ac
         $responseContent = $e->getMessage();
     }
 
-    // === 6) Guardar log ===
+    // === 5) Guardar log ===
     $doc->total_unidades = $totCant;
     $doc->total_costo    = $totCosto;
     $doc->estado         = $estadoLog;
@@ -816,81 +676,6 @@ private function enviarASiesa(\frontend\models\LogFactVmi $doc, $items = [], $ac
         'mensaje' => $responseContent,
         'logId'   => $doc->id,
     ];
-}
-
-/**
- * Mapa de existencias por item/ext/bodega en consignación.
- * key: item|ext1|ext2|bodega
- */
-private function getExistenciaConsignacionMap(array $rows): array
-{
-    $items = [];
-    foreach ($rows as $r) {
-        $it = trim((string)($r['item'] ?? ''));
-        if ($it !== '') {
-            $items[$it] = true;
-        }
-    }
-
-    if (empty($items)) {
-        return [];
-    }
-
-    $placeholders = [];
-    $params = [];
-    $i = 0;
-    foreach (array_keys($items) as $itemId) {
-        $ph = ':item' . $i++;
-        $placeholders[] = $ph;
-        $params[$ph] = $itemId;
-    }
-
-    $sql = "
-        SELECT
-            LTRIM(RTRIM(items.f120_id)) AS item,
-            LTRIM(RTRIM(ISNULL(i.f121_id_ext1_detalle,''))) AS ext1,
-            LTRIM(RTRIM(ISNULL(i.f121_id_ext2_detalle,''))) AS ext2,
-            RIGHT('000' + LTRIM(RTRIM(bodega.f150_id)), 3) AS bodega,
-            SUM(CAST(c.f415_cant_existencia_1 AS INT)) AS existencia
-        FROM t415_cm_existencia_consig c
-        JOIN t121_mc_items_extensiones i
-            ON i.f121_rowid = c.f415_rowid_item_ext
-           AND i.f121_id_cia = 7
-        JOIN t120_mc_items items
-            ON items.f120_rowid = i.f121_rowid_item
-           AND items.f120_id_cia = 7
-        JOIN t150_mc_bodegas bodega
-            ON bodega.f150_rowid = c.f415_rowid_bodega
-           AND bodega.f150_id_cia = 7
-        WHERE c.f415_id_cia = 7
-          AND c.f415_cant_existencia_1 > 0
-          AND items.f120_id IN (" . implode(',', $placeholders) . ")
-        GROUP BY
-            items.f120_id,
-            i.f121_id_ext1_detalle,
-            i.f121_id_ext2_detalle,
-            bodega.f150_id
-    ";
-
-    try {
-        $data = Yii::$app->dbSiesa->createCommand($sql, $params)->queryAll();
-    } catch (\Throwable $e) {
-        Yii::warning('No se pudo consultar existencias de consignación: ' . $e->getMessage(), 'inventario');
-        return [];
-    }
-
-    $map = [];
-    foreach ($data as $r) {
-        $key = implode('|', [
-            trim((string)($r['item'] ?? '')),
-            trim((string)($r['ext1'] ?? '')),
-            trim((string)($r['ext2'] ?? '')),
-            $this->normalizeBodegaId($r['bodega'] ?? ''),
-        ]);
-        $map[$key] = (int)($r['existencia'] ?? 0);
-    }
-
-    return $map;
 }
 
 
