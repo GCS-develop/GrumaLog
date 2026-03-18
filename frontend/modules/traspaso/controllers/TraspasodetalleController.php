@@ -148,7 +148,6 @@ class TraspasodetalleController extends Controller
                 if ($modelitem == null) {
 
                     Yii::$app->session->setFlash('error', 'No existe codigo de barras: ' . $model->codigoitem);
-
                 } else {
 
                     $model->idItem = $modelitem->id;
@@ -183,13 +182,11 @@ class TraspasodetalleController extends Controller
 
                             Yii::$app->session->setFlash('success', 'Guardado exitosamente!');
                             Yii::trace('Modelo guardado correctamente', __METHOD__);
-
                         } else {
 
                             Yii::error('El modelo no es válido. Verifica los datos.', __METHOD__);
 
                             Yii::$app->session->setFlash('error', 'El modelo no es válido, verifica los datos.' . __METHOD__);
-
                         }
                     } else {
 
@@ -197,7 +194,6 @@ class TraspasodetalleController extends Controller
                     }
 
                     return $this->redirect(['create', 'idtraspaso' => $idtraspaso]);
-
                 }
 
                 return $this->redirect(['create', 'idtraspaso' => $idtraspaso]);
@@ -392,8 +388,6 @@ class TraspasodetalleController extends Controller
             'ultimo_codigo' => $ultimo_codigo,
             'cantidad_paquetes' => $cantidad_paquetes,
         ];
-
-
     }
 
     public function actionProcesarFormularioV1($idtraspaso)
@@ -424,7 +418,6 @@ class TraspasodetalleController extends Controller
             if ($modelitem == null) {
 
                 Yii::$app->session->setFlash('error', 'No existe codigo de barras: ' . $codigoBarras);
-
             } else {
 
                 // encuentro mi modelo traspaso
@@ -463,7 +456,6 @@ class TraspasodetalleController extends Controller
                         'error' => ' El item no tiene equivalencia : ' . $modelitem->item
                         // . $modeldetalle->errors . ' - ' . $modeltraspaso->errors
                     ];
-
                 }
 
                 // verifico que en siesa el codigo de barras exista en la bodega origen
@@ -553,7 +545,6 @@ class TraspasodetalleController extends Controller
                             'ultimo_codigo' => $ultimo_codigo,
                             'cantidad_paquetes' => $cantidad_paquetes,
                         ];
-
                     } else {
 
                         // si no puedo guardar dejo mensajes para revisar
@@ -563,21 +554,15 @@ class TraspasodetalleController extends Controller
                         Yii::$app->session->setFlash('error', 'El modelo no es válido, verifica los datos.' . __METHOD__);
 
                         return ['success' => false, 'errors' => $modeldetalle->errors . ' - ' . $modeltraspaso->errors];
-
                     }
-
                 } else {
 
                     Yii::$app->session->setFlash('error', 'Articulo sin existencia para traspaso: ' . $modelitem->id . ' en bodega ' . $modeltraspaso->bodegaOrigen->nombre . ' inventario ' . $inventario);
-
                 }
-
             }
-
         } else {
             throw new \yii\web\BadRequestHttpException('Solicitud no válida');
         }
-
     }
 
 
@@ -744,7 +729,17 @@ class TraspasodetalleController extends Controller
             $printer->text("__________________________________________\n\n");
 
 
-            //IMPRIMIR CODIGO DE BARRAS 1
+            //IMPRIMIR CODIGO DE BARRAS 1 - solo para tiendas
+            if ($model->bodegaOrigen->cedi == 0) {
+                $printer->setBarcodeHeight(80);
+                $printer->setBarcodeTextPosition(Printer::BARCODE_TEXT_BELOW);
+                $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_DOUBLE_WIDTH);
+                $printer->barcode("{A" . $model->bodegaOrigen->codigo, Printer::BARCODE_CODE128);
+                $printer->feed();
+            }
+            $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_DOUBLE_WIDTH);
+            $printer->text("ORIGEN:" . trim($model->bodegaOrigen->codigo) . ' ' . $model->bodegaOrigen->nombre . "\n");
+            //IMPRIMIR CODIGO DE BARRAS 2
             $printer->setBarcodeHeight(80);
             $printer->setBarcodeTextPosition(Printer::BARCODE_TEXT_BELOW);
             $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_DOUBLE_WIDTH);
@@ -752,16 +747,17 @@ class TraspasodetalleController extends Controller
             $printer->feed();
 
             //Info en medio de los codigos de barras
-            $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_DOUBLE_WIDTH);
-            $printer->text("NUMERO CAJAS:" . $model->numeroCajas . "\n");
-            $printer->text("ORIGEN:" . trim($model->bodegaOrigen->codigo) . '-' . $model->bodegaOrigen->nombre . "\n");
-            $printer->text("DESTINO:" . trim($model->bodegaDestino->codigo) . '-' . $model->bodegaDestino->nombre . "\n");
-            $printer->selectPrintMode();
 
+            $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_DOUBLE_WIDTH);
+            $printer->text("NUMEROCAJAS:" . $model->numeroCajas . "\n");
+            $printer->text("DESTINO:" . trim($model->bodegaDestino->codigo) . ' ' . $model->bodegaDestino->nombre . "\n");
+            $printer->selectPrintMode();
+            $heights = array(1, 2, 4, 8, 16, 32);
+            $widths = array(1, 2, 3, 4, 5, 6, 7, 8);
             $printer->text("USUARIO:" . $model->usuario->username . "\n\n");
 
 
-            //IMPRIMIR CODIGO DE BARRAS 2
+            //IMPRIMIR CODIGO DE BARRAS 3
             $printer->setBarcodeHeight(80);
             $printer->setBarcodeTextPosition(Printer::BARCODE_TEXT_BELOW);
             $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_DOUBLE_WIDTH);
@@ -772,7 +768,6 @@ class TraspasodetalleController extends Controller
                 'success' => true,
                 'message' => 'Impresión ejecutada correctamente en la impresora: ' . $impresora->ip,
             ]);
-
         } catch (Exception $e) {
             // Captura de errores específicos como ErrorException
             if (strpos($e->getMessage(), 'trim(): Passing null to parameter #1') !== false) {
@@ -781,7 +776,7 @@ class TraspasodetalleController extends Controller
                 Yii::$app->session->setFlash(
                     'error',
                     'Se intentó usar una función con un valor null, por favor verifica los datos. '
-                    . $e->getFile() . ' linea ' . $e->getLine()
+                        . $e->getFile() . ' linea ' . $e->getLine()
                 );
             } else {
                 // Maneja otros tipos de ErrorException
@@ -792,16 +787,13 @@ class TraspasodetalleController extends Controller
                 );
             }
             return ['success' => false, $this->redirect(Yii::$app->request->referrer)];
-
         } finally {
 
             Yii::trace('Impresion finalizada ' . $impresora->ip);
 
             $printer->cut();
             $printer->close();
-
         }
-
     }
     /**
      * Deletes an existing Traspasodetalle model.
@@ -896,9 +888,6 @@ class TraspasodetalleController extends Controller
             //     return json_encode(['success' => false, 'message' => 'No se seleccionaron registros']);
             // }
         }
-
-
-
     }
 
     public function actionEliminar()
@@ -995,7 +984,6 @@ class TraspasodetalleController extends Controller
             if (!$detalle->delete()) {
                 return "Error al eliminar el detalle ID {$detalle->id}.";
             }
-
         } else {
             // Se va a reducir parcialmente la cantidad
             $valoreliminacion = $cantidad * $equivalencia;
@@ -1161,9 +1149,7 @@ class TraspasodetalleController extends Controller
                             return implode(' | ', $e);
                         }, $model->getErrors()))
                     ]);
-
                 }
-
             } else {
                 if (!$model->delete()) {
                     return $this->asJson([
@@ -1172,7 +1158,6 @@ class TraspasodetalleController extends Controller
                             return implode(' | ', $e);
                         }, $model->getErrors()))
                     ]);
-
                 }
             }
 
@@ -1226,7 +1211,7 @@ class TraspasodetalleController extends Controller
 
         // SearchModel para el comparativo
         $searchModel = new TraspasodetalletiendaSearch();
-        $dataProvider = $searchModel->searchComparativoSiesa(Yii::$app->request->queryParams, $datosSiesa, );
+        $dataProvider = $searchModel->searchComparativoSiesa(Yii::$app->request->queryParams, $datosSiesa,);
 
         return $this->render('comparativo-siesa', [
             'searchModel' => $searchModel,
@@ -1234,7 +1219,4 @@ class TraspasodetalleController extends Controller
             'modelTraspaso' => $modelTraspaso,
         ]);
     }
-
-
-
 }

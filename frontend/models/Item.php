@@ -277,7 +277,7 @@ class Item extends \yii\db\ActiveRecord
     public static function obtenerPrecioVenta2($codigoEAN, $fecha_activacion)
     {
         ///obtiene el ultimo precio de venta pedido por fannor
-        $resultado = OrdendecompraSIESA::obtenerDatosPrecioVenta2($codigoEAN, $fecha_activacion, '001');
+        $resultado = OrdendecompraSIESA::obtenerUltimoPrecioVenta($codigoEAN, '001');
         if (!empty($resultado)) {
             foreach ($resultado as $dato) {
                 return $dato['f126_precio'];

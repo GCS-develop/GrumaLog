@@ -62,6 +62,7 @@ class TraspasodashboardController extends Controller
         $dataUnidades = array_map(fn($r) => (float)($r['total_unidades_eq'] ?? 0), $rows); // equivalentes
         $dataRegs     = array_map(fn($r) => (int)  ($r['total_registros']   ?? 0), $rows);
         $dataVel      = array_map(fn($r) => (float)($r['velocidad_uph']     ?? 0), $rows);
+        $dataHoras    = array_map(fn($r) => (int)  ($r['dur_seconds']       ?? 0), $rows);
 
         return $this->render('index', [
             'searchModel'           => $searchModel,
@@ -77,6 +78,7 @@ class TraspasodashboardController extends Controller
             'dataUnidades'          => $dataUnidades,
             'dataRegs'              => $dataRegs,
             'dataVel'               => $dataVel,
+            'dataHoras'             => $dataHoras,
         ]);
     }
 }

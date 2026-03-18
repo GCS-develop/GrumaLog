@@ -19,7 +19,8 @@ class InventarioSearch extends Inventario
     {
         return [
             [['id', 'item', 'idItem', 'created_by', 'updated_by'], 'integer'],
-            [['codigoBarras', 'codigoBodega', 'fechaUltimaActualizacion', 'created_at', 'updated_at', 'talla', 'color'], 'safe'],
+            [['codigoBarras', 'fechaUltimaActualizacion', 'created_at', 'updated_at', 'talla', 'color'], 'safe'],
+            [['codigoBodega'], 'each', 'rule' => ['safe']],
             [['existencia'], 'number'],
         ];
     }
@@ -82,9 +83,11 @@ class InventarioSearch extends Inventario
             'inv.updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['like', 'inv.codigoBarras', $this->codigoBarras])
-            // ->andFilterWhere(['like', 'inv.codigoBodega', $this->codigoBodega]);
-            ->andFilterWhere(['=', 'inv.codigoBodega', $this->codigoBodega]);
+        $query->andFilterWhere(['like', 'inv.codigoBarras', $this->codigoBarras]);
+
+        if (!empty($this->codigoBodega)) {
+            $query->andWhere(['in', 'inv.codigoBodega', (array)$this->codigoBodega]);
+        }
 
         // ->andFilterWhere(['like', new \yii\db\Expression('LTRIM(RTRIM(inv.codigoBodega))'), trim($this->codigoBodega)]);
 

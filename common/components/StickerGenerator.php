@@ -20,9 +20,9 @@ class StickerGenerator
 			$item = Item::findOne($detalle->idItem);
 			if (!$item) continue;
 
-			$precio = Item::obtenerPrecioVenta($item->codigoBarras, $fecha_activacion);
+			$precio = Item::obtenerPrecioVenta2($item->codigoBarras, '001');
 
-			$CantidadDetalle = $cantidad > 0 ? (int) $cantidad : (int) $detalle->cantidadPedida; 
+			$CantidadDetalle = $cantidad > 0 ? (int) $cantidad : (int) $detalle->cantidadPedida;
 
 			// if ($cantidad > 0) {
 			// 	$cantidad = (int) $cantidad;
@@ -30,7 +30,7 @@ class StickerGenerator
 			// 	$cantidad = (int) $detalle->cantidadPedida;
 			// }
 
-			$ImprimirCantidad [] = $CantidadDetalle;
+			$ImprimirCantidad[] = $CantidadDetalle;
 
 			for ($i = 0; $i < $CantidadDetalle; $i++) {
 				$stickers[] = ['item' => $item, 'precio' => $precio];

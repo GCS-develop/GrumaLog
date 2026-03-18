@@ -96,60 +96,53 @@ class Inventario extends \yii\db\ActiveRecord
     //  TUS MÉTODOS EXISTENTES
     // ============================
 
+    /**
+     * Normaliza el parámetro de bodega(s) a un array limpio de códigos.
+     * Acepta null, string o array.
+     */
+    private static function normalizeBodegas($codigoBodega): array
+    {
+        if (empty($codigoBodega)) return [];
+        $list = is_array($codigoBodega) ? $codigoBodega : [$codigoBodega];
+        return array_values(array_filter(array_map('trim', $list)));
+    }
+
     public static function getotalExistenciasGruma($codigoBodega = null)
     {
         $query = self::find();
-
-        if ($codigoBodega !== null && trim($codigoBodega) !== '') {
-            $query->andWhere(['codigoBodega' => trim($codigoBodega)]);
+        $bodegas = self::normalizeBodegas($codigoBodega);
+        if (!empty($bodegas)) {
+            $query->andWhere(['in', 'codigoBodega', $bodegas]);
         }
-
         return $query->sum('existencia');
     }
 
     public static function getTotalExistenciasSiesa($codigoBodega = null)
     {
-        $codigoBodega == '' && $codigoBodega = null;
-
-        $codigosLocales = self::getCodigosBodegaUnicos();
-
-        // Si no hay códigos, retornar 0 directamente
-        if (empty($codigosLocales)) {
-            return 0;
+        $bodegas = self::normalizeBodegas($codigoBodega);
+        if (empty($bodegas)) {
+            $bodegas = self::getCodigosBodegaUnicos();
         }
+        if (empty($bodegas)) return 0;
 
-        // Crear placeholders para IN (...)
         $placeholders = [];
-        foreach ($codigosLocales as $index => $codigo) {
-            $placeholders[] = ":id{$index}";
+        foreach ($bodegas as $i => $cod) {
+            $placeholders[] = ":id{$i}";
         }
 
         $sql = "
-        SELECT SUM(t400.f400_cant_existencia_1) 
+        SELECT SUM(t400.f400_cant_existencia_1)
         FROM t400_cm_existencia t400
         INNER JOIN t150_mc_bodegas t150 ON t400.f400_rowid_bodega = t150.f150_rowid
         LEFT JOIN t131_mc_items_barras t131 ON t400.f400_rowid_item_ext = t131.f131_rowid_item_ext
-        WHERE (
-            (:codigoBodega IS NULL AND f150_id IN (" . implode(',', $placeholders) . ")) 
-            OR f150_id = :codigoBodega
-        )";
+        WHERE f150_id IN (" . implode(',', $placeholders) . ")";
 
         $command = \Yii::$app->dbSiesa->createCommand($sql);
-
-        // Parámetro principal
-        if ($codigoBodega !== null) {
-            $command->bindValue(':codigoBodega', $codigoBodega, \PDO::PARAM_INT);
-        } else {
-            $command->bindValue(':codigoBodega', null, \PDO::PARAM_NULL);
-        }
-
-        // Agregar dinámicamente los valores para IN (...)
-        foreach ($codigosLocales as $index => $codigo) {
-            $command->bindValue(":id{$index}", $codigo, \PDO::PARAM_STR);
+        foreach ($bodegas as $i => $cod) {
+            $command->bindValue(":id{$i}", $cod, \PDO::PARAM_STR);
         }
 
         $existencia = $command->queryScalar();
-
         return $existencia !== false ? $existencia : 0;
     }
 
@@ -172,23 +165,32 @@ class Inventario extends \yii\db\ActiveRecord
      */
     public static function getotalExistenciasGrumaReal($codigoBodega = null)
     {
+        $bodegas = self::normalizeBodegas($codigoBodega);
         $params = [];
         $where = "1=1";
 
-        if ($codigoBodega !== null && trim($codigoBodega) !== '') {
-            $where .= " AND codigoBodega = :bod";
-            $params[':bod'] = trim($codigoBodega);
+        if (!empty($bodegas)) {
+            $placeholders = [];
+            foreach ($bodegas as $i => $cod) {
+                $placeholders[] = ":bod{$i}";
+                $params[":bod{$i}"] = $cod;
+            }
+            $where .= " AND inv.codigoBodega IN (" . implode(',', $placeholders) . ")";
         }
 
         $sql = "
         SELECT COALESCE(SUM(x.existencia),0) AS total_real
         FROM (
             SELECT
-                idItem,
-                MAX(COALESCE(existencia,0)) AS existencia
-            FROM inventario
+                inv.codigoBodega,
+                i.item,
+                i.idColor,
+                i.idTalla,
+                MAX(COALESCE(inv.existencia,0)) AS existencia
+            FROM inventario inv
+            JOIN item i ON i.id = inv.idItem
             WHERE {$where}
-            GROUP BY idItem
+            GROUP BY inv.codigoBodega, i.item, i.idColor, i.idTalla
         ) x
     ";
 
@@ -209,17 +211,14 @@ class Inventario extends \yii\db\ActiveRecord
      */
     public static function getTotalExistenciasSiesaReal($codigoBodega = null)
     {
-        $codigoBodega = ($codigoBodega === '' ? null : $codigoBodega);
-
-        // Si no envían bodega, replico tu lógica: sumar solo para bodegas existentes localmente
-        $codigosLocales = self::getCodigosBodegaUnicos();
-        if (empty($codigosLocales)) {
-            return 0;
+        $bodegas = self::normalizeBodegas($codigoBodega);
+        if (empty($bodegas)) {
+            $bodegas = self::getCodigosBodegaUnicos();
         }
+        if (empty($bodegas)) return 0;
 
-        // placeholders IN
         $placeholders = [];
-        foreach ($codigosLocales as $i => $cod) {
+        foreach ($bodegas as $i => $cod) {
             $placeholders[] = ":bod{$i}";
         }
 
@@ -228,22 +227,11 @@ class Inventario extends \yii\db\ActiveRecord
         FROM t400_cm_existencia t400
         JOIN t150_mc_bodegas t150
           ON t400.f400_rowid_bodega = t150.f150_rowid
-        WHERE
-            (
-                (:codigoBodega IS NULL AND t150.f150_id IN (" . implode(',', $placeholders) . "))
-                OR t150.f150_id = :codigoBodega
-            )
+        WHERE t150.f150_id IN (" . implode(',', $placeholders) . ")
     ";
 
         $cmd = Yii::$app->dbSiesa->createCommand($sql);
-
-        if ($codigoBodega !== null) {
-            $cmd->bindValue(':codigoBodega', $codigoBodega, \PDO::PARAM_STR);
-        } else {
-            $cmd->bindValue(':codigoBodega', null, \PDO::PARAM_NULL);
-        }
-
-        foreach ($codigosLocales as $i => $cod) {
+        foreach ($bodegas as $i => $cod) {
             $cmd->bindValue(":bod{$i}", $cod, \PDO::PARAM_STR);
         }
 

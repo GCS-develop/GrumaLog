@@ -83,6 +83,9 @@ class TraspasoDashboardSearch extends Model
         $q->andWhere(['between', $conv, $inicio, $fin]);
         $q->andWhere(new Expression('TRY_CAST([[td]].[[created_at]] AS datetime2) IS NOT NULL'));
 
+        // Excluir traspasos anulados (idEstado = 2)
+        $q->andWhere(['!=', 't.idEstado', 2]);
+
         // Filtros opcionales
         if ($this->user_id) {
             $q->andWhere(['td.created_by' => (int)$this->user_id]);

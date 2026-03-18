@@ -106,7 +106,7 @@ $gridColumns = [
         'hAlign' => 'right', // Alineación horizontal al centro
         'vAlign' => 'middle', // Alineación vertical al centro
         'value' => function ($model) {
-            $resultado = OrdendecompraSIESA::obtenerDatosPrecioVenta($model->codigoEAN, $model->fecha_activacion, '001');
+            $resultado = OrdendecompraSIESA::obtenerUltimoPrecioVenta($model->codigoEAN, '001');
             if (!empty($resultado)) {
                 foreach ($resultado as $dato) {
                     return $dato['f126_precio'];

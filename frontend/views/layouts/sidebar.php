@@ -243,6 +243,7 @@ $baseUrl = Url::base(true);
                                     ['label' => 'Conductores', 'url' => ['/despacho/conductor/index'], 'iconStyle' => 'far'],
                                     ['label' => 'Vehículos', 'url' => ['/despacho/vehiculo/index'], 'iconStyle' => 'far'],
                                     ['label' => 'Usuarios', 'url' => ['/nomina/userdespacho/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Tipos Doc. Despacho', 'url' => ['/despacho/tipodocumentodespacho/index'], 'iconStyle' => 'far'],
                                 ]
                             ],
                         ]
@@ -256,6 +257,14 @@ $baseUrl = Url::base(true);
                             ['label' => 'Importar', 'url' => ['/devolucion/devolucionimportacion/index'], 'iconStyle' => 'far'],
                             ['label' => 'Registrar Documento', 'url' => ['/devolucion/devoluciondocumento/register'], 'iconStyle' => 'far'],
                             ['label' => 'Consultar', 'url' => ['/devolucion/devoluciondocumentodetalle/indexall'], 'iconStyle' => 'far'],
+                        ]
+                    ],
+                    [
+                        'label' => 'Compras',
+                        'icon' => 'shopping-cart',
+                        'badge' => '<span class="right badge badge-info">1</span>',
+                        'items' => [
+                            ['label' => 'Importar Archivo', 'url' => ['/compras/importacion/index'], 'iconStyle' => 'far'],
                         ]
                     ],
                     [

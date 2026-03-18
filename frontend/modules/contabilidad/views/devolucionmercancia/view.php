@@ -17,7 +17,7 @@ $totalCosto    = !empty($detalleValidos) ? array_sum(array_column($detalleValido
 $valorDocumento = isset($documento['valor_documento']) ? (float)$documento['valor_documento'] : 0;
 
 // Calcular diferencia para detectar descuadres
-$diferencia = round($valorDocumento - $totalCosto, 2);
+$diferencia = (int) round($valorDocumento - $totalCosto, 0);
 ?>
 <h1><?= Html::encode($this->title) ?></h1>
 
@@ -43,16 +43,16 @@ $diferencia = round($valorDocumento - $totalCosto, 2);
             </tr>
             <tr>
                 <th>Valor Documento (enviado a Siesa)</th>
-                <td class="text-end fw-bold">$ <?= number_format($valorDocumento, 2, ',', '.') ?></td>
+                <td class="text-end fw-bold">$ <?= number_format($valorDocumento, 0, ',', '.') ?></td>
             </tr>
             <tr>
                 <th>Total calculado (según detalle)</th>
-                <td class="text-end fw-bold">$ <?= number_format($totalCosto, 2, ',', '.') ?></td>
+                <td class="text-end fw-bold">$ <?= number_format($totalCosto, 0, ',', '.') ?></td>
             </tr>
             <tr>
                 <th>Diferencia</th>
                 <td class="text-end <?= abs($diferencia) > 0.01 ? 'text-danger fw-bold' : 'text-success' ?>">
-                    $ <?= number_format($diferencia, 2, ',', '.') ?>
+                    $ <?= number_format($diferencia, 0, ',', '.') ?>
                     <?= abs($diferencia) > 0.01 ? '⚠ Descuadre detectado' : '✔ Cuadrado' ?>
                 </td>
             </tr>
@@ -122,8 +122,8 @@ $diferencia = round($valorDocumento - $totalCosto, 2);
                     <td><?= Html::encode($row['unidad']) ?></td>
                     <td><?= Html::encode($row['bodega']) ?></td>
                     <td class="text-end"><?= number_format($row['cantidad'], 0, ',', '.') ?></td>
-                    <td class="text-end"><?= number_format($row['precio_unitario'], 2, ',', '.') ?></td>
-                    <td class="text-end"><?= number_format($row['costo_total'], 2, ',', '.') ?></td>
+                    <td class="text-end"><?= number_format($row['precio_unitario'], 0, ',', '.') ?></td>
+                    <td class="text-end"><?= number_format($row['costo_total'], 0, ',', '.') ?></td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
@@ -132,7 +132,7 @@ $diferencia = round($valorDocumento - $totalCosto, 2);
                 <td colspan="6" class="text-end">TOTALES</td>
                 <td class="text-end"><?= number_format($totalUnidades, 0, ',', '.') ?></td>
                 <td></td>
-                <td class="text-end">$ <?= number_format($totalCosto, 2, ',', '.') ?></td>
+                <td class="text-end">$ <?= number_format($totalCosto, 0, ',', '.') ?></td>
             </tr>
         </tfoot>
     </table>

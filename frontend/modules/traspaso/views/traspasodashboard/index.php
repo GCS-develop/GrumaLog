@@ -14,6 +14,7 @@
 /** @var $dataUnidades array */  // equivalentes
 /** @var $dataRegs array */
 /** @var $dataVel array */
+/** @var $dataHoras array */
 
 use frontend\models\Bodegas;
 use frontend\models\Usertraspaso;
@@ -146,7 +147,7 @@ $this->title = 'Dashboard de Traspasos';
             <div class="card kpi-card shadow-sm border-0 h-100">
                 <div class="card-body">
                     <div class="text-muted small mb-1">Unidades (equiv.)</div>
-                    <div class="display-6 mb-1"><?= number_format($totalUnidadesEq, 2, ',', '.') ?></div>
+                    <div class="display-6 mb-1" id="kpi-unidades"><?= number_format($totalUnidadesEq, 2, ',', '.') ?></div>
                     <div class="text-muted small">Suma cantidad × equivalencia</div>
                 </div>
             </div>
@@ -155,7 +156,7 @@ $this->title = 'Dashboard de Traspasos';
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <div class="text-muted small">Registros</div>
-                    <div class="display-6"><?= number_format($totalRegistros, 0, ',', '.') ?></div>
+                    <div class="display-6" id="kpi-registros"><?= number_format($totalRegistros, 0, ',', '.') ?></div>
                     <div class="text-muted small">Líneas del rango</div>
                 </div>
             </div>
@@ -164,7 +165,7 @@ $this->title = 'Dashboard de Traspasos';
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <div class="text-muted small">Velocidad del grupo</div>
-                    <div class="display-6"><?= number_format($velocidadGrupo, 2, ',', '.') ?> UPH</div>
+                    <div class="display-6" id="kpi-velocidad"><?= number_format($velocidadGrupo, 2, ',', '.') ?> UPH</div>
                     <div class="text-muted small">Basada en unidades (equiv.)</div>
                 </div>
             </div>
@@ -173,7 +174,7 @@ $this->title = 'Dashboard de Traspasos';
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <div class="text-muted small">Horas-persona</div>
-                    <div class="display-6"><?= number_format($totalSegundosPersona / 3600, 2, ',', '.') ?></div>
+                    <div class="display-6" id="kpi-horas"><?= number_format($totalSegundosPersona / 3600, 2, ',', '.') ?></div>
                     <div class="text-muted small">Σ duración por usuario</div>
                 </div>
             </div>
@@ -352,6 +353,7 @@ $this->registerJsVar('dashboardData', [
     'unidades' => array_values($dataUnidades),
     'regs'     => array_values($dataRegs),
     'vel'      => array_values($dataVel),
+    'horas'    => array_values($dataHoras),
 ]);
 
 // Carga Chart.js local (sin CDN)

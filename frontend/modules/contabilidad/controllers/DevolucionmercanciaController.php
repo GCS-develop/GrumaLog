@@ -24,7 +24,7 @@ class DevolucionmercanciaController extends Controller
     if ($model->load(Yii::$app->request->get()) && $model->validate()) {
         $db = Yii::$app->dbSiesa;
 
-        // ðŸ”¹ Normalizamos parÃ¡metros
+        // Ã°Å¸â€Â¹ Normalizamos parÃƒÂ¡metros
         $params = [
             ':fecha_inicio'   => $model->fecha_inicio,
             ':fecha_fin'      => $model->fecha_fin,
@@ -34,7 +34,7 @@ class DevolucionmercanciaController extends Controller
             ':proveedor'      => $model->proveedor ?: null,
         ];
 
-        // ðŸ”¹ Consulta principal
+        // Ã°Å¸â€Â¹ Consulta principal
         $sql = "
             SELECT 
                 D.f350_id_tipo_docto AS tipo_documento,
@@ -78,10 +78,10 @@ class DevolucionmercanciaController extends Controller
         $rows = $db->createCommand($sql, $params)->queryAll();
         $data = $rows;
 
-        // ðŸ”¹ Guardamos en sesiÃ³n para usar despuÃ©s en actionGenerar
+        // Ã°Å¸â€Â¹ Guardamos en sesiÃƒÂ³n para usar despuÃƒÂ©s en actionGenerar
         Yii::$app->session->set('devoluciones_data', $rows);
 
-        // ðŸ”¹ Ajuste de existencias (si se pidiÃ³)
+        // Ã°Å¸â€Â¹ Ajuste de existencias (si se pidiÃƒÂ³)
         if (Yii::$app->request->get('ajustar') == 1) {
             foreach ($rows as $row) {
                 $item     = $row['v121_id_item'];
@@ -150,19 +150,19 @@ class DevolucionmercanciaController extends Controller
                         'item'    => $item,
                         'bodega'  => $bodega,
                         'estado'  => 'AJUSTADO',
-                        'mensaje' => "Se ajustÃ³ con existencia desde bodega {$bodegaOrigen}",
+                        'mensaje' => "Se ajustÃƒÂ³ con existencia desde bodega {$bodegaOrigen}",
                     ];
                 } else {
                     $resultados[] = [
                         'item'    => $item,
                         'bodega'  => $bodega,
                         'estado'  => 'SIN EXISTENCIA',
-                        'mensaje' => "No se encontrÃ³ existencia en ninguna bodega",
+                        'mensaje' => "No se encontrÃƒÂ³ existencia en ninguna bodega",
                     ];
                 }
             }
 
-// ðŸ”¹ Guardamos los datos ajustados (detalle + resultados) en sesiÃ³n
+// Ã°Å¸â€Â¹ Guardamos los datos ajustados (detalle + resultados) en sesiÃƒÂ³n
             Yii::$app->session->set('devoluciones_data_ajustada', [
                 'detalle'    => $rows,
                 'data'       => $data,
@@ -219,7 +219,7 @@ public function actionGenerar()
         $detalleFinal = [];
 
         // =========================
-        // 1ï¸âƒ£ AGRUPAR DETALLES POR ITEM + EXT1 + EXT2
+        // 1Ã¯Â¸ÂÃ¢Æ’Â£ AGRUPAR DETALLES POR ITEM + EXT1 + EXT2
         // =========================
         $agrupados = [];
         foreach ($detalle as $row) {
@@ -233,7 +233,7 @@ public function actionGenerar()
         }
 
         // =========================
-        // 2ï¸âƒ£ PROCESAR CADA GRUPO UNA SOLA VEZ
+        // 2Ã¯Â¸ÂÃ¢Æ’Â£ PROCESAR CADA GRUPO UNA SOLA VEZ
         // =========================
         foreach ($agrupados as $grupo) {
             $item      = trim($grupo['v121_id_item']);
@@ -244,10 +244,11 @@ public function actionGenerar()
             $costoUnitario = (float)$grupo['costo_unitario'];
             $faltante  = (int)$grupo['cantidad_total'];
 
-            // Buscar existencias reales vÃ¡lidas (solo > 0)
+            // Buscar existencias reales vÃƒÂ¡lidas (solo > 0)
             $existencias = Yii::$app->dbSiesa->createCommand("
                 SELECT b.F150_ID AS bodega,
-                       CASE WHEN c.f415_cant_existencia_1 < 0 THEN 0 ELSE c.f415_cant_existencia_1 END AS saldo
+                       CASE WHEN c.f415_cant_existencia_1 < 0 THEN 0 ELSE c.f415_cant_existencia_1 END AS saldo,
+                       CAST(ISNULL(c.F415_COSTO_PROM_TOT, 0) AS DECIMAL(18,6)) AS costo_total_existencia
                 FROM t415_cm_existencia_consig c
                 INNER JOIN v121 v ON c.f415_rowid_item_ext = v.v121_rowid_item_ext
                 INNER JOIN t150_mc_bodegas b ON c.f415_rowid_bodega = b.f150_rowid
@@ -255,9 +256,10 @@ public function actionGenerar()
                   AND RTRIM(LTRIM(v.v121_id_ext1_detalle)) = :ext1
                   AND RTRIM(LTRIM(v.v121_id_ext2_detalle)) = :ext2
                   AND ISNULL(c.f415_cant_existencia_1, 0) > 0
+                  AND ISNULL(c.F415_COSTO_PROM_TOT, 0) > 0
                   AND c.f415_id_cia = :cia
                   AND b.f150_id_cia = :cia
-                ORDER BY c.f415_cant_existencia_1 DESC
+                ORDER BY c.f415_cant_existencia_1 DESC, c.F415_COSTO_PROM_TOT DESC
             ", [
                 ':item' => $item,
                 ':ext1' => $ext1,
@@ -273,7 +275,13 @@ public function actionGenerar()
                     $usar = min($faltante, (int)$ex['saldo']);
                     if ($usar <= 0) continue;
 
-                    $costoTotal = (int)floor($usar * $costoUnitario);
+                    $saldoExistencia = (float)($ex['saldo'] ?? 0);
+                    $costoTotalExistencia = (float)($ex['costo_total_existencia'] ?? 0);
+                    $costoUnitarioReal = $saldoExistencia > 0
+                        ? ($costoTotalExistencia / $saldoExistencia)
+                        : $costoUnitario;
+                    $precioUnitario = (int) floor($costoUnitarioReal);
+                    $costoTotal = (int) floor($usar * $costoUnitarioReal);
 
                     Yii::$app->db->createCommand()->insert('devolucionmercancia_detalle', [
                         'documento_id'   => $id,
@@ -284,7 +292,7 @@ public function actionGenerar()
                         'unidad'         => $unidad,
                         'bodega'         => $this->normalizeBodegaId($ex['bodega'] ?? ''),
                         'cantidad'       => $usar,
-                        'precio_unitario'=> (int)floor($costoUnitario),
+                        'precio_unitario'=> $precioUnitario,
                         'costo_total'    => $costoTotal,
                         'sin_existencia' => 0,
                     ])->execute();
@@ -297,7 +305,7 @@ public function actionGenerar()
                         'unidad'         => $unidad,
                         'bodega'         => $this->normalizeBodegaId($ex['bodega'] ?? ''),
                         'cantidad'       => $usar,
-                        'costo_unitario' => (int)floor($costoUnitario),
+                        'costo_unitario' => $precioUnitario,
                         'costo_total'    => $costoTotal,
                         'sin_existencia' => 0,
                     ];
@@ -306,7 +314,7 @@ public function actionGenerar()
                 }
             }
 
-            // Si todavÃ­a queda faltante, registrar lÃ­nea sin existencia (una sola)
+            // Si todavÃƒÂ­a queda faltante, registrar lÃƒÂ­nea sin existencia (una sola)
             if ($faltante > 0) {
                 $costoTotal = (int)floor($faltante * $costoUnitario);
 
@@ -340,7 +348,7 @@ public function actionGenerar()
         }
 
         // =========================
-        // 3ï¸âƒ£ CALCULAR TOTAL REAL
+        // 3Ã¯Â¸ÂÃ¢Æ’Â£ CALCULAR TOTAL REAL
         // =========================
         $totalExacto = 0;
         foreach ($detalleFinal as $d) {
@@ -355,7 +363,7 @@ public function actionGenerar()
         ], ['id' => $id])->execute();
 
         // =========================
-        // 4ï¸âƒ£ ENVIAR A SIESA
+        // 4Ã¯Â¸ÂÃ¢Æ’Â£ ENVIAR A SIESA
         // =========================
         $doc = Yii::$app->db->createCommand("
             SELECT * FROM devolucionmercancia_documento WHERE id = :id
@@ -457,7 +465,7 @@ public function actionReenviar($id)
     ", [':id' => $id])->queryAll();
 
     if (empty($detalle)) {
-        return ['success' => false, 'mensaje' => 'No se encontrÃ³ detalle para este documento.'];
+        return ['success' => false, 'mensaje' => 'No se encontrÃƒÂ³ detalle para este documento.'];
     }
 
     $resultado = $this->enviarASiesa($documento, $detalle, true);
@@ -482,14 +490,14 @@ private function enviarASiesa($doc, $items = [], $actualizar = false)
         'updated_at'=> new Expression('GETDATE()'),
     ], ['id' => $doc['id']])->execute();
 
-    // === 1) Filtrar Ã­tems vÃ¡lidos (con existencia y cantidad vÃ¡lida)
+    // === 1) Filtrar ÃƒÂ­tems vÃƒÂ¡lidos (con existencia y cantidad vÃƒÂ¡lida)
     $items = array_filter($items, function($it) {
         if (!isset($it['cantidad']) || $it['cantidad'] <= 0) return false;
         if (isset($it['sin_existencia']) && $it['sin_existencia'] == 1) return false;
         return true;
     });
 
-    // === 2) Agrupar Ã­tems (por item + ext1 + ext2 + bodega)
+    // === 2) Agrupar ÃƒÂ­tems (por item + ext1 + ext2 + bodega)
     $agrupados = [];
     foreach ($items as $it) {
         $itemId = $it['item'] ?? ($it['v121_id_item'] ?? null);
@@ -505,8 +513,10 @@ private function enviarASiesa($doc, $items = [], $actualizar = false)
         if (!isset($agrupados[$key])) {
             $agrupados[$key] = [
                 'item'           => trim($itemId),
+                'descripcion'    => trim((string)($it['descripcion'] ?? '')),
                 'extension1'     => trim($it['extension1'] ?? ''),
                 'extension2'     => trim($it['extension2'] ?? ''),
+                'unidad'         => trim((string)($it['unidad'] ?? 'UND')),
                 'bodega'         => $this->normalizeBodegaId($it['bodega'] ?? ''),
                 'cantidad'       => (int)($it['cantidad'] ?? 0),
                 'costo_unitario' => (float)($it['costo_unitario'] ?? $it['precio_unitario'] ?? 0),
@@ -516,7 +526,7 @@ private function enviarASiesa($doc, $items = [], $actualizar = false)
         }
     }
 
-    // === 3) Normalizar totales â€” SIN decimales (enteros)
+    // === 3) Normalizar totales Ã¢â‚¬â€ SIN decimales (enteros)
     $itemsFinal = [];
     $totCosto   = 0;
 
@@ -526,11 +536,13 @@ private function enviarASiesa($doc, $items = [], $actualizar = false)
         $cantidad = (int)$n['cantidad'];
         $pu       = (float)$n['costo_unitario'];
 
-        $costoTot = (int) floor($cantidad * $pu); // ðŸ”¹ truncado (entero)
+        $costoTot = (int) floor($cantidad * $pu); // Ã°Å¸â€Â¹ truncado (entero)
         $itemsFinal[] = [
             'item'           => $n['item'],
+            'descripcion'    => $n['descripcion'] ?? '',
             'extension1'     => $n['extension1'],
             'extension2'     => $n['extension2'],
+            'unidad'         => $n['unidad'] ?? 'UND',
             'bodega'         => $n['bodega'],
             'cantidad'       => $cantidad,
             'costo_unitario' => (int) floor($pu),
@@ -542,13 +554,14 @@ private function enviarASiesa($doc, $items = [], $actualizar = false)
     // Revalidar existencia en vivo para no enviar saldos negativos
     $itemsAjustados = [];
     foreach ($itemsFinal as $n) {
-        $disponible = $this->consultarExistenciaConsignacion(
+        $existencia = $this->consultarExistenciaConsignacion(
             (string)$n['item'],
             (string)$n['extension1'],
             (string)$n['extension2'],
             (string)$n['bodega']
         );
 
+        $disponible = (int)($existencia['cantidad'] ?? 0);
         if ($disponible <= 0) {
             continue;
         }
@@ -558,11 +571,18 @@ private function enviarASiesa($doc, $items = [], $actualizar = false)
             continue;
         }
 
-        $pu = (int)$n['costo_unitario'];
+        $saldoExistencia = (float)($existencia['cantidad'] ?? 0);
+        $costoTotalExistencia = (float)($existencia['costo_total'] ?? 0);
+        $puCalculado = $saldoExistencia > 0
+            ? ($costoTotalExistencia / $saldoExistencia)
+            : (float)$n['costo_unitario'];
+        $pu = (int) floor($puCalculado);
         $itemsAjustados[] = [
             'item'           => $n['item'],
+            'descripcion'    => $n['descripcion'] ?? '',
             'extension1'     => $n['extension1'],
             'extension2'     => $n['extension2'],
+            'unidad'         => $n['unidad'] ?? 'UND',
             'bodega'         => $n['bodega'],
             'cantidad'       => $usar,
             'costo_unitario' => $pu,
@@ -588,17 +608,45 @@ private function enviarASiesa($doc, $items = [], $actualizar = false)
         ];
     }
 
-    // === 4) Armar JSON â€” Usa el valor de documento exacto desde cabecera
-    $valorDocumento = (int) $totCosto;
+    if (!$actualizar) {
+        Yii::$app->db->createCommand()->delete('devolucionmercancia_detalle', [
+            'documento_id' => $doc['id'],
+        ])->execute();
+
+        foreach ($itemsFinal as $n) {
+            Yii::$app->db->createCommand()->insert('devolucionmercancia_detalle', [
+                'documento_id'    => $doc['id'],
+                'item'            => $n['item'],
+                'descripcion'     => $n['descripcion'] ?? '',
+                'extension1'      => $n['extension1'],
+                'extension2'      => $n['extension2'],
+                'unidad'          => $n['unidad'] ?? 'UND',
+                'bodega'          => $this->normalizeBodegaId($n['bodega'] ?? ''),
+                'cantidad'        => (int)$n['cantidad'],
+                'precio_unitario' => (int)$n['costo_unitario'],
+                'costo_total'     => (int)$n['costo_total'],
+                'sin_existencia'  => 0,
+            ])->execute();
+        }
+    }
+
+    // === 4) Armar JSON Ã¢â‚¬â€ Usa el valor de documento exacto desde cabecera
+        $valorDocumento = (int) $totCosto;
+    $secRelacion = json_decode('"\u0052elaci\u00f3n saldos por \u00edtem V.3"');
+    $secDocumentos = 'Documentos';
+    $secCuotas = 'Cuotas CxP';
+    $kCentroOperacion = json_decode('"Centro de operaci\u00f3n"');
+    $kCondicionPago = json_decode('"Condici\u00f3n de pago"');
+    $kCentroOperacionDocumento = json_decode('"Centro de operaci\u00f3n del documento"');
     $json = [
-        "RelaciÃ³n saldos por Ã­tem V.3" => [],
-        "Documentos" => [],
-        "Cuotas CxP" => [],
+        $secRelacion => [],
+        $secDocumentos => [],
+        $secCuotas => [],
     ];
 
     foreach ($itemsFinal as $n) {
-        $json["RelaciÃ³n saldos por Ã­tem V.3"][] = [
-            "Centro de operaciÃ³n"      => "002",
+        $json[$secRelacion][] = [
+            $kCentroOperacion           => "002",
             "Tipo de documento"        => $doc['tipo_documento'],
             "Consecutivo de documento" => "1",
             "Item"                     => $n['item'],
@@ -613,8 +661,8 @@ private function enviarASiesa($doc, $items = [], $actualizar = false)
         ];
     }
 
-    $json["Documentos"][] = [
-        "Centro de operaciÃ³n"                => "002",
+    $json[$secDocumentos][] = [
+        $kCentroOperacion           => "002",
         "Tipo de documento"                  => $doc['tipo_documento'],
         "Consecutivo de documento"           => "1",
         "Fecha del documento AAAAMMDD"       => date('Ymd', strtotime($doc['fecha_documento'])),
@@ -623,21 +671,20 @@ private function enviarASiesa($doc, $items = [], $actualizar = false)
         "Prefijo documento proveedor"        => trim($doc['prefijo_documento_proveedor']),
         "Consecutivo documento proveedor"    => (string)$doc['consecutivo_documento_proveedor'],
         "Fecha documento proveedor AAAAMMDD" => date('Ymd', strtotime($doc['fecha_documento_proveedor'])),
-        "CondiciÃ³n de pago"                  => $doc['condicion_pago'],
-        "Valor del documento"                => $valorDocumento, // âœ… mismo que en cabecera
+        $kCondicionPago                      => $doc['condicion_pago'],
+        "Valor del documento"                => $valorDocumento, // Ã¢Å“â€¦ mismo que en cabecera
         "Tipo de proveedor"                  => $doc['tipo_proveedor'],
     ];
 
-    $json["Cuotas CxP"][] = [
-        "Centro de operaciÃ³n del documento"  => "002",
+    $json[$secCuotas][] = [
+        $kCentroOperacionDocumento          => "002",
         "Tipo de documento"                  => $doc['tipo_documento'],
         "Numero de documento"                => "1",
         "Porcentaje de la cuota respecto al total del documento." => "100",
         "Fecha de vencimiento de la cuota AAAAMMDD" => date('Ymd', strtotime("+15 days", strtotime($doc['fecha_documento']))),
         "fecha pronto pago"                  => date('Ymd', strtotime("+15 days", strtotime($doc['fecha_documento']))),
     ];
-
-    // === 5) EnvÃ­o a Siesa ===
+    // === 5) EnvÃƒÂ­o a Siesa ===
     $estadoLog = 'error';
     $responseContent = null;
 
@@ -739,10 +786,12 @@ private function buscarNombresProveedorPorNit(array $nits): array
 
 
 
-private function consultarExistenciaConsignacion(string $item, string $ext1, string $ext2, string $bodega): int
+private function consultarExistenciaConsignacion(string $item, string $ext1, string $ext2, string $bodega): array
 {
     $sql = "
-        SELECT SUM(CASE WHEN c.f415_cant_existencia_1 < 0 THEN 0 ELSE c.f415_cant_existencia_1 END)
+        SELECT
+            SUM(CASE WHEN c.f415_cant_existencia_1 < 0 THEN 0 ELSE c.f415_cant_existencia_1 END) AS cantidad,
+            SUM(CASE WHEN c.F415_COSTO_PROM_TOT < 0 THEN 0 ELSE ISNULL(c.F415_COSTO_PROM_TOT, 0) END) AS costo_total
         FROM t415_cm_existencia_consig c
         INNER JOIN v121 v ON c.f415_rowid_item_ext = v.v121_rowid_item_ext
         INNER JOIN t150_mc_bodegas b ON c.f415_rowid_bodega = b.f150_rowid
@@ -752,17 +801,21 @@ private function consultarExistenciaConsignacion(string $item, string $ext1, str
           AND LTRIM(RTRIM(v.v121_id_ext1_detalle)) = :ext1
           AND LTRIM(RTRIM(v.v121_id_ext2_detalle)) = :ext2
           AND RIGHT('000' + LTRIM(RTRIM(b.f150_id)), 3) = :bodega
+          AND ISNULL(c.F415_COSTO_PROM_TOT, 0) > 0
     ";
 
-    $val = Yii::$app->dbSiesa->createCommand($sql, [
+    $row = Yii::$app->dbSiesa->createCommand($sql, [
         ':cia'    => self::SIESA_CIA_ID,
         ':item'   => trim($item),
         ':ext1'   => trim($ext1),
         ':ext2'   => trim($ext2),
         ':bodega' => $this->normalizeBodegaId($bodega),
-    ])->queryScalar();
+    ])->queryOne();
 
-    return max(0, (int)$val);
+    return [
+        'cantidad'    => max(0, (int)($row['cantidad'] ?? 0)),
+        'costo_total' => max(0, (float)($row['costo_total'] ?? 0)),
+    ];
 }
 
 
@@ -789,7 +842,7 @@ private function normalizeBodegaId($val): string
         SELECT * FROM devolucionmercancia_detalle WHERE documento_id = :id
     ", [':id' => $id])->queryAll();
 
-    // ðŸ‘‡ Intentamos decodificar JSON de respuesta_siesa
+    // Ã°Å¸â€˜â€¡ Intentamos decodificar JSON de respuesta_siesa
     $respuestaSiesa = null;
     if (!empty($doc['respuesta_siesa'])) {
         $decoded = json_decode($doc['respuesta_siesa'], true);
@@ -799,10 +852,12 @@ private function normalizeBodegaId($val): string
     return $this->render('view', [
         'documento'      => $doc,
         'detalle'        => $detalle,
-        'respuestaSiesa' => $respuestaSiesa, // ðŸ‘ˆ enviamos formateado
+        'respuestaSiesa' => $respuestaSiesa, // Ã°Å¸â€˜Ë† enviamos formateado
     ]);
 }
 
 }
+
+
 
 

@@ -434,6 +434,33 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
             ->queryAll();
     }
 
+    public static function obtenerUltimoPrecioVenta($codigobarras, $codigolistaprecios)
+    {
+        $sql = "
+        SELECT TOP 1
+            ipre.f126_rowid,
+            ipre.f126_id_cia,
+            ipre.f126_rowid_item,
+            CONVERT(VARCHAR(10), ipre.f126_fecha_activacion, 23) AS fecha_activacion,
+            ipre.f126_precio
+        FROM t126_mc_items_precios ipre
+        INNER JOIN t120_mc_items it 
+            ON ipre.f126_rowid_item = it.f120_rowid
+        INNER JOIN t121_mc_items_extensiones itx 
+            ON itx.f121_rowid_item = it.f120_rowid
+        LEFT JOIN t131_mc_items_barras bar 
+            ON itx.f121_id_barras_principal = bar.f131_id
+        WHERE ipre.f126_id_lista_precio = :codigolistaprecios
+          AND itx.f121_id_barras_principal = :codigobarras
+        ORDER BY ipre.f126_fecha_activacion DESC
+    ";
+
+        return self::getDb()->createCommand($sql)
+            ->bindValue(':codigolistaprecios', $codigolistaprecios)
+            ->bindValue(':codigobarras', $codigobarras)
+            ->queryAll();
+    }
+
     public static function obtenerDatosDocumento($tipodocumento, $numerodocumento, $tipomovimiento = null)
     {
 

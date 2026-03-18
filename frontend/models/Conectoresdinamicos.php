@@ -13,6 +13,11 @@ use yii\helpers\ArrayHelper;
  * @property string $nombreDocumento
  * @property int $idCompania
  * @property int $idInterface
+ * @property string|null $urlConector
+ * @property string|null $paramSistema
+ * @property string|null $conniKey
+ * @property string|null $conniToken
+ * @property string|null $nombreSIESA
  */
 class Conectoresdinamicos extends \yii\db\ActiveRecord
 {
@@ -33,6 +38,7 @@ class Conectoresdinamicos extends \yii\db\ActiveRecord
             [['idDocumento', 'nombreDocumento', 'idCompania', 'idInterface'], 'required'],
             [['idDocumento', 'idCompania', 'idInterface'], 'integer'],
             [['nombreDocumento', 'nombreSIESA'], 'string', 'max' => 50],
+            [['urlConector', 'conniKey', 'conniToken', 'paramSistema'], 'string', 'max' => 500],
             [['idDocumento'], 'unique'],
             [['nombreDocumento'], 'unique'],
         ];

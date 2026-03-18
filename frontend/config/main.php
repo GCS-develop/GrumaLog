@@ -51,6 +51,9 @@ return [
         'devolucion' => [
             'class' => 'frontend\modules\devolucion\Module',
         ],
+        'compras' => [
+            'class' => 'frontend\modules\compras\Module',
+        ],
 
         'productostiquetesprecio' => [
             'class' => 'frontend\modules\productostiquetesprecio\Module',

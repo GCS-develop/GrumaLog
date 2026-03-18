@@ -1,47 +1,58 @@
 <?php
 
+use frontend\models\Bodegas;
+use kartik\select2\Select2;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\InventarioSearch $model */
-/** @var yii\widgets\ActiveForm $form */
 ?>
 
-<div class="inventario-search">
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <?php $form = ActiveForm::begin([
+            'action' => ['index'],
+            'method' => 'get',
+        ]); ?>
 
-    <?php $form = ActiveForm::begin([
-        'action' => ['index'],
-        'method' => 'get',
-    ]); ?>
+        <div class="row g-2">
+            <div class="col-md-4">
+                <?= $form->field($model, 'codigoBodega')->label('Bodega(s)')->widget(Select2::class, [
+                    'data'    => Bodegas::getListaDataCodigo(),
+                    'options' => [
+                        'multiple'    => true,
+                        'placeholder' => 'Todas las bodegas',
+                    ],
+                    'pluginOptions' => [
+                        'allowClear'    => true,
+                        'closeOnSelect' => false,
+                    ],
+                ]) ?>
+            </div>
 
-    <?= $form->field($model, 'id') ?>
+            <div class="col-md-2">
+                <?= $form->field($model, 'item')->label('Item') ?>
+            </div>
 
-    <?= $form->field($model, 'codigoBarras') ?>
+            <div class="col-md-2">
+                <?= $form->field($model, 'codigoBarras')->label('Cód. Barras') ?>
+            </div>
 
-    <?= $form->field($model, 'item') ?>
+            <div class="col-md-2">
+                <?= $form->field($model, 'color')->label('Color') ?>
+            </div>
 
-    <?= $form->field($model, 'idItem') ?>
+            <div class="col-md-2">
+                <?= $form->field($model, 'talla')->label('Talla') ?>
+            </div>
+        </div>
 
-    <?= $form->field($model, 'codigoBodega') ?>
+        <div class="d-flex gap-2 mt-2">
+            <?= Html::submitButton('<i class="fas fa-search"></i> Filtrar', ['class' => 'btn btn-primary']) ?>
+            <?= Html::a('<i class="fas fa-times"></i> Limpiar', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+        </div>
 
-    <?php // echo $form->field($model, 'existencia') ?>
-
-    <?php // echo $form->field($model, 'fechaUltimaActualizacion') ?>
-
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'created_by') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'updated_by') ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
+        <?php ActiveForm::end(); ?>
     </div>
-
-    <?php ActiveForm::end(); ?>
-
 </div>
