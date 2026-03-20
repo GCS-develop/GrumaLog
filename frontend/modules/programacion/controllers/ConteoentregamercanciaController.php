@@ -49,6 +49,10 @@ class ConteoentregamercanciaController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'deleteconteos' => ['POST'],
+                        'reducirconteositem' => ['POST'],
+                        'reducirconteosfila' => ['POST'],
+                        'reducirconteostalla' => ['POST'],
                     ],
                 ],
             ]
@@ -372,6 +376,115 @@ class ConteoentregamercanciaController extends Controller
         $model->delete();
 
         return $this->redirect(['index', 'idprogramacion' => $idprogramacion]);
+    }
+
+    public function actionDeleteconteos($idprogramacion)
+    {
+        Conteoentregamercancia::updateAll(
+            ['unidadesConteo' => 0],
+            ['idProgramacionEntregaMercancia' => $idprogramacion]
+        );
+
+        return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
+    }
+
+    public function actionReducirconteosfila($idprogramacion, $item, $color, $cantidad)
+    {
+        $cantidad = (int) $cantidad;
+        if ($cantidad <= 0) {
+            return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
+        }
+
+        $models = Conteoentregamercancia::find()
+            ->alias('cem')
+            ->join('INNER JOIN', 'item it', 'cem.idItem = it.id')
+            ->join('INNER JOIN', 'color col', 'it.idColor = col.id')
+            ->where(['cem.idProgramacionEntregaMercancia' => $idprogramacion])
+            ->andWhere(['cem.item' => $item])
+            ->andWhere(['col.codigo' => $color])
+            ->orderBy(['cem.id' => SORT_DESC])
+            ->all();
+
+        $restante = $cantidad;
+        foreach ($models as $model) {
+            if ($restante <= 0) break;
+            if ($model->unidadesConteo <= $restante) {
+                $restante -= $model->unidadesConteo;
+                $model->unidadesConteo = 0;
+                $model->save(false);
+            } else {
+                $model->unidadesConteo -= $restante;
+                $model->save(false);
+                $restante = 0;
+            }
+        }
+
+        return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
+    }
+
+    public function actionReducirconteostalla($idprogramacion, $item, $color, $talla, $cantidad)
+    {
+        $cantidad = (int) $cantidad;
+        if ($cantidad <= 0) {
+            return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
+        }
+
+        $models = Conteoentregamercancia::find()
+            ->alias('cem')
+            ->join('INNER JOIN', 'item it', 'cem.idItem = it.id')
+            ->join('INNER JOIN', 'color col', 'it.idColor = col.id')
+            ->join('INNER JOIN', 'talla tal', 'it.idTalla = tal.id')
+            ->where(['cem.idProgramacionEntregaMercancia' => $idprogramacion])
+            ->andWhere(['cem.item' => $item])
+            ->andWhere(['col.codigo' => $color])
+            ->andWhere(['tal.codigo' => $talla])
+            ->orderBy(['cem.id' => SORT_DESC])
+            ->all();
+
+        $restante = $cantidad;
+        foreach ($models as $model) {
+            if ($restante <= 0) break;
+            if ($model->unidadesConteo <= $restante) {
+                $restante -= $model->unidadesConteo;
+                $model->unidadesConteo = 0;
+                $model->save(false);
+            } else {
+                $model->unidadesConteo -= $restante;
+                $model->save(false);
+                $restante = 0;
+            }
+        }
+
+        return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
+    }
+
+    public function actionReducirconteositem($idprogramacion, $item, $cantidad)
+    {
+        $cantidad = (int) $cantidad;
+        if ($cantidad <= 0) {
+            return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
+        }
+
+        $models = Conteoentregamercancia::find()
+            ->where(['idProgramacionEntregaMercancia' => $idprogramacion, 'item' => $item])
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+
+        $restante = $cantidad;
+        foreach ($models as $model) {
+            if ($restante <= 0) break;
+            if ($model->unidadesConteo <= $restante) {
+                $restante -= $model->unidadesConteo;
+                $model->unidadesConteo = 0;
+                $model->save(false);
+            } else {
+                $model->unidadesConteo -= $restante;
+                $model->save(false);
+                $restante = 0;
+            }
+        }
+
+        return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
     }
 
     public function actionFinalizarconteo($id, $origen, $idfactura)

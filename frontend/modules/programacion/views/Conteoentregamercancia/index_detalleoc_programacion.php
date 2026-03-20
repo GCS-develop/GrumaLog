@@ -241,22 +241,24 @@ $columns = [
 foreach ($tallasUnicas as $talla) {
     $columns[] = [
         'label' => 'Conteo Talla: ' . $talla,
-        'value' => function ($model) use ($talla) {
-            //return isset($model[$talla]) ?  ($model[$talla]['unidadesConteo'])  : null;
+        'format' => 'raw',
+        'value' => function ($model) use ($talla, $modelprogramacion) {
             $unidades = 0;
-
-            if (isset($model[$talla])) {
-                if (isset($model[$talla]['unidadesConteo'])) {
-                    // La clave 'unidadesConteo' está definida en la fila actual
-                    $unidades = $model[$talla]['unidadesConteo'];
-                }
+            if (isset($model[$talla]['unidadesConteo'])) {
+                $unidades = (int)$model[$talla]['unidadesConteo'];
             }
-
-            return $unidades;
+            if ($unidades <= 0) return '0';
+            $item  = \yii\helpers\Html::encode($model['item']);
+            $color = \yii\helpers\Html::encode($model['color']);
+            $tallaEnc = \yii\helpers\Html::encode($talla);
+            return $unidades . "&nbsp;<button type='button' class='btn btn-danger btn-xs' title='Borrar talla {$tallaEnc} (máx: {$unidades})'
+                        onclick=\"borrarConteosTalla({$modelprogramacion->id}, '{$item}', '{$color}', '{$tallaEnc}', {$unidades})\">
+                        <i class='fa fa-trash'></i>
+                    </button>";
         },
-        'pageSummary' => true,
-        'hAlign' => 'right', // Alineación horizontal al centro
-        'vAlign' => 'middle', // Alineación vertical al centro
+        'pageSummary' => false,
+        'hAlign' => 'right',
+        'vAlign' => 'middle',
     ];
 
     /*$columns[] = [
@@ -281,6 +283,23 @@ foreach ($tallasUnicas as $talla) {
     ];*/
 }
 
+// Columna de acción por fila (reducir conteo de color específico)
+$columns[] = [
+    'label' => 'Reducir',
+    'format' => 'raw',
+    'value' => function ($model) use ($modelprogramacion) {
+        if ((int)$model['totalUnidadesConteo'] <= 0) return '';
+        $item  = \yii\helpers\Html::encode($model['item']);
+        $color = \yii\helpers\Html::encode($model['color']);
+        $total = (int)$model['totalUnidadesConteo'];
+        return "<button type='button' class='btn btn-danger btn-xs' title='Borrar unidades de {$color} (máx: {$total})'
+                    onclick=\"borrarConteosFila({$modelprogramacion->id}, '{$item}', '{$color}', {$total})\">
+                    <i class='fa fa-trash'></i>
+                </button>";
+    },
+    'hAlign' => 'center',
+    'vAlign' => 'middle',
+];
 
 // Agrupar los resultados por item
 $itemsAgrupados = [];
@@ -313,9 +332,67 @@ foreach ($dataProvider as $fila) {
     </div>
     -->
 
+    <?php
+    $csrfParam = Yii::$app->request->csrfParam;
+    $csrfToken = Yii::$app->request->getCsrfToken();
+    $this->registerJs("
+        function submitPostForm(action, fields) {
+            var params = [];
+            for (var n in fields) {
+                params.push(encodeURIComponent(n) + '=' + encodeURIComponent(fields[n]));
+            }
+            var fullAction = action + '&' + params.join('&');
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = fullAction;
+            var csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = " . json_encode($csrfParam) . ";
+            csrf.value = " . json_encode($csrfToken) . ";
+            form.appendChild(csrf);
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function borrarConteosFila(idprogramacion, item, color, maxUnidades) {
+            var cantidad = prompt('Eliminar unidades de Item: ' + item + ' | Color: ' + color + ' - Máximo: ' + maxUnidades, '');
+            if (cantidad === null) return;
+            cantidad = parseInt(cantidad);
+            if (isNaN(cantidad) || cantidad <= 0) { alert('Ingrese un número válido mayor a 0.'); return; }
+            if (cantidad > maxUnidades) { alert('No puede eliminar más de ' + maxUnidades + ' unidades.'); return; }
+            submitPostForm('" . \yii\helpers\Url::to(['reducirconteosfila']) . "', {
+                'idprogramacion': idprogramacion, 'item': item, 'color': color, 'cantidad': cantidad
+            });
+        }
+
+        function borrarConteosTalla(idprogramacion, item, color, talla, maxUnidades) {
+            if (maxUnidades <= 0) return;
+            var cantidad = prompt('Eliminar unidades - Item: ' + item + ' | Color: ' + color + ' | Talla: ' + talla + ' - Máximo: ' + maxUnidades, '');
+            if (cantidad === null) return;
+            cantidad = parseInt(cantidad);
+            if (isNaN(cantidad) || cantidad <= 0) { alert('Ingrese un número válido mayor a 0.'); return; }
+            if (cantidad > maxUnidades) { alert('No puede eliminar más de ' + maxUnidades + ' unidades.'); return; }
+            submitPostForm('" . \yii\helpers\Url::to(['reducirconteostalla']) . "', {
+                'idprogramacion': idprogramacion, 'item': item, 'color': color, 'talla': talla, 'cantidad': cantidad
+            });
+        }
+
+        function borrarConteosItem(idprogramacion, item, maxUnidades) {
+            var cantidad = prompt('Cuantas unidades desea eliminar del item ' + item + '? (maximo: ' + maxUnidades + ')', '');
+            if (cantidad === null) return;
+            cantidad = parseInt(cantidad);
+            if (isNaN(cantidad) || cantidad <= 0) { alert('Ingrese un número válido mayor a 0.'); return; }
+            if (cantidad > maxUnidades) { alert('No puede eliminar más de ' + maxUnidades + ' unidades.'); return; }
+            submitPostForm('" . \yii\helpers\Url::to(['reducirconteositem']) . "', {
+                'idprogramacion': idprogramacion, 'item': item, 'cantidad': cantidad
+            });
+        }
+    ", \yii\web\View::POS_END);
+    ?>
+
     <div class="row">
 
-        <div class="col-lg-4 centrar">
+        <div class="col-lg-3 centrar">
             <?php echo ExportMenu::widget(
                 [
                     'dataProvider' => new \yii\data\ArrayDataProvider([
@@ -353,7 +430,26 @@ foreach ($dataProvider as $fila) {
             ?>
         </div>
 
-        <div class="col-lg-4 centrar">
+        <div class="col-lg-3 centrar">
+            <?= Html::a(
+                'Borrar Conteos',
+                [
+                    'deleteconteos',
+                    'idprogramacion' => $modelprogramacion->id,
+                ],
+                [
+                    'class' => 'btn btn-danger btn-lg btn-create',
+                    'data' => [
+                        'confirm' => '¿Está seguro de borrar TODOS los conteos de esta programación? ( OC:' . $modelprogramacion->agendaEntregaMercancia->ordenCompra->tipoDocumento->codigo . '-' .
+                            $modelprogramacion->agendaEntregaMercancia->ordenCompra->cO->codigo . '-' .
+                            $modelprogramacion->agendaEntregaMercancia->ordenCompra->consecutivo . ' ) El valor máximo quedará en 0.',
+                        'method' => 'post',
+                    ]
+                ]
+            ) ?>
+        </div>
+
+        <div class="col-lg-3 centrar">
             <?= Html::a(
                 'Finalizar Conteo',
                 [
@@ -374,7 +470,7 @@ foreach ($dataProvider as $fila) {
             ) ?>
         </div>
 
-        <div class="col-lg-4 centrar">
+        <div class="col-lg-3 centrar">
             <?php echo ExportMenu::widget(
                 [
                     'dataProvider' => $dataProviderBD,
@@ -472,6 +568,15 @@ foreach ($dataProvider as $fila) {
             },*/
 
         ]); ?>
+
+        <?php if ($totalUnidadesConteo > 0): ?>
+        <div style="margin: 8px 0 20px 0;">
+            <button type="button" class="btn btn-warning btn-sm"
+                onclick="borrarConteosItem(<?= $modelprogramacion->id ?>, '<?= \yii\helpers\Html::encode($item) ?>', <?= (int)$totalUnidadesConteo ?>)">
+                Borrar conteos de Item <?= \yii\helpers\Html::encode($item) ?> (contado: <?= (int)$totalUnidadesConteo ?>)
+            </button>
+        </div>
+        <?php endif; ?>
 
     <?php } ?>
 
