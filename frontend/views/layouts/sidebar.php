@@ -324,6 +324,7 @@ $baseUrl = Url::base(true);
                             ['label' => 'Ver mapa', 'url' => ['/grumascanmarcacion/grumascanmarcacion/mapa'], 'iconStyle' => 'far'],
                             ['label' => 'Conteos', 'url' => ['/grumascanmarcacion/grumascanconteo/index'], 'iconStyle' => 'far'],
                             ['label' => 'Conteo manual', 'url' => ['/grumascanmarcacion/grumascanconteomanual/index'], 'iconStyle' => 'far'],
+                            ['label' => '📸 Snapshots Inventario', 'url' => ['/grumascanmarcacion/grumascan-snapshot/index'], 'iconStyle' => 'far'],
                             ['label' => 'Consolidado', 'url' => ['/grumascanmarcacion/reporte-conteos/consolidado'], 'iconStyle' => 'far'],
                             ['label' => 'Exportar INV Físico', 'url' => ['/grumascanmarcacion/grumascanconteodetalle/export-fisico'], 'iconStyle' => 'far'],
                             [
@@ -397,6 +398,18 @@ $baseUrl = Url::base(true);
 
                     ['label' => 'Ingreso Sistema', 'header' => true],
                     ['label' => 'Login', 'url' => ['/admin/user/login'], 'icon' => 'user', 'visible' => Yii::$app->user->isGuest],
+
+                    ['label' => 'DOCUMENTACIÓN', 'header' => true],
+                    [
+                        'label' => 'Documentación',
+                        'icon'  => 'book',
+                        'url'   => 'http://192.168.2.20:8082/docs/',
+                        'target' => '_blank',
+                        'items' => [
+                            ['label' => 'Manual de Usuario',      'icon' => 'file-alt',   'iconStyle' => 'far', 'url' => 'http://192.168.2.20:8082/docs/manual-usuario.html',      'target' => '_blank'],
+                            ['label' => 'Documentación Técnica',  'icon' => 'cog',        'iconStyle' => 'far', 'url' => 'http://192.168.2.20:8082/docs/documentacion-tecnica.html', 'target' => '_blank'],
+                        ],
+                    ],
 
                     /*['label' => 'Gii',  'icon' => 'file-code', 'url' => ['/gii'], 'target' => '_blank'],
                                    ['label' => 'Debug', 'icon' => 'bug', 'url' => ['/debug'], 'target' => '_blank'],

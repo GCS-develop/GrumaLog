@@ -357,6 +357,62 @@ class InventarioController extends Controller
         ];
     }
 
+    /**
+     * Diagnóstico temporal: lista tipos de documento con movimientos en t470,
+     * con descripción desde t303 y conteo de registros + unidades.
+     * Visitar: /catalogos/inventario/tipos-movimiento
+     */
+    public function actionTiposMovimiento()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        // t303_co_tipo_docto es el catálogo de tipos de documento en Siesa
+        $sql = "
+            SELECT
+                t350.f350_id_tipo_docto                        AS codigo,
+                MAX(COALESCE(t303.f303_descripcion, '—'))      AS descripcion,
+                COUNT(DISTINCT t350.f350_rowid)                AS num_documentos,
+                SUM(ABS(t470.f470_cant_1))                    AS unidades_totales,
+                MIN(CAST(t350.f350_fecha AS DATE))             AS fecha_primera,
+                MAX(CAST(t350.f350_fecha AS DATE))             AS fecha_ultima
+            FROM t470_cm_movto_invent t470
+            JOIN t350_co_docto_contable t350
+              ON t470.f470_rowid_docto = t350.f350_rowid
+            LEFT JOIN t303_co_tipo_docto t303
+              ON t303.f303_id = t350.f350_id_tipo_docto
+            WHERE CAST(t350.f350_fecha AS DATE) >= DATEADD(MONTH, -6, GETDATE())
+            GROUP BY t350.f350_id_tipo_docto
+            ORDER BY unidades_totales DESC
+        ";
+
+        try {
+            $rows = Yii::$app->dbSiesa->createCommand($sql)->queryAll();
+            return ['ok' => true, 'tipos' => $rows];
+        } catch (\Exception $e) {
+            // Si t303 no existe, intentar sin join de descripción
+            $sql2 = "
+                SELECT
+                    t350.f350_id_tipo_docto       AS codigo,
+                    COUNT(DISTINCT t350.f350_rowid) AS num_documentos,
+                    SUM(ABS(t470.f470_cant_1))      AS unidades_totales,
+                    MIN(CAST(t350.f350_fecha AS DATE)) AS fecha_primera,
+                    MAX(CAST(t350.f350_fecha AS DATE)) AS fecha_ultima
+                FROM t470_cm_movto_invent t470
+                JOIN t350_co_docto_contable t350
+                  ON t470.f470_rowid_docto = t350.f350_rowid
+                WHERE CAST(t350.f350_fecha AS DATE) >= DATEADD(MONTH, -6, GETDATE())
+                GROUP BY t350.f350_id_tipo_docto
+                ORDER BY unidades_totales DESC
+            ";
+            try {
+                $rows = Yii::$app->dbSiesa->createCommand($sql2)->queryAll();
+                return ['ok' => true, 'nota' => 'sin tabla t303, sin descripcion', 'tipos' => $rows];
+            } catch (\Exception $e2) {
+                return ['ok' => false, 'error' => $e2->getMessage()];
+            }
+        }
+    }
+
     public function actionDiferencias()
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
