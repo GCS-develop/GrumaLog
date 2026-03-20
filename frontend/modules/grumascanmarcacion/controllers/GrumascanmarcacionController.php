@@ -304,6 +304,83 @@ class GrumascanmarcacionController extends Controller
 
         return ['status' => 'error', 'message' => 'Tipo de impresora no reconocido.'];
     }
+    /**
+     * Re-imprime stickers existentes dado un rango de IDs.
+     * No crea registros nuevos — solo reenvía los IDs a la impresora.
+     */
+    public function actionReprint()
+    {
+        $request  = Yii::$app->request;
+        $printers = Impresora::getListaData();
+
+        if (!$request->isPost) {
+            return $this->redirect(['indeximprecion']);
+        }
+
+        $printerId = (int)$request->post('printer_id_reprint');
+        $desde     = (int)$request->post('desde_reprint');
+        $hasta     = (int)$request->post('hasta_reprint');
+
+        if (!$printerId || $desde < 1 || $hasta < $desde) {
+            Yii::$app->session->setFlash('error', 'Datos inválidos: verifique impresora y rango de IDs.');
+            return $this->redirect(['indeximprecion']);
+        }
+
+        $printer = Impresora::findOne($printerId);
+        if (!$printer) {
+            Yii::$app->session->setFlash('error', 'Impresora no encontrada.');
+            return $this->redirect(['indeximprecion']);
+        }
+
+        $ids = Grumascanmarcacion::find()
+            ->where(['between', 'id', $desde, $hasta])
+            ->orderBy(['id' => SORT_ASC])
+            ->select('id')
+            ->column();
+
+        if (empty($ids)) {
+            Yii::$app->session->setFlash('warning', "No se encontraron marcaciones entre ID {$desde} y {$hasta}.");
+            return $this->redirect(['indeximprecion']);
+        }
+
+        $usuario = Yii::$app->user->identity->username ?? 'N/A';
+        $esEpl   = ((string)$printer->tipo === 'epl');
+
+        if ($esEpl) {
+            $payload = MarcacionStickerPrinter::buildPayload($ids, $usuario, 'epl');
+        } else {
+            $payload = '';
+            foreach (array_chunk($ids, 3) as $chunk) {
+                $payload .= MarcacionStickerPrinter::buildPayloadZpl3Up($chunk, $usuario);
+            }
+        }
+
+        $config = [
+            'tipo'    => $printer->tipo,
+            'ip'      => $printer->ip      ?? null,
+            'puerto'  => $printer->puerto  ?? 9100,
+            'recurso' => $printer->recurso ?? null,
+        ];
+
+        $resp = $this->enviarImpresora($payload, $config);
+
+        if (($resp['status'] ?? 'error') === 'success') {
+            Yii::$app->session->setFlash(
+                'success',
+                'Re-impresión enviada. Stickers: ' . count($ids)
+                    . ' (IDs ' . $desde . '–' . $hasta . ')'
+                    . ' | Impresora: ' . ($printer->nombre ?? $printer->ip ?? 'N/A')
+            );
+        } else {
+            Yii::$app->session->setFlash(
+                'error',
+                'Error re-imprimiendo: ' . ($resp['message'] ?? 'Error desconocido')
+            );
+        }
+
+        return $this->redirect(['indeximprecion']);
+    }
+
     public function actionUsarSticker()
     {
         $form = new GrumascanMarcacionUseForm();
