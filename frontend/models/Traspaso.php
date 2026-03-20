@@ -13,6 +13,7 @@ use common\models\User;
 use yii\db\Query;
 
 use common\models\OrdendecompraSIESA;
+use frontend\models\Transferenciaordencompraexcel;
 
 
 /**
@@ -390,9 +391,9 @@ class Traspaso extends \yii\db\ActiveRecord
             $tipomovimiento = 1;
         }
 
-        $sql = "SELECT 1 AS idCentroOperacion, bs.id AS idBodegaOrigen, tte.bodegaSalidaDocumento, 
+        $sql = "SELECT 1 AS idCentroOperacion, bs.id AS idBodegaOrigen, tte.bodegaSalidaDocumento,
                     be.id AS idBodegaDestino, tte.bodegaEntradaDocumento,
-                    1 AS numeroCajas, td.id AS idTipoDocumento, tte.idTransferenciaerp AS consecutivo,
+                    MAX(tte.cajas) AS numeroCajas, td.id AS idTipoDocumento, tte.idTransferenciaerp AS consecutivo,
                     1 AS idEstado, NULL AS idUltimoItem, 1 AS transferenciaerp, :tipomovimiento AS tipoMovimiento
                 FROM transferenciatransitoexcel tte
                 INNER JOIN bodegas bs ON tte.bodegaSalidaDocumento = bs.codigo
@@ -523,6 +524,117 @@ class Traspaso extends \yii\db\ActiveRecord
             $transferencia->notas = $movimientomsg . $numero;
             $transferencia->codigoBarras = $modelitem->codigoBarras;
             $transferencia->save();
+        }
+    }
+
+    public static function generarTraspasoDesdeOrdenCompra($idtransferenciaerp, $tipomovimiento = null)
+    {
+        if ($tipomovimiento == null) {
+            $tipomovimiento = 1;
+        }
+
+        $sql = "SELECT 1 AS idCentroOperacion,
+                    b.id AS idBodegaOrigen, toce.bodegaMovimiento AS bodegaSalidaDocumento,
+                    b.id AS idBodegaDestino, toce.bodegaMovimiento AS bodegaEntradaDocumento,
+                    MAX(toce.cajas) AS numeroCajas, td.id AS idTipoDocumento,
+                    toce.idTransferenciaerp AS consecutivo,
+                    1 AS idEstado, NULL AS idUltimoItem, 1 AS transferenciaerp,
+                    :tipomovimiento AS tipoMovimiento
+                FROM transferenciaordencompraexcel toce
+                INNER JOIN bodegas b ON toce.bodegaMovimiento = b.codigo
+                INNER JOIN tipodocumento td ON toce.tipoDocumento = td.codigo
+                WHERE toce.idTransferenciaerp = :idTransferenciaErp
+                GROUP BY toce.idTransferenciaerp, b.id, toce.bodegaMovimiento, td.id";
+
+        $command = Yii::$app->db->createCommand($sql);
+        $command->bindValues([
+            ':idTransferenciaErp' => $idtransferenciaerp,
+            ':tipomovimiento' => $tipomovimiento
+        ]);
+
+        $resultados = $command->queryAll();
+        $id = null;
+
+        foreach ($resultados as $resultado) {
+
+            $traspaso = new Traspaso();
+            $traspaso->idCentroOperacion = $resultado['idCentroOperacion'];
+            $traspaso->idBodegaOrigen = $resultado['idBodegaOrigen'];
+            $traspaso->idBodegaDestino = $resultado['idBodegaDestino'];
+            $traspaso->numeroCajas = $resultado['numeroCajas'];
+            $traspaso->idTipoDocumento = $resultado['idTipoDocumento'];
+            $traspaso->consecutivo = $resultado['consecutivo'];
+            $traspaso->idEstado = $resultado['idEstado'];
+            $traspaso->idUltimoItem = $resultado['idUltimoItem'];
+            $traspaso->transferenciaerp = $resultado['transferenciaerp'];
+            $traspaso->tipoMovimiento = $resultado['tipoMovimiento'];
+
+            if ($traspaso->save()) {
+
+                $id = $traspaso->id;
+                $model = Traspaso::findOne(['id' => $id]);
+                $model->consecutivo = $id;
+                $model->save();
+
+                $bodega = $resultado['bodegaSalidaDocumento'];
+
+                self::generarTraspasoDetalleDesdeOrdenCompra($idtransferenciaerp, $traspaso->id, $bodega, $tipomovimiento);
+
+                $traspaso->totalUnidad    = $traspaso->TotalUnidades;
+                $traspaso->totalRegistros = $traspaso->AllRecords;
+                $traspaso->save(false, ['totalUnidad', 'totalRegistros']);
+            } else {
+                break;
+            }
+        }
+
+        return $id;
+    }
+
+    public static function generarTraspasoDetalleDesdeOrdenCompra($idtransferenciaerp, $idtraspaso, $bodega, $tipomovimiento)
+    {
+        $sqlDetalle = "
+            SELECT toce.id, toce.item, toce.color, toce.talla, toce.cantidadBase AS cantidad
+            FROM transferenciaordencompraexcel toce
+            INNER JOIN bodegas b ON toce.bodegaMovimiento = b.codigo
+            WHERE toce.idTransferenciaerp = :idtransferenciaerp AND toce.bodegaMovimiento = :bodega
+            ORDER BY toce.item
+        ";
+
+        $commandDetalle = Yii::$app->db->createCommand($sqlDetalle);
+        $commandDetalle
+            ->bindValue(':idtransferenciaerp', $idtransferenciaerp)
+            ->bindValue(':bodega', $bodega);
+
+        $detalles = $commandDetalle->queryAll();
+
+        foreach ($detalles as $detalle) {
+
+            $item = $detalle['item'];
+            $color = $detalle['color'];
+            $talla = $detalle['talla'];
+
+            $iditem = Item::grabarDataDesdeSIESA($item, $color, $talla);
+            $modelitem = Item::findOne(['id' => $iditem]);
+
+            $traspasoDetalle = new Traspasodetalle();
+            $traspasoDetalle->idTraspaso = $idtraspaso;
+            $traspasoDetalle->idItem = $iditem;
+            $traspasoDetalle->codigoitem = $modelitem->codigoBarras;
+
+            $cantidadBase = $detalle['cantidad'];
+            $equivalencia = $modelitem->unidadempaque ? $modelitem->unidadempaque->equivalencia : 1;
+            $cantidad = $cantidadBase / $equivalencia;
+
+            $traspasoDetalle->cantidad = $cantidad;
+            $traspasoDetalle->cantidadTransferencia = $cantidadBase;
+
+            if (!$traspasoDetalle->save()) {
+                var_dump($traspasoDetalle->getErrors());
+                die("hola");
+            }
+
+            // No extra fields to update on transferenciaordencompraexcel
         }
     }
 

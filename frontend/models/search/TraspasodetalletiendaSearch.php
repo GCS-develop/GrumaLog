@@ -203,6 +203,18 @@ class TraspasodetalletiendaSearch extends Traspasodetalletienda
                 // filtra por el código visible (serie)
                 $q->andWhere(['like', 'tdoc.codigo', $this->serie]);
             }
+            if (!empty($this->Origen)) {
+                $q->andWhere(['or',
+                    ['like', 'bo.codigo', $this->Origen],
+                    ['like', 'bo.nombre', $this->Origen],
+                ]);
+            }
+            if (!empty($this->Destino)) {
+                $q->andWhere(['or',
+                    ['like', 'bd.codigo', $this->Destino],
+                    ['like', 'bd.nombre', $this->Destino],
+                ]);
+            }
 
             // Usar la fecha del detalle (tdt.created_at) para no perder registros
             if ($this->fechaDesde || $this->fechaHasta) {

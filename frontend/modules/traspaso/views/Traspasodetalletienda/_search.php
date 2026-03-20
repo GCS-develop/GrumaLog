@@ -32,6 +32,12 @@ use yii\widgets\ActiveForm;
             <?= $form->field($model, 'consecutivoSiesa')->label('Consecutivo siesa'); ?>
         </div>
         <div class="col-lg-3">
+            <?= $form->field($model, 'Origen')->textInput(['placeholder' => 'Código o nombre origen...'])->label('Origen'); ?>
+        </div>
+        <div class="col-lg-3">
+            <?= $form->field($model, 'Destino')->textInput(['placeholder' => 'Código o nombre destino...'])->label('Destino'); ?>
+        </div>
+        <div class="col-lg-3">
             <?=
                 $form->field($model, 'fechaDesde')->widget(DatePicker::className(), [
                     'name' => 'fechadesde',

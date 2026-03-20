@@ -141,6 +141,11 @@ class Traspasodetalle extends \yii\db\ActiveRecord
         return $this->hasOne(Item::class, ['id' => 'idItem'])
             ->where(['idEstado' => 'ACTIVO']);
     }
+
+    public function getItemAll()
+    {
+        return $this->hasOne(Item::class, ['id' => 'idItem']);
+    }
     /**
      * Gets query for [[Traspaso]].
      *

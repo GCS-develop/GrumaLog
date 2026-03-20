@@ -1,4 +1,5 @@
 <?php
+
 use yii\widgets\ActiveForm;
 use yii\widgets\Pjax;
 
@@ -90,8 +91,8 @@ $this->registerJs("
         <?php if ($traspaso): ?>
             <?= Html::encode(
                 $traspaso->tipodocumento->codigo . '-' .
-                ($traspaso->codigoerp ? $traspaso->codigoerp->f350_consec_docto : $traspaso->consecutivo) .
-                '  Estado: ' . $traspaso->estado->nombre
+                    ($traspaso->codigoerp ? $traspaso->codigoerp->f350_consec_docto : $traspaso->consecutivo) .
+                    '  Estado: ' . $traspaso->estado->nombre
             ) ?>
         <?php else: ?>
             <?= Html::encode('Todos los traspasos') ?>
@@ -108,7 +109,8 @@ $this->registerJs("
         <?php endif; ?>
     </h2>
 
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+    <?php // echo $this->render('_search', ['model' => $searchModel]); 
+    ?>
 
 
     <?php
@@ -221,7 +223,7 @@ $this->registerJs("
         [
             'attribute' => 'proveedor',
             'value' => function ($model) {
-                return $model->item->nombreProveedor;
+                return $model->itemAll ? $model->itemAll->nombreProveedor : '-';
             },
             'enableSorting' => true,
             'group' => true,
@@ -229,7 +231,7 @@ $this->registerJs("
         [
             'attribute' => 'idItem',
             'value' => function ($model) {
-                return $model->item->item;
+                return $model->itemAll ? $model->itemAll->item : '-';
             },
             'enableSorting' => true,
             'group' => true,
@@ -237,37 +239,48 @@ $this->registerJs("
         [
             'attribute' => 'idItem',
             'value' => function ($model) {
-                return $model->item->codigoBarras;
+                return $model->itemAll ? $model->itemAll->codigoBarras : '-';
             },
             'enableSorting' => true,
             'group' => true,
         ],
         [
             'label' => 'Talla',
-            // 'attribute' => 'idItem',
             'value' => function ($model) {
-                return $model->item->talla->nombre;
+                return $model->itemAll && $model->itemAll->talla ? $model->itemAll->talla->nombre : '-';
             },
         ],
         [
             'label' => 'Color',
-            // 'attribute' => 'idItem',
             'value' => function ($model) {
-                return $model->item->color->nombre;
+                return $model->itemAll && $model->itemAll->color ? $model->itemAll->color->nombre : '-';
             },
         ],
         [
             'label' => 'Descripcion',
-            // 'attribute' => 'idItem',
             'value' => function ($model) {
-                return $model->item->descripcion;
+                return $model->itemAll ? $model->itemAll->descripcion : '-';
+            },
+        ],
+        [
+            'label' => 'Estado Item',
+            'value' => function ($model) {
+                return $model->itemAll ? $model->itemAll->idEstado : '-';
+            },
+            'contentOptions' => function ($model) {
+                return ($model->item === null && $model->itemAll !== null)
+                    ? ['style' => 'font-weight:bold; color:#c00;']
+                    : [];
             },
         ],
         [
             'label' => 'paquete',
-            // 'attribute' => 'idItem',
             'value' => function ($model) {
-                return $model->item->unidadempaque ? $model->item->unidadempaque->codigo : $model->item->unidadorden->codigo;
+                return $model->itemAll
+                    ? ($model->itemAll->unidadempaque
+                        ? $model->itemAll->unidadempaque->codigo
+                        : ($model->itemAll->unidadorden ? $model->itemAll->unidadorden->codigo : '-'))
+                    : '-';
             },
         ],
         [
@@ -280,39 +293,49 @@ $this->registerJs("
         [
             'label' => 'unidades',
             'value' => function ($model) {
-                return $model->cantidad * ($model->item->unidadempaque ? $model->item->unidadempaque->equivalencia : $model->item->unidadorden->equivalencia);
-            },
-            'format' => ['decimal', 0], // Formato decimal con 0 decimales,
-            'pageSummary' => true,
+                $item = $model->itemAll;
 
+                if ($item === null) {
+                    return 0;
+                }
+
+                if ($item->unidadempaque !== null) {
+                    return $model->cantidad * $item->unidadempaque->equivalencia;
+                }
+
+                if ($item->unidadorden !== null) {
+                    return $model->cantidad * $item->unidadorden->equivalencia;
+                }
+
+                return 0;
+            },
+            'format' => ['decimal', 0],
+            'pageSummary' => true,
         ],
 
         [
             'label' => 'unidadesInventarioSiesa',
             'value' => function ($model) {
-                // Verifica si el estado es "Pendiente"
                 $estado = $model->traspaso->estado ? $model->traspaso->estado->nombre : '';
-                if (strcasecmp($estado, 'Pendiente') === 0) {
-                    return Item::getInventario($model->item->codigoBarras, $model->traspaso->bodegaOrigen->codigo);
+                if (strcasecmp($estado, 'Pendiente') === 0 && $model->itemAll) {
+                    return Item::getInventario($model->itemAll->codigoBarras, $model->traspaso->bodegaOrigen->codigo);
                 }
-                return null; // O devuelve '-' si prefieres que se vea un guion en lugar de vacío
+                return null;
             },
-            'format' => ['decimal', 0], // Formato decimal con 0 decimales
+            'format' => ['decimal', 0],
             'pageSummary' => true,
         ],
 
         [
             'label' => 'unidadesInventarioGruma',
             'value' => function ($model) {
-                // Verifica si el estado es "Pendiente"
                 $estado = $model->traspaso->estado ? $model->traspaso->estado->nombre : '';
-                if (strcasecmp($estado, 'Pendiente') === 0) {
-                    return $model->item->geInventariogruma($model->item->codigoBarras, $model->traspaso->bodegaOrigen->codigo);
-                    ;
+                if (strcasecmp($estado, 'Pendiente') === 0 && $model->itemAll) {
+                    return $model->itemAll->geInventariogruma($model->itemAll->codigoBarras, $model->traspaso->bodegaOrigen->codigo);
                 }
-                return null; // O devuelve '-' si prefieres que se vea un guion en lugar de vacío
+                return null;
             },
-            'format' => ['decimal', 0], // Formato decimal con 0 decimales
+            'format' => ['decimal', 0],
             'pageSummary' => true,
         ],
 
@@ -426,21 +449,26 @@ $this->registerJs("
             'class' => 'mi-gridview', // Agrega una clase CSS a la tabla generada por el GridView
         ],
         'rowOptions' => function ($model) {
-        $classes = [];
-        if ($model->traspaso->estado->nombre === 'muelle') {
-            $classes[] = 'text-success';
-        }
-        if ($model->traspaso->estado->nombre === 'anulado') {
-            $classes[] = 'text-danger';
-        }
-        if ($model->traspaso->estado->nombre === 'pendiente') {
-            $classes[] = 'text-primary';
-        }
-        if (($model->traspaso->estado->nombre === 'pendiente') && (Item::getInventario($model->item->codigoBarras, $model->traspaso->bodegaOrigen->codigo) < $model->cantidadunidades)) {
-            $classes[] = 'text-danger';
-        }
-        return ['class' => implode(' ', $classes)];
-    },
+            $classes = [];
+            // Item bloqueado (idEstado != ACTIVO): relación getItem() retorna null
+            if ($model->item === null) {
+                $classes[] = 'danger';
+                return ['class' => implode(' ', $classes), 'title' => 'Item bloqueado'];
+            }
+            if ($model->traspaso->estado->nombre === 'muelle') {
+                $classes[] = 'text-success';
+            }
+            if ($model->traspaso->estado->nombre === 'anulado') {
+                $classes[] = 'text-danger';
+            }
+            if ($model->traspaso->estado->nombre === 'pendiente') {
+                $classes[] = 'text-primary';
+            }
+            if (($model->traspaso->estado->nombre === 'pendiente') && (Item::getInventario($model->item->codigoBarras, $model->traspaso->bodegaOrigen->codigo) < $model->cantidadunidades)) {
+                $classes[] = 'text-danger';
+            }
+            return ['class' => implode(' ', $classes)];
+        },
         'columns' => array_merge(
             [
                 ['class' => 'kartik\grid\SerialColumn'],
@@ -463,14 +491,14 @@ $this->registerJs("
 <link rel="stylesheet" href="<?= Yii::$app->request->baseUrl ?>/css/swal.css">
 
 <script>
-
     function openPrintModal(id, url, idTraspaso) {
         Swal.fire({
             title: 'Digite la cantidad a eliminar',
             text: 'Por favor, ingrese un valor antes de continuar:',
             input: 'text',
             inputPlaceholder: 'Escribe aquí...',
-            showCancelButton: true, buttonsStyling: false,
+            showCancelButton: true,
+            buttonsStyling: false,
             cancelButtonText: 'Cancelar',
             confirmButtonText: 'Aceptar',
             inputAttributes: {
@@ -493,29 +521,37 @@ $this->registerJs("
                 Swal.fire({
                     title: 'Eliminando...',
                     text: 'Por favor espere mientras se procesa la solicitud.',
-                    allowOutsideClick: false,  // Desactiva hacer clic fuera de la alerta
+                    allowOutsideClick: false, // Desactiva hacer clic fuera de la alerta
                     didOpen: () => {
-                        Swal.showLoading();  // Muestra el cargador
-                    }, willClose: () => {
+                        Swal.showLoading(); // Muestra el cargador
+                    },
+                    willClose: () => {
                         // Esto se asegura de que el modal de carga no se cierre hasta que termine la operación
                     }
                 });
                 // Enviar el valor y el ID al controlador mediante POST
-                $.post(url, { id: id, input: result.value, idtraspaso: idTraspaso })
-                    .done(function (response) {
+                $.post(url, {
+                        id: id,
+                        input: result.value,
+                        idtraspaso: idTraspaso
+                    })
+                    .done(function(response) {
                         if (response.status === 'success') {
                             Swal.fire('¡Éxito!', response.message, 'success');
                             $('#count').val(response.count);
                             $('#cantidad_paquetes').val(response.cantidad_paquetes);
                             // $.pjax.reload({ container: '#pjax-container' });
-                            $.pjax.reload({ container: '#alert-pjax-container', async: false });
+                            $.pjax.reload({
+                                container: '#alert-pjax-container',
+                                async: false
+                            });
 
                         } else {
                             Swal.fire('¡Error!', response.message, 'error');
                         }
                     })
-                    .fail(function () {
-                        Swal.close();  // Cierra la alerta de carga
+                    .fail(function() {
+                        Swal.close(); // Cierra la alerta de carga
                         Swal.fire('¡Error!', 'Hubo un problema con la conexión.', 'error');
                     })
 
@@ -527,5 +563,4 @@ $this->registerJs("
             }
         });
     }
-
 </script>
