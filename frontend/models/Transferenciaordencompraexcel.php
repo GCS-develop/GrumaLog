@@ -33,6 +33,7 @@ use Yii;
  * @property string $color
  * @property string $talla
  * @property string $rowid
+ * @property int $cajas
  */
 class Transferenciaordencompraexcel extends \yii\db\ActiveRecord
 {
@@ -50,16 +51,16 @@ class Transferenciaordencompraexcel extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['idTransferenciaerp', 'centroOperacionDocumento', 'tipoDocumento', 
-            'consecutivoDocumento', 'fechaDocumento', 'tercero', 'numeroFactura', 
-            'sucursal', 'idTerceroComprador', 'consignacion', 'centroOperacionOrdenCompra', 
-            'tipoDocumentoOrdenCompra', 'consecutivoOrdenCompra', 'centroOperacionMovimiento', 
-            'tipoDocumentoMovimiento', 'consecutivoMovimiento', 'numeroRegistroMovimiento', 
-            'bodegaMovimiento', 'unidadMovimiento', 'fechaEntregaMovimiento', 'cantidadBase', 
+            [['idTransferenciaerp', 'centroOperacionDocumento', 'tipoDocumento',
+            'consecutivoDocumento', 'fechaDocumento', 'tercero', 'numeroFactura',
+            'sucursal', 'idTerceroComprador', 'consignacion', 'centroOperacionOrdenCompra',
+            'tipoDocumentoOrdenCompra', 'consecutivoOrdenCompra', 'centroOperacionMovimiento',
+            'tipoDocumentoMovimiento', 'consecutivoMovimiento', 'numeroRegistroMovimiento',
+            'bodegaMovimiento', 'unidadMovimiento', 'fechaEntregaMovimiento', 'cantidadBase',
             'item', 'color', 'talla', 'rowid'], 'required'],
-            [['idTransferenciaerp', 'consecutivoDocumento', 'consignacion', 
-            'consecutivoOrdenCompra', 'consecutivoMovimiento', 
-            'numeroRegistroMovimiento', 'cantidadBase', 'item'], 'integer'],
+            [['idTransferenciaerp', 'consecutivoDocumento', 'consignacion',
+            'consecutivoOrdenCompra', 'consecutivoMovimiento',
+            'numeroRegistroMovimiento', 'cantidadBase', 'item', 'cajas'], 'integer'],
             /*[['centroOperacionDocumento', 'tipoDocumento', 'sucursal', 
             'centroOperacionOrdenCompra', 'tipoDocumentoOrdenCompra', 
             'centroOperacionMovimiento', 'tipoDocumentoMovimiento', 'bodegaMovimiento', 
@@ -101,7 +102,8 @@ class Transferenciaordencompraexcel extends \yii\db\ActiveRecord
             'item' => 'Item',
             'color' => 'Color',
             'talla' => 'Talla',
-            'rowid' => 'ROWID'
+            'rowid' => 'ROWID',
+            'cajas' => 'Cajas',
         ];
     }
 

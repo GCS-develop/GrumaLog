@@ -25,6 +25,7 @@ use yii\helpers\Json;
  * @property int $item
  * @property string $color
  * @property string $talla
+ * @property int $cajas
  *
  * @property Transferenciaerp $transferenciaerp
  */
@@ -45,7 +46,7 @@ class Transferenciatransitoexcel extends \yii\db\ActiveRecord
     {
         return [
             [['idTransferenciaerp', 'centroOperacionDocumento', 'tipoDocumento', 'fechaDocumento', 'bodegaSalidaDocumento', 'bodegaEntradaDocumento', 'centroOperacion', 'tipoDocumentoMovimiento', 'bodegaSalidaMovimiento', 'centroOperacionMovimiento', 'unidadSalida', 'cantidadBase', 'costoPromedioUnitario', 'item', 'color', 'talla'], 'required'],
-            [['idTransferenciaerp', 'cantidadBase', 'item'], 'integer'],
+            [['idTransferenciaerp', 'cantidadBase', 'item', 'cajas'], 'integer'],
             [['costoPromedioUnitario'], 'number'],
             /*[['centroOperacionDocumento', 'tipoDocumento', 'bodegaSalidaDocumento', 
             'bodegaEntradaDocumento', 'centroOperacion', 'tipoDocumentoMovimiento', 

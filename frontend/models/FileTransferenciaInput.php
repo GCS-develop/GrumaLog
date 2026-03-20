@@ -200,8 +200,17 @@ class FileTransferenciaInput extends Model
                 $idtalla = Talla::actualizarRegistro($talla, $talla);
             }
 
-            $numero = null;
+            $cajas = 1;
             $valor_celda = $sheet->getCell('P' . $fila)->getValue();
+            if ($valor_celda) {
+                $cajas = (int)$valor_celda;
+                if ($cajas <= 0) {
+                    $cajas = 1;
+                }
+            }
+
+            $numero = null;
+            $valor_celda = $sheet->getCell('Q' . $fila)->getValue();
             if ($valor_celda) {
                 $numero = $valor_celda;
             }
@@ -223,6 +232,7 @@ class FileTransferenciaInput extends Model
             $model->color = $color;
             $model->talla = $talla;
             $model->numero = $numero;
+            $model->cajas = $cajas;
             $model->idTransferenciaerp = $id;
 
             $ok = $model->save();
@@ -463,6 +473,14 @@ class FileTransferenciaInput extends Model
                 $rowid = $valor_celda;
             }
 
+            $cajas = 1;
+            $valor_celda = $sheet->getCell('Y' . $fila)->getValue();
+            if ($valor_celda) {
+                $cajas = (int)$valor_celda;
+                if ($cajas <= 0) {
+                    $cajas = 1;
+                }
+            }
 
             $modelcolor = Color::find()->where(['codigo' => $color])->one();
             if (!$modelcolor) {
@@ -529,6 +547,7 @@ class FileTransferenciaInput extends Model
             $model->color = $color;
             $model->talla = $talla;
             $model->rowid = $rowid;
+            $model->cajas = $cajas;
             $model->idTransferenciaerp = $id;
 
             $model->codigoUnidadEmpaque = $modelitem->unidadEmpaque ? $modelitem->unidadEmpaque : 'UND';
