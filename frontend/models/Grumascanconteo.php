@@ -11,12 +11,13 @@ use yii\db\Expression;
 /**
  * This is the model class for table "grumascanconteo".
  *
- * @property int $id
- * @property int $idmarcacion
- * @property int $idestado
+ * @property int      $id
+ * @property int      $idmarcacion
+ * @property int      $idestado
+ * @property int|null $idSnapshot
  * @property string|null $ultimoean
- * @property int $totalregistros
- * @property int $totalunidades
+ * @property int      $totalregistros
+ * @property int      $totalunidades
  * @property string|null $created_at
  * @property int|null $created_by
  * @property string|null $updated_at
@@ -25,6 +26,7 @@ use yii\db\Expression;
  * @property Grumascanconteodetalle[] $grumascanconteodetalles
  * @property Grumascanestado $idestado0
  * @property Grumascanmarcacion $idmarcacion0
+ * @property GrumascanSnapshot|null $snapshot
  */
 class Grumascanconteo extends \yii\db\ActiveRecord
 {
@@ -61,7 +63,7 @@ class Grumascanconteo extends \yii\db\ActiveRecord
     {
         return [
             [['idmarcacion', 'idestado', 'totalregistros', 'totalunidades'], 'required'],
-            [['idmarcacion', 'idestado', 'totalregistros', 'totalunidades', 'created_by', 'updated_by'], 'integer'],
+            [['idmarcacion', 'idestado', 'totalregistros', 'totalunidades', 'created_by', 'updated_by', 'idSnapshot'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
             [['ultimoean'], 'string', 'max' => 30],
             [['idmarcacion'], 'exist', 'skipOnError' => true, 'targetClass' => Grumascanmarcacion::class, 'targetAttribute' => ['idmarcacion' => 'id']],
@@ -120,5 +122,10 @@ class Grumascanconteo extends \yii\db\ActiveRecord
     public function getUsuario()
     {
         return $this->hasOne(User::className(), ['id' => 'created_by']);
+    }
+
+    public function getSnapshot()
+    {
+        return $this->hasOne(GrumascanSnapshot::class, ['id' => 'idSnapshot']);
     }
 }

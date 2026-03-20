@@ -12,6 +12,7 @@ use kartik\date\DatePicker;
 /** @var frontend\models\search\GrumascanReporteSearch $searchModel */
 /** @var yii\data\SqlDataProvider $dataProvider */
 /** @var array $resumenTiendas */
+/** @var frontend\models\GrumascanSnapshot[] $snapshotsDisponibles */
 
 $this->title = 'Consolidado Conteo vs Inventario (Tienda / SKU)';
 
@@ -41,6 +42,28 @@ Modal::end();
         <br>
         <strong>Optimizado:</strong> las marcaciones se consultan bajo demanda (modal), no en el grid.
     </div>
+
+    <?php if (!empty($searchModel->idSnapshot)): ?>
+        <?php
+        $snap = \frontend\models\GrumascanSnapshot::findOne($searchModel->idSnapshot);
+        if ($snap):
+        ?>
+        <div class="alert alert-info py-2 mb-2">
+            📸 <strong>Comparando contra Snapshot #<?= $snap->id ?></strong>
+            &nbsp;|&nbsp; Bodega: <strong>[<?= Html::encode($snap->codigoBodega) ?>]</strong>
+            &nbsp;|&nbsp; Fecha: <strong><?= Html::encode(substr($snap->fecha_snapshot, 0, 16)) ?></strong>
+            &nbsp;|&nbsp; Items: <?= number_format($snap->total_items) ?>
+            <?= $snap->descripcion ? ' &nbsp;|&nbsp; ' . Html::encode($snap->descripcion) : '' ?>
+            &nbsp;&nbsp;
+            <?= Html::a('Gestionar snapshot', ['/grumascanmarcacion/grumascan-snapshot/view', 'id' => $snap->id], ['class' => 'btn btn-sm btn-outline-primary', 'target' => '_blank']) ?>
+        </div>
+        <?php endif; ?>
+    <?php else: ?>
+        <div class="alert alert-warning py-2 mb-2">
+            ⚠️ Comparando contra <strong>inventario actual (live)</strong>.
+            Para comparar contra un inventario congelado, seleccione un snapshot abajo.
+        </div>
+    <?php endif; ?>
 
     <div class="card mb-3">
         <div class="card-body">
@@ -100,6 +123,58 @@ Modal::end();
                     <?= $form->field($searchModel, 'min_abs_dif')
                         ->textInput(['type' => 'number', 'min' => 0, 'step' => 1, 'placeholder' => 'Ej: 5'])
                         ->label('Mínimo |diferencia|') ?>
+                </div>
+            </div>
+
+            <!-- Selector de snapshot -->
+            <div class="row g-2 mt-1">
+                <div class="col-12">
+                    <div class="border rounded p-2 bg-light">
+                        <strong>📦 Comparar inventario contra:</strong>
+                        <div class="d-flex align-items-center gap-3 flex-wrap mt-1">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="GrumascanReporteSearch[idSnapshot]"
+                                       id="snap_live" value=""
+                                       <?= empty($searchModel->idSnapshot) ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="snap_live">
+                                    Inventario actual (live)
+                                </label>
+                            </div>
+                            <?php if (!empty($snapshotsDisponibles)): ?>
+                                <?php foreach ($snapshotsDisponibles as $snap): ?>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio"
+                                               name="GrumascanReporteSearch[idSnapshot]"
+                                               id="snap_<?= $snap->id ?>"
+                                               value="<?= $snap->id ?>"
+                                               <?= (int)$searchModel->idSnapshot === $snap->id ? 'checked' : '' ?>>
+                                        <label class="form-check-label" for="snap_<?= $snap->id ?>">
+                                            📸 #<?= $snap->id ?> &mdash;
+                                            <?= Html::encode(substr($snap->fecha_snapshot, 0, 16)) ?>
+                                            <?= $snap->descripcion ? '— ' . Html::encode($snap->descripcion) : '' ?>
+                                            <span class="text-muted small">(<?= number_format($snap->total_items) ?> items)</span>
+                                        </label>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php elseif (!empty($searchModel->tienda)): ?>
+                                <span class="text-muted small">
+                                    Sin snapshots para esta bodega.
+                                    <?= Html::a('Crear uno', ['/grumascanmarcacion/grumascan-snapshot/create'], ['class' => 'text-primary']) ?>
+                                </span>
+                            <?php else: ?>
+                                <span class="text-muted small">Ingrese un código de tienda para ver snapshots disponibles.</span>
+                            <?php endif; ?>
+                        </div>
+                        <?php if (!empty($searchModel->idSnapshot)): ?>
+                            <div class="mt-1">
+                                <?= Html::a(
+                                    '⚙️ Gestionar snapshot #' . $searchModel->idSnapshot,
+                                    ['/grumascanmarcacion/grumascan-snapshot/view', 'id' => $searchModel->idSnapshot],
+                                    ['class' => 'btn btn-sm btn-outline-info', 'target' => '_blank']
+                                ) ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
 

@@ -3,6 +3,7 @@
 namespace frontend\modules\grumascanmarcacion\controllers;
 
 use frontend\models\Grumascanconteo;
+use frontend\models\GrumascanInventarioSnapshot;
 use frontend\models\search\GrumascanconteoSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -75,6 +76,22 @@ class GrumascanconteoController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
+                // Snapshot inventario Siesa al momento de crear el conteo (non-blocking)
+                try {
+                    $marcacion = $model->marcacion;
+                    if ($marcacion && $marcacion->bodega) {
+                        $codigoBodega = trim((string)$marcacion->bodega->codigo);
+                        if ($codigoBodega !== '') {
+                            GrumascanInventarioSnapshot::crearDesdeConteo((int)$model->id, $codigoBodega);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Yii::warning(
+                        'Snapshot inventario falló para conteo #' . $model->id . ': ' . $e->getMessage(),
+                        'grumascan'
+                    );
+                }
+
                 return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
@@ -134,6 +151,37 @@ class GrumascanconteoController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    /**
+     * Regenera el snapshot de inventario Siesa para un conteo existente.
+     * Útil para conteos creados antes de que existiera la funcionalidad de snapshot.
+     */
+    public function actionRegenerarSnapshot($id)
+    {
+        $model = $this->findModel($id);
+
+        $result = ['ok' => false, 'rows' => 0, 'errors' => []];
+
+        try {
+            $marcacion = $model->marcacion;
+            if (!$marcacion || !$marcacion->bodega) {
+                $result['errors'][] = 'No se encontró la bodega del conteo.';
+            } else {
+                $codigoBodega = trim((string)$marcacion->bodega->codigo);
+                if ($codigoBodega === '') {
+                    $result['errors'][] = 'Código de bodega vacío.';
+                } else {
+                    $result = GrumascanInventarioSnapshot::crearDesdeConteo((int)$model->id, $codigoBodega);
+                    $result['ok'] = empty($result['errors']);
+                }
+            }
+        } catch (\Exception $e) {
+            $result['errors'][] = $e->getMessage();
+        }
+
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return $result;
     }
 
     public function actionAnular($id)

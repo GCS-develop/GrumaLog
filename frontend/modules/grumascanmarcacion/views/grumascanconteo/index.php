@@ -77,7 +77,7 @@ $this->params['breadcrumbs'][] = $this->title;
             //'updated_by',
             [
                 'class' => ActionColumn::class,
-                'template' => '{anular} {desanular}',
+                'template' => '{anular} {desanular} {snapshot}',
                 'buttons' => [
                     'anular' => function ($url, $model) {
                         // Mostrar botón solo si estado = 1 (Terminado)
@@ -111,10 +111,53 @@ $this->params['breadcrumbs'][] = $this->title;
                             ]
                         );
                     },
+                    'snapshot' => function ($url, $model) {
+                        $snapUrl = \yii\helpers\Url::to(['regenerar-snapshot', 'id' => $model->id]);
+                        return Html::button(
+                            '📸 Snapshot',
+                            [
+                                'class' => 'btn btn-info btn-xs btn-snapshot',
+                                'data-url' => $snapUrl,
+                                'data-id'  => $model->id,
+                                'title'    => 'Capturar inventario Siesa para este conteo (usar antes de ver el consolidado)',
+                            ]
+                        );
+                    },
                 ],
             ],
         ],
     ]); ?>
 
-
 </div>
+
+<?php
+$js = <<<JS
+$(document).on('click', '.btn-snapshot', function () {
+    var btn = $(this);
+    var url = btn.data('url');
+    var id  = btn.data('id');
+
+    if (!confirm('¿Capturar snapshot de inventario Siesa para el conteo #' + id + '?\nEsto sobreescribe el snapshot anterior si existía.')) {
+        return;
+    }
+
+    btn.prop('disabled', true).text('Procesando...');
+
+    $.getJSON(url)
+        .done(function (res) {
+            if (res.ok) {
+                alert('✅ Snapshot generado: ' + res.rows + ' filas para conteo #' + id);
+            } else {
+                alert('⚠️ Snapshot con errores:\n' + (res.errors || []).join('\n'));
+            }
+        })
+        .fail(function () {
+            alert('❌ Error al conectar con el servidor.');
+        })
+        .always(function () {
+            btn.prop('disabled', false).text('📸 Snapshot');
+        });
+});
+JS;
+$this->registerJs($js);
+?>

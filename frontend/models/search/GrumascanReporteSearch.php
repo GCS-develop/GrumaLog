@@ -20,6 +20,9 @@ class GrumascanReporteSearch extends Model
     public $created_from;
     public $created_to;
 
+    // ID del snapshot maestro a usar (nuevo sistema)
+    public $idSnapshot;
+
     // all | diff | nodiff
     public $dif_mode = 'all';
     public $min_abs_dif = 0;
@@ -29,6 +32,7 @@ class GrumascanReporteSearch extends Model
         return [
             [['tienda', 'item', 'color', 'talla', 'dif_mode', 'created_from', 'created_to'], 'safe'],
             [['min_abs_dif'], 'number'],
+            [['idSnapshot'], 'integer'],
         ];
     }
 
@@ -82,7 +86,7 @@ class GrumascanReporteSearch extends Model
         };
 
         $itemAsText_it  = new Expression("LTRIM(RTRIM(CAST(it.item  AS NVARCHAR(50))))");
-        $itemAsText_it2 = new Expression("LTRIM(RTRIM(CAST(it2.item AS NVARCHAR(50))))");
+        $itemAsText_it2 = new Expression("LTRIM(RTRIM(CAST(it2.item AS NVARCHAR(50))))"); // también usado en snapshot (alias it2)
 
         // ============================================================
         // 1) Conteo consolidado (estado=1)
@@ -140,30 +144,71 @@ class GrumascanReporteSearch extends Model
         }
 
         // ============================================================
-        // 2) Inventario por SKU lógico
+        // 2) Determinar fuente de inventario
+        //    Prioridad: idSnapshot explícito → fallback inventario live
         // ============================================================
-        $qInv = (new Query())
-            ->from(['inv' => 'inventario'])
-            ->innerJoin(['it2' => 'item'], 'it2.id = inv.idItem')
-            ->select([
-                'codigoBodega' => $normBodega('inv.codigoBodega'),
-                'item' => $itemAsText_it2,
-                'item_descripcion' => new Expression("MAX(LTRIM(RTRIM(CAST(it2.descripcion AS NVARCHAR(255)))))"),
-                'idColor' => new Expression("NULLIF(LTRIM(RTRIM(CAST(it2.idColor AS NVARCHAR(50)))), '')"),
-                'idTalla' => new Expression("NULLIF(LTRIM(RTRIM(CAST(it2.idTalla AS NVARCHAR(50)))), '')"),
-                'existencia_unidades' => new Expression("
-                    CAST(
-                        MAX(COALESCE(TRY_CONVERT(DECIMAL(18,2), inv.existencia), 0))
-                        AS DECIMAL(18,2)
-                    )
-                "),
-            ])
-            ->groupBy([
-                $normBodega('inv.codigoBodega'),
-                $itemAsText_it2,
-                new Expression("NULLIF(LTRIM(RTRIM(CAST(it2.idColor AS NVARCHAR(50)))), '')"),
-                new Expression("NULLIF(LTRIM(RTRIM(CAST(it2.idTalla AS NVARCHAR(50)))), '')"),
-            ]);
+        $idSnapshotExplicito = (int)($this->idSnapshot ?? 0);
+        $useSnapshot         = false;
+
+        if ($idSnapshotExplicito > 0) {
+            // Modo nuevo: snapshot maestro seleccionado manualmente
+            $useSnapshot  = true;
+            $snapshotInfo = ['tipo' => 'maestro', 'id' => $idSnapshotExplicito];
+        }
+
+        // ============================================================
+        // 3) Inventario por SKU lógico (snapshot maestro o tabla live)
+        // ============================================================
+        if ($useSnapshot && $snapshotInfo['tipo'] === 'maestro') {
+            // Usa grumascan_snapshot_detalle del snapshot maestro
+            $snapId = $snapshotInfo['id'];
+            $qInv = (new Query())
+                ->from(['sd' => 'grumascan_snapshot_detalle'])
+                ->innerJoin(['it2' => 'item'], 'it2.id = sd.idItem')
+                ->where(['sd.idSnapshot' => $snapId])
+                ->select([
+                    'codigoBodega' => new Expression("(SELECT codigoBodega FROM grumascan_snapshot WHERE id = {$snapId})"),
+                    'item' => $itemAsText_it2,
+                    'item_descripcion' => new Expression("MAX(LTRIM(RTRIM(CAST(it2.descripcion AS NVARCHAR(255)))))"),
+                    'idColor' => new Expression("NULLIF(LTRIM(RTRIM(CAST(it2.idColor AS NVARCHAR(50)))), '')"),
+                    'idTalla' => new Expression("NULLIF(LTRIM(RTRIM(CAST(it2.idTalla AS NVARCHAR(50)))), '')"),
+                    'existencia_unidades' => new Expression("
+                        CAST(
+                            SUM(COALESCE(TRY_CONVERT(DECIMAL(18,2), sd.existencia), 0))
+                            AS DECIMAL(18,2)
+                        )
+                    "),
+                ])
+                ->groupBy([
+                    $itemAsText_it2,
+                    new Expression("NULLIF(LTRIM(RTRIM(CAST(it2.idColor AS NVARCHAR(50)))), '')"),
+                    new Expression("NULLIF(LTRIM(RTRIM(CAST(it2.idTalla AS NVARCHAR(50)))), '')"),
+                ]);
+        } else {
+            // Fallback: inventario actual (comportamiento original)
+            $qInv = (new Query())
+                ->from(['inv' => 'inventario'])
+                ->innerJoin(['it2' => 'item'], 'it2.id = inv.idItem')
+                ->select([
+                    'codigoBodega' => $normBodega('inv.codigoBodega'),
+                    'item' => $itemAsText_it2,
+                    'item_descripcion' => new Expression("MAX(LTRIM(RTRIM(CAST(it2.descripcion AS NVARCHAR(255)))))"),
+                    'idColor' => new Expression("NULLIF(LTRIM(RTRIM(CAST(it2.idColor AS NVARCHAR(50)))), '')"),
+                    'idTalla' => new Expression("NULLIF(LTRIM(RTRIM(CAST(it2.idTalla AS NVARCHAR(50)))), '')"),
+                    'existencia_unidades' => new Expression("
+                        CAST(
+                            MAX(COALESCE(TRY_CONVERT(DECIMAL(18,2), inv.existencia), 0))
+                            AS DECIMAL(18,2)
+                        )
+                    "),
+                ])
+                ->groupBy([
+                    $normBodega('inv.codigoBodega'),
+                    $itemAsText_it2,
+                    new Expression("NULLIF(LTRIM(RTRIM(CAST(it2.idColor AS NVARCHAR(50)))), '')"),
+                    new Expression("NULLIF(LTRIM(RTRIM(CAST(it2.idTalla AS NVARCHAR(50)))), '')"),
+                ]);
+        }
 
         // ============================================================
         // 3) FULL OUTER JOIN simulado (A ∪ B ∪ huérfanos)
@@ -211,21 +256,41 @@ class GrumascanReporteSearch extends Model
                 'diferencia' => new Expression("CAST(0 - ISNULL(i.existencia_unidades, 0) AS DECIMAL(18,2))"),
             ]);
 
-        $qHuerfanos = (new Query())
-            ->from(['inv' => 'inventario'])
-            ->leftJoin(['itx' => 'item'], 'itx.id = inv.idItem')
-            ->where(['itx.id' => null])
-            ->select([
-                'codigoBodega' => $normBodega('inv.codigoBodega'),
-                'item' => new Expression("CAST('__SIN_ITEM__' AS NVARCHAR(50))"),
-                'item_descripcion' => new Expression("CAST('' AS NVARCHAR(255))"),
-                'idColor' => new Expression("NULL"),
-                'idTalla' => new Expression("NULL"),
-                'conteo_unidades' => new Expression("CAST(0 AS DECIMAL(18,2))"),
-                'existencia_unidades' => new Expression("CAST(SUM(COALESCE(TRY_CONVERT(DECIMAL(18,2), inv.existencia), 0)) AS DECIMAL(18,2))"),
-                'diferencia' => new Expression("CAST(0 - SUM(COALESCE(TRY_CONVERT(DECIMAL(18,2), inv.existencia), 0)) AS DECIMAL(18,2))"),
-            ])
-            ->groupBy([$normBodega('inv.codigoBodega')]);
+        if ($useSnapshot && isset($snapshotInfo) && $snapshotInfo['tipo'] === 'maestro') {
+            // Huérfanos del snapshot maestro: items sin idItem mapeado
+            $snapId = $snapshotInfo['id'];
+            $qHuerfanos = (new Query())
+                ->from(['sd' => 'grumascan_snapshot_detalle'])
+                ->leftJoin(['itx' => 'item'], 'itx.id = sd.idItem')
+                ->where(['sd.idSnapshot' => $snapId, 'itx.id' => null])
+                ->select([
+                    'codigoBodega' => new Expression("(SELECT codigoBodega FROM grumascan_snapshot WHERE id = {$snapId})"),
+                    'item' => new Expression("CAST('__SIN_ITEM__' AS NVARCHAR(50))"),
+                    'item_descripcion' => new Expression("CAST('' AS NVARCHAR(255))"),
+                    'idColor' => new Expression("NULL"),
+                    'idTalla' => new Expression("NULL"),
+                    'conteo_unidades' => new Expression("CAST(0 AS DECIMAL(18,2))"),
+                    'existencia_unidades' => new Expression("CAST(SUM(COALESCE(TRY_CONVERT(DECIMAL(18,2), sd.existencia), 0)) AS DECIMAL(18,2))"),
+                    'diferencia' => new Expression("CAST(0 - SUM(COALESCE(TRY_CONVERT(DECIMAL(18,2), sd.existencia), 0)) AS DECIMAL(18,2))"),
+                ])
+                ->groupBy([new Expression("(SELECT codigoBodega FROM grumascan_snapshot WHERE id = {$snapId})")]);
+        } else {
+            $qHuerfanos = (new Query())
+                ->from(['inv' => 'inventario'])
+                ->leftJoin(['itx' => 'item'], 'itx.id = inv.idItem')
+                ->where(['itx.id' => null])
+                ->select([
+                    'codigoBodega' => $normBodega('inv.codigoBodega'),
+                    'item' => new Expression("CAST('__SIN_ITEM__' AS NVARCHAR(50))"),
+                    'item_descripcion' => new Expression("CAST('' AS NVARCHAR(255))"),
+                    'idColor' => new Expression("NULL"),
+                    'idTalla' => new Expression("NULL"),
+                    'conteo_unidades' => new Expression("CAST(0 AS DECIMAL(18,2))"),
+                    'existencia_unidades' => new Expression("CAST(SUM(COALESCE(TRY_CONVERT(DECIMAL(18,2), inv.existencia), 0)) AS DECIMAL(18,2))"),
+                    'diferencia' => new Expression("CAST(0 - SUM(COALESCE(TRY_CONVERT(DECIMAL(18,2), inv.existencia), 0)) AS DECIMAL(18,2))"),
+                ])
+                ->groupBy([$normBodega('inv.codigoBodega')]);
+        }
 
         $qUnion = (new Query())
             ->from(['u' => $qA->union($qB, true)->union($qHuerfanos, true)]);

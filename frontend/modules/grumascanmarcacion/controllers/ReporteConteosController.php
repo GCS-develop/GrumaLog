@@ -6,6 +6,7 @@ use Yii;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use frontend\models\search\GrumascanReporteSearch;
+use frontend\models\GrumascanSnapshot;
 
 class ReporteConteosController extends Controller
 {
@@ -31,10 +32,24 @@ class ReporteConteosController extends Controller
         $searchModel = new GrumascanReporteSearch();
         $result = $searchModel->searchConsolidadoConteoVsInventario(Yii::$app->request->queryParams);
 
+        // Snapshots disponibles para la bodega seleccionada (para el selector en la vista)
+        $snapshotsDisponibles = [];
+        $tienda = trim((string)($searchModel->tienda ?? ''));
+        if ($tienda !== '') {
+            if (ctype_digit($tienda)) {
+                $tienda = str_pad($tienda, 3, '0', STR_PAD_LEFT);
+            }
+            $snapshotsDisponibles = GrumascanSnapshot::find()
+                ->where(['codigoBodega' => $tienda])
+                ->orderBy(['fecha_snapshot' => SORT_DESC])
+                ->all();
+        }
+
         return $this->render('consolidado', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $result['dataProvider'],
-            'resumenTiendas' => $result['resumenTiendas'],
+            'searchModel'          => $searchModel,
+            'dataProvider'         => $result['dataProvider'],
+            'resumenTiendas'       => $result['resumenTiendas'],
+            'snapshotsDisponibles' => $snapshotsDisponibles,
         ]);
     }
 
