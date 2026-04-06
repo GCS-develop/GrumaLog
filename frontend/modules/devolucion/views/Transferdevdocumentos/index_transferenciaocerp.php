@@ -101,10 +101,10 @@ $this->registerCss('
 
         <div class="centrar">
             <?php if ($documento->estado_envio != 1): ?>
-                <?= Html::a('Ejecutar Transferencia', ['ejecutar-transferencia', 'id' => $documento->id_transferencia], [
-                    'class' => 'btn btn-success',
-                    'data-confirm' => '¿Estás seguro de enviar esta transferencia a Siesa?',
-                    'data-method' => 'post',
+                <?= Html::button('<i class="fas fa-paper-plane"></i> Ejecutar Transferencia', [
+                    'class' => 'btn btn-success btn-ejecutar-transferencia-dev',
+                    'data-url' => \yii\helpers\Url::to(['ejecutar-transferencia', 'id' => $documento->id_transferencia]),
+                    'data-desc' => 'Documento #' . $documento->id_transferencia,
                 ]) ?>
             <?php else: ?>
                 <div class="alert alert-info">
@@ -201,22 +201,51 @@ $this->registerCss('
     </div>
 </div>
 
+<!-- Modal confirmación ejecutar transferencia -->
+<div class="modal fade" id="modalConfirmTransferDev" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-paper-plane"></i> Confirmar Transferencia</h5>
+            </div>
+            <div id="transferdev-confirm-panel" class="modal-body">
+                <p>¿Está seguro de enviar esta transferencia a Siesa?</p>
+                <p class="text-muted mb-0" style="font-size:12px" id="transferdev-desc-text"></p>
+            </div>
+            <div id="transferdev-spinner-panel" class="modal-body text-center d-none">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-3 mb-0">Enviando a SIESA, por favor espere...</p>
+            </div>
+            <div class="modal-footer" id="transferdev-modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnConfirmTransferDev">
+                    <i class="fas fa-paper-plane"></i> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php
-$this->registerJs(<<<JS
-    $('#btn-ejecutar-transferencia').on('click', function () {
-        let id = $(this).data('id');
-        $.ajax({
-            url: '/devolucion/transferdevdocumentos/enviar-a-api',
-            type: 'POST',
-            data: { id: id },
-            success: function (response) {
-                alert('Transferencia enviada a Siesa correctamente.');
-                console.log(response);
-            },
-            error: function () {
-                alert('Error al enviar la transferencia.');
-            }
-        });
-    });
-JS);
+$js = <<<JS
+var _transferDevUrl = '';
+
+$(document).on('click', '.btn-ejecutar-transferencia-dev', function () {
+    _transferDevUrl = $(this).data('url');
+    var desc = $(this).data('desc');
+    $('#transferdev-desc-text').text(desc);
+    $('#transferdev-confirm-panel').removeClass('d-none');
+    $('#transferdev-spinner-panel').addClass('d-none');
+    $('#transferdev-modal-footer').removeClass('d-none');
+    $('#modalConfirmTransferDev').modal('show');
+});
+
+$('#btnConfirmTransferDev').on('click', function () {
+    $('#transferdev-confirm-panel').addClass('d-none');
+    $('#transferdev-spinner-panel').removeClass('d-none');
+    $('#transferdev-modal-footer').addClass('d-none');
+    window.location.href = _transferDevUrl;
+});
+JS;
+$this->registerJs($js);
 ?>

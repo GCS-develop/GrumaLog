@@ -208,7 +208,17 @@ class Comprasimportaciondetalle extends \yii\db\ActiveRecord
     private static function celda($sheet, $colMap, $campo, $fila)
     {
         if (!isset($colMap[$campo])) return null;
-        $val = trim((string)($sheet->getCell($colMap[$campo] . $fila)->getValue() ?? ''));
+        $cell = $sheet->getCell($colMap[$campo] . $fila);
+        $raw  = $cell->getValue();
+
+        // Detectar celdas de fecha de Excel y convertirlas a YYYY-MM-DD
+        if (is_numeric($raw) && \PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($cell)) {
+            $dt  = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($raw);
+            $val = $dt->format('Y-m-d');
+        } else {
+            $val = trim((string)($raw ?? ''));
+        }
+
         return $val !== '' ? $val : null;
     }
 }

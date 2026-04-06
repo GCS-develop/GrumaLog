@@ -15,6 +15,11 @@ $this->title = 'Detalle Importación #' . $model->id;
 $this->params['breadcrumbs'][] = ['label' => 'Compras - Importar', 'url' => ['/compras/importacion/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
+// Total costo de la importación
+$totalCosto = (float) Yii::$app->db->createCommand(
+    "SELECT SUM(uds * costo) FROM comprasimportaciondetalle WHERE idImportacion = :id"
+)->bindValue(':id', $model->id, \PDO::PARAM_INT)->queryScalar();
+
 // Historial de envíos a SIESA (para el modal de ver)
 $logs = Yii::$app->db->createCommand(
     "SELECT id, fechaEnvio, tipoDoc, consecutivo, estadoEnvio, mensaje,
@@ -77,6 +82,9 @@ $('#btn-envio-siesa').on('click', function(){
         <span class="total-badge">
             <i class="fas fa-boxes mr-1"></i>
             Total Unidades: <?= number_format($model->totalUnidades, 0, '.', ',') ?>
+            &nbsp;&nbsp;
+            <i class="fas fa-dollar-sign mr-1"></i>
+            Total Costo: $<?= number_format($totalCosto, 0, '.', ',') ?>
         </span>
     </div>
 
