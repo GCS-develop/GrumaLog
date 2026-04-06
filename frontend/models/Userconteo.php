@@ -144,52 +144,53 @@ class Userconteo extends \yii\db\ActiveRecord
     	return $listadata;
     }
 
-    public static function getListaDataHabilOC($idagenda, $item){
+    /**
+     * Lista de usuarios disponibles para asignar a un ítem específico de una agenda.
+     * Muestra todos los usuarios activos excepto los que ya están contando ESE MISMO ítem
+     * en esa agenda con estado=1, permitiendo reasignación si se pasa $currentUserId.
+     *
+     * @param int $idagenda
+     * @param int $item
+     * @param int|null $currentUserId ID del userconteo ya asignado (para excluirlo del filtro en update)
+     */
+    public static function getListaDataHabilOC($idagenda, $item, $currentUserId = null)
+    {
+        $idagenda = (int)$idagenda;
+        $item     = (int)$item;
+
+        // Si se pasa el usuario actual (modo update), lo excluimos del filtro de exclusión
+        // para que siga apareciendo como opción seleccionable
+        $excludeCurrentUser = '';
+        if (!empty($currentUserId)) {
+            $excludeCurrentUser = 'AND idUserConteo <> ' . (int)$currentUserId;
+        }
+
         $sql = "
-            SELECT usc.id,  
-            emp.nombreEmpleado + ' - ' + CAST(emp.identificacion AS NVARCHAR(50)) + ' - ' + co.nombre AS nombre
-            FROM userconteo usc 
-            INNER JOIN [user] us ON usc.idUser = us.id
-            INNER JOIN empleado emp ON us.idEmpleado = emp.id 
-            LEFT JOIN centrooperacion co ON emp.idCO = co.id 
-            INNER JOIN 
-            (
-            SELECT Q1.idUserConteo
-            FROM (
-            SELECT pem.idUserConteo
-                FROM programacionentregamercancia pem
-                WHERE ISNULL(pem.idEstado,0) = 1 AND pem.idAgendaEntregaMercancia = " . $idagenda . " AND pem.idUserConteo IS NOT NULL
-            ) Q1
-            LEFT JOIN (
-            SELECT pem.idUserConteo
-                FROM programacionentregamercancia pem
-                WHERE ISNULL(pem.idEstado,0) = 1 AND pem.idAgendaEntregaMercancia = " . $idagenda . " AND pem.item = " . $item . 
-            ") Q2 
-            ON Q1.idUserConteo = Q2.idUserConteo 
-            WHERE Q2.idUserConteo IS NULL
-            ) Q3 ON Q3.idUserConteo = usc.id
-            UNION
-            SELECT usc.id,  
-            emp.nombreEmpleado + ' - ' + CAST(emp.identificacion AS NVARCHAR(50)) + ' - ' + co.nombre AS nombre
-            FROM userconteo usc 
-            INNER JOIN [user] us ON usc.idUser = us.id
-            INNER JOIN empleado emp ON us.idEmpleado = emp.id 
-            LEFT JOIN centrooperacion co ON emp.idCO = co.id 
-            LEFT JOIN 
-            (
-                SELECT distinct pem.idUserConteo
-                FROM programacionentregamercancia pem
-                WHERE ISNULL(pem.idEstado,0) = 1 AND pem.idUserConteo IS NOT NULL
-            ) Q1 ON usc.id = Q1.idUserConteo
-            WHERE Q1.idUserConteo IS NULL
+            SELECT usc.id,
+                   emp.nombreEmpleado + ' - ' + CAST(emp.identificacion AS NVARCHAR(50))
+                   + ' - ' + ISNULL(co.nombre, '') AS nombre
+            FROM   userconteo usc
+            INNER JOIN [user]            us  ON usc.idUser               = us.id
+            INNER JOIN empleadologistica eml ON usc.idEmpleadoLogistica   = eml.id
+            INNER JOIN empleado          emp ON eml.idEmpleado            = emp.id
+            LEFT  JOIN centrooperacion   co  ON emp.idCO                  = co.id
+            WHERE  us.status   = 10
+            AND    eml.idEstado = 1
+            AND    usc.id NOT IN (
+                       SELECT DISTINCT idUserConteo
+                       FROM   programacionentregamercancia
+                       WHERE  idAgendaEntregaMercancia = {$idagenda}
+                       AND    item                    = {$item}
+                       AND    ISNULL(idEstado, 0)     = 1
+                       AND    idUserConteo IS NOT NULL
+                       {$excludeCurrentUser}
+                   )
+            ORDER BY emp.nombreEmpleado
         ";
 
-        // Ejecutar la consulta y devolver los resultados
-        $command = Yii::$app->db->createCommand($sql);
-        $results = $command->queryAll(); 
-
+        $results   = Yii::$app->db->createCommand($sql)->queryAll();
         $listadata = ArrayHelper::map($results, 'id', 'nombre');
-    	return $listadata;
+        return $listadata;
     }
 
     public static function actualizarUsuario ($status, $iduser, $idempleadologistica){

@@ -37,7 +37,8 @@ class ProgramacionentregamercanciaController extends Controller
                 'verbs' => [
                     'class' => VerbFilter::className(),
                     'actions' => [
-                        'delete' => ['POST'],
+                        'delete'        => ['POST'],
+                        'anular-conteo' => ['POST'],
                     ],
                 ],
             ]
@@ -359,6 +360,63 @@ class ProgramacionentregamercanciaController extends Controller
         }
     }
 // ======================= TERMINA actionAssignoneuser =======================
+
+    // ======================= INICIA actionAssignmultipleusers =======================
+    public function actionAssignmultipleusers($idfactura)
+    {
+        $modelfactura = Facturaentregamercancia::findOne(['id' => $idfactura]);
+        if (!$modelfactura) {
+            throw new \yii\web\NotFoundHttpException("Factura no existe: {$idfactura}");
+        }
+
+        $idagenda = (int)$modelfactura->idAgendaEntregaMercancia;
+
+        if ($this->request->isPost) {
+            $userIds = Yii::$app->request->post('userIds', []);
+
+            if (empty($userIds)) {
+                Yii::$app->session->setFlash('error', 'Debe seleccionar al menos un usuario.');
+                return $this->redirect(['indexfactura', 'idfactura' => $idfactura]);
+            }
+
+            // Construir array de usuarios con su idEmpleadoLogistica
+            $usuarios = [];
+            foreach ($userIds as $idUserConteo) {
+                $uc = \frontend\models\Userconteo::findOne(['id' => (int)$idUserConteo]);
+                if ($uc) {
+                    $usuarios[] = [
+                        'idUserConteo'        => $uc->id,
+                        'idEmpleadoLogistica' => $uc->idEmpleadoLogistica,
+                    ];
+                }
+            }
+
+            if (empty($usuarios)) {
+                Yii::$app->session->setFlash('error', 'Los usuarios seleccionados no son válidos.');
+                return $this->redirect(['indexfactura', 'idfactura' => $idfactura]);
+            }
+
+            $numItems = Programacionentregamercancia::asignarMultiplesUsersConteo(
+                $idagenda,
+                $usuarios,
+                $idfactura
+            );
+
+            Yii::$app->session->setFlash(
+                'success',
+                count($usuarios) . ' usuario(s) asignados — ' . $numItems . ' ítem(s) distribuidos en forma rotativa.'
+            );
+
+            return $this->redirect(['indexfactura', 'idfactura' => $idfactura]);
+        }
+
+        if (Yii::$app->request->isAjax) {
+            return $this->renderAjax('_form_multiusers', [
+                'idfactura' => $idfactura,
+            ]);
+        }
+    }
+    // ======================= TERMINA actionAssignmultipleusers =======================
 
     /**
      * Creates a new Programacionentregamercancia model.
@@ -689,6 +747,22 @@ class ProgramacionentregamercanciaController extends Controller
         Yii::$app->session->setFlash('success', 'Orden de Compra Actualizada Con Éxito');
 
         return $this->redirect(['indexprogramacion', 'menu' => 'programacion']);
+    }
+
+    public function actionAnularConteo($id)
+    {
+        $model = $this->findModel($id);
+
+        // Borrar todos los registros de conteo de esta programación
+        Conteoentregamercancia::deleteAll(['idProgramacionEntregaMercancia' => $id]);
+
+        // Regresar el estado a "en conteo" (codigo=1) para que el operario pueda recontar
+        $modelestado = Estadoprogramacion::findOne(['codigo' => 1]);
+        $model->idEstado = $modelestado->id;
+        $model->save(false);
+
+        Yii::$app->session->setFlash('success', 'Conteo anulado. El operario puede realizar un nuevo conteo.');
+        return $this->redirect(['/programacion/facturaentregamercancia/indexconteoprogramacion', 'idfactura' => $model->idFacturaEntregaMercancia]);
     }
 
     /**

@@ -272,6 +272,54 @@ class Programacionentregamercancia extends \yii\db\ActiveRecord
             ->count();
     }
 
+    /**
+     * Distribuye los ítems sin asignar de una factura entre varios usuarios (round-robin por ítem).
+     *
+     * @param int   $idagenda
+     * @param array $usuarios  [['idUserConteo' => x, 'idEmpleadoLogistica' => y], ...]
+     * @param int|null $idfactura
+     * @return int  número de ítems asignados
+     */
+    public static function asignarMultiplesUsersConteo($idagenda, array $usuarios, $idfactura = null)
+    {
+        if (empty($usuarios)) {
+            return 0;
+        }
+
+        $modelestado = Estadoprogramacion::findOne(['codigo' => 1]);
+
+        $items = Programacionentregamercancia::find()
+            ->where([
+                'idAgendaEntregaMercancia'    => $idagenda,
+                'idFacturaEntregaMercancia'   => $idfactura,
+            ])
+            ->andWhere(['OR', ['idUserConteo' => null], ['idUserConteo' => '']])
+            ->orderBy(['item' => SORT_ASC])
+            ->all();
+
+        $totalUsers  = count($usuarios);
+        $numAsignados = 0;
+
+        foreach ($items as $i => $model) {
+            $usuario = $usuarios[$i % $totalUsers];
+            $model->scenario = 'scenarioUser';
+            $model->idUserConteo        = $usuario['idUserConteo'];
+            $model->idEmpleadoLogistica = $usuario['idEmpleadoLogistica'];
+            $model->idEstado            = $modelestado->id;
+            $model->save(false);
+            $numAsignados++;
+        }
+
+        if ($numAsignados > 0) {
+            $modelagendaentrega = Agendaentregamercancia::findOne(['id' => $idagenda]);
+            $modelestadoConteo  = Estadoconteo::findOne(['codigo' => 1]);
+            $modelagendaentrega->idEstadoConteo = $modelestadoConteo->id;
+            $modelagendaentrega->save();
+        }
+
+        return $numAsignados;
+    }
+
 }
 
 

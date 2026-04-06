@@ -42,7 +42,7 @@ use frontend\models\Userconteo;
         <div class="col-lg-12">
 
             <?= $form->field($model, 'idUserConteo')->widget(Select2::classname(), [
-                    'data' => Userconteo::getListaDataHabilOC($model->idAgendaEntregaMercancia, $model->item),
+                    'data' => Userconteo::getListaDataHabilOC($model->idAgendaEntregaMercancia, $model->item, $model->idUserConteo),
                     'options' => [
                         'placeholder' => 'Seleccionar Usuario ...', 
                         'multiple' => false,

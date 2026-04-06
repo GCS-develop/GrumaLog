@@ -295,12 +295,22 @@ $attributes = [
     <div class="row">
 
         <div class="col-lg-12 centrar">
-            <?php $url = Url::to(['assignoneuser', 'idfactura' => $modelfactura->id]); ?>
-            
-            <p>
-            <?= Html::button('Asignar Solo 1 Usuario', 
-                        ['value'=>  $url, 'class' => 'btn btn-success btn-lg btn-create', 'id'=>'modalButtonCreate']) 
+            <?php
+                $urlOneUser   = Url::to(['assignoneuser',       'idfactura' => $modelfactura->id]);
+                $urlMultiUser = Url::to(['assignmultipleusers', 'idfactura' => $modelfactura->id]);
             ?>
+            <p>
+                <?= Html::button(
+                    '<i class="fa fa-user"></i> Asignar 1 Usuario (todos los ítems)',
+                    ['value' => $urlOneUser,   'class' => 'btn btn-success btn-lg btn-create', 'id' => 'modalButtonCreate',
+                     'title' => 'Asigna un único operario a todos los ítems sin asignar']
+                ) ?>
+                &nbsp;
+                <?= Html::button(
+                    '<i class="fa fa-users"></i> Asignar Múltiples Usuarios',
+                    ['value' => $urlMultiUser, 'class' => 'btn btn-primary btn-lg btn_create',
+                     'title' => 'Selecciona varios operarios y distribuye los ítems en forma rotativa']
+                ) ?>
             </p>
         </div>
     </div>
@@ -407,12 +417,12 @@ $attributes = [
                 'class' => ActionColumn::className(),
                 'header'=>'Acción',
                 'headerOptions' => ['width' => '10%'],
-                'template' => '{update}',
+                'template' => '{update} {anular-conteo}',
 
                 'buttons' => [
 
-                    'update' => function ($url, $model) {                                
-                        $t = Url::to([  'update', 
+                    'update' => function ($url, $model) {
+                        $t = Url::to([  'update',
                                         'id' => $model->id
                                     ]);
 
@@ -420,6 +430,23 @@ $attributes = [
                                     'value'=> $t,
                                     'title' => 'Actualizar Datos Asignación',
                                     'class' => 'btn btn-default btn_update',
+                        ]);
+                    },
+
+                    'anular-conteo' => function ($url, $model) {
+                        $estadoActual = $model->estado ? $model->estado->codigo : null;
+                        // Solo mostrar si el conteo ya fue finalizado (codigo=2)
+                        if ($estadoActual != 2) {
+                            return '';
+                        }
+                        $t = Url::to(['anular-conteo', 'id' => $model->id]);
+                        return Html::a('<i class="fa fa-undo"></i>', $t, [
+                            'class' => 'btn btn-warning btn-xs',
+                            'title' => 'Anular Conteo (permitir recontar)',
+                            'data'  => [
+                                'confirm' => '¿Anular el conteo de ' . Html::encode($model->userConteo ? $model->userConteo->user->username : '') . '? Se borrarán todos los registros de conteo.',
+                                'method'  => 'post',
+                            ],
                         ]);
                     },
 
