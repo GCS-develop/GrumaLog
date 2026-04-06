@@ -353,6 +353,88 @@ class TraspasoController extends Controller
     }
 
     /**
+     * Consulta si el traspaso bloqueado existe en SIESA.
+     * GET — devuelve JSON para el modal de confirmación.
+     */
+    public function actionDesbloquearStatus($id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+
+        if ((int)$model->transferenciaerp !== 2) {
+            return [
+                'ok'    => false,
+                'error' => 'Este traspaso no está bloqueado (estado ERP: ' . $model->transferenciaerp . ').',
+            ];
+        }
+
+        $existeEnSiesa = Traspaso::buscarDocumentoTraspasoEnSiesa($id) !== null;
+
+        return [
+            'ok'            => true,
+            'existeEnSiesa' => $existeEnSiesa,
+            'info'          => [
+                'id'          => $model->id,
+                'consecutivo' => $model->consecutivo,
+                'origen'      => $model->bodegaOrigen->nombre ?? '-',
+                'destino'     => $model->bodegaDestino->nombre ?? '-',
+            ],
+        ];
+    }
+
+    /**
+     * Desbloquea un traspaso atascado con transferenciaerp = 2.
+     * POST — libera el candado de DB y el mutex file si quedan huérfanos.
+     * Si el documento ya existe en SIESA, lo sincroniza y marca como completado.
+     */
+    public function actionDesbloquear($id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if (!\Yii::$app->request->isPost) {
+            return ['ok' => false, 'error' => 'Método no permitido.'];
+        }
+
+        $model = $this->findModel($id);
+
+        if ((int)$model->transferenciaerp !== 2) {
+            return ['ok' => false, 'error' => 'Este traspaso no está bloqueado.'];
+        }
+
+        // Borrar mutex file huérfano si existe
+        $mutexFile = 'C:\\Apache24\\htdocs\\Grumalog-traspaso\\runtime\\mutex\\'
+            . md5("traspaso:end:{$id}") . '.lock';
+        if (file_exists($mutexFile)) {
+            @unlink($mutexFile);
+        }
+
+        $siesaDoc = Traspaso::buscarDocumentoTraspasoEnSiesa($id);
+
+        if ($siesaDoc !== null) {
+            // Ya existe en SIESA → sincronizar y marcar como completado
+            $result = Traspaso::sincronizarTraspaso($id);
+            if ($result['success']) {
+                Traspaso::updateAll(['transferenciaerp' => 1, 'idEstado' => 1], ['id' => $id]);
+                return [
+                    'ok'      => true,
+                    'action'  => 'completado',
+                    'message' => 'El traspaso ya existía en SIESA y fue marcado como completado.',
+                ];
+            }
+            return ['ok' => false, 'error' => 'Error al sincronizar con SIESA: ' . $result['message']];
+        }
+
+        // No existe en SIESA → liberar candado para reintento
+        Traspaso::updateAll(['transferenciaerp' => 0], ['id' => $id]);
+
+        return [
+            'ok'      => true,
+            'action'  => 'liberado',
+            'message' => 'Candado liberado. El traspaso puede volver a enviarse a SIESA.',
+        ];
+    }
+
+    /**
      * Finds the Traspaso model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID

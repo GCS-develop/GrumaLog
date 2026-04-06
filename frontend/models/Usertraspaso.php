@@ -166,29 +166,8 @@ class Usertraspaso extends \yii\db\ActiveRecord
             $conteo->idEmpleadoLogistica = $idempleadologistica;
 
 
-            try {
-
-                if ($conteo->save()) {
-                    $resultado = TRUE;
-
-                    die("✅ SAVE OK\n" .
-                        "ID: {$conteo->id}\n" .
-                        "idUser: {$conteo->idUser}\n" .
-                        "idEmpleadoLogistica: {$conteo->idEmpleadoLogistica}\n");
-                }
-
-                // Si llega aquí, el save() devolvió false (validación)
-                die("❌ SAVE FAILED (VALIDATION)\n" .
-                    print_r($conteo->getErrors(), true)."✅ SAVE OK\n" .
-                        "ID: {$conteo->id}\n" .
-                        "idUser: {$conteo->idUser}\n" .
-                        "idEmpleadoLogistica: {$conteo->idEmpleadoLogistica}\n");
-            } catch (\Throwable $e) {
-
-                // Si llega aquí, fue error de BD u otra excepción
-                die("❌ SAVE FAILED (EXCEPTION)\n" .
-                    $e->getMessage() . "\n\n" .
-                    "TRACE:\n" . $e->getTraceAsString());
+            if ($conteo->save()) {
+                $resultado = TRUE;
             }
         } else {
 

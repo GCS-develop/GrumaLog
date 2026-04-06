@@ -457,7 +457,7 @@ Modal::end();
             'class' => ActionColumn::className(),
             'header' => 'Acción',
             'headerOptions' => ['width' => '10%'],
-            'template' => '{retornar} {anular} {view} {update}  {factura} {directo} {interno} {siesa} {viewTraspasodetalledelete} ,{viewTraspasodetalleauditado}',
+            'template' => '{retornar} {anular} {view} {update}  {factura} {directo} {interno} {siesa} {desbloquear} {viewTraspasodetalledelete} ,{viewTraspasodetalleauditado}',
             'buttons' => [
                 'anular' => function ($url, $model) {
                     return Html::a(
@@ -577,18 +577,32 @@ Modal::end();
 
 
                 'siesa' => function ($url, $model) {
-                    return Html::a(
+                    $actionUrl = Url::to(['sincronizar', 'id' => $model->id]);
+                    $desc = 'Origen: ' . $model->bodegaOrigen->nombre
+                        . ', Destino: ' . $model->bodegaDestino->nombre
+                        . ', No. Traspaso: ' . $model->id;
+                    return Html::button(
                         '<i class="fa fa-sync"></i>',
-                        ['sincronizar', 'id' => $model->id],
                         [
-                            'class' => 'btn btn-default',
+                            'class' => 'btn btn-default btn-sincronizar-siesa',
                             'title' => 'Sincronizar Documento ERP',
-                            'data' => [
-                                'confirm' => 'Esta seguro de Sincronizar Este Documento? ( Origen: '
-                                    . $model->bodegaOrigen->nombre . ', Destino: '
-                                    . $model->bodegaDestino->nombre . ', No. Traspaso: ' . $model->id . ' )',
-                                'method' => 'post',
-                            ]
+                            'data-url' => $actionUrl,
+                            'data-desc' => $desc,
+                        ]
+                    );
+                },
+
+                'desbloquear' => function ($url, $model) {
+                    $statusUrl   = Url::to(['desbloquear-status', 'id' => $model->id]);
+                    $unlockUrl   = Url::to(['desbloquear', 'id' => $model->id]);
+                    return Html::button(
+                        '<i class="fa fa-lock-open"></i>',
+                        [
+                            'class'           => 'btn btn-default text-warning btn-desbloquear',
+                            'title'           => 'Desbloquear traspaso atascado',
+                            'data-status-url' => $statusUrl,
+                            'data-unlock-url' => $unlockUrl,
+                            'data-id'         => $model->id,
                         ]
                     );
                 },
@@ -624,11 +638,201 @@ Modal::end();
                     return $model->idEstado == 6; //Condicion para mostrar el boton
                 },
 
+                'desbloquear' => function ($model, $key, $index) {
+                    return (int)$model->transferenciaerp === 2;
+                },
+
             ],
 
         ],
     ],
 ]); ?>
 <?php Pjax::end(); ?>
+
+<!-- Modal confirmación sincronizar SIESA -->
+<div class="modal fade" id="modalSincronizarSiesa" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-sync"></i> Sincronizar con ERP</h5>
+            </div>
+            <div id="siesa-confirm-panel" class="modal-body">
+                <p>¿Está seguro de sincronizar este traspaso con SIESA?</p>
+                <p class="text-muted mb-0" style="font-size:12px" id="siesa-desc-text"></p>
+            </div>
+            <div id="siesa-spinner-panel" class="modal-body text-center d-none">
+                <div class="spinner-border text-primary" style="width:3rem;height:3rem;" role="status"></div>
+                <p class="mt-3 mb-0">Sincronizando con SIESA...</p>
+            </div>
+            <div class="modal-footer" id="siesa-modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmSincronizar">
+                    <i class="fa fa-sync"></i> Sincronizar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal desbloquear traspaso -->
+<div class="modal fade" id="modalDesbloquear" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-lock-open text-warning"></i> Desbloquear Traspaso</h5>
+            </div>
+
+            <!-- Panel: consultando -->
+            <div id="dblq-checking-panel" class="modal-body text-center">
+                <div class="spinner-border text-warning" style="width:2.5rem;height:2.5rem;" role="status"></div>
+                <p class="mt-3 mb-0">Consultando estado en SIESA...</p>
+            </div>
+
+            <!-- Panel: confirmación -->
+            <div id="dblq-confirm-panel" class="modal-body d-none">
+                <div id="dblq-siesa-existe" class="alert alert-warning d-none">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <strong>El documento YA existe en SIESA.</strong><br>
+                    Al confirmar se sincronizará y se marcará como <strong>completado</strong>.
+                </div>
+                <div id="dblq-siesa-noexiste" class="alert alert-info d-none">
+                    <i class="fa fa-info-circle"></i>
+                    El documento <strong>no existe en SIESA</strong>.<br>
+                    Al confirmar se liberará el candado para que pueda volver a enviarse.
+                </div>
+                <p class="text-muted mb-0" style="font-size:12px" id="dblq-info-text"></p>
+            </div>
+
+            <!-- Panel: spinner ejecutando -->
+            <div id="dblq-spinner-panel" class="modal-body text-center d-none">
+                <div class="spinner-border text-warning" style="width:3rem;height:3rem;" role="status"></div>
+                <p class="mt-3 mb-0">Desbloqueando traspaso...</p>
+            </div>
+
+            <!-- Panel: resultado -->
+            <div id="dblq-result-panel" class="modal-body d-none">
+                <div id="dblq-result-msg"></div>
+            </div>
+
+            <div class="modal-footer" id="dblq-footer-confirm" style="display:none!important">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="btnConfirmDesbloquear">
+                    <i class="fa fa-lock-open"></i> Confirmar desbloqueo
+                </button>
+            </div>
+            <div class="modal-footer" id="dblq-footer-close" style="display:none!important">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btnCerrarDesbloquear">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php
+$js = <<<JS
+var _dblqUnlockUrl = '';
+
+$(document).on('click', '.btn-desbloquear', function () {
+    var statusUrl = $(this).data('status-url');
+    _dblqUnlockUrl = $(this).data('unlock-url');
+
+    // Reset modal
+    $('#dblq-checking-panel').removeClass('d-none');
+    $('#dblq-confirm-panel,#dblq-spinner-panel,#dblq-result-panel').addClass('d-none');
+    $('#dblq-siesa-existe,#dblq-siesa-noexiste').addClass('d-none');
+    $('#dblq-footer-confirm,#dblq-footer-close').css('display', 'none !important').hide();
+    $('#modalDesbloquear').modal('show');
+
+    $.ajax({
+        url: statusUrl,
+        method: 'GET',
+        dataType: 'json',
+        success: function (resp) {
+            $('#dblq-checking-panel').addClass('d-none');
+            if (!resp.ok) {
+                $('#dblq-result-msg').html('<div class="alert alert-danger"><i class="fa fa-times-circle"></i> ' + resp.error + '</div>');
+                $('#dblq-result-panel').removeClass('d-none');
+                $('#dblq-footer-close').show();
+                return;
+            }
+            if (resp.existeEnSiesa) {
+                $('#dblq-siesa-existe').removeClass('d-none');
+            } else {
+                $('#dblq-siesa-noexiste').removeClass('d-none');
+            }
+            var info = resp.info;
+            $('#dblq-info-text').text('Traspaso #' + info.id + ' | Consecutivo: ' + info.consecutivo + ' | ' + info.origen + ' → ' + info.destino);
+            $('#dblq-confirm-panel').removeClass('d-none');
+            $('#dblq-footer-confirm').show();
+        },
+        error: function () {
+            $('#dblq-checking-panel').addClass('d-none');
+            $('#dblq-result-msg').html('<div class="alert alert-danger"><i class="fa fa-times-circle"></i> Error al consultar el estado. Intenta de nuevo.</div>');
+            $('#dblq-result-panel').removeClass('d-none');
+            $('#dblq-footer-close').show();
+        }
+    });
+});
+
+$('#btnConfirmDesbloquear').on('click', function () {
+    $('#dblq-confirm-panel').addClass('d-none');
+    $('#dblq-footer-confirm').hide();
+    $('#dblq-spinner-panel').removeClass('d-none');
+
+    $.ajax({
+        url: _dblqUnlockUrl,
+        method: 'POST',
+        data: { _csrf: yii.getCsrfToken() },
+        dataType: 'json',
+        success: function (resp) {
+            $('#dblq-spinner-panel').addClass('d-none');
+            if (resp.ok) {
+                var cls = resp.action === 'completado' ? 'alert-success' : 'alert-info';
+                var icon = resp.action === 'completado' ? 'fa-check-circle' : 'fa-unlock';
+                $('#dblq-result-msg').html('<div class="alert ' + cls + '"><i class="fa ' + icon + '"></i> ' + resp.message + '</div>');
+            } else {
+                $('#dblq-result-msg').html('<div class="alert alert-danger"><i class="fa fa-times-circle"></i> ' + resp.error + '</div>');
+            }
+            $('#dblq-result-panel').removeClass('d-none');
+            $('#dblq-footer-close').show();
+        },
+        error: function () {
+            $('#dblq-spinner-panel').addClass('d-none');
+            $('#dblq-result-msg').html('<div class="alert alert-danger"><i class="fa fa-times-circle"></i> Error al ejecutar el desbloqueo.</div>');
+            $('#dblq-result-panel').removeClass('d-none');
+            $('#dblq-footer-close').show();
+        }
+    });
+});
+
+$('#btnCerrarDesbloquear').on('click', function () {
+    location.reload();
+});
+JS;
+$this->registerJs($js);
+?>
+
+<?php
+$js = <<<JS
+var _siesaSincronizarUrl = '';
+
+$(document).on('click', '.btn-sincronizar-siesa', function () {
+    _siesaSincronizarUrl = $(this).data('url');
+    var desc = $(this).data('desc');
+    $('#siesa-desc-text').text(desc);
+    $('#siesa-confirm-panel').removeClass('d-none');
+    $('#siesa-spinner-panel').addClass('d-none');
+    $('#siesa-modal-footer').removeClass('d-none');
+    $('#modalSincronizarSiesa').modal('show');
+});
+
+$('#btnConfirmSincronizar').on('click', function () {
+    $('#siesa-confirm-panel').addClass('d-none');
+    $('#siesa-spinner-panel').removeClass('d-none');
+    $('#siesa-modal-footer').addClass('d-none');
+    window.location.href = _siesaSincronizarUrl;
+});
+JS;
+$this->registerJs($js);
+?>
 
 </div>
