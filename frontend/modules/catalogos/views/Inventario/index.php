@@ -381,9 +381,10 @@ JS
                     <th style="width:28px"></th>
                     <th>Bodega</th>
                     <th>Item</th>
-                    <th>Color</th>
                     <th>Talla</th>
-                    <th class="text-end">Existencia</th>
+                    <th>Color</th>
+                    <th class="text-end">Exist. Gruma</th>
+                    <th class="text-end">Exist. Siesa</th>
                     <th class="text-end" title="Cantidad de códigos de barras para esta variante">EANs</th>
                 </tr>
             </thead>
@@ -403,9 +404,19 @@ JS
                     </td>
                     <td><?= Html::encode($sku['codigoBodega']) ?></td>
                     <td><?= Html::encode($sku['item'] ?? '—') ?></td>
-                    <td><?= Html::encode($sku['color'] ?? '—') ?></td>
                     <td><?= Html::encode($sku['talla'] ?? '—') ?></td>
+                    <td><?= Html::encode($sku['color'] ?? '—') ?></td>
                     <td class="text-end fw-semibold"><?= number_format((float)$sku['existencia']) ?></td>
+                    <?php if ($sku['existenciaSiesa'] === null): ?>
+                        <td class="text-end text-muted" title="Sin datos de SIESA">—</td>
+                    <?php else:
+                        $diffSku = (float)$sku['existenciaSiesa'] - (float)$sku['existencia'];
+                    ?>
+                        <td class="text-end <?= $diffSku != 0 ? 'text-danger fw-semibold' : 'text-success' ?>"
+                            title="<?= $diffSku != 0 ? 'Diferencia: ' . number_format($diffSku, 0, '.', '') : 'Coincide' ?>">
+                            <?= number_format((float)$sku['existenciaSiesa']) ?>
+                        </td>
+                    <?php endif; ?>
                     <td class="text-end">
                         <?= $nEan > 1
                             ? Html::tag('span', $nEan, ['class' => 'badge bg-warning text-dark'])
@@ -414,7 +425,7 @@ JS
                 </tr>
                 <?php if ($canExpand): ?>
                 <tr class="p-0">
-                    <td colspan="7" class="p-0" style="border-top:none">
+                    <td colspan="8" class="p-0" style="border-top:none">
                         <div class="collapse" id="<?= $collapseId ?>">
                             <table class="table table-sm ean-sub-table mb-0 ms-4"
                                    style="width:calc(100% - 1.5rem)">

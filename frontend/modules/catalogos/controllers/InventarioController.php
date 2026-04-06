@@ -124,7 +124,7 @@ class InventarioController extends Controller
             LEFT JOIN talla t ON t.id = i.idTalla
             WHERE {$where}
             GROUP BY inv.codigoBodega, i.item, i.idColor, i.idTalla, c.nombre, t.codigo
-            ORDER BY inv.codigoBodega, i.item
+            ORDER BY inv.codigoBodega, i.item, t.codigo, c.nombre
         ";
 
         $sqlEan = "
@@ -157,9 +157,62 @@ class InventarioController extends Controller
             ];
         }
 
+        // ── Existencia SIESA por (bodega, barcode) ────────────────────────────
+        // Igual que actionDiferencias: query todo SIESA para las bodegas, sin filtrar por barcode
+        $siesaExMap   = null; // null = fallo de conexión; array = datos ok
+        $siesaErrMsg  = null;
+        if (!empty($bodegas)) {
+            $sBodPhs = [];
+            $sParams  = [];
+            foreach ($bodegas as $i => $cod) {
+                $sBodPhs[] = ":sbod{$i}";
+                $sParams[":sbod{$i}"] = $cod;
+            }
+            // No indexamos por bodega para evitar discrepancias de formato (ej: "81" vs "081")
+            // Ya filtramos por bodega en el WHERE, así que todos los registros son de esas bodegas
+            $sqlSiesa = "
+                SELECT t131.f131_id                AS barras,
+                       t400.f400_cant_existencia_1 AS existencia
+                FROM t400_cm_existencia t400
+                INNER JOIN t150_mc_bodegas t150
+                  ON t400.f400_rowid_bodega = t150.f150_rowid
+                INNER JOIN t131_mc_items_barras t131
+                  ON t400.f400_rowid_item_ext = t131.f131_rowid_item_ext
+                WHERE t150.f150_id IN (" . implode(',', $sBodPhs) . ")
+            ";
+            try {
+                $siesaRows = Yii::$app->dbSiesa->createCommand($sqlSiesa, $sParams)->queryAll();
+                $siesaExMap = [];
+                foreach ($siesaRows as $sr) {
+                    $siesaExMap[$sr['barras']] = (float)$sr['existencia'];
+                }
+            } catch (\Exception $e) {
+                $siesaErrMsg = $e->getMessage();
+                Yii::error('[Inventario/buildSkuRows] SIESA error: ' . $e->getMessage(), __METHOD__);
+            }
+        }
+
         foreach ($skus as &$sku) {
             $key = $sku['codigoBodega'] . '|' . $sku['item'] . '|' . $sku['idColor'] . '|' . $sku['idTalla'];
             $sku['eans'] = $eanMap[$key] ?? [];
+
+            if ($siesaExMap === null) {
+                // error de conexión SIESA
+                $sku['existenciaSiesa'] = null;
+            } else {
+                // En SIESA t400 guarda existencia por item_ext, no por barcode.
+                // Todos los barcodes del mismo item_ext tienen el mismo valor,
+                // así que tomamos el primero que exista en el mapa (no sumamos).
+                $siesaVal = null;
+                foreach ($sku['eans'] as $ean) {
+                    if (isset($siesaExMap[$ean['codigoBarras']])) {
+                        $siesaVal = $siesaExMap[$ean['codigoBarras']];
+                        break;
+                    }
+                }
+                $sku['existenciaSiesa'] = $siesaVal ?? 0;
+            }
+
             unset($sku['idColor'], $sku['idTalla']);
         }
 
