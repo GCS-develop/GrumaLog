@@ -7,7 +7,7 @@ use frontend\models\Item;
 class StickerGenerator
 {
 
-	public static function generar($detalles, $fecha_activacion, $origen, $labelsPerRow = 3, $labelWidth = 220, $labelHeight = 170, $cantidad = null)
+	public static function generar($detalles, $fecha_activacion, $origen, $labelsPerRow = 3, $labelWidth = 220, $labelHeight = 170, $cantidad = null, $precio_index = 0)
 	{
 		$count = 0;
 		$horizontalGap = 50;
@@ -20,7 +20,7 @@ class StickerGenerator
 			$item = Item::findOne($detalle->idItem);
 			if (!$item) continue;
 
-			$precio = Item::obtenerPrecioVenta2($item->codigoBarras, '001');
+			$precio = Item::obtenerPrecioVenta2ByIndex($item->codigoBarras, $precio_index);
 
 			$CantidadDetalle = $cantidad > 0 ? (int) $cantidad : (int) $detalle->cantidadPedida;
 

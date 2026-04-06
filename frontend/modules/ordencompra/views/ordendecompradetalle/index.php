@@ -34,6 +34,14 @@ $this->registerJsFile(
     ['depends' => [\yii\web\JqueryAsset::className()]]
 );
 
+$this->registerJs("
+    $('#modalButtonCreateP2').click(function () {
+        $('#modaldata').modal('show')
+            .find('#modalContentData')
+            .load($(this).attr('value'));
+    });
+");
+
 use frontend\models\Ordendecompradetalle;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -102,19 +110,24 @@ $gridColumns = [
     ],
 
     [
-        'attribute' => 'precio', // Nombre del atributo en el modelo
-        'hAlign' => 'right', // Alineación horizontal al centro
-        'vAlign' => 'middle', // Alineación vertical al centro
+        'label' => 'Último Precio',
+        'hAlign' => 'right',
+        'vAlign' => 'middle',
         'value' => function ($model) {
             $resultado = OrdendecompraSIESA::obtenerUltimoPrecioVenta($model->codigoEAN, '001');
-            if (!empty($resultado)) {
-                foreach ($resultado as $dato) {
-                    return $dato['f126_precio'];
-                }
-            }
-            return null;
+            return (!empty($resultado) && isset($resultado[0])) ? $resultado[0]['f126_precio'] : null;
         },
-        'format' => ['decimal', 0], // Formato decimal con 0 decimales
+        'format' => ['decimal', 0],
+    ],
+    [
+        'label' => 'Precio Anterior',
+        'hAlign' => 'right',
+        'vAlign' => 'middle',
+        'value' => function ($model) {
+            $resultado = OrdendecompraSIESA::obtenerUltimoPrecioVenta($model->codigoEAN, '001');
+            return (!empty($resultado) && isset($resultado[1])) ? $resultado[1]['f126_precio'] : null;
+        },
+        'format' => ['decimal', 0],
     ],
     
     'cantidad',
@@ -140,25 +153,40 @@ $gridColumns = [
     [
         'class' => ActionColumn::className(),
         'header' => 'Acción',
-        //'headerOptions' => ['width' => '15%'],
         'template' => '{printitems}',
 
         'buttons' => [
 
             'printitems' => function ($url, $model) {
-                $t = Url::to([
+                $t1 = Url::to([
                     'printitems',
                     'idordencompra' => $model->idOrdenCompra,
                     'fecha_activacion' => $model->fecha_activacion,
                     'iditem' => $model->idItem,
-                    'origen' => 'item'
+                    'origen' => 'item',
+                    'precio_index' => 0,
+                ]);
+                $t2 = Url::to([
+                    'printitems',
+                    'idordencompra' => $model->idOrdenCompra,
+                    'fecha_activacion' => $model->fecha_activacion,
+                    'iditem' => $model->idItem,
+                    'origen' => 'item',
+                    'precio_index' => 1,
                 ]);
 
-                return Html::button('<i class="fa fa-barcode"></i>', [
-                    'value' => $t,
-                    'title' => 'Imprimir Sticker Item',
+                $btn1 = Html::button('<i class="fa fa-barcode"></i> P1', [
+                    'value' => $t1,
+                    'title' => 'Imprimir Sticker - Precio 1 (más reciente)',
                     'class' => 'btn btn-default btn_update',
                 ]);
+                $btn2 = Html::button('<i class="fa fa-barcode"></i> P2', [
+                    'value' => $t2,
+                    'title' => 'Imprimir Sticker - Precio 2 (anterior)',
+                    'class' => 'btn btn-warning btn_update',
+                ]);
+
+                return $btn1 . ' ' . $btn2;
             },
 
         ],
@@ -195,22 +223,35 @@ Modal::end();
         <div class="col-lg-6 derecha">
             <?php
 
-            $url = Url::to([
+            $urlP1 = Url::to([
                 'printitems',
                 'idordencompra' => $modeloc->id,
                 'fecha_activacion' => $modeloc->fecha,
                 'iditem' => null,
-                'origen' => 'oc'
+                'origen' => 'oc',
+                'precio_index' => 0,
+            ]);
+
+            $urlP2 = Url::to([
+                'printitems',
+                'idordencompra' => $modeloc->id,
+                'fecha_activacion' => $modeloc->fecha,
+                'iditem' => null,
+                'origen' => 'oc',
+                'precio_index' => 1,
             ]);
 
             ?>
 
             <p>
                 <?= Html::button(
-                    'Imprimir Stckers',
-                    ['value' => $url, 'class' => 'btn btn-success btn-lg btn-create', 'id' => 'modalButtonCreate']
-                )
-                ?>
+                    'Imprimir Stickers P1',
+                    ['value' => $urlP1, 'class' => 'btn btn-success btn-lg', 'id' => 'modalButtonCreate', 'title' => 'Imprimir con Precio 1 (más reciente)']
+                ) ?>
+                <?= Html::button(
+                    'Imprimir Stickers P2',
+                    ['value' => $urlP2, 'class' => 'btn btn-warning btn-lg', 'id' => 'modalButtonCreateP2', 'title' => 'Imprimir con Precio 2 (anterior)']
+                ) ?>
             </p>
         </div>
         <div class="col-lg-6 izquierda">

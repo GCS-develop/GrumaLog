@@ -49,6 +49,18 @@ class OrdendecompradetalleController extends Controller
     {
         $modeloc = Ordendecompra::findOne(['id' => $idordencompra]);
 
+        // Sincronización automática con SIESA al abrir los items de la OC
+        if ($modeloc) {
+            try {
+                $idCia = 7;
+                Ordendecompra::insertarDatosOC($idCia, $modeloc->idCO, $modeloc->idTipoDocumento, $modeloc->consecutivo);
+                // Re-cargar el modelo por si fue actualizado
+                $modeloc = Ordendecompra::findOne(['id' => $idordencompra]);
+            } catch (\Exception $e) {
+                Yii::$app->session->setFlash('warning', 'No se pudo sincronizar la OC con SIESA: ' . $e->getMessage());
+            }
+        }
+
         $searchModel = new OrdendecompradetalleSearch();
         $dataProvider = $searchModel->search($this->request->queryParams, $idordencompra);
 
@@ -128,7 +140,7 @@ class OrdendecompradetalleController extends Controller
         return $this->redirect(['index']);
     }
 
-    public function actionPrintitems($idordencompra, $fecha_activacion, $iditem = null, $origen = null, $cantidad = null)
+    public function actionPrintitems($idordencompra, $fecha_activacion, $iditem = null, $origen = null, $cantidad = null, $precio_index = 0)
     {
         $model = new Selectimpresora();
 
@@ -168,7 +180,7 @@ class OrdendecompradetalleController extends Controller
                 $detalles = $query->all();
 
                 // Generar etiquetas
-                $labelContent = StickerGenerator::generar($detalles, $fecha_activacion, $origen, 3, 220, 170, $cantidad);
+                $labelContent = StickerGenerator::generar($detalles, $fecha_activacion, $origen, 3, 220, 170, $cantidad, (int)$precio_index);
 
                 /*
                 //Mostrar en pantalla (modo prueba)

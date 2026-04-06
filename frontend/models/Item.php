@@ -287,6 +287,19 @@ class Item extends \yii\db\ActiveRecord
         return 0;
     }
 
+    public static function obtenerPrecioVenta2ByIndex($codigoEAN, $index = 0)
+    {
+        $resultado = OrdendecompraSIESA::obtenerUltimoPrecioVenta($codigoEAN, '001');
+        if (!empty($resultado)) {
+            if (isset($resultado[$index])) {
+                return $resultado[$index]['f126_precio'];
+            }
+            // Si el índice no existe (ej: solo hay 1 precio), devuelve el primero
+            return $resultado[0]['f126_precio'];
+        }
+        return 0;
+    }
+
     public static function generarContenidoSticker($registro, $precio, $x, $y, $labelWidth)
     {
         // --- Ajuste de margen superior ---

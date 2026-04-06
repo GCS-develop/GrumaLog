@@ -437,7 +437,7 @@ class OrdendecompraSIESA extends \yii\db\ActiveRecord
     public static function obtenerUltimoPrecioVenta($codigobarras, $codigolistaprecios)
     {
         $sql = "
-        SELECT TOP 1
+        SELECT TOP 2
             ipre.f126_rowid,
             ipre.f126_id_cia,
             ipre.f126_rowid_item,
