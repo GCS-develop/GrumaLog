@@ -302,6 +302,17 @@ Modal::end();
         ],
 
         [
+            'attribute' => 'updated_by',
+            'label' => 'Usuario anuló',
+            'value' => function ($model) {
+                if ($model->idEstado == 5 && $model->usuarioAnulo) {
+                    return $model->usuarioAnulo->username;
+                }
+                return '-';
+            },
+        ],
+
+        [
             'attribute' => 'flotaPropia',
             'filter' => Estadodespacho::getListaData(),
             'contentOptions' => ['data-cellvalue' => 'serie'],

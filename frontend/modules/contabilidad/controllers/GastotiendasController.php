@@ -287,7 +287,7 @@ public function actionEnviarSiesa($id)
             "F350_CONSEC_DOCTO" => 1,
             "F350_FECHA"        => str_replace("-", "", $doc->F350_FECHA),
             "F350_ID_TERCERO"   => (string)$doc->F350_ID_TERCERO,
-            "F350_NOTAS"        => $doc->F350_NOTAS,
+            "F350_NOTAS"        => str_replace(['&','<','>'], [' ',' ',' '], $doc->F350_NOTAS),
         ]],
         "Movimientocontable" => [],
         "Caja"               => [],
@@ -318,7 +318,7 @@ foreach ($movs as $m) {
         "F351_VALOR_DB"      => (int)$m->F351_VALOR_DB,
         "F351_VALOR_CR"      => (int)$m->F351_VALOR_CR,
         "F351_BASE_GRAVABLE" => '1',
-        "F351_NOTAS"         => $m->F351_NOTAS,
+        "F351_NOTAS"         => str_replace(['&','<','>'], [' ',' ',' '], $m->F351_NOTAS),
     ];
 
     $totalDebitos  += (float)$m->F351_VALOR_DB;

@@ -49,6 +49,23 @@ $this->params['breadcrumbs'][] = $this->title;
                         'data-pjax' => 0,
                     ]
                 ) ?>
+                <?= Html::a(
+                    'Ver Todas las Facturas Crédito',
+                    array_merge(
+                        ['historial-facturas'],
+                        array_filter([
+                            'ReporteCreditosHistorialForm[fecha_inicio]' => $model->fecha_inicio,
+                            'ReporteCreditosHistorialForm[fecha_fin]'    => $model->fecha_fin,
+                            'ReporteCreditosHistorialForm[ID_TERCERO]'   => $model->ID_TERCERO,
+                        ])
+                    ),
+                    [
+                        'class'      => 'btn btn-info',
+                        'style'      => 'margin-left:5px;',
+                        'data-pjax'  => 0,
+                        'title'      => 'Ver todas las facturas crédito, pagadas y con saldo pendiente',
+                    ]
+                ) ?>
             </div>
         </div>
         <?php ActiveForm::end(); ?>

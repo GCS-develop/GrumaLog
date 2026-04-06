@@ -5,6 +5,7 @@ use frontend\models\Centrooperacion;
 use Yii;
 use yii\web\Controller;
 use frontend\models\ReporteCreditosEmpleadosForm;
+use frontend\models\ReporteCreditosHistorialForm;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ReporteCreditosEmpleadosController extends Controller
@@ -69,6 +70,58 @@ class ReporteCreditosEmpleadosController extends Controller
             'model' => $model,
             'dataProvider' => $dataProvider,
             'total' => $total,
+        ]);
+    }
+
+    /**
+     * Vista de TODAS las facturas crédito (pagadas + pendientes)
+     */
+    public function actionHistorialFacturas()
+    {
+        $model = new ReporteCreditosHistorialForm();
+
+        if (!($model->load(Yii::$app->request->get()) && $model->validate())) {
+            $model->fecha_inicio = $model->fecha_inicio ?: date('Y-m-01');
+            $model->fecha_fin    = $model->fecha_fin ?: date('Y-m-t');
+        }
+
+        $dataProvider = $model->dataProviderAgrupado();
+        $total        = $model->getTotalValor();
+        $cupoInfo     = $model->getCupoInfo();
+
+        return $this->render('historial-facturas', [
+            'model'        => $model,
+            'dataProvider' => $dataProvider,
+            'total'        => $total,
+            'cupoInfo'     => $cupoInfo,
+        ]);
+    }
+
+    /**
+     * Detalle de cuotas de una factura específica
+     */
+    public function actionDetalleFactura()
+    {
+        $nit  = Yii::$app->request->get('nit', '');
+        $tipo = Yii::$app->request->get('tipo', '');
+        $num  = (int) Yii::$app->request->get('num', 0);
+
+        if (!$nit || !$tipo || !$num) {
+            throw new \yii\web\BadRequestHttpException('Parámetros incompletos.');
+        }
+
+        $cuotas = \frontend\models\ReporteCreditosHistorialForm::getCuotasFactura($nit, $tipo, $num);
+
+        // Parámetros para volver al listado
+        $backParams = Yii::$app->request->get();
+        unset($backParams['nit'], $backParams['tipo'], $backParams['num']);
+
+        return $this->render('historial-facturas-detalle', [
+            'cuotas'     => $cuotas,
+            'nit'        => $nit,
+            'tipo'       => $tipo,
+            'num'        => $num,
+            'backParams' => $backParams,
         ]);
     }
 
