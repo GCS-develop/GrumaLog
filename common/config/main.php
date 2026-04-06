@@ -76,6 +76,7 @@ return [
 			//'admin/*',
 			'gii/*',
 			//'catalogos/*',
+			'api/*',
 		]
 	],
 

@@ -93,6 +93,16 @@ $baseUrl = Url::base(true);
                                 ],
                             ],
                             [
+                                'label' => 'Calificación Proveedores',
+                                'icon'  => 'star',
+                                'badge' => '<span class="right badge badge-warning">2</span>',
+                                'items' => [
+                                    ['label' => 'Calificar OC', 'url' => ['/calificacion/calificacion/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Ranking Proveedores', 'url' => ['/calificacion/ranking/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Historial', 'url' => ['/calificacion/calificacion/historial'], 'iconStyle' => 'far'],
+                                ],
+                            ],
+                            [
                                 'label' => 'Datos de Control',
                                 'icon' => 'book',
                                 'badge' => '<span class="right badge badge-info">3</span>',
@@ -122,6 +132,7 @@ $baseUrl = Url::base(true);
                                     ['label' => 'Gestionar Conteo', 'url' => ['/programacion/facturaentregamercancia/indexprogramacion'], 'iconStyle' => 'far'],
                                     ['label' => 'Legalización Conteo', 'url' => ['/programacion/facturaentregamercancia/indexlegalizaconteo'], 'iconStyle' => 'far'],
                                     ['label' => 'Conteo por Usuario', 'url' => ['/programacion/conteobylecturacodigo/indexusuario'], 'iconStyle' => 'far'],
+                                    ['label' => 'Auditoría de Entradas', 'url' => ['/auditoriaentrada/auditoriaentrada/index'], 'iconStyle' => 'far'],
                                     //['label' => 'Conteo Recibo Mercancia', 'url' => ['/programacion/programacionentregamercancia/indexconteoagenda'], 'iconStyle' => 'far'],
                                     //['label' => 'Legalización Conteo', 'url' => ['/programacion/conteoentregamercancia/indexlegalizacion'], 'iconStyle' => 'far'],
                                     //['label' => 'Gestionar Conteo', 'url' => ['/programacion/conteoentregamercancia/indexall'], 'iconStyle' => 'far'],
@@ -184,7 +195,7 @@ $baseUrl = Url::base(true);
                         'label' => 'Dashboard',
                         'icon' => 'chart-line',
                         'iconStyle' => 'fas',
-                        'badge' => '<span class="right badge badge-info">3</span>',
+                        'badge' => '<span class="right badge badge-info">4</span>',
                         'items' => [
 
                             // ✅ Dashboard: ruta correcta + active controlado
@@ -208,6 +219,16 @@ $baseUrl = Url::base(true);
                                     Yii::$app->controller->module
                                     && Yii::$app->controller->module->id === 'traspaso'
                                     && Yii::$app->controller->id === 'traspasoauditdashboard'
+                                ),
+                            ],
+                            [
+                                'label'     => 'Comparativo OC → Conteo → Traspasos',
+                                'url'       => ['/traspaso/comparativo-dashboard/index'],
+                                'iconStyle' => 'far',
+                                'active'    => (
+                                    Yii::$app->controller->module
+                                    && Yii::$app->controller->module->id === 'traspaso'
+                                    && Yii::$app->controller->id === 'comparativo-dashboard'
                                 ),
                             ],
 
@@ -262,9 +283,11 @@ $baseUrl = Url::base(true);
                     [
                         'label' => 'Compras',
                         'icon' => 'shopping-cart',
-                        'badge' => '<span class="right badge badge-info">1</span>',
+                        'badge' => '<span class="right badge badge-info">3</span>',
                         'items' => [
                             ['label' => 'Importar Archivo', 'url' => ['/compras/importacion/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Pedido Monacho',   'url' => ['/compras/monacho/lista'],     'iconStyle' => 'far'],
+                            ['label' => 'OC Precios Vigentes', 'url' => ['/compras/oc-precios/index'], 'iconStyle' => 'far'],
                         ]
                     ],
                     [

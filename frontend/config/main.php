@@ -75,6 +75,15 @@ return [
         'grumascanmarcacion' => [
             'class' => 'frontend\modules\grumascanmarcacion\Module',
         ],
+        'calificacion' => [
+            'class' => 'frontend\modules\calificacion\Module',
+        ],
+        'auditoriaentrada' => [
+            'class' => 'frontend\modules\auditoriaentrada\Module',
+        ],
+        'api' => [
+            'class' => 'frontend\modules\api\Module',
+        ],
     ],
 
     'components' => [
