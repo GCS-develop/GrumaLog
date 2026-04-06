@@ -176,8 +176,14 @@ class Transferenciaerp extends \yii\db\ActiveRecord
 
         if ($error == 0) {
 
-            $numRegistrosBorrados = Transferencialogws::deleteAll(['idTransferenciaerp' => $id]);
-            $numRegistrosBorrados = Transferenciaerperror::deleteAll(['idTransferenciaerp' => $id]);
+            // Conservar logs de grupos ya enviados exitosamente; solo borrar fallidos/pendientes
+            // SQL Server: columna 'mensaje' es TEXT, no admite <> directo — usar CAST
+            Transferencialogws::deleteAll([
+                'and',
+                ['idTransferenciaerp' => $id],
+                new \yii\db\Expression("CAST([mensaje] AS nvarchar(max)) <> '0'"),
+            ]);
+            Transferenciaerperror::deleteAll(['idTransferenciaerp' => $id]);
 
             $tiposdocumentos = Transferenciatransitoexcel::find()
                 ->select([
@@ -215,6 +221,21 @@ class Transferenciaerp extends \yii\db\ActiveRecord
         $error = 0;
         $conta = 1;
         foreach ($tiposdocumentos as $registro) {
+
+            // Omitir grupos que ya fueron enviados exitosamente en un intento anterior
+            // SQL Server: columna 'mensaje' es TEXT — usar CAST para comparación
+            $existeExitoso = Transferencialogws::find()->where([
+                'idTransferenciaerp' => $id,
+                'centroOperacionDocumento' => $registro->centroOperacionDocumento,
+                'tipoDocumento' => $registro->tipoDocumento,
+                'fechaDocumento' => $registro->fechaDocumento,
+                'bodegaSalidaDocumento' => $registro->bodegaSalidaDocumento,
+                'bodegaEntradaDocumento' => $registro->bodegaEntradaDocumento,
+            ])->andWhere(new \yii\db\Expression("CAST([mensaje] AS nvarchar(max)) = '0'"))->exists();
+
+            if ($existeExitoso) {
+                continue;
+            }
 
             $numeroRegistros = Transferenciatransitoexcel::find()
                 ->where(
@@ -326,14 +347,21 @@ class Transferenciaerp extends \yii\db\ActiveRecord
 
     public static function ejecutartransferenciaWS($url, $headers, $json)
     {
-        $client = new Client();
-        $response = $client->createRequest()
-            ->setUrl($url)
-            ->setMethod('POST')
-            ->setHeaders($headers)
-            ->setContent($json)
-            ->send();
-        return $response->content;
+        try {
+            $client = new Client();
+            $response = $client->createRequest()
+                ->setUrl($url)
+                ->setMethod('POST')
+                ->setHeaders($headers)
+                ->setContent($json)
+                ->send();
+            return $response->content;
+        } catch (\Exception $e) {
+            return json_encode([
+                'codigo' => 1,
+                'mensaje' => 'Error de conexión con SIESA: ' . $e->getMessage(),
+            ]);
+        }
     }
 
     public static function errortransferenciaWS_Back($id, $CO, $tipoDocumento, $fechaDocumento = null, $consecutivo = null, $respuesta = null)
@@ -817,7 +845,35 @@ class Transferenciaerp extends \yii\db\ActiveRecord
     public static function entradaalmacenintERP($id, $co, $tipodocumento, $consecutivo)
     {
 
+        $groupFields = [
+            'idTransferenciaerp',
+            'centroOperacionDocumento',
+            'tipoDocumento',
+            'consecutivoDocumento',
+            'fechaDocumento',
+            'tercero',
+            'numeroFactura',
+            'sucursal',
+            'idTerceroComprador',
+            'consignacion',
+            'centroOperacionOrdenCompra',
+            'tipoDocumentoOrdenCompra',
+            'consecutivoOrdenCompra',
+            'centroOperacionMovimiento',
+            'tipoDocumentoMovimiento',
+            'consecutivoMovimiento',
+            'numeroRegistroMovimiento',
+            'bodegaMovimiento',
+            'unidadMovimiento',
+            'fechaEntregaMovimiento',
+            'item',
+            'color',
+            'talla',
+            'rowid',
+        ];
+
         $registros = Transferenciaordencompraexcel::find()
+            ->select(array_merge($groupFields, ['MIN(id) as id', 'SUM(cantidadBase) as cantidadBase']))
             ->where([
                 'idTransferenciaerp' => $id,
                 'centroOperacionOrdenCompra' => $co,
@@ -825,6 +881,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 'consecutivoOrdenCompra' => $consecutivo
             ])
             ->andWhere(['>', 'cantidadBase', 0])
+            ->groupBy($groupFields)
             ->orderBy([
                 'centroOperacionDocumento' => SORT_ASC,
                 'tipoDocumento' => SORT_ASC,

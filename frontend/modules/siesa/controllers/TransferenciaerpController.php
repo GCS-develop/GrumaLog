@@ -197,7 +197,28 @@ class TransferenciaerpController extends Controller
             return $this->redirect(['/crossdocking/conteocdscdestinofactura/indextraspaso']);
         }
 
-        return $this->redirect(['index']);
+        return $this->redirect(['resultado', 'id' => $id]);
+    }
+
+    public function actionResultado($id)
+    {
+        $model = $this->findModel($id);
+
+        $logs = Transferencialogws::find()
+            ->where(['idTransferenciaerp' => $id])
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
+
+        $errors = Transferenciaerperror::find()
+            ->where(['idTransferenciaerp' => $id])
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
+
+        $totalGrupos = count($logs);
+        $exitosos = count(array_filter($logs, function ($l) { return $l->mensaje == '0'; }));
+        $fallidos = $totalGrupos - $exitosos;
+
+        return $this->render('resultado', compact('model', 'logs', 'errors', 'totalGrupos', 'exitosos', 'fallidos'));
     }
 
     /**

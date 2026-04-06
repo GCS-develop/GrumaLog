@@ -73,6 +73,55 @@ Modal::end();
                     ?>
             </p>
         </div>
+
+<!-- Overlay spinner -->
+<div id="overlaySpinnerERP" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,.55); z-index:9999; align-items:center; justify-content:center; flex-direction:column;">
+    <div class="spinner-border text-light" style="width:4rem;height:4rem;" role="status"></div>
+    <p style="color:#fff; margin-top:18px; font-size:16px; margin-bottom:4px;">Enviando a SIESA, por favor espere...</p>
+    <p style="color:#ddd; font-size:12px; margin:0;">No cierre ni actualice esta ventana.</p>
+</div>
+
+<!-- Modal de confirmación transferencia ERP -->
+<div class="modal fade" id="modalConfirmERP" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-globe"></i> Confirmar Transferencia ERP</h5>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de realizar la transferencia a SIESA?</p>
+                <p class="text-muted mb-0" style="font-size:12px" id="erpDescText"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmERP">
+                    <i class="fa fa-globe"></i> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php
+$js = <<<JS
+var _erpTransferUrl = '';
+
+$(document).on('click', '.btn-transferencia-erp', function () {
+    _erpTransferUrl = $(this).data('url');
+    var desc = $(this).data('desc');
+    $('#erpDescText').text(desc);
+    $('#modalConfirmERP').modal('show');
+});
+
+$('#btnConfirmERP').on('click', function () {
+    $('#modalConfirmERP').modal('hide');
+    $('#overlaySpinnerERP').css('display', 'flex');
+    window.location.href = _erpTransferUrl;
+});
+JS;
+$this->registerJs($js);
+?>
     </div>
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
@@ -227,16 +276,14 @@ Modal::end();
     },
 
                     'transferencia' => function ($url, $model) {
-        return Html::a(
+        $actionUrl = Url::to(['transferencia', 'id' => $model->id]);
+        return Html::button(
             '<i class="fa fa-globe"></i>',
-            ['transferencia', 'id' => $model->id],
             [
-                'class' => 'btn btn-default',
+                'class' => 'btn btn-default btn-transferencia-erp',
                 'title' => 'Transferencia ERP',
-                'data' => [
-                    'confirm' => 'Esta Seguro de Realizar Transferencia? ( ' . $model->descripcion . ' )',
-                    'method' => 'post',
-                ]
+                'data-url' => $actionUrl,
+                'data-desc' => $model->descripcion,
             ]
         );
     },

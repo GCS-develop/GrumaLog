@@ -40,7 +40,42 @@ class TransferenciaordencompraexcelSearch extends Transferenciaordencompraexcel
      */
     public function search($params, $idtransferenciaerp)
     {
-        $query = Transferenciaordencompraexcel::find()->where(['idTransferenciaerp' => $idtransferenciaerp]);
+        $groupFields = [
+            'idTransferenciaerp',
+            'centroOperacionDocumento',
+            'tipoDocumento',
+            'consecutivoDocumento',
+            'fechaDocumento',
+            'tercero',
+            'numeroFactura',
+            'sucursal',
+            'idTerceroComprador',
+            'consignacion',
+            'centroOperacionOrdenCompra',
+            'tipoDocumentoOrdenCompra',
+            'consecutivoOrdenCompra',
+            'centroOperacionMovimiento',
+            'tipoDocumentoMovimiento',
+            'consecutivoMovimiento',
+            'numeroRegistroMovimiento',
+            'bodegaMovimiento',
+            'unidadMovimiento',
+            'fechaEntregaMovimiento',
+            'item',
+            'color',
+            'talla',
+            'rowid',
+            'codigoUnidadEmpaque',
+        ];
+
+        $query = Transferenciaordencompraexcel::find()
+            ->select(array_merge($groupFields, [
+                'MIN(id) as id',
+                'SUM(cantidadBase) as cantidadBase',
+                'SUM(unidadesConteoEmpaque) as unidadesConteoEmpaque',
+            ]))
+            ->where(['idTransferenciaerp' => $idtransferenciaerp])
+            ->groupBy($groupFields);
 
         // add conditions that should always apply here
 
