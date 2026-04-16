@@ -92,13 +92,22 @@ $criteriosInfo = [
                     <!-- CALIDAD DEL PRODUCTO 30% -->
                     <div class="col-md-3">
                         <?php
-                            $cpVal  = $model->calidad_producto ? (float)$model->calidad_producto : null;
-                            $lP     = $cpVal !== null ? Calificacionproveedor::puntajeALetra($cpVal) : '—';
-                            $claseP = $cpVal !== null ? Calificacionproveedor::letraClase($lP) : 'secondary';
+                            $cpEf   = $model->calcularCalidadProductoEfectiva();
+                            $cpRaw  = $model->calidad_producto ? (float)$model->calidad_producto : null;
+                            $lP     = $cpEf !== null ? Calificacionproveedor::puntajeALetra($cpEf) : '—';
+                            $claseP = $cpEf !== null ? Calificacionproveedor::letraClase($lP) : 'secondary';
+                            $nInc   = (int)($model->num_incumplimientos ?? 0);
                         ?>
                         <div class="text-muted small font-weight-bold">CALIDAD DEL PRODUCTO <span class="badge badge-dark">30%</span></div>
                         <div class="h2 font-weight-bold text-<?= $claseP ?>"><?= $lP ?></div>
-                        <div class="text-muted"><?= $cpVal !== null ? number_format($cpVal, 1) . ' / 5' : '—' ?></div>
+                        <div class="text-muted">
+                            <?php if ($cpEf !== null): ?>
+                                <?= number_format($cpEf, 2) ?> / 5
+                                <?php if ($nInc > 0): ?>
+                                    <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> ingresado: <?= $cpRaw ?>, <?= $nInc ?> incumpl.</small>
+                                <?php endif ?>
+                            <?php else: ?>—<?php endif ?>
+                        </div>
                     </div>
 
                 </div>
@@ -126,6 +135,14 @@ $criteriosInfo = [
                         <tr><td class="text-muted">Uds. Entregadas</td><td><?= number_format($model->unidades_entregadas) ?>
                             <?php if ($model->unidades_ordenadas): ?>
                                 <small class="text-muted">(<?= number_format($model->unidades_entregadas / $model->unidades_ordenadas * 100, 1) ?>%)</small>
+                            <?php endif ?>
+                        </td></tr>
+                        <tr><td class="text-muted">N° Incumplimientos</td><td>
+                            <?php $ni = (int)($model->num_incumplimientos ?? 0); ?>
+                            <?php if ($ni > 0): ?>
+                                <span class="badge badge-danger"><?= $ni ?></span>
+                            <?php else: ?>
+                                <span class="badge badge-success">0</span>
                             <?php endif ?>
                         </td></tr>
                         <tr><td class="text-muted">Fecha Cita</td><td><?= Html::encode(substr($model->fecha_entrega_cita ?? '', 0, 10)) ?></td></tr>

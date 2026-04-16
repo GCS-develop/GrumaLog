@@ -52,6 +52,29 @@ $currentParams = Yii::$app->request->get();
                     ),
                     ['class' => 'btn btn-warning', 'style' => 'margin-left:5px;', 'data-pjax' => 0]
                 ) ?>
+                <?php if (!empty($model->ID_TERCERO)): ?>
+                <?= Html::a(
+                    '<span class="glyphicon glyphicon-download-alt"></span> Generar Cruce SIESA',
+                    ['generar-cruce', 'nit' => $model->ID_TERCERO],
+                    [
+                        'class'      => 'btn btn-success',
+                        'style'      => 'margin-left:5px;',
+                        'data-pjax'  => 0,
+                        'title'      => 'Genera el documento contable NC para cruzar los pagos de nómina con las cuotas pendientes',
+                    ]
+                ) ?>
+                <?php endif; ?>
+                <?= Html::a(
+                    '<span class="glyphicon glyphicon-download-alt"></span> Generar Cruce General',
+                    ['generar-cruce-general'],
+                    [
+                        'class'     => 'btn btn-warning',
+                        'style'     => 'margin-left:5px;',
+                        'data-pjax' => 0,
+                        'title'     => 'Genera el cruce SIESA para TODOS los empleados con pagos de nómina pendientes',
+                        'onclick'   => "return confirm('¿Generar cruce para TODOS los empleados con anticipos pendientes?');",
+                    ]
+                ) ?>
             </div>
         </div>
         <?php ActiveForm::end(); ?>
@@ -136,6 +159,11 @@ $currentParams = Yii::$app->request->get();
                 'label'     => 'Razón Social',
             ],
             [
+                'attribute' => 'TIENDA',
+                'label'     => 'Tienda',
+                'contentOptions' => ['style' => 'white-space:nowrap;'],
+            ],
+            [
                 'attribute' => 'SUCURSAL_CLIENTE',
                 'label'     => 'Sucursal',
             ],
@@ -148,6 +176,23 @@ $currentParams = Yii::$app->request->get();
                 'attribute' => 'NUMERO_DOCUMENTO_CRUCE',
                 'label'     => 'N° Factura',
                 'contentOptions' => ['style' => 'white-space:nowrap; font-weight:bold;'],
+            ],
+            [
+                'label'          => 'Auxiliar',
+                'format'         => 'raw',
+                'filter'         => Html::activeDropDownList($model, 'AUXILIAR', [
+                    ''      => 'Todos',
+                    '20805' => 'EMPLEADOS 13659525',
+                    '1323'  => 'MAYORISTAS 13050506',
+                ], ['class' => 'form-control', 'style' => 'font-size:11px;']),
+                'contentOptions' => ['style' => 'text-align:center; white-space:nowrap;'],
+                'value'          => function ($row) {
+                    $aux = (int)$row['AUXILIAR'];
+                    if ($aux === 20805) {
+                        return '<span style="display:inline-block; padding:2px 8px; border-radius:10px; background:#d4edda; color:#155724; font-size:11px; font-weight:bold;" title="' . $aux . '">EMPLEADOS 13659525</span>';
+                    }
+                    return '<span style="display:inline-block; padding:2px 8px; border-radius:10px; background:#fff3cd; color:#856404; font-size:11px; font-weight:bold;" title="' . $aux . ' — revisar tipo cliente en SIESA">MAYORISTAS 13050506 ⚠</span>';
+                },
             ],
             [
                 'attribute' => 'CONDICION_PAGO',

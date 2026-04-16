@@ -40,20 +40,23 @@ $consecutivoDocumentoConstante = '1'; // Valor fijo
         </div>
         <div class="col-md-4">
             <?= $form->field($model, 'tercero_proveedor')->widget(Select2::class, [
-                'data' => \yii\helpers\ArrayHelper::map(
-                    Proveedor::find()
-                        ->select(['nit', "CONCAT(nit, ' - ', razonSocial) AS nombre"])
-                        ->orderBy('razonSocial')
-                        ->asArray()
-                        ->all(),
-                    'nit',
-                    'nombre'
-                ),
+                'initValueText' => $model->tercero_proveedor
+                    ? ($model->tercero_proveedor . ' - ' . (\frontend\models\Proveedor::findOne(['nit' => $model->tercero_proveedor])?->razonSocial ?? ''))
+                    : '',
                 'options' => [
-                    'placeholder' => 'Seleccione un proveedor por NIT o nombre...',
+                    'placeholder' => 'Buscar proveedor por NIT o nombre...',
                 ],
                 'pluginOptions' => [
-                    'allowClear' => true,
+                    'allowClear'         => true,
+                    'minimumInputLength' => 2,
+                    'ajax'               => [
+                        'url'      => \yii\helpers\Url::to(['/devolucion/transferdevdocumentos/buscarproveedor']),
+                        'dataType' => 'json',
+                        'delay'    => 300,
+                        'data'     => new \yii\web\JsExpression('function(params){ return {q: params.term}; }'),
+                        'processResults' => new \yii\web\JsExpression('function(data){ return {results: data.results}; }'),
+                        'cache'    => true,
+                    ],
                 ],
             ]) ?>
         </div>

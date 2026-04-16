@@ -156,9 +156,16 @@ $clase  = $letra ? Calificacionproveedor::letraClase($letra) : 'secondary';
                                 <?php else: ?><span class="text-muted">—</span><?php endif ?>
                             </td>
                             <td class="text-center">
-                                <?php if ($c->calidad_producto): ?>
-                                    <?php $cp = Calificacionproveedor::letraClase(Calificacionproveedor::puntajeALetra($c->calidad_producto)) ?>
-                                    <span class="badge badge-<?= $cp ?>"><?= (int)$c->calidad_producto ?>/5</span>
+                                <?php
+                                    $cpEf  = $c->calcularCalidadProductoEfectiva();
+                                    $nIncP = (int)($c->num_incumplimientos ?? 0);
+                                ?>
+                                <?php if ($cpEf !== null): ?>
+                                    <?php $cp = Calificacionproveedor::letraClase(Calificacionproveedor::puntajeALetra($cpEf)) ?>
+                                    <span class="badge badge-<?= $cp ?>"><?= number_format($cpEf, 2) ?></span>
+                                    <?php if ($nIncP > 0): ?>
+                                        <br><small class="text-danger" title="<?= $nIncP ?> incumplimiento(s)"><i class="fas fa-exclamation-triangle"></i> <?= (int)$c->calidad_producto ?>/5 −<?= $nIncP ?>inc</small>
+                                    <?php endif ?>
                                 <?php else: ?><span class="text-muted">—</span><?php endif ?>
                             </td>
                             <td class="text-center">

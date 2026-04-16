@@ -19,6 +19,8 @@ use frontend\models\Transferencialogws;
 use frontend\models\Transferenciatransitoexcel;
 use frontend\models\Traspaso;
 use frontend\models\Conteocdscdestinofactura;
+use frontend\models\Logtransferenciaerp;
+use frontend\models\search\LogtransferenciaerpSearch;
 
 use common\models\ProcedimientosGenerales;
 
@@ -230,15 +232,14 @@ class TransferenciaerpController extends Controller
      */
     public function actionDelete($id)
     {
-        $numRegistrosBorrados = Transferencialogws::deleteAll(['idTransferenciaerp' => $id]);
-
-        $numRegistrosBorrados = Transferenciaerperror::deleteAll(['idTransferenciaerp' => $id]);
-
-        $numRegistrosBorrados = Transferenciaordencompraexcel::deleteAll(['idTransferenciaerp' => $id]);
-
-        $numRegistrosBorrados = Transferenciatransitoexcel::deleteAll(['idTransferenciaerp' => $id]);
-
         $model = $this->findModel($id);
+
+        Logtransferenciaerp::registrar($model, 'MANUAL_USUARIO');
+
+        Transferencialogws::deleteAll(['idTransferenciaerp' => $id]);
+        Transferenciaerperror::deleteAll(['idTransferenciaerp' => $id]);
+        Transferenciaordencompraexcel::deleteAll(['idTransferenciaerp' => $id]);
+        Transferenciatransitoexcel::deleteAll(['idTransferenciaerp' => $id]);
 
         $model->delete();
 
@@ -288,6 +289,36 @@ class TransferenciaerpController extends Controller
      * @return Transferenciaerp the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
+    public function actionHistorial()
+    {
+        $searchModel  = new LogtransferenciaerpSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        return $this->render('historial', [
+            'searchModel'  => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionLogBorrada($id)
+    {
+        $logs = Transferencialogws::find()
+            ->where(['idTransferenciaerp' => $id])
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
+
+        $logHeader = Logtransferenciaerp::find()
+            ->where(['idTransferenciaerpBorrada' => $id])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+
+        return $this->render('log_borrada', [
+            'idBorrada' => $id,
+            'logs'      => $logs,
+            'logHeader' => $logHeader,
+        ]);
+    }
+
     protected function findModel($id)
     {
         if (($model = Transferenciaerp::findOne(['id' => $id])) !== null) {

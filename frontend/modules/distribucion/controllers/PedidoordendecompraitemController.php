@@ -9,6 +9,9 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
 use frontend\models\Pedidoordendecompra;
+use frontend\models\Pedidodetalle;
+use frontend\models\Logborradopedido;
+use Yii;
 
 /**
  * PedidoordendecompraitemController implements the CRUD actions for Pedidoordendecompraitem model.
@@ -120,9 +123,82 @@ class PedidoordendecompraitemController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model    = $this->findModel($id);
+        $idPedido = $model->idPedido;
+        $idOC     = $model->idOrdenCompra;
 
-        return $this->redirect(['index']);
+        // Validar que ningún SKU de este item haya sido contado
+        $totalRecibidas = (int) Pedidodetalle::find()
+            ->where([
+                'idPedido'      => $idPedido,
+                'idOrdenCompra' => $idOC,
+                'idItem'        => $model->idItem,
+                'idBodega'      => $model->idBodega,
+            ])
+            ->sum('unidadesRecibidas');
+
+        if ($totalRecibidas > 0) {
+            Yii::$app->session->setFlash(
+                'warning',
+                'No se puede eliminar el item porque ya tiene unidades contadas/recibidas.'
+            );
+            return $this->redirect(['/distribucion/pedidoordendecompraitem/index',
+                'idpedido'      => $idPedido,
+                'idordencompra' => $idOC,
+            ]);
+        }
+
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            // Log antes de borrar
+            $unidadesAntes = (int) $model->totalUnidades;
+            Logborradopedido::registrarEliminarItem($model, $unidadesAntes);
+
+            // Borrar SKUs del item en esta OC
+            Pedidodetalle::deleteAll([
+                'idPedido'      => $idPedido,
+                'idOrdenCompra' => $idOC,
+                'idItem'        => $model->idItem,
+                'idBodega'      => $model->idBodega,
+            ]);
+
+            // Borrar el item
+            $model->delete();
+
+            // Recalcular pedidoordendecompra (nroItems y totalUnidades)
+            Yii::$app->db->createCommand("
+                UPDATE pedidoordendecompra SET
+                    nroItems = (
+                        SELECT COUNT(*) FROM pedidoordendecompraitem
+                        WHERE idPedido = :p1 AND idOrdenCompra = :p2
+                    ),
+                    totalUnidades = ISNULL((
+                        SELECT SUM(totalUnidades) FROM pedidoordendecompraitem
+                        WHERE idPedido = :p3 AND idOrdenCompra = :p4
+                    ), 0)
+                WHERE idPedido = :p5 AND idOrdenCompra = :p6
+            ", [':p1' => $idPedido, ':p2' => $idOC, ':p3' => $idPedido, ':p4' => $idOC, ':p5' => $idPedido, ':p6' => $idOC])->execute();
+
+            // Recalcular pedido (totalUnidades)
+            Yii::$app->db->createCommand("
+                UPDATE pedido SET
+                    totalUnidades = ISNULL((
+                        SELECT SUM(totalUnidades) FROM pedidoordendecompra WHERE idPedido = :p1
+                    ), 0)
+                WHERE id = :p2
+            ", [':p1' => $idPedido, ':p2' => $idPedido])->execute();
+
+            $tx->commit();
+            Yii::$app->session->setFlash('success', 'Item eliminado del pedido correctamente.');
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            Yii::$app->session->setFlash('error', 'No se pudo eliminar el item: ' . $e->getMessage());
+        }
+
+        return $this->redirect(['/distribucion/pedidoordendecompraitem/index',
+            'idpedido'      => $idPedido,
+            'idordencompra' => $idOC,
+        ]);
     }
 
     /**

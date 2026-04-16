@@ -28,6 +28,8 @@ class ReporteCreditosHistorialForm extends Model
     public $FECHA;
     public $FECHA_VCTO;
     public $ESTADO;
+    public $AUXILIAR;
+    public $TIENDA;
 
     public function rules()
     {
@@ -48,6 +50,7 @@ class ReporteCreditosHistorialForm extends Model
             ], 'string'],
             [['VALOR', 'SALDO_PENDIENTE'], 'number'],
             [['FECHA_VCTO'], 'date', 'format' => 'php:Y-m-d'],
+            [['AUXILIAR'], 'safe'],
         ];
     }
 
@@ -70,6 +73,7 @@ class ReporteCreditosHistorialForm extends Model
             'FECHA'                  => 'Fecha',
             'FECHA_VCTO'             => 'Fecha Vcto.',
             'ESTADO'                 => 'Estado',
+            'TIENDA'                 => 'Tienda',
         ];
     }
 
@@ -224,20 +228,25 @@ SELECT
     SA.f353_id_tipo_docto_cruce                                                     AS TIPO_DOCUMENTO_CRUCE,
     SA.F353_CONSEC_DOCTO_CRUCE                                                      AS NUMERO_DOCUMENTO_CRUCE,
     SA.f353_id_cond_pago                                                            AS CONDICION_PAGO,
+    MAX(SA.f353_rowid_auxiliar)                                                     AS AUXILIAR,
     MIN(SA.f353_fecha)                                                              AS FECHA,
     MAX(SA.f353_fecha_vcto)                                                         AS ULTIMA_FECHA_VCTO,
     SUM(SA.f353_total_db)                                                           AS VALOR_TOTAL,
-    SUM(CASE WHEN SA.f353_total_cr = 0 THEN SA.f353_total_db ELSE 0 END)           AS SALDO_PENDIENTE,
+    SUM(SA.f353_total_db - SA.f353_total_cr)                                        AS SALDO_PENDIENTE,
     COUNT(*)                                                                        AS TOTAL_CUOTAS,
     SUM(CASE WHEN SA.f353_total_cr <> 0 THEN 1 ELSE 0 END)                        AS CUOTAS_PAGADAS,
     SUM(CASE WHEN SA.f353_total_cr = 0  THEN 1 ELSE 0 END)                        AS CUOTAS_PENDIENTES,
-    CASE WHEN SUM(CASE WHEN SA.f353_total_cr = 0 THEN SA.f353_total_db ELSE 0 END) > 0
+    CASE WHEN SUM(SA.f353_total_db - SA.f353_total_cr) > 0
          THEN 'Pendiente'
          ELSE 'Pagado'
-    END                                                                             AS ESTADO
+    END                                                                             AS ESTADO,
+    ISNULL(MAX(bod.f150_descripcion), MAX(SA.F353_ID_CO_CRUCE))                    AS TIENDA
 FROM t353_co_saldo_abierto AS SA
 INNER JOIN t200_mm_terceros AS T
     ON SA.f353_rowid_tercero = T.f200_rowid
+LEFT JOIN t150_mc_bodegas AS bod
+    ON LTRIM(RTRIM(bod.f150_id)) = LTRIM(RTRIM(SA.F353_ID_CO_CRUCE))
+    AND bod.f150_id_cia = 7
 WHERE
     SA.F353_FECHA >= :fini
     AND SA.F353_FECHA < DATEADD(day, 1, :ffin)
@@ -303,6 +312,13 @@ SQL;
             $and[] = 'CONVERT(date, SA.f353_fecha, 120) = CONVERT(date, :f_fecha, 120)';
             $params[':f_fecha'] = $this->FECHA;
         }
+        if ($this->AUXILIAR) {
+            if ($this->AUXILIAR === '20805') {
+                $and[] = 'SA.f353_rowid_auxiliar = 20805';
+            } elseif ($this->AUXILIAR === '1323') {
+                $and[] = 'SA.f353_rowid_auxiliar = 1323';
+            }
+        }
 
         return $and ? "\nAND " . implode("\nAND ", $and) : '';
     }
@@ -344,6 +360,7 @@ SQL;
                     'TIPO_DOCUMENTO_CRUCE', 'NUMERO_DOCUMENTO_CRUCE',
                     'CONDICION_PAGO', 'FECHA', 'ULTIMA_FECHA_VCTO',
                     'VALOR_TOTAL', 'SALDO_PENDIENTE', 'TOTAL_CUOTAS', 'ESTADO',
+                    'TIENDA',
                 ],
                 'defaultOrder' => [
                     'FECHA' => SORT_DESC,
@@ -440,16 +457,15 @@ SQL;
 
         $cupo = (float) (Yii::$app->dbSiesa->createCommand($sqlCupo, [':nit' => $this->ID_TERCERO])->queryScalar() ?: 0);
 
-        // Saldo pendiente: suma de f353_total_db donde f353_total_cr = 0 (cuotas no cruzadas)
+        // Saldo pendiente neto: incluye facturas (anticipo=0) Y pagos nómina (anticipo=1, CO 002)
+        // para cuadrar con el "Resumen de saldos de clientes" de SIESA
         $sqlPendiente = <<<SQL
-SELECT SUM(SA.f353_total_db)
+SELECT SUM(SA.f353_total_db - SA.f353_total_cr)
 FROM t353_co_saldo_abierto AS SA
 INNER JOIN t200_mm_terceros AS T
     ON SA.f353_rowid_tercero = T.f200_rowid
 WHERE LTRIM(RTRIM(T.f200_nit)) = LTRIM(RTRIM(:nit))
     AND SA.f353_rowid_auxiliar = 20805
-    AND SA.f353_ind_anticipo = 0
-    AND SA.f353_total_cr = 0
     AND SA.f353_id_tipo_docto_cruce <> 'NC'
 SQL;
 

@@ -566,13 +566,15 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
 
         $ordencompra = Ordendecompra::findOne(['id' => $factura->idOrdenCompra]);
 
+        $logErp = null;
         if ($factura->idTransferenciaerp) {
             $transferenciaerp = Transferenciaerp::findOne(['id' => $factura->idTransferenciaerp]);
 
             if ($transferenciaerp) {
-                $numRegistrosBorrados = Transferenciaerperror::deleteAll((['idTransferenciaerp' => $transferenciaerp->id]));
-                $numRegistrosBorrados = Transferenciaordencompraexcel::deleteAll(['idTransferenciaerp' => $transferenciaerp->id]);
-                $numRegistrosBorrados = Transferenciaerp::deleteAll(['id' => $transferenciaerp->id]);
+                $logErp = Logtransferenciaerp::registrar($transferenciaerp, 'AUTO_REGENERACION');
+                Transferenciaerperror::deleteAll(['idTransferenciaerp' => $transferenciaerp->id]);
+                Transferenciaordencompraexcel::deleteAll(['idTransferenciaerp' => $transferenciaerp->id]);
+                Transferenciaerp::deleteAll(['id' => $transferenciaerp->id]);
             }
         }
 
@@ -587,6 +589,12 @@ class Conteocdscdestinofactura extends \yii\db\ActiveRecord
             $model->numeroRegistros = $count;
             $model->save();
         }
+
+        if ($logErp !== null) {
+            $logErp->idTransferenciaerpNueva = $idtransferenciaerp;
+            $logErp->save(false);
+        }
+
         return $idtransferenciaerp;
     }
 

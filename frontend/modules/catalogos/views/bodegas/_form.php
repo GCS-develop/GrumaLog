@@ -37,11 +37,20 @@ use yii\widgets\ActiveForm;
         </div>
 
         <div class="col-lg-3">
-            <?= $form->field($model, 'cedi')->dropDownList(['1' => 'SI', '0' => 'NO'], 
-                    [   'prompt' => ' Seleccionar Opción ... ', 
+            <?= $form->field($model, 'cedi')->dropDownList(['1' => 'SI', '0' => 'NO'],
+                    [   'prompt' => ' Seleccionar Opción ... ',
                         'id' => 'cedi',
                         'required'=>true]);
             ?>
+        </div>
+
+        <div class="col-lg-3">
+            <?= $form->field($model, 'zona')->textInput([
+                'type' => 'number',
+                'min' => 1,
+                'placeholder' => 'Sin zona',
+                'id' => 'zona',
+            ])->hint('Agrupa tiendas para cambio de bodega en PDA. Dejar vacío si no aplica.') ?>
         </div>
     </div>
 

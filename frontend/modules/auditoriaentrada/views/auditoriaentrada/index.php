@@ -94,7 +94,8 @@ $this->registerCss('
         </div>
     </div>
 
-    <form method="get" action="<?= Url::to(['/auditoriaentrada/auditoriaentrada/index']) ?>">
+    <form method="get" action="<?= Url::to(['/index.php']) ?>">
+        <input type="hidden" name="r" value="auditoriaentrada/auditoriaentrada/index">
         <div class="filter-bar">
             <div>
                 <label>Estado</label>
@@ -191,7 +192,7 @@ $this->registerCss('
                         <span><i class="glyphicon glyphicon-barcode"></i> <strong><?= number_format($stats['totalEscaneos']) ?></strong> escaneos</span>
                         <span><i class="glyphicon glyphicon-th"></i> <strong><?= number_format($escaneado) ?></strong> uds</span>
                         <?php if ($esperado > 0): ?>
-                            <span><strong><?= $pct ?>%</strong> de <?= number_format($esperado) ?> UNDentradas</span>
+                            <span><strong><?= $pct ?>%</strong> de <?= number_format($esperado) ?> unidades entradas</span>
                         <?php endif; ?>
                     </div>
                     <?php if ($esperado > 0): ?>

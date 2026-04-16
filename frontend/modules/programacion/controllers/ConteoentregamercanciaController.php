@@ -28,7 +28,10 @@ use frontend\models\Estadoprogramacion;
 use frontend\models\Estadoconteo;
 use frontend\models\Estadolegalizacion;
 use frontend\models\LegalizaConteoForm;
+use frontend\models\Calificacionproveedor;
 use frontend\models\FileAgendaInput;
+use frontend\models\Logborradoconteo;
+use frontend\models\search\LogborradoconteoSearch;
 
 use common\models\ProcedimientosGenerales;
 
@@ -372,6 +375,27 @@ class ConteoentregamercanciaController extends Controller
     {
         $model = $this->findModel($id);
         $idprogramacion = $model->idProgramacionEntregaMercancia;
+        $programacion   = Programacionentregamercancia::findOne(['id' => $idprogramacion]);
+
+        if ($this->estaLegalizado($programacion)) {
+            Yii::$app->session->setFlash('error', 'No se puede eliminar conteos de una agenda ya legalizada.');
+            return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
+        }
+
+        $it        = $model->getItem()->one();
+        $itemCode  = $it ? $it->item : null;
+        $itemColor = $it && $it->color ? $it->color->nombre : null;
+        $itemTalla = $it && $it->talla ? trim($it->talla->nombre) : null;
+
+        Logborradoconteo::registrar(
+            $programacion,
+            'ELIMINAR_FILA',
+            $model->unidadesConteo,
+            $model->unidadesConteo,
+            $itemCode,
+            $itemColor,
+            $itemTalla
+        );
 
         $model->delete();
 
@@ -380,6 +404,24 @@ class ConteoentregamercanciaController extends Controller
 
     public function actionDeleteconteos($idprogramacion)
     {
+        $programacion = Programacionentregamercancia::findOne(['id' => $idprogramacion]);
+
+        if ($this->estaLegalizado($programacion)) {
+            Yii::$app->session->setFlash('error', 'No se puede eliminar conteos de una agenda ya legalizada.');
+            return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
+        }
+
+        $totalAntes = Conteoentregamercancia::find()
+            ->where(['idProgramacionEntregaMercancia' => $idprogramacion])
+            ->sum('unidadesConteo') ?? 0;
+
+        Logborradoconteo::registrar(
+            $programacion,
+            'BORRAR_TODOS',
+            $totalAntes,
+            $totalAntes
+        );
+
         Conteoentregamercancia::updateAll(
             ['unidadesConteo' => 0],
             ['idProgramacionEntregaMercancia' => $idprogramacion]
@@ -390,8 +432,15 @@ class ConteoentregamercanciaController extends Controller
 
     public function actionReducirconteosfila($idprogramacion, $item, $color, $cantidad)
     {
-        $cantidad = (int) $cantidad;
+        $cantidad     = (int) $cantidad;
+        $programacion = Programacionentregamercancia::findOne(['id' => $idprogramacion]);
+
         if ($cantidad <= 0) {
+            return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
+        }
+
+        if ($this->estaLegalizado($programacion)) {
+            Yii::$app->session->setFlash('error', 'No se puede modificar conteos de una agenda ya legalizada.');
             return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
         }
 
@@ -404,6 +453,8 @@ class ConteoentregamercanciaController extends Controller
             ->andWhere(['col.codigo' => $color])
             ->orderBy(['cem.id' => SORT_DESC])
             ->all();
+
+        $totalAntes = array_sum(array_column(array_map(fn($m) => ['u' => $m->unidadesConteo], $models), 'u'));
 
         $restante = $cantidad;
         foreach ($models as $model) {
@@ -419,13 +470,22 @@ class ConteoentregamercanciaController extends Controller
             }
         }
 
+        Logborradoconteo::registrar($programacion, 'REDUCIR_FILA', $totalAntes, $cantidad, $item, $color);
+
         return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
     }
 
     public function actionReducirconteostalla($idprogramacion, $item, $color, $talla, $cantidad)
     {
-        $cantidad = (int) $cantidad;
+        $cantidad     = (int) $cantidad;
+        $programacion = Programacionentregamercancia::findOne(['id' => $idprogramacion]);
+
         if ($cantidad <= 0) {
+            return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
+        }
+
+        if ($this->estaLegalizado($programacion)) {
+            Yii::$app->session->setFlash('error', 'No se puede modificar conteos de una agenda ya legalizada.');
             return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
         }
 
@@ -441,6 +501,8 @@ class ConteoentregamercanciaController extends Controller
             ->orderBy(['cem.id' => SORT_DESC])
             ->all();
 
+        $totalAntes = array_sum(array_column(array_map(fn($m) => ['u' => $m->unidadesConteo], $models), 'u'));
+
         $restante = $cantidad;
         foreach ($models as $model) {
             if ($restante <= 0) break;
@@ -455,13 +517,22 @@ class ConteoentregamercanciaController extends Controller
             }
         }
 
+        Logborradoconteo::registrar($programacion, 'REDUCIR_TALLA', $totalAntes, $cantidad, $item, $color, $talla);
+
         return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
     }
 
     public function actionReducirconteositem($idprogramacion, $item, $cantidad)
     {
-        $cantidad = (int) $cantidad;
+        $cantidad     = (int) $cantidad;
+        $programacion = Programacionentregamercancia::findOne(['id' => $idprogramacion]);
+
         if ($cantidad <= 0) {
+            return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
+        }
+
+        if ($this->estaLegalizado($programacion)) {
+            Yii::$app->session->setFlash('error', 'No se puede modificar conteos de una agenda ya legalizada.');
             return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
         }
 
@@ -470,6 +541,8 @@ class ConteoentregamercanciaController extends Controller
             ->orderBy(['id' => SORT_DESC])
             ->all();
 
+        $totalAntes = array_sum(array_column(array_map(fn($m) => ['u' => $m->unidadesConteo], $models), 'u'));
+
         $restante = $cantidad;
         foreach ($models as $model) {
             if ($restante <= 0) break;
@@ -483,6 +556,8 @@ class ConteoentregamercanciaController extends Controller
                 $restante = 0;
             }
         }
+
+        Logborradoconteo::registrar($programacion, 'REDUCIR_ITEM', $totalAntes, $cantidad, $item);
 
         return $this->redirect(['indexprogramacion', 'idprogramacion' => $idprogramacion]);
     }
@@ -674,9 +749,42 @@ class ConteoentregamercanciaController extends Controller
                     $modelagenda->idUserLegalizacion = Yii::$app->user->identity->id;
 
                     $respuesta = $modelagenda->save();
-                    
+
                     if ($respuesta){
                         Yii::$app->session->setFlash( 'success', 'Registro Actualizado');
+
+                        // Actualizar unidades entregadas en las calificaciones de esta OC
+                        $idOc = (int)Yii::$app->db->createCommand("
+                            SELECT idOrdenCompra FROM agendaentregamercancia WHERE id = :id
+                        ", [':id' => $idagenda])->queryScalar();
+
+                        if ($idOc) {
+                            // Totales reales contados por subcategoría
+                            $totales = Yii::$app->db->createCommand("
+                                SELECT sub.nombre AS subcategoria,
+                                       SUM(d.cantidadEntrada) AS total_entregadas
+                                FROM ordendecompradetalle d
+                                INNER JOIN subcategoria sub ON sub.id = d.idSubcategoria
+                                WHERE d.idOrdenCompra = :id
+                                GROUP BY sub.nombre
+                            ", [':id' => $idOc])->queryAll();
+
+                            foreach ($totales as $total) {
+                                $calif = Calificacionproveedor::find()
+                                    ->where([
+                                        'id_ordendecompra' => $idOc,
+                                        'subcategoria'     => $total['subcategoria'],
+                                    ])
+                                    ->orderBy(['id' => SORT_DESC])
+                                    ->one();
+
+                                if ($calif) {
+                                    $calif->unidades_entregadas = (int)$total['total_entregadas'];
+                                    $calif->calcularPuntajes();
+                                    $calif->save(false); // false = sin re-validar
+                                }
+                            }
+                        }
                     }else{
                         Yii::$app->session->setFlash( 'error', 'Error Actualizando Registro');
                     }
@@ -781,6 +889,162 @@ class ConteoentregamercanciaController extends Controller
         ]);
     }
 
+
+    /**
+     * Investigación forense OC 2CA-6427
+     */
+    public function actionInvestigacion6427()
+    {
+        $db = Yii::$app->db;
+
+        // 1. OC y agenda
+        $oc = $db->createCommand("
+            SELECT oc.id AS idOC, oc.consecutivo, td.codigo AS tipoDoc, co.codigo AS co,
+                   a.id AS idAgenda, ec.nombre AS estadoConteo, el.nombre AS estadoLegaliz,
+                   ul.username AS userLegalizo,
+                   CONVERT(varchar,a.updated_at,120) AS agendaUltimaMod,
+                   uu.username AS agendaModPor
+            FROM ordencompra oc
+            INNER JOIN tipodocumento td ON oc.idTipoDocumento = td.id
+            INNER JOIN centrooperacion co ON oc.idCO = co.id
+            INNER JOIN agendaentregamercancia a ON a.idOrdenCompra = oc.id
+            LEFT JOIN estadoconteo ec ON a.idEstadoConteo = ec.id
+            LEFT JOIN estadolegalizacion el ON a.idEstadoLegalizacion = el.id
+            LEFT JOIN [user] ul ON a.idUserLegalizacion = ul.id
+            LEFT JOIN [user] uu ON a.updated_by = uu.id
+            WHERE oc.consecutivo = '6427' AND td.codigo = '2CA'
+        ")->queryAll();
+
+        $idAgenda = $oc[0]['idAgenda'] ?? null;
+        $programaciones = $idAgenda ? $db->createCommand("
+            SELECT p.id, p.item, ep.nombre AS estadoProg,
+                   p.idFacturaEntregaMercancia AS idFactura,
+                   CONVERT(varchar,p.created_at,120) AS created_at, uc2.username AS creadoPor,
+                   CONVERT(varchar,p.updated_at,120) AS updated_at, uu.username AS actualizadoPor
+            FROM programacionentregamercancia p
+            LEFT JOIN estadoprogramacion ep ON p.idEstado = ep.id
+            LEFT JOIN userconteo uc ON p.idUserConteo = uc.id
+            LEFT JOIN [user] uc2 ON p.created_by = uc2.id
+            LEFT JOIN [user] uu ON p.updated_by = uu.id
+            WHERE p.idAgendaEntregaMercancia = $idAgenda ORDER BY p.item
+        ")->queryAll() : [];
+
+        $idsProgStr  = implode(',', array_column($programaciones, 'id') ?: [0]);
+        $facturasStr = implode(',', array_unique(array_filter(array_column($programaciones, 'idFactura'))) ?: [0]);
+
+        $conteos = $db->createCommand("
+            SELECT c.id, c.item, c.unidadesConteo, c.unidadesAsignadas,
+                   CONVERT(varchar,c.created_at,120) AS created_at, uc.username AS creadoPor,
+                   CONVERT(varchar,c.updated_at,120) AS updated_at, uu.username AS actualizadoPor
+            FROM conteoentregamercancia c
+            LEFT JOIN [user] uc ON c.created_by = uc.id
+            LEFT JOIN [user] uu ON c.updated_by = uu.id
+            WHERE c.idProgramacionEntregaMercancia IN ($idsProgStr)
+            ORDER BY c.item, c.id
+        ")->queryAll();
+
+        $actividad7abril = $db->createCommand("
+            SELECT c.id, c.item, c.unidadesConteo,
+                   CONVERT(varchar,c.created_at,120) AS created_at, uc.username AS creadoPor,
+                   CONVERT(varchar,c.updated_at,120) AS updated_at, uu.username AS actualizadoPor
+            FROM conteoentregamercancia c
+            LEFT JOIN [user] uc ON c.created_by = uc.id
+            LEFT JOIN [user] uu ON c.updated_by = uu.id
+            WHERE c.idProgramacionEntregaMercancia IN ($idsProgStr)
+              AND (CAST(c.updated_at AS DATE) = '2026-04-07' OR CAST(c.created_at AS DATE) = '2026-04-07')
+            ORDER BY c.updated_at
+        ")->queryAll();
+
+        $escaneos = $db->createCommand("
+            SELECT cb.id, cb.idConteoFactura, cb.codigoBarras, cb.unidades, cb.isMobile AS desdeCelular,
+                   CONVERT(varchar,cb.created_at,120) AS created_at, uc.username AS creadoPor,
+                   CONVERT(varchar,cb.updated_at,120) AS updated_at, uu.username AS actualizadoPor
+            FROM conteobylecturacodigo cb
+            LEFT JOIN [user] uc ON cb.created_by = uc.id
+            LEFT JOIN [user] uu ON cb.updated_by = uu.id
+            WHERE cb.idConteoFactura IN ($facturasStr)
+            ORDER BY cb.created_at DESC
+        ")->queryAll();
+
+        $escaneos7abril = $db->createCommand("
+            SELECT cb.id, cb.codigoBarras, cb.unidades,
+                   CONVERT(varchar,cb.created_at,120) AS created_at, uc.username AS creadoPor,
+                   CONVERT(varchar,cb.updated_at,120) AS updated_at, uu.username AS actualizadoPor
+            FROM conteobylecturacodigo cb
+            LEFT JOIN [user] uc ON cb.created_by = uc.id
+            LEFT JOIN [user] uu ON cb.updated_by = uu.id
+            WHERE cb.idConteoFactura IN ($facturasStr)
+              AND (CAST(cb.created_at AS DATE) = '2026-04-07' OR CAST(cb.updated_at AS DATE) = '2026-04-07')
+            ORDER BY cb.created_at
+        ")->queryAll();
+
+        $resumenFechas = $db->createCommand("
+            SELECT MIN(CONVERT(varchar,c.created_at,120)) AS primerConteo,
+                   MAX(CONVERT(varchar,c.created_at,120)) AS ultimoConteo,
+                   MIN(CONVERT(varchar,c.updated_at,120)) AS primeraModif,
+                   MAX(CONVERT(varchar,c.updated_at,120)) AS ultimaModif,
+                   COUNT(*) AS totalFilas, SUM(c.unidadesConteo) AS totalUnidadesActual
+            FROM conteoentregamercancia c
+            WHERE c.idProgramacionEntregaMercancia IN ($idsProgStr)
+        ")->queryAll();
+
+        $facturas = $idAgenda ? $db->createCommand("
+            SELECT f.id, f.numeroFacturaLegaliza, f.consecutivoDocumentoEntrada,
+                   CONVERT(varchar,f.updated_at,120) AS updated_at, uu.username AS actualizadoPor
+            FROM facturaentregamercancia f
+            LEFT JOIN [user] uu ON f.updated_by = uu.id
+            WHERE f.idAgendaEntregaMercancia = $idAgenda
+        ")->queryAll() : [];
+
+        return $this->render('investigacion6427', compact(
+            'oc','programaciones','conteos','actividad7abril',
+            'escaneos','escaneos7abril','resumenFechas','facturas','facturasStr'
+        ));
+    }
+
+    /**
+     * Index global de borrados de conteo — todas las OC, con filtros.
+     */
+    public function actionIndexborradosglobal()
+    {
+        $searchModel  = new LogborradoconteoSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        return $this->render('index_borrados_global', [
+            'searchModel'  => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
+     * Historial de eliminaciones de conteos para una programación.
+     */
+    public function actionHistorialborrados($idprogramacion)
+    {
+        $modelprogramacion = Programacionentregamercancia::findOne(['id' => $idprogramacion]);
+
+        $logs = Logborradoconteo::find()
+            ->where(['idProgramacionEntregaMercancia' => $idprogramacion])
+            ->orderBy(['created_at' => SORT_DESC])
+            ->all();
+
+        return $this->render('historial_borrados', [
+            'logs'              => $logs,
+            'modelprogramacion' => $modelprogramacion,
+        ]);
+    }
+
+    /**
+     * Devuelve true si la agenda asociada a la programación ya fue legalizada (codigo 2).
+     */
+    protected function estaLegalizado($programacion)
+    {
+        if (!$programacion) return false;
+        $agenda = Agendaentregamercancia::findOne(['id' => $programacion->idAgendaEntregaMercancia]);
+        if (!$agenda) return false;
+        // idEstadoLegalizacion = 2 → legalizado
+        return (int) $agenda->idEstadoLegalizacion === 2;
+    }
 
     /**
      * Finds the Conteoentregamercancia model based on its primary key value.

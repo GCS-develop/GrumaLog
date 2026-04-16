@@ -122,6 +122,7 @@ $hayFiltros = !empty($filtros['q_oc']) || !empty($filtros['q_proveedor']) || !em
                             <th>Proveedor</th>
                             <th>CO</th>
                             <th>Fecha OC</th>
+                            <th class="text-center">Fecha Recepción<br><small class="font-weight-normal">(cita agenda)</small></th>
                             <th class="text-center">Subcats calificadas</th>
                             <th class="text-center">Ponderado OC</th>
                             <th class="text-center">Última Calif.</th>
@@ -153,6 +154,9 @@ $hayFiltros = !empty($filtros['q_oc']) || !empty($filtros['q_proveedor']) || !em
                             <td><?= Html::encode($oc['proveedor']) ?></td>
                             <td><?= Html::encode($oc['centro_operacion']) ?></td>
                             <td><?= Html::encode(substr($oc['fecha'] ?? '', 0, 10)) ?></td>
+                            <td class="text-center">
+                                <?= $oc['fecha_recepcion'] ? Html::encode($oc['fecha_recepcion']) : '<span class="text-muted">—</span>' ?>
+                            </td>
                             <td class="text-center">
                                 <?php if ($califs > 0): ?>
                                     <span class="badge badge-info"><?= $califs ?> subcategoría(s)</span>

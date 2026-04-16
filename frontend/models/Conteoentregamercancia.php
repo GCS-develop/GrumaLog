@@ -18,6 +18,8 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use yii\web\Response;
 
 use frontend\models\search\ConteoentregamercanciaSearch;
+use frontend\models\Logtransferenciaerp;
+use frontend\models\Transferenciaerp;
 
 /**
  * This is the model class for table "conteoentregamercancia".
@@ -382,19 +384,27 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
             (td.codigo + '-' +  CAST(oc.consecutivo AS nvarchar(50))) AS numeroOrden,
             cat.nombre AS categoria, prv.razonSocial,
             it.item, it.idColor, it.descripcion,
-            col.codigo AS color, tal.codigo AS talla, 
+            col.codigo AS color, tal.codigo AS talla,
             pem.unidadesAsignadas AS unidadesAsignadasUser,
-            cem.unidadesAsignadas, cem.unidadesConteo
-            FROM conteoentregamercancia cem 
+            cem.unidadesAsignadas, cem.unidadesConteo,
+            (
+                SELECT STUFF(
+                    (SELECT DISTINCT ', ' + z2.codigo
+                     FROM conteozona cz2
+                     INNER JOIN zonas z2 ON z2.id = cz2.idZona
+                     WHERE cz2.idConteoEntregaMercancia = cem.id
+                     FOR XML PATH('')), 1, 2, '')
+            ) AS zonas
+            FROM conteoentregamercancia cem
             INNER JOIN programacionentregamercancia pem ON cem.idProgramacionEntregaMercancia = pem.id
-            INNER JOIN agendaentregamercancia aem ON pem.idAgendaEntregaMercancia = aem.id 
-            INNER JOIN ordendecompra oc ON aem.idOrdenCompra = oc.id 
-            INNER JOIN tipodocumento td ON oc.idTipoDocumento = td.id 
+            INNER JOIN agendaentregamercancia aem ON pem.idAgendaEntregaMercancia = aem.id
+            INNER JOIN ordendecompra oc ON aem.idOrdenCompra = oc.id
+            INNER JOIN tipodocumento td ON oc.idTipoDocumento = td.id
             INNER JOIN item it ON cem.idItem = it.id
             INNER JOIN talla tal ON it.idTalla = tal.id
             INNER JOIN color col ON it.idColor = col.id
-            INNER JOIN categoria cat ON aem.idCategoria = cat.id 
-            LEFT JOIN proveedor prv ON oc.idProveedor = prv.id 
+            INNER JOIN categoria cat ON aem.idCategoria = cat.id
+            LEFT JOIN proveedor prv ON oc.idProveedor = prv.id
             WHERE pem.id = :idprogramacion ";
 
         // $sql = $sql . " ORDER BY it.item, col.codigo;";
@@ -426,12 +436,22 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
                     'descripcion' => $fila['descripcion'],
                     'totalUnidadesAsignadas' => 0,
                     'totalUnidadesConteo' => 0,
+                    'zonas' => [],
                 ];
             }
 
             // Sumar las unidades asignadas y de conteo a las totales de la fila
             $filas[$identificador]['totalUnidadesAsignadas'] += $fila['unidadesAsignadas'];
             $filas[$identificador]['totalUnidadesConteo'] += $fila['unidadesConteo'];
+
+            // Acumular zonas únicas para este item+color
+            if (!empty($fila['zonas'])) {
+                $nuevasZonas = array_map('trim', explode(',', $fila['zonas']));
+                $filas[$identificador]['zonas'] = array_values(array_unique(
+                    array_merge($filas[$identificador]['zonas'], $nuevasZonas)
+                ));
+                sort($filas[$identificador]['zonas']);
+            }
 
             if (!isset($filas[$identificador][$fila['talla']])) {
                 $filas[$identificador][$fila['talla']] = [
@@ -805,10 +825,12 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
 
         $transferenciaerp = Transferenciaerp::findOne(['idOrdenCompra' => $agenda->idOrdenCompra]);
 
+        $logErp = null;
         if ($transferenciaerp) {
-            $numRegistrosBorrados = Transferenciaerperror::deleteAll((['idTransferenciaerp' => $transferenciaerp->id]));
-            $numRegistrosBorrados = Transferenciaerp::deleteAll(['id' => $transferenciaerp->id]);
-            $numRegistrosBorrados = Transferenciaordencompraexcel::deleteAll(['idTransferenciaerp' => $transferenciaerp->id]);
+            $logErp = Logtransferenciaerp::registrar($transferenciaerp, 'AUTO_REGENERACION');
+            Transferenciaerperror::deleteAll(['idTransferenciaerp' => $transferenciaerp->id]);
+            Transferenciaerp::deleteAll(['id' => $transferenciaerp->id]);
+            Transferenciaordencompraexcel::deleteAll(['idTransferenciaerp' => $transferenciaerp->id]);
         }
 
         $idtransferenciaerp = Conteoentregamercancia::cabeceraTransferencia($agenda, $ordencompra, $factura);
@@ -822,6 +844,12 @@ class Conteoentregamercancia extends \yii\db\ActiveRecord
             $model->numeroRegistros = $count;
             $model->save();
         }
+
+        if ($logErp !== null) {
+            $logErp->idTransferenciaerpNueva = $idtransferenciaerp;
+            $logErp->save(false);
+        }
+
         return $idtransferenciaerp;
     }
 

@@ -82,8 +82,8 @@ class PreciosiesaController extends Controller
 
         $rowidItem = (int)Yii::$app->request->post('rowidItem');
         $cantidad  = (int)Yii::$app->request->post('input');
-        $tipo = (string)Yii::$app->request->post('tipo', 'actual'); // actual | futuro
-        
+        $precio    = Yii::$app->request->post('precio');
+
         if ($rowidItem <= 0) {
             return ['status' => 'error', 'message' => 'rowidItem inválido'];
         }
@@ -91,17 +91,21 @@ class PreciosiesaController extends Controller
             return ['status' => 'error', 'message' => 'Cantidad inválida'];
         }
 
-        // Precio a imprimir: vigente o futuro más cercano
-        $precioRow = Yii::$app->siesaPrecio->precioImprimirPorRowidItem($rowidItem, 7, '001');
-
-        if (!$precioRow || empty($precioRow['precio'])) {
-            return ['status' => 'error', 'message' => 'No se encontró precio vigente/futuro para este ítem'];
+        // Usar el precio enviado desde la vista (precio1 o precio2 según el botón pulsado)
+        if ($precio !== null && (float)$precio > 0) {
+            $precioFinal = (float)$precio;
+        } else {
+            // Fallback: consultar el precio vigente/futuro más cercano
+            $precioRow = Yii::$app->siesaPrecio->precioImprimirPorRowidItem($rowidItem, 7, '001');
+            if (!$precioRow || empty($precioRow['precio'])) {
+                return ['status' => 'error', 'message' => 'No se encontró precio vigente/futuro para este ítem'];
+            }
+            $precioFinal = (float)$precioRow['precio'];
         }
 
-        // Modelo mínimo para tu impresor
         $modelo = (object)[
-            'precio' => (float)$precioRow['precio'],
-            'codigoBarra' => (string)$rowidItem, // luego lo cambias por EAN real si lo traes
+            'precio' => $precioFinal,
+            'codigoBarra' => (string)$rowidItem,
         ];
 
         return $this->imprimirEtiquetas($cantidad, $modelo);

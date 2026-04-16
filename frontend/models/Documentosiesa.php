@@ -40,7 +40,8 @@ class Documentosiesa extends \yii\db\ActiveRecord
         return [
             [['numeroDocumento', 'f350_id_cia', 'f350_rowid', 'f350_consec_docto', 'idGruma', 'created_by', 'updated_by'], 'integer'],
             [['created_at', 'updated_at', 'origen'], 'safe'],
-            [['tipoDocumento', 'f350_id_co', 'f350_id_tipo_docto'], 'string', 'max' => 5],
+            [['tipoDocumento', 'f350_id_tipo_docto'], 'string', 'max' => 5],
+            [['f350_id_co'], 'string', 'max' => 20],
         ];
     }
 

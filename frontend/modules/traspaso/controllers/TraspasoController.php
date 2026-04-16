@@ -368,7 +368,7 @@ class TraspasoController extends Controller
             ];
         }
 
-        $existeEnSiesa = Traspaso::buscarDocumentoTraspasoEnSiesa($id) !== null;
+        $existeEnSiesa = !empty(Traspaso::buscarDocumentoTraspasoEnSiesa($id));
 
         return [
             'ok'            => true,
@@ -410,7 +410,7 @@ class TraspasoController extends Controller
 
         $siesaDoc = Traspaso::buscarDocumentoTraspasoEnSiesa($id);
 
-        if ($siesaDoc !== null) {
+        if (!empty($siesaDoc)) {
             // Ya existe en SIESA → sincronizar y marcar como completado
             $result = Traspaso::sincronizarTraspaso($id);
             if ($result['success']) {

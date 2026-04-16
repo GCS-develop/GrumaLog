@@ -11,6 +11,7 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
 use frontend\models\Pedidoordendecompra;
+use frontend\models\Logborradopedido;
 
 /**
  * PedidodetalleController implements the CRUD actions for Pedidodetalle model.
@@ -158,9 +159,81 @@ class PedidodetalleController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model    = $this->findModel($id);
+        $idPedido = $model->idPedido;
+        $idOC     = $model->idOrdenCompra;
 
-        return $this->redirect(['index']);
+        // Validar que el SKU no haya sido contado
+        if ((int) $model->unidadesRecibidas > 0) {
+            Yii::$app->session->setFlash(
+                'warning',
+                'No se puede eliminar el SKU porque ya tiene unidades contadas/recibidas.'
+            );
+            return $this->redirect(['/distribucion/pedidodetalle/index',
+                'idpedido'      => $idPedido,
+                'idordencompra' => $idOC,
+            ]);
+        }
+
+        $idItem   = $model->idItem;
+        $idBodega = $model->idBodega;
+
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            $unidadesAntes = (int) $model->unidades;
+            Logborradopedido::registrarEliminarSku($model, $unidadesAntes);
+
+            $model->delete();
+
+            // Recalcular pedidoordendecompraitem (totalUnidades del item)
+            Yii::$app->db->createCommand("
+                UPDATE pedidoordendecompraitem SET
+                    totalUnidades = ISNULL((
+                        SELECT SUM(unidades) FROM pedidodetalle
+                        WHERE idPedido = :p1 AND idOrdenCompra = :p2
+                          AND idItem = :p3 AND idBodega = :p4
+                    ), 0)
+                WHERE idPedido = :p5 AND idOrdenCompra = :p6
+                  AND idItem = :p7 AND idBodega = :p8
+            ", [
+                ':p1' => $idPedido, ':p2' => $idOC, ':p3' => $idItem, ':p4' => $idBodega,
+                ':p5' => $idPedido, ':p6' => $idOC, ':p7' => $idItem, ':p8' => $idBodega,
+            ])->execute();
+
+            // Recalcular pedidoordendecompra (totalUnidades y nroItems de la OC)
+            Yii::$app->db->createCommand("
+                UPDATE pedidoordendecompra SET
+                    nroItems = (
+                        SELECT COUNT(*) FROM pedidoordendecompraitem
+                        WHERE idPedido = :p1 AND idOrdenCompra = :p2
+                    ),
+                    totalUnidades = ISNULL((
+                        SELECT SUM(totalUnidades) FROM pedidoordendecompraitem
+                        WHERE idPedido = :p3 AND idOrdenCompra = :p4
+                    ), 0)
+                WHERE idPedido = :p5 AND idOrdenCompra = :p6
+            ", [':p1' => $idPedido, ':p2' => $idOC, ':p3' => $idPedido, ':p4' => $idOC, ':p5' => $idPedido, ':p6' => $idOC])->execute();
+
+            // Recalcular pedido (totalUnidades)
+            Yii::$app->db->createCommand("
+                UPDATE pedido SET
+                    totalUnidades = ISNULL((
+                        SELECT SUM(totalUnidades) FROM pedidoordendecompra WHERE idPedido = :p1
+                    ), 0)
+                WHERE id = :p2
+            ", [':p1' => $idPedido, ':p2' => $idPedido])->execute();
+
+            $tx->commit();
+            Yii::$app->session->setFlash('success', 'SKU eliminado del pedido correctamente.');
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            Yii::$app->session->setFlash('error', 'No se pudo eliminar el SKU: ' . $e->getMessage());
+        }
+
+        return $this->redirect(['/distribucion/pedidodetalle/index',
+            'idpedido'      => $idPedido,
+            'idordencompra' => $idOC,
+        ]);
     }
 
     /**

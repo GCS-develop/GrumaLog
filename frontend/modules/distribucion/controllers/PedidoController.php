@@ -16,6 +16,8 @@ use frontend\models\Ordendecompra;
 use frontend\models\FileFormInput;
 use common\models\ProcedimientosGenerales;
 use common\components\PedidoImportService;
+use frontend\models\Logborradopedido;
+use yii\data\ActiveDataProvider;
 
 /**
  * PedidoController implements the CRUD actions for Pedido model.
@@ -272,6 +274,25 @@ class PedidoController extends Controller
      * @return Pedido the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
+    public function actionLogBorrados($idpedido = null)
+    {
+        $query = Logborradopedido::find()->orderBy(['created_at' => SORT_DESC]);
+
+        if ($idpedido !== null) {
+            $query->andWhere(['idPedido' => (int) $idpedido]);
+        }
+
+        $dataProvider = new ActiveDataProvider([
+            'query'      => $query,
+            'pagination' => ['pageSize' => 50],
+        ]);
+
+        return $this->render('log_borrados', [
+            'dataProvider' => $dataProvider,
+            'idpedido'     => $idpedido,
+        ]);
+    }
+
     protected function findModel($id)
     {
         if (($model = Pedido::findOne(['id' => $id])) !== null) {

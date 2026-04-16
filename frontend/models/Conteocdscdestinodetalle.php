@@ -129,11 +129,16 @@ class Conteocdscdestinodetalle extends \yii\db\ActiveRecord
             'codigoError' => '',
         ];
 
+        $logErp = null;
         if ($factura->idTransferenciatraspasoerp){
             $id = $factura->idTransferenciatraspasoerp;
-            $numRegistrosBorrados = Transferenciaerperror::deleteAll((['idTransferenciaerp' => $id]));
-            $numRegistrosBorrados = Transferenciatransitoexcel::deleteAll(['idTransferenciaerp' => $id]);
-            $numRegistrosBorrados = Transferenciaerp::deleteAll(['id' => $id]);
+            $transferenciaVieja = Transferenciaerp::findOne(['id' => $id]);
+            if ($transferenciaVieja) {
+                $logErp = Logtransferenciaerp::registrar($transferenciaVieja, 'AUTO_REGENERACION');
+            }
+            Transferenciaerperror::deleteAll(['idTransferenciaerp' => $id]);
+            Transferenciatransitoexcel::deleteAll(['idTransferenciaerp' => $id]);
+            Transferenciaerp::deleteAll(['id' => $id]);
         }
 
         $iddocumento = 165613;
@@ -236,9 +241,14 @@ class Conteocdscdestinodetalle extends \yii\db\ActiveRecord
             }
         }
 
-        $respuesta['id'] = $transferencia->id; 
+        $respuesta['id'] = $transferencia->id;
         $respuesta['mensaje'] = "Proceso de Transferencia Finalizo Con Éxito";
         $respuesta['codigoError'] = 1;
+
+        if ($logErp !== null) {
+            $logErp->idTransferenciaerpNueva = $transferencia->id;
+            $logErp->save(false);
+        }
 
         return $respuesta;
     }

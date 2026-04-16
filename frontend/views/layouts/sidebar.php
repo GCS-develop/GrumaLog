@@ -4,6 +4,40 @@ use yii\helpers\Url;
 
 $baseUrl = Url::base(true);
 
+$this->registerCss('
+    /* ── Nivel 2 (EDI, Ropero, Orden Compras, Portal Proveedores) ── */
+    .sidebar-dark-primary .nav-sidebar .nav-treeview > .nav-item > .nav-link {
+        color: rgba(255,255,255,0.75) !important;
+        background-color: transparent !important;
+    }
+    .sidebar-dark-primary .nav-sidebar .nav-treeview > .nav-item > .nav-link:hover {
+        color: #fff !important;
+        background-color: rgba(255,255,255,0.10) !important;
+    }
+    /* Nivel 2 activo/abierto: sin color, igual que los demás */
+    .sidebar-dark-primary .nav-sidebar .nav-treeview > .nav-item.menu-open > .nav-link,
+    .sidebar-dark-primary .nav-sidebar .nav-treeview > .nav-item > .nav-link.active {
+        color: rgba(255,255,255,0.75) !important;
+        background-color: transparent !important;
+    }
+
+    /* ── Nivel 3 (Importar Archivo, Pedido Monacho, etc.) ── */
+    .sidebar-dark-primary .nav-sidebar .nav-treeview .nav-treeview {
+        background-color: rgba(255,255,255,0.04) !important;
+    }
+    .sidebar-dark-primary .nav-sidebar .nav-treeview .nav-treeview > .nav-item > .nav-link {
+        color: rgba(255,255,255,0.70) !important;
+        background-color: transparent !important;
+    }
+    .sidebar-dark-primary .nav-sidebar .nav-treeview .nav-treeview > .nav-item > .nav-link:hover {
+        color: #fff !important;
+        background-color: rgba(255,255,255,0.10) !important;
+    }
+    .sidebar-dark-primary .nav-sidebar .nav-treeview .nav-treeview > .nav-item > .nav-link.active {
+        color: #fff !important;
+        background-color: rgba(255,255,255,0.15) !important;
+    }
+');
 ?>
 
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
@@ -69,9 +103,10 @@ $baseUrl = Url::base(true);
                     [
                         'label' => 'SIESA -Conectores',
                         'icon' => 'cogs',
-                        'badge' => '<span class="right badge badge-info">3</span>',
+                        'badge' => '<span class="right badge badge-info">4</span>',
                         'items' => [
                             ['label' => 'Integración ERP', 'url' => ['/siesa/transferenciaerp/index'], 'iconStyle' => 'far'],
+                            ['label' => 'Historial ERP borrados', 'url' => ['/siesa/transferenciaerp/historial'], 'iconStyle' => 'far'],
                             ['label' => 'Consulta Dcto Interno', 'url' => ['/siesa/documentosiesa/indexdctointerno'], 'iconStyle' => 'far'],
                             ['label' => 'Consulta Dcto SIESA', 'url' => ['/siesa/documentosiesa/indexdctosiesa'], 'iconStyle' => 'far'],
                             ['label' => 'Conslta de repetidos', 'url' => ['/siesa/documentosiesa/indexdctosrepetidos'], 'iconStyle' => 'far'],
@@ -132,7 +167,9 @@ $baseUrl = Url::base(true);
                                     ['label' => 'Gestionar Conteo', 'url' => ['/programacion/facturaentregamercancia/indexprogramacion'], 'iconStyle' => 'far'],
                                     ['label' => 'Legalización Conteo', 'url' => ['/programacion/facturaentregamercancia/indexlegalizaconteo'], 'iconStyle' => 'far'],
                                     ['label' => 'Conteo por Usuario', 'url' => ['/programacion/conteobylecturacodigo/indexusuario'], 'iconStyle' => 'far'],
-                                    ['label' => 'Auditoría de Entradas', 'url' => ['/auditoriaentrada/auditoriaentrada/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Zonas Conteo', 'url' => ['/programacion/zonas/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Consolidado Inventario', 'url' => ['/programacion/consolidado/index'], 'iconStyle' => 'far'],
+                                    ['label' => 'Log Borrados Conteo', 'url' => ['/programacion/conteoentregamercancia/indexborradosglobal'], 'iconStyle' => 'far'],
                                     //['label' => 'Conteo Recibo Mercancia', 'url' => ['/programacion/programacionentregamercancia/indexconteoagenda'], 'iconStyle' => 'far'],
                                     //['label' => 'Legalización Conteo', 'url' => ['/programacion/conteoentregamercancia/indexlegalizacion'], 'iconStyle' => 'far'],
                                     //['label' => 'Gestionar Conteo', 'url' => ['/programacion/conteoentregamercancia/indexall'], 'iconStyle' => 'far'],
@@ -182,8 +219,6 @@ $baseUrl = Url::base(true);
                             ['label' => 'Bodegas / Usuario', 'url' => ['/traspaso/traspasouserbodega/index'], 'iconStyle' => 'far'],
                             ['label' => 'Traspaso Auditado', 'url' => ['/traspaso/traspasodetalleauditado/index-agrupado'], 'iconStyle' => 'far'],
 
-                            ['label' => 'Auditoria', 'url' => ['/traspaso/traspasodetalleauditado/index'], 'iconStyle' => 'far'],
-                            ['label' => 'Auditoria - Novedades', 'url' => ['/traspaso/traspasodetalleauditado/index-novedades'], 'iconStyle' => 'far'],
                             ['label' => 'Tiendas', 'url' => ['/traspaso/traspasodetalletienda/index'], 'iconStyle' => 'far'],
                             ['label' => 'Tiendas - Novedades', 'url' => ['/traspaso/traspasodetalletienda/index-novedades'], 'iconStyle' => 'far'],
 
@@ -281,23 +316,60 @@ $baseUrl = Url::base(true);
                         ]
                     ],
                     [
-                        'label' => 'Compras',
-                        'icon' => 'shopping-cart',
-                        'badge' => '<span class="right badge badge-info">3</span>',
+                        'label' => 'Producto',
+                        'icon' => 'box-open',
+                        'badge' => '<span class="right badge badge-info">4</span>',
                         'items' => [
-                            ['label' => 'Importar Archivo', 'url' => ['/compras/importacion/index'], 'iconStyle' => 'far'],
-                            ['label' => 'Pedido Monacho',   'url' => ['/compras/monacho/lista'],     'iconStyle' => 'far'],
-                            ['label' => 'OC Precios Vigentes', 'url' => ['/compras/oc-precios/index'], 'iconStyle' => 'far'],
-                        ]
+                            [
+                                'label' => 'EDI',
+                                'icon'  => 'file-import',
+                                'items' => [
+                                    ['label' => 'Importar Archivo', 'url' => ['/compras/importacion/index'], 'iconStyle' => 'far'],
+                                ],
+                            ],
+                            [
+                                'label' => 'Ropero',
+                                'icon'  => 'tshirt',
+                                'items' => [
+                                    ['label' => 'Pedido Monacho', 'url' => ['/compras/monacho/lista'], 'iconStyle' => 'far'],
+                                ],
+                            ],
+                            [
+                                'label' => 'Orden Compras',
+                                'icon'  => 'clipboard-list',
+                                'items' => [
+                                    ['label' => 'OC Precios Vigentes', 'url' => ['/compras/oc-precios/index'], 'iconStyle' => 'far'],
+                                ],
+                            ],
+                            [
+                                'label' => 'Portal Proveedores',
+                                'icon'  => 'store-alt',
+                                'items' => [
+                                    [
+                                        'label'     => 'Ventas POS - Diario',
+                                        'url'       => ['/compras/portal-proveedores/ventas-diario'],
+                                        'iconStyle' => 'far',
+                                    ],
+                                    [
+                                        'label'     => 'Existencia - General',
+                                        'url'       => ['/compras/portal-proveedores/existencia-general'],
+                                        'iconStyle' => 'far',
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                     [
-                        'label' => 'Auditoria Manual',
-                        'icon' => 'search',
-                        'badge' => '<span class="right badge badge-info">3</span>',
+                        'label' => 'Auditorías',
+                        'icon' => 'clipboard-check',
+                        'badge' => '<span class="right badge badge-info">6</span>',
                         'items' => [
-                            ['label' => 'Importar', 'url' => ['/auditoriamanual/auditoriamanualimportacion/index'], 'iconStyle' => 'far'],
-                            ['label' => 'Registrar Documento', 'url' => ['/auditoriamanual/auditoriamanualdocumento/register'], 'iconStyle' => 'far'],
-                            ['label' => 'Consultar', 'url' => ['/auditoriamanual/auditoriamanualdocumentodetalle/indexall'], 'iconStyle' => 'far'],
+                            ['label' => 'Auditoría de Entradas',   'url' => ['/auditoriaentrada/auditoriaentrada/index'],                   'iconStyle' => 'far'],
+                            ['label' => 'Auditoria Traspasos',      'url' => ['/traspaso/traspasodetalleauditado/index'],                    'iconStyle' => 'far'],
+                            ['label' => 'Auditoria - Novedades',    'url' => ['/traspaso/traspasodetalleauditado/index-novedades'],          'iconStyle' => 'far'],
+                            ['label' => 'Manual - Importar',        'url' => ['/auditoriamanual/auditoriamanualimportacion/index'],          'iconStyle' => 'far'],
+                            ['label' => 'Manual - Registrar',       'url' => ['/auditoriamanual/auditoriamanualdocumento/register'],         'iconStyle' => 'far'],
+                            ['label' => 'Manual - Consultar',       'url' => ['/auditoriamanual/auditoriamanualdocumentodetalle/indexall'],  'iconStyle' => 'far'],
                         ]
                     ],
                     /*[
@@ -323,6 +395,7 @@ $baseUrl = Url::base(true);
                             ['label' => 'Pedido por tienda', 'url' => ['/distribucion/pedidodetalle/index-macro'], 'iconStyle' => 'far'],
                             ['label' => 'Consolidado', 'url' => ['/distribucion/pedidodetalle/index-consolidado'], 'iconStyle' => 'far'],
                             ['label' => 'Detalle de Distribución', 'url' => ['/distribucion/pedidodetalle/indexdetalledistribucion'], 'iconStyle' => 'far'],
+                            ['label' => 'Log Borrados Pedidos', 'url' => ['/distribucion/pedido/log-borrados'], 'iconStyle' => 'far'],
 
                         ]
                     ],

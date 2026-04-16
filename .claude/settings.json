@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(///192.168.2.20/c$/Apache24/htdocs/GRUMALog/**)",
+      "Read(//192.168.2.20/c$/Apache24/htdocs/GRUMALog/frontend/**)",
+      "Read(//192.168.2.20/c$/Apache24/htdocs/**)",
+      "Read(///192.168.2.20/c$/Apache24/htdocs/GRUMALog/192.168.2.20c$Apache24htdocsGRUMALog/frontend/models/**)",
+      "Read(//192.168.2.20/c$/Apache24/htdocs/GRUMALog/frontend/models/**)",
+      "Read(//192.168.2.20/c$/Apache24/htdocs/GRUMALog/frontend/web/**)",
+      "Read(//192.168.2.20/c$/Apache24/htdocs/GRUMALog/console/**)",
+      "Read(//192.168.2.20/c$/Apache24/htdocs/GRUMALog/console/migrations/**)",
+      "Read(///192.168.2.20/c$/Apache24/htdocs/GRUMALog/console/**)",
+      "Read(///192.168.2.20/c$/Apache24/htdocs/GRUMALog/frontend/models/**)",
+      "Read(///192.168.2.20/c$/Apache24/htdocs/GRUMALog/console/migrations\" --include=*.php -l 2>/dev/**)",
+      "Read(//192.168.2.20/c$/Apache24/htdocs/GRUMALog/frontend/modules/**)",
+      "Read(//192.168.2.20/c$/Apache24/htdocs/GRUMALog/frontend/modules/auditoriaentrada/**)",
+      "Read(//192.168.2.20/c$/Apache24/htdocs/GRUMALog/frontend/modules/auditoriaentrada/views/**)",
+      "Read(//192.168.2.20/c$/Apache24/htdocs/GRUMALog/backend/**)",
+      "Read(//192.168.2.20/c$/Apache24/htdocs/GRUMALog/**)",
+      "Read(///192.168.2.20/c$/Apache24/htdocs/**)",
+      "Bash(sqlcmd -S \"SRVICGBD1\\\\APP\" -d GRUMALOG -U sa -P \"MasterKey..\" -Q \"SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME IN \\('transferencialogws','transferenciaordencompraexcel','transferenciaerperror'\\) AND DATA_TYPE IN \\('datetime','datetime2','date','smalldatetime'\\) ORDER BY TABLE_NAME, COLUMN_NAME\")",
+      "Bash(sqlcmd -S \"SRVICGBD1\\\\APP\" -d GRUMALOG -U sa -P \"MasterKey..\" -Q \"SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE DATA_TYPE IN \\('datetime','datetime2','date','smalldatetime'\\) ORDER BY TABLE_NAME, COLUMN_NAME\")",
+      "Bash(sqlcmd -S \"SRVICGBD1\\\\APP\" -d GRUMALOG -U sa -P \"MasterKey..\" -Q \"SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE DATA_TYPE IN \\('datetime','datetime2','date','smalldatetime'\\) AND TABLE_NAME LIKE 'transferencia%' ORDER BY TABLE_NAME, COLUMN_NAME\")",
+      "Bash(sqlcmd -S 'SRVICGBD1\\\\APP' -d GRUMALOG -U sa -P MasterKey.. -Q ':*)",
+      "Read(///192.168.2.20/c$/Apache24/htdocs/GRUMALog/frontend/runtime/logs/**)",
+      "Read(///192.168.2.20/c$/Apache24/htdocs/GRUMALog/frontend/views/**)",
+      "Read(//mnt/192.168.2.20/c$/Apache24/htdocs/GRUMALog/console/**)",
+      "Bash(cmd.exe /c \"dir /b \\\\\"\\\\\\\\\\\\\\\\192.168.2.20\\\\\\\\c$\\\\\\\\Apache24\\\\\\\\htdocs\\\\\\\\GRUMALog\\\\\\\\console\\\\\\\\migrations\\\\\" | findstr /i audit\")",
+      "Bash(powershell -Command 'Get-ChildItem '\\\\''\\\\\\\\192.168.2.20\\\\c$\\\\Apache24\\\\htdocs\\\\GRUMALog\\\\console\\\\migrations'\\\\'' | Where-Object { $_.Name -match '\\\\''audit'\\\\'' } | Select-Object -ExpandProperty Name')",
+      "Bash(powershell -Command 'Get-ChildItem '\\\\''C:\\\\Apache24\\\\htdocs\\\\GRUMALog\\\\console\\\\migrations'\\\\'' | Where-Object { $_.Name -match '\\\\''audit'\\\\'' } | Select-Object -ExpandProperty Name')",
+      "Bash(powershell -Command 'Get-ChildItem '\\\\''C:\\\\Apache24\\\\htdocs\\\\GRUMALog\\\\console\\\\migrations'\\\\'' | Where-Object { $_.Name -match '\\\\''auditoria'\\\\'' } | Select-Object Name')",
+      "Bash(powershell -Command \"Get-ChildItem 'C:\\\\Apache24\\\\htdocs\\\\GRUMALog\\\\common\\\\config' | Select-Object Name\")",
+      "Bash(powershell -Command \"Get-ChildItem '\\\\\\\\\\\\\\\\192.168.2.20\\\\\\\\c$\\\\\\\\Apache24\\\\\\\\htdocs\\\\\\\\GRUMALog\\\\\\\\common\\\\\\\\config' | Select-Object Name\")",
+      "Read(///192.168.2.20/c$/Apache24/htdocs/GRUMALog/common/**)",
+      "Bash(sqlcmd -S \"SRVICGBD1\\\\APP\" -d GRUMALOG -U sa -P \"MasterKey..\" -Q \"SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'auditoriaentrada' AND COLUMN_NAME IN \\('created_at','updated_at'\\)\")",
+      "Bash(sqlcmd -S \"192.168.2.20\\\\APP\" -d GRUMALOG -U sa -P \"MasterKey..\" -Q \"SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'auditoriaentrada' AND COLUMN_NAME IN \\('created_at','updated_at'\\)\")",
+      "Bash(sqlcmd -S \"192.168.2.20\" -d GRUMALOG -U sa -P \"MasterKey..\" -Q \"SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'auditoriaentrada' AND COLUMN_NAME IN \\('created_at','updated_at'\\)\")"
+    ]
+  }
+}

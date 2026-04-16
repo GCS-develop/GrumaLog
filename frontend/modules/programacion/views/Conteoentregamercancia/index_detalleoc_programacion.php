@@ -1,5 +1,8 @@
 <?php
 
+// ¿Ya fue legalizada esta agenda? Si sí, bloquear todas las acciones de borrado.
+$estaLegalizado = (int) $modelprogramacion->agendaEntregaMercancia->idEstadoLegalizacion === 2;
+
 $this->registerCss('
     .mi-gridview {
         font-size: 12px; /* Ajusta el tamaño de la fuente según sea necesario */
@@ -65,7 +68,7 @@ $filenameBD = "Relacion_Conteo_BD_CurvaTallasColores_" . $numeroorden . "_" . $f
 $tallasUnicas = [];
 foreach ($dataProvider as $fila) {
     foreach (array_keys($fila) as $columna) {
-        if ($columna !== 'numeroOrden' && $columna !== 'item' && $columna !== 'color' && $columna !== 'descripcion' && $columna !== 'Item' && $columna !== 'Color' && $columna !== 'totalUnidadesAsignadas' && $columna !== 'totalUnidadesConteo') {
+        if ($columna !== 'numeroOrden' && $columna !== 'item' && $columna !== 'color' && $columna !== 'descripcion' && $columna !== 'Item' && $columna !== 'Color' && $columna !== 'totalUnidadesAsignadas' && $columna !== 'totalUnidadesConteo' && $columna !== 'zonas') {
             if (!in_array($columna, $tallasUnicas)) {
                 $tallasUnicas[] = $columna;
             }
@@ -235,6 +238,16 @@ $columns = [
         'pageSummary' => true,
 
     ],
+
+    [
+        'label' => 'Zonas',
+        'value' => function ($model) {
+            $zonas = isset($model['zonas']) && is_array($model['zonas']) ? $model['zonas'] : [];
+            return count($zonas) > 0 ? implode(', ', $zonas) : '-';
+        },
+        'hAlign' => 'center',
+        'vAlign' => 'middle',
+    ],
 ];
 
 // Agregar las columnas por talla dinámicamente
@@ -242,12 +255,13 @@ foreach ($tallasUnicas as $talla) {
     $columns[] = [
         'label' => 'Conteo Talla: ' . $talla,
         'format' => 'raw',
-        'value' => function ($model) use ($talla, $modelprogramacion) {
+        'value' => function ($model) use ($talla, $modelprogramacion, $estaLegalizado) {
             $unidades = 0;
             if (isset($model[$talla]['unidadesConteo'])) {
                 $unidades = (int)$model[$talla]['unidadesConteo'];
             }
             if ($unidades <= 0) return '0';
+            if ($estaLegalizado) return (string)$unidades;
             $item  = \yii\helpers\Html::encode($model['item']);
             $color = \yii\helpers\Html::encode($model['color']);
             $tallaEnc = \yii\helpers\Html::encode($talla);
@@ -287,8 +301,9 @@ foreach ($tallasUnicas as $talla) {
 $columns[] = [
     'label' => 'Reducir',
     'format' => 'raw',
-    'value' => function ($model) use ($modelprogramacion) {
+    'value' => function ($model) use ($modelprogramacion, $estaLegalizado) {
         if ((int)$model['totalUnidadesConteo'] <= 0) return '';
+        if ($estaLegalizado) return '';
         $item  = \yii\helpers\Html::encode($model['item']);
         $color = \yii\helpers\Html::encode($model['color']);
         $total = (int)$model['totalUnidadesConteo'];
@@ -431,22 +446,28 @@ foreach ($dataProvider as $fila) {
         </div>
 
         <div class="col-lg-3 centrar">
-            <?= Html::a(
-                'Borrar Conteos',
-                [
-                    'deleteconteos',
-                    'idprogramacion' => $modelprogramacion->id,
-                ],
-                [
-                    'class' => 'btn btn-danger btn-lg btn-create',
-                    'data' => [
-                        'confirm' => '¿Está seguro de borrar TODOS los conteos de esta programación? ( OC:' . $modelprogramacion->agendaEntregaMercancia->ordenCompra->tipoDocumento->codigo . '-' .
-                            $modelprogramacion->agendaEntregaMercancia->ordenCompra->cO->codigo . '-' .
-                            $modelprogramacion->agendaEntregaMercancia->ordenCompra->consecutivo . ' ) El valor máximo quedará en 0.',
-                        'method' => 'post',
+            <?php if ($estaLegalizado): ?>
+                <button class="btn btn-danger btn-lg btn-create" disabled title="La agenda ya fue legalizada — no se puede borrar conteos">
+                    Borrar Conteos
+                </button>
+            <?php else: ?>
+                <?= Html::a(
+                    'Borrar Conteos',
+                    [
+                        'deleteconteos',
+                        'idprogramacion' => $modelprogramacion->id,
+                    ],
+                    [
+                        'class' => 'btn btn-danger btn-lg btn-create',
+                        'data' => [
+                            'confirm' => '¿Está seguro de borrar TODOS los conteos de esta programación? ( OC:' . $modelprogramacion->agendaEntregaMercancia->ordenCompra->tipoDocumento->codigo . '-' .
+                                $modelprogramacion->agendaEntregaMercancia->ordenCompra->cO->codigo . '-' .
+                                $modelprogramacion->agendaEntregaMercancia->ordenCompra->consecutivo . ' ) El valor máximo quedará en 0.',
+                            'method' => 'post',
+                        ]
                     ]
-                ]
-            ) ?>
+                ) ?>
+            <?php endif; ?>
         </div>
 
         <div class="col-lg-3 centrar">
@@ -505,6 +526,22 @@ foreach ($dataProvider as $fila) {
             ?>
         </div>
 
+    </div>
+
+    <!-- Alerta legalización + link historial borrados -->
+    <div class="row" style="margin-top:10px;">
+        <div class="col-md-12">
+            <?php if ($estaLegalizado): ?>
+                <div class="alert alert-warning" style="font-weight:bold;">
+                    &#x26A0; Esta agenda ya fue <strong>legalizada</strong>. No se permite borrar ni reducir conteos.
+                </div>
+            <?php endif; ?>
+            <?= \yii\helpers\Html::a(
+                '&#x1F4CB; Historial de Borrados',
+                ['historialborrados', 'idprogramacion' => $modelprogramacion->id],
+                ['class' => 'btn btn-default btn-sm', 'target' => '_blank']
+            ) ?>
+        </div>
     </div>
 
     <!-- Espacio -->
@@ -569,7 +606,7 @@ foreach ($dataProvider as $fila) {
 
         ]); ?>
 
-        <?php if ($totalUnidadesConteo > 0): ?>
+        <?php if ($totalUnidadesConteo > 0 && !$estaLegalizado): ?>
         <div style="margin: 8px 0 20px 0;">
             <button type="button" class="btn btn-warning btn-sm"
                 onclick="borrarConteosItem(<?= $modelprogramacion->id ?>, '<?= \yii\helpers\Html::encode($item) ?>', <?= (int)$totalUnidadesConteo ?>)">

@@ -39,7 +39,13 @@ if (isset($params["ProveedoresWsSearch"]["Nit"])) {
 
     <p align="center">
         <?= Html::a('Sincronizar ERP', ['sincronizarerp', 'nit' => $nit], ['class' => 'btn btn-success btn-lg btn-create']) ?>
-    </p>    
+        &nbsp;
+        <?= Html::a('Sincronizar Todos desde SIESA', ['sincronizarsiesa'], [
+            'class' => 'btn btn-primary btn-lg btn-create',
+            'data-confirm' => '¿Sincronizar TODOS los proveedores desde SIESA DB? Esto puede tardar unos segundos.',
+            'data-method' => 'get',
+        ]) ?>
+    </p>
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,

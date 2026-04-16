@@ -63,7 +63,7 @@ class Bodegas extends \yii\db\ActiveRecord
         return [
             [['codigo', 'nombre'], 'required', 'message' => '{attribute} Es Un Valor Obligatorio'],
             [['created_at', 'updated_at'], 'safe'],
-            [['created_by', 'updated_by', 'cedi'], 'integer'],
+            [['created_by', 'updated_by', 'cedi', 'zona'], 'integer'],
             [['codigo'], 'string', 'max' => 5],
             [['nombre'], 'string', 'max' => 50],
             ['nombre', 'unique', 'message' => 'Nombre Bodega ya está registrado.'],
@@ -80,11 +80,12 @@ class Bodegas extends \yii\db\ActiveRecord
             'id' => 'ID',
             'codigo' => 'Código',
             'nombre' => 'Nombre',
+            'cedi' => 'Es CEDI',
+            'zona' => 'Zona',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
             'updated_by' => 'Updated By',
-            'cedi' => 'Es CEDI',
         ];
     }
     public static function getListaDataCodigo()

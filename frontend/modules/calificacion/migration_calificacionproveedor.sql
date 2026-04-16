@@ -71,3 +71,28 @@ ALTER TABLE calificacionproveedor
 
 -- Nota: puntaje_total ahora = oportunidad*10% + cantidad*30% + calidad_criterios*30% + calidad_producto*30%
 -- Los registros históricos quedarán con puntaje_total=NULL hasta ser recalculados.
+
+-- =============================================================
+-- Migración v3: múltiples revisores, incumplimientos
+-- =============================================================
+
+-- Ampliar campo revisado_por para soportar múltiples nombres
+ALTER TABLE calificacionproveedor
+    ALTER COLUMN revisado_por NVARCHAR(500) NULL;
+
+-- Contador de incumplimientos al momento de calificar (afecta calidad_producto)
+ALTER TABLE calificacionproveedor
+    ADD num_incumplimientos INT NOT NULL DEFAULT 0;
+
+-- Tabla para registrar incumplimientos por OC
+CREATE TABLE calificacion_incumplimiento (
+    id               INT           IDENTITY(1,1) PRIMARY KEY,
+    id_ordendecompra INT           NOT NULL,
+    numero_oc        NVARCHAR(50)  NOT NULL,
+    descripcion      NVARCHAR(500) NOT NULL,
+    created_at       DATETIME      NOT NULL DEFAULT GETDATE(),
+    created_by       INT           NULL,
+    CONSTRAINT FK_incumplimiento_oc FOREIGN KEY (id_ordendecompra) REFERENCES ordendecompra(id)
+);
+
+CREATE INDEX IX_incumplimiento_oc ON calificacion_incumplimiento (id_ordendecompra);

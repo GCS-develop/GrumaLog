@@ -312,27 +312,35 @@ ORDER BY
             return null;
         }
 
-        // 3) Armar el array en el formato que espera Documentosiesa::grabarDatos
-        $resultado = [[
-            // 👉 Si en tu flujo numeroDocumento debe ser otro (por ejemplo el consecutivo de Siesa),
-            // cambia ESTA línea.
-            'numeroDocumento'      => (int)$traspaso->id,
-            'tipoDocumento'        => $aen['tipo_aen'],
-            'f350_id_tipo_docto'   => $aen['tipo_aen'],
-            'f350_rowid'           => (int)$aen['rowid_aen'],
-            'f350_id_cia'          => 7, // lo usas fijo en el SQL
-            'f350_id_co'           => $aen['co_aen'],
-            'f350_consec_docto'    => (int)$aen['consec_aen'],
-        ]];
-
         $idGruma = $this->id;
-        $origen = 'Recibir Traspaso Tienda';
+        $origen  = 'Recibir Traspaso Tienda';
 
-        // 4) Grabar en documentosiesa usando tu helper estático
-        $ok = Documentosiesa::grabarDatos($resultado, $idGruma, $origen);
+        // 3) Upsert en documentosiesa con captura de errores de validación
+        $docSiesa = Documentosiesa::find()->where([
+            'origen'   => $origen,
+            'idGruma'  => $idGruma,
+        ])->one();
 
-        if (!$ok) {
-            $this->addError('id', 'AEN encontrado en Siesa, pero no se pudo grabar en documentosiesa.');
+        if (!$docSiesa) {
+            $docSiesa = new Documentosiesa();
+            $docSiesa->idGruma = $idGruma;
+            $docSiesa->origen  = $origen;
+        }
+
+        $docSiesa->tipoDocumento     = $aen['tipo_aen'];
+        $docSiesa->numeroDocumento   = (int)$traspaso->id;
+        $docSiesa->f350_id_tipo_docto = $aen['tipo_aen'];
+        $docSiesa->f350_rowid        = (int)$aen['rowid_aen'];
+        $docSiesa->f350_id_cia       = 7;
+        $docSiesa->f350_id_co        = $aen['co_aen'];
+        $docSiesa->f350_consec_docto = (int)$aen['consec_aen'];
+
+        if (!$docSiesa->save()) {
+            $errores = implode('; ', array_map(
+                fn($msgs) => implode(', ', $msgs),
+                $docSiesa->getErrors()
+            ));
+            $this->addError('id', "AEN encontrado en Siesa, pero no se pudo grabar: {$errores}");
             return null;
         }
 

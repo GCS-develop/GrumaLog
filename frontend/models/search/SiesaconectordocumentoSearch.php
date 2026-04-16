@@ -53,20 +53,21 @@ class SiesaconectordocumentoSearch extends SiesaConectorDocumento
     {
         $query = SiesaConectorDocumento::find()->alias('doct');
 
-        $query->join('LEFT JOIN', 'documentosiesa ds', 'doct.id = ds.idGruma');
-        $query->join('INNER JOIN', 'user u', 'u.id = doct.created_by');
-        $query->join('INNER JOIN', 'traspaso t', 't.id = doct.id_traspaso');
+        // LEFT JOIN para que registros sin traspaso, usuario o bodega sigan apareciendo
+        // ds filtra solo AEN directamente en el JOIN para evitar filas duplicadas
+        $query->join('LEFT JOIN', 'documentosiesa ds', "doct.id = ds.idGruma AND ds.f350_id_tipo_docto = 'AEN'");
+        $query->join('LEFT JOIN', 'user u', 'u.id = doct.created_by');
+        $query->join('LEFT JOIN', 'traspaso t', 't.id = doct.id_traspaso');
         $query->join('LEFT JOIN', 'documentosiesa dst', 't.id = dst.idGruma');
-        $query->join('INNER JOIN', 'bodegas b', 'b.id = t.idbodegadestino');
+        $query->join('LEFT JOIN', 'bodegas b', 'b.id = t.idbodegadestino');
 
         $query->select([
             'doct.*',
-            'CONCAT(ds.f350_id_tipo_docto, ds.f350_consec_docto) AS consecutivoSiesa',
+            "CONCAT(ISNULL(ds.f350_id_tipo_docto,''), ISNULL(CAST(ds.f350_consec_docto AS VARCHAR(20)),'')) AS consecutivoSiesa",
             'u.username as usuarioTransferencia',
-            'CONCAT(dst.f350_id_tipo_docto, dst.f350_consec_docto) AS consecutivosiesatraspaso',
-            'CONCAT(b.codigo, b.nombre) as bodegaentrada',
+            "CONCAT(ISNULL(dst.f350_id_tipo_docto,''), ISNULL(CAST(dst.f350_consec_docto AS VARCHAR(20)),'')) AS consecutivosiesatraspaso",
+            "CONCAT(ISNULL(b.codigo,''), ISNULL(b.nombre,'')) as bodegaentrada",
             new Expression("CASE WHEN ds.f350_id_tipo_docto = 'AEN' THEN 1 ELSE 0 END AS tieneAen"),
-
         ]);
         // add conditions that should always apply here
 
@@ -99,18 +100,19 @@ class SiesaconectordocumentoSearch extends SiesaConectorDocumento
         $query->andFilterWhere(['like', 'ds.f350_consec_docto', $this->consecutivoSiesa]);
 
         $query->orderBy([
-            'id' => SORT_DESC,
+            'doct.id' => SORT_DESC,
         ]);
         // ----- FILTRO AEN -----
+        // Con el JOIN ya filtrado a solo AEN, si ds.f350_id_tipo_docto IS NOT NULL → tiene AEN
         if ($this->tieneAen !== null && $this->tieneAen !== '') {
             if ((int)$this->tieneAen === 1) {
-                $query->andWhere(['ds.f350_id_tipo_docto' => 'AEN']);
+                $query->andWhere(['is not', 'ds.f350_rowid', null]);
             } elseif ((int)$this->tieneAen === 0) {
-                $query->andWhere('ds.f350_id_tipo_docto IS NULL OR ds.f350_id_tipo_docto <> \'AEN\'');
+                $query->andWhere(['is', 'ds.f350_rowid', null]);
             }
-        } else {
-            $query->andWhere("ds.f350_id_tipo_docto IS NULL OR ds.f350_id_tipo_docto = 'AEN'");
         }
+        // Si tieneAen está vacío → mostrar todos sin condición adicional
+
         return $dataProvider;
     }
 }

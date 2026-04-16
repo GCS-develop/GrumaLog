@@ -256,7 +256,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
             $modellog->fechaDocumento = $registro->fechaDocumento;
             $modellog->bodegaSalidaDocumento = $registro->bodegaSalidaDocumento;
             $modellog->bodegaEntradaDocumento = $registro->bodegaEntradaDocumento;
-            $modellog->startDate = date('Y-m-d H:i:s');
+            $modellog->startDate = new Expression('GETDATE()');
             $modellog->idConectorDinamico = $modelconector->id;
             $modellog->numeroRegistros = $numeroRegistros;
 
@@ -328,7 +328,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 $respuesta
             );
 
-            $modellog->endDate = date('Y-m-d H:i:s');
+            $modellog->endDate = new Expression('GETDATE()');
             $modellog->mensaje = $codigo;
             $modellog->save();
 
@@ -746,7 +746,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
             $modellog->tipoDocumento = $registro->tipoDocumentoOrdenCompra;
             $modellog->consecutivoOrdenCompra = $registro->consecutivoOrdenCompra;
 
-            $modellog->startDate = date('Y-m-d H:i:s');
+            $modellog->startDate = new Expression('GETDATE()');
             $modellog->idConectorDinamico = $modelconector->id;
             $modellog->numeroRegistros = $numeroRegistros;
 
@@ -830,7 +830,7 @@ class Transferenciaerp extends \yii\db\ActiveRecord
                 $respuesta
             );
 
-            $modellog->endDate = date('Y-m-d H:i:s');
+            $modellog->endDate = new Expression('GETDATE()');
             $modellog->mensaje = $codigo;
             $modellog->save();
 

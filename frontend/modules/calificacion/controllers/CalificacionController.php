@@ -3,6 +3,7 @@
 namespace frontend\modules\calificacion\controllers;
 
 use frontend\models\Calificacionproveedor;
+use frontend\models\Calificacionincumplimiento;
 use frontend\models\Proveedor;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -260,11 +261,11 @@ class CalificacionController extends Controller
             $params[':q_proveedor'] = '%' . $filtros['q_proveedor'] . '%';
         }
         if (!empty($filtros['q_desde'])) {
-            $where[]           = "CAST(cp.created_at AS DATE) >= :q_desde";
+            $where[]           = "cp.fecha_entrega_cita >= :q_desde";
             $params[':q_desde'] = $filtros['q_desde'];
         }
         if (!empty($filtros['q_hasta'])) {
-            $where[]           = "CAST(cp.created_at AS DATE) <= :q_hasta";
+            $where[]           = "cp.fecha_entrega_cita <= :q_hasta";
             $params[':q_hasta'] = $filtros['q_hasta'];
         }
 
@@ -283,12 +284,14 @@ class CalificacionController extends Controller
                 cp.cantidad_formula,
                 cp.calidad_ponderada,
                 cp.calidad_producto,
+                cp.num_incumplimientos,
                 cp.puntaje_total,
+                cp.fecha_entrega_cita,
                 cp.created_at,
                 cp.created_by
             FROM calificacionproveedor cp
             {$whereClause}
-            ORDER BY cp.created_at DESC
+            ORDER BY cp.fecha_entrega_cita DESC, cp.created_at DESC
         ";
 
         $calificaciones = Yii::$app->db->createCommand($sql, $params)->queryAll();
@@ -345,11 +348,11 @@ class CalificacionController extends Controller
             $params[':q_proveedor'] = '%' . $filtros['q_proveedor'] . '%';
         }
         if (!empty($filtros['q_desde'])) {
-            $where[]           = "CAST(cp.created_at AS DATE) >= :q_desde";
+            $where[]           = "cp.fecha_entrega_cita >= :q_desde";
             $params[':q_desde'] = $filtros['q_desde'];
         }
         if (!empty($filtros['q_hasta'])) {
-            $where[]           = "CAST(cp.created_at AS DATE) <= :q_hasta";
+            $where[]           = "cp.fecha_entrega_cita <= :q_hasta";
             $params[':q_hasta'] = $filtros['q_hasta'];
         }
 
@@ -519,8 +522,9 @@ class CalificacionController extends Controller
     public function actionCreate($id_oc = null)
     {
         $model = new Calificacionproveedor();
-        $subcategorias = [];
-        $yaCalificadas = [];
+        $subcategorias   = [];
+        $yaCalificadas   = [];
+        $incumplimientos = [];
 
         // Pre-cargar datos desde la OC + programacion si viene el id
         if ($id_oc) {
@@ -547,15 +551,7 @@ class CalificacionController extends Controller
                      FROM agendaentregamercancia ag3
                      INNER JOIN transportadora tr2 ON tr2.id = ag3.idTransportadora
                      WHERE ag3.idOrdenCompra = oc.id
-                     ORDER BY ag3.id DESC)                          AS transportadora,
-                    /* Empleado logístico que hizo el conteo (programacion más reciente) */
-                    (SELECT TOP 1 em.nombreEmpleado
-                     FROM agendaentregamercancia ag4
-                     INNER JOIN programacionentregamercancia prog ON prog.idAgendaEntregaMercancia = ag4.id
-                     INNER JOIN empleadologistica eml ON eml.id = prog.idEmpleadoLogistica
-                     INNER JOIN empleado em ON em.id = eml.idEmpleado
-                     WHERE ag4.idOrdenCompra = oc.id
-                     ORDER BY prog.id DESC)                         AS revisado_por
+                     ORDER BY ag3.id DESC)                          AS transportadora
                 FROM ordendecompra oc
                 LEFT JOIN proveedor     p  ON p.id  = oc.idProveedor
                 LEFT JOIN tipodocumento td ON td.id = oc.idTipoDocumento
@@ -590,13 +586,22 @@ class CalificacionController extends Controller
 
             // Calificaciones ya existentes por subcategoría
             $yaCalificadas = Calificacionproveedor::calificadasPorSubcategoria($id_oc);
+
+            // Incumplimientos registrados para esta OC
+            $incumplimientos           = Calificacionincumplimiento::listByOc($id_oc);
+            $model->num_incumplimientos = count($incumplimientos);
         }
 
-        // Revisado por = usuario logueado, siempre (no editable por el usuario)
-        $model->revisado_por = Yii::$app->user->identity->username ?? '';
+        // Pre-llenar revisado_por con el usuario logueado (editable para agregar más personas)
+        if (!$model->revisado_por) {
+            $model->revisado_por = Yii::$app->user->identity->username ?? '';
+        }
 
         if ($model->load(Yii::$app->request->post())) {
-            $model->revisado_por = Yii::$app->user->identity->username ?? '';
+            // Asegurar que revisado_por incluya al menos al usuario actual
+            if (empty(trim($model->revisado_por))) {
+                $model->revisado_por = Yii::$app->user->identity->username ?? '';
+            }
 
             // Si ya existe calificación para esta subcategoría en esta OC, reemplazarla
             $existente = Calificacionproveedor::findOne([
@@ -626,11 +631,50 @@ class CalificacionController extends Controller
         $proveedoresMap = \yii\helpers\ArrayHelper::map($proveedores, 'id', 'razonSocial');
 
         return $this->render('create', [
-            'model'          => $model,
-            'proveedoresMap' => $proveedoresMap,
-            'subcategorias'  => $subcategorias,
-            'yaCalificadas'  => $yaCalificadas,
+            'model'           => $model,
+            'proveedoresMap'  => $proveedoresMap,
+            'subcategorias'   => $subcategorias,
+            'yaCalificadas'   => $yaCalificadas,
+            'incumplimientos' => $incumplimientos,
         ]);
+    }
+
+    // ---------------------------------------------------------------
+    //  Agregar incumplimiento vía AJAX
+    // ---------------------------------------------------------------
+    public function actionAddIncumplimiento()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if (!Yii::$app->request->isPost) {
+            return ['success' => false, 'error' => 'Método no permitido'];
+        }
+
+        $idOc     = (int)Yii::$app->request->post('id_oc');
+        $numeroOc = trim(Yii::$app->request->post('numero_oc', ''));
+        $desc     = trim(Yii::$app->request->post('descripcion', ''));
+
+        if (!$idOc || !$desc) {
+            return ['success' => false, 'error' => 'Datos incompletos'];
+        }
+
+        $inc = new Calificacionincumplimiento();
+        $inc->id_ordendecompra = $idOc;
+        $inc->numero_oc        = $numeroOc;
+        $inc->descripcion      = $desc;
+
+        if ($inc->save()) {
+            $total = Calificacionincumplimiento::countByOc($idOc);
+            return [
+                'success'     => true,
+                'total'       => $total,
+                'id'          => $inc->id,
+                'descripcion' => $desc,
+                'fecha'       => substr($inc->created_at, 0, 10),
+            ];
+        }
+
+        return ['success' => false, 'error' => 'Error al guardar el incumplimiento'];
     }
 
     // ---------------------------------------------------------------
@@ -696,18 +740,32 @@ class CalificacionController extends Controller
         $proveedores    = Proveedor::find()->orderBy('razonSocial')->select(['id','razonSocial'])->asArray()->all();
         $proveedoresMap = \yii\helpers\ArrayHelper::map($proveedores, 'id', 'razonSocial');
 
-        $subcategorias = $model->id_ordendecompra
+        $subcategorias   = $model->id_ordendecompra
             ? Calificacionproveedor::subcategoriasDeOc($model->id_ordendecompra)
             : [];
-        $yaCalificadas = $model->id_ordendecompra
+        $yaCalificadas   = $model->id_ordendecompra
             ? Calificacionproveedor::calificadasPorSubcategoria($model->id_ordendecompra)
             : [];
+        $incumplimientos = $model->id_ordendecompra
+            ? Calificacionincumplimiento::listByOc($model->id_ordendecompra)
+            : [];
+
+        // Si categoria está vacía pero subcategoria está set, recuperarla desde los datos de la OC
+        if (empty($model->categoria) && !empty($model->subcategoria) && !empty($subcategorias)) {
+            foreach ($subcategorias as $sc) {
+                if ($sc['subcategoria'] === $model->subcategoria) {
+                    $model->categoria = $sc['categoria'];
+                    break;
+                }
+            }
+        }
 
         return $this->render('create', [
-            'model'          => $model,
-            'proveedoresMap' => $proveedoresMap,
-            'subcategorias'  => $subcategorias,
-            'yaCalificadas'  => $yaCalificadas,
+            'model'           => $model,
+            'proveedoresMap'  => $proveedoresMap,
+            'subcategorias'   => $subcategorias,
+            'yaCalificadas'   => $yaCalificadas,
+            'incumplimientos' => $incumplimientos,
         ]);
     }
 

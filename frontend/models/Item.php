@@ -433,6 +433,7 @@ class Item extends \yii\db\ActiveRecord
     {
 
         $resultado = OrdendecompraSIESA::obtenerDatosItem($item, $color, $talla);
+        $idprincipal = null;
         if (!empty($resultado)) {
             foreach ($resultado as $dato) {
 

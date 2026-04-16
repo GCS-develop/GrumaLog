@@ -242,7 +242,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'class' => ActionColumn::className(),
                 'header' => 'Acción',
                 //'headerOptions' => ['width' => '15%'],
-                'template' => '{detalle} {view}', // {importardataxls} {delete}
+                'template' => '{detalle} {view} {delete}',
 
                 'buttons' => [
 
@@ -286,16 +286,20 @@ $this->params['breadcrumbs'][] = $this->title;
                     },
 
                     'delete' => function ($url, $model) {
+                        $oc = $model->ordencompra;
+                        $label = $oc
+                            ? ($oc->cO->codigo ?? '') . '-' . ($oc->tipoDocumento->codigo ?? '') . '-' . $oc->consecutivo
+                            : $model->idOrdenCompra;
                         return Html::a(
                             '<i class="fa fa-trash"></i>',
-                            ['eliminar-items', 'id' => $model->id],
+                            ['delete', 'id' => $model->id],
                             [
-                                'class' => 'btn btn-default',
-                                'title' => 'Eliminar Items de la Orden de Compra',
-                                'data' => [
-                                    'confirm' => 'Esta Seguro de Eliminar Items de la Orden de Compra? ( ' . $model->ordencompra->consecutivo . ' )',
-                                    'method' => 'post',
-                                ]
+                                'class' => 'btn btn-danger btn-sm',
+                                'title' => 'Eliminar OC del pedido',
+                                'data'  => [
+                                    'confirm' => '¿Eliminar la OC ' . $label . ' de este pedido? Esta acción quedará registrada en el log de auditoría.',
+                                    'method'  => 'post',
+                                ],
                             ]
                         );
                     },

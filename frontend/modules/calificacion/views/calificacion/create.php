@@ -4,6 +4,7 @@
 /** @var array $proveedoresMap */
 /** @var array $subcategorias  filas con subcategoria, categoria, unidades_ordenadas, unidades_entregadas */
 /** @var array $yaCalificadas  [subcategoria => Calificacionproveedor] */
+/** @var frontend\models\Calificacionincumplimiento[] $incumplimientos */
 
 use frontend\models\Calificacionproveedor;
 use kartik\date\DatePicker;
@@ -16,14 +17,16 @@ $this->title = $isNew ? 'Nueva Calificación' : 'Editar Calificación #' . $mode
 $this->params['breadcrumbs'][] = ['label' => 'Calificación Proveedores', 'url' => ['/calificacion/calificacion/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
-$tieneSubcats  = !empty($subcategorias) && count($subcategorias) > 1;
-$tieneOc       = !empty($model->id_ordendecompra);
-$subcatDataJson = json_encode(array_column($subcategorias, null, 'subcategoria'));
-$urlSubcatData  = \yii\helpers\Url::to(['/calificacion/calificacion/subcategoria-data',
+$tieneSubcats       = !empty($subcategorias) && count($subcategorias) > 1;
+$tieneOc            = !empty($model->id_ordendecompra);
+$subcatDataJson     = json_encode(array_column($subcategorias, null, 'subcategoria'));
+$urlSubcatData      = \yii\helpers\Url::to(['/calificacion/calificacion/subcategoria-data',
     'id_oc' => $model->id_ordendecompra]);
-$urlPonderado   = $model->id_ordendecompra
+$urlPonderado       = $model->id_ordendecompra
     ? \yii\helpers\Url::to(['/calificacion/calificacion/ponderado', 'id_oc' => $model->id_ordendecompra])
     : null;
+$urlAddIncumplimiento = \yii\helpers\Url::to(['/calificacion/calificacion/add-incumplimiento']);
+$numIncumplimientos   = count($incumplimientos ?? []);
 
 // Opciones 1-5 para criterios
 $opciones = [1 => '1', 2 => '2', 3 => '3', 4 => '4', 5 => '5'];
@@ -46,8 +49,20 @@ $(document).on('change', '.score-select', function() {
 });
 
 $(document).on('change', '#calificacionproveedor-calidad_producto', function() {
+    actualizarFormulaPreview();
     recalcularTotal();
 });
+
+function actualizarFormulaPreview() {
+    var cpRaw  = parseInt(\$('#calificacionproveedor-calidad_producto').val());
+    var nIncum = parseInt(\$('#campo-num-incumplimientos').val()) || 0;
+    if (isNaN(cpRaw) || cpRaw < 1 || nIncum === 0) {
+        \$('#formula-preview').text('');
+        return;
+    }
+    var ef = ((cpRaw + nIncum) / (1 + nIncum)).toFixed(2);
+    \$('#formula-preview').text(' → (' + cpRaw + ' + ' + nIncum + ') / ' + (1 + nIncum) + ' = ' + ef);
+}
 
 function recalcularCalidad() {
     var pesos = {
@@ -75,26 +90,34 @@ function recalcularCalidad() {
 }
 
 function recalcularTotal() {
-    var oportVal = parseFloat(\$('#preview-oportunidad-val').text());
-    var cantVal  = parseFloat(\$('#preview-cantidad-val').text());
-    var calVal   = parseFloat(\$('#preview-calidad-val').text());
-    var cpVal    = parseInt(\$('#calificacionproveedor-calidad_producto').val());
+    var oportVal  = parseFloat(\$('#preview-oportunidad-val').text());
+    var cantVal   = parseFloat(\$('#preview-cantidad-val').text());
+    var calVal    = parseFloat(\$('#preview-calidad-val').text());
+    var cpRaw     = parseInt(\$('#calificacionproveedor-calidad_producto').val());
+    var nIncum    = parseInt(\$('#campo-num-incumplimientos').val()) || 0;
 
-    if (isNaN(oportVal) || isNaN(cantVal) || isNaN(calVal) || isNaN(cpVal) || cpVal < 1) {
+    if (isNaN(oportVal) || isNaN(cantVal) || isNaN(calVal) || isNaN(cpRaw) || cpRaw < 1) {
         \$('#preview-total').html('<span class=\"text-muted small\">Complete todos los campos</span>');
         return;
     }
 
-    // Pesos: oportunidad*10% + cantidad*30% + calidad_criterios*30% + calidad_producto*30%
-    var total = oportVal * 0.10 + cantVal * 0.30 + calVal * 0.30 + cpVal * 0.30;
+    // Calidad producto efectiva: (score + N×1) / (1 + N)
+    var cpEfectivo = nIncum > 0 ? (cpRaw + nIncum) / (1 + nIncum) : cpRaw;
+
+    // Pesos: oportunidad*10% + cantidad*30% + calidad_criterios*30% + calidad_producto_efectiva*30%
+    var total = oportVal * 0.10 + cantVal * 0.30 + calVal * 0.30 + cpEfectivo * 0.30;
     var letra = puntajeALetra(total);
     var color = letra === 'A' ? 'success' : (letra === 'B' ? 'warning' : 'danger');
     \$('#preview-total').html('<span class=\"badge badge-' + color + ' badge-pill px-3 py-2\" style=\"font-size:1.3rem\">' + letra + ' (' + total.toFixed(2) + '/5)</span>');
 
-    // Preview calidad_producto badge
-    var cpLetra = puntajeALetra(cpVal);
+    // Preview calidad_producto: mostrar score ingresado y efectivo si hay incumplimientos
+    var cpLetra = puntajeALetra(cpEfectivo);
     var cpColor = cpLetra === 'A' ? 'success' : (cpLetra === 'B' ? 'warning' : 'danger');
-    \$('#preview-calidad-producto').html('<span class=\"badge badge-' + cpColor + '\">' + cpLetra + ' (' + cpVal + '/5)</span>');
+    var cpHtml  = '<span class=\"badge badge-' + cpColor + '\">' + cpLetra + ' (' + cpEfectivo.toFixed(2) + ')</span>';
+    if (nIncum > 0) {
+        cpHtml += ' <small class=\"text-danger ml-1\">ingresado: ' + cpRaw + '/5, ' + nIncum + ' incumpl.</small>';
+    }
+    \$('#preview-calidad-producto').html(cpHtml);
 }
 
 function puntajeALetra(score) {
@@ -104,17 +127,9 @@ function puntajeALetra(score) {
     return 'A';
 }
 
-// Calcular oportunidad en tiempo real
+// Recalcular oportunidad al cambiar fechas o incumplimientos
 \$('#calificacionproveedor-fecha_entrega_cita, #calificacionproveedor-fecha_entrega_oc').on('change', function() {
-    var cita    = new Date(\$('#calificacionproveedor-fecha_entrega_cita').val());
-    var entrega = new Date(\$('#calificacionproveedor-fecha_entrega_oc').val());
-    if (isNaN(cita) || isNaN(entrega)) return;
-    var diff = Math.round((entrega - cita) / 86400000);
-    var score = diff <= 0 ? 5 : (diff <= 2 ? 4 : 1);
-    var label = diff <= 0 ? 'Mismo día / adelantado (5)' : (diff <= 2 ? '1-2 días tarde (4)' : 'Más de 2 días tarde (1)');
-    var color = score === 5 ? 'success' : (score === 4 ? 'warning' : 'danger');
-    \$('#preview-oportunidad').html('<span class=\"badge badge-' + color + '\">' + label + '</span>');
-    \$('#preview-oportunidad-val').text(score);
+    calcularOportunidadPreview();
     recalcularTotal();
 });
 
@@ -126,8 +141,8 @@ function puntajeALetra(score) {
 
 function calcularCantidadPreview() {
     var ord  = parseInt(\$('#calificacionproveedor-unidades_ordenadas').val());
-    var ent  = parseInt(\$('#calificacionproveedor-unidades_entregadas').val());
-    if (!ord || !ent) return;
+    if (!ord || isNaN(ord)) return;
+    var ent  = parseInt(\$('#calificacionproveedor-unidades_entregadas').val()) || 0;
     var pct   = ent / ord;
     var score = pct >= 1.0 ? 5 : (pct >= 0.80 ? 4 : 1);
     var pctStr = (pct * 100).toFixed(1) + '%';
@@ -137,15 +152,29 @@ function calcularCantidadPreview() {
 }
 
 function calcularOportunidadPreview() {
-    var cita    = new Date(\$('#calificacionproveedor-fecha_entrega_cita').val());
-    var entrega = new Date(\$('#calificacionproveedor-fecha_entrega_oc').val());
-    if (isNaN(cita) || isNaN(entrega)) return;
-    var diff = Math.round((entrega - cita) / 86400000);
-    var score = diff <= 0 ? 5 : (diff <= 2 ? 4 : 1);
-    var label = diff <= 0 ? 'Mismo día / adelantado (5)' : (diff <= 2 ? '1-2 días tarde (4)' : 'Más de 2 días tarde (1)');
-    var color = score === 5 ? 'success' : (score === 4 ? 'warning' : 'danger');
-    \$('#preview-oportunidad').html('<span class=\"badge badge-' + color + '\">' + label + '</span>');
-    \$('#preview-oportunidad-val').text(score);
+    var cita = \$('#calificacionproveedor-fecha_entrega_cita').val();
+    var oc   = \$('#calificacionproveedor-fecha_entrega_oc').val();
+    if (!cita || !oc) return;
+
+    var citaDate = new Date(cita);
+    var ocDate   = new Date(oc);
+    if (isNaN(citaDate) || isNaN(ocDate)) return;
+
+    // Score binario de la entrega actual: 5 (a tiempo) | 1 (tarde)
+    var scoreActual = (ocDate <= citaDate) ? 5 : 1;
+
+    // Incumplimientos previos de esta OC: cada uno aporta 1 al pool
+    var n     = parseInt(\$('#campo-num-incumplimientos').val()) || 0;
+    var score = n > 0 ? (n + scoreActual) / (n + 1) : scoreActual;
+
+    var letra = puntajeALetra(score);
+    var color = letra === 'A' ? 'success' : (letra === 'B' ? 'warning' : 'danger');
+    var lbl   = letra + ' (' + score.toFixed(2) + ')';
+    if (n > 0) {
+        lbl += ' <small class=\"text-muted font-weight-normal\">· ' + (n + 1) + ' intentos</small>';
+    }
+    \$('#preview-oportunidad').html('<span class=\"badge badge-' + color + '\">' + lbl + '</span>');
+    \$('#preview-oportunidad-val').text(score.toFixed(4));
 }
 
 // Calcular todo al cargar la página (campos pre-llenados desde OC)
@@ -153,7 +182,45 @@ function calcularOportunidadPreview() {
     calcularOportunidadPreview();
     calcularCantidadPreview();
     recalcularCalidad();
+    actualizarFormulaPreview();
     recalcularTotal();
+});
+
+// Agregar incumplimiento vía AJAX
+\$('#btn-add-incumplimiento').on('click', function() {
+    var desc = \$('#nuevo-incumplimiento').val().trim();
+    if (!desc) {
+        \$('#nuevo-incumplimiento').addClass('is-invalid').focus();
+        return;
+    }
+    \$('#nuevo-incumplimiento').removeClass('is-invalid');
+    \$(this).prop('disabled', true);
+
+    \$.post('<?= $urlAddIncumplimiento ?>', {
+        '_csrf':       yii.getCsrfToken(),
+        'id_oc':       '<?= (int)$model->id_ordendecompra ?>',
+        'numero_oc':   '<?= addslashes($model->numero_oc ?? '') ?>',
+        'descripcion': desc
+    }, function(data) {
+        if (data.success) {
+            \$('#badge-incumplimientos').text(data.total);
+            \$('#campo-num-incumplimientos').val(data.total);
+            \$('#sin-incumplimientos').hide();
+            var html = '<div class=\"alert alert-warning py-1 px-2 mb-1 small d-flex justify-content-between align-items-start\">'
+                     + '<span><i class=\"fas fa-times-circle text-danger mr-1\"></i>' + \$('<div>').text(desc).html() + '</span>'
+                     + '<small class=\"text-muted ml-2 text-nowrap\">' + (data.fecha || '') + '</small>'
+                     + '</div>';
+            \$('#lista-incumplimientos').append(html);
+            \$('#nuevo-incumplimiento').val('');
+            actualizarFormulaPreview();
+            calcularOportunidadPreview();
+            recalcularTotal();
+        } else {
+            alert('Error: ' + (data.error || 'No se pudo guardar'));
+        }
+    }).always(function() {
+        \$('#btn-add-incumplimiento').prop('disabled', false);
+    });
 });
 
 // Selector de subcategorías (modo con OC)
@@ -247,38 +314,45 @@ function calcularOportunidadPreview() {
                     <i class="fas fa-file-alt"></i> Datos de la Orden de Compra
                 </div>
                 <div class="card-body">
-                    <?= $form->field($model, 'numero_oc')->textInput(['maxlength' => 50, 'placeholder' => 'Ej: 2CA-00004648']) ?>
+                    <?= $form->field($model, 'numero_oc')->textInput(['maxlength' => 50, 'readonly' => $tieneOc, 'style' => $tieneOc ? 'background:#f8f9fa;' : '']) ?>
+                    <?php if ($tieneOc): ?>
+                    <div class="form-group">
+                        <label class="control-label">Proveedor</label>
+                        <p class="form-control-plaintext font-weight-bold" style="font-size:0.9rem; padding-top:4px;">
+                            <i class="fas fa-building text-secondary mr-1"></i>
+                            <?= Html::encode($model->proveedor ?: '—') ?>
+                        </p>
+                        <?= Html::hiddenInput('Calificacionproveedor[id_proveedor]', $model->id_proveedor, ['id' => 'calificacionproveedor-id_proveedor']) ?>
+                    </div>
+                    <?php else: ?>
                     <?= $form->field($model, 'id_proveedor')->widget(Select2::class, [
                         'data'          => $proveedoresMap,
                         'options'       => ['placeholder' => 'Seleccione proveedor...', 'id' => 'sel-proveedor'],
                         'pluginOptions' => ['allowClear' => true],
                     ]) ?>
+                    <?php endif ?>
                     <?php /* Categoría y subcategoría siempre readonly cuando viene de OC */ ?>
                     <div class="form-group">
                         <label class="control-label">Categoría</label>
                         <input type="text" id="campo-categoria" class="form-control form-control-sm"
                                name="Calificacionproveedor[categoria]"
-                               value="<?= Html::encode($model->categoria) ?>"
-                               <?= $tieneOc ? 'readonly style="background:#f8f9fa;"' : '' ?>>
+                               value="<?= Html::encode($model->categoria) ?>">
                     </div>
                     <div class="form-group">
                         <label class="control-label">Subcategoría</label>
                         <input type="text" id="campo-subcategoria" class="form-control form-control-sm"
                                name="Calificacionproveedor[subcategoria]"
-                               value="<?= Html::encode($model->subcategoria) ?>"
-                               <?= $tieneOc ? 'readonly style="background:#f8f9fa;"' : '' ?>>
+                               value="<?= Html::encode($model->subcategoria) ?>">
                     </div>
                     <?= $form->field($model, 'tipo_mercancia')->textInput(['maxlength' => 100]) ?>
                     <?= $form->field($model, 'producto')->textInput(['maxlength' => 200]) ?>
                     <?= $form->field($model, 'transportadora')->textInput(['maxlength' => 100]) ?>
-                    <div class="form-group">
-                        <label class="control-label">Revisado Por</label>
-                        <p class="form-control-plaintext font-weight-bold">
-                            <i class="fas fa-user-check text-secondary"></i>
-                            <?= Html::encode($model->revisado_por) ?>
-                        </p>
-                        <?= Html::hiddenInput('Calificacionproveedor[revisado_por]', $model->revisado_por) ?>
-                    </div>
+                    <?= $form->field($model, 'revisado_por')
+                        ->textInput([
+                            'maxlength'   => 500,
+                            'placeholder' => 'Ej: juan.perez, maria.garcia...',
+                        ])
+                        ->hint('<i class="fas fa-users text-secondary"></i> Puede ingresar varios nombres separados por coma.') ?>
                 </div>
             </div>
 
@@ -292,7 +366,14 @@ function calcularOportunidadPreview() {
                             <?= $form->field($model, 'unidades_ordenadas')->textInput(['type' => 'number', 'min' => 0]) ?>
                         </div>
                         <div class="col-6">
-                            <?= $form->field($model, 'unidades_entregadas')->textInput(['type' => 'number', 'min' => 0]) ?>
+                            <?= $form->field($model, 'unidades_entregadas')
+                                ->textInput([
+                                    'type'     => 'number',
+                                    'min'      => 0,
+                                    'readonly' => true,
+                                    'style'    => 'background:#f8f9fa; cursor:not-allowed;',
+                                ])
+                                ->hint('<i class="fas fa-lock text-secondary"></i> Se actualiza al legalizar el conteo de la OC.') ?>
                         </div>
                     </div>
                     <?= $form->field($model, 'fecha_entrega_cita')->widget(DatePicker::class, [
@@ -305,6 +386,55 @@ function calcularOportunidadPreview() {
                     ]) ?>
                 </div>
             </div>
+
+            <!-- Incumplimientos de la OC -->
+            <?php if ($tieneOc): ?>
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header py-2" style="background:#f8d7da; color:#721c24;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Incumplimientos</strong>
+                    <span class="badge badge-danger ml-1" id="badge-incumplimientos"><?= $numIncumplimientos ?></span>
+                    <small class="ml-2" style="color:#721c24;">Penalizan el puntaje de Calidad del Producto</small>
+                </div>
+                <div class="card-body p-2">
+                    <?= Html::hiddenInput(
+                        'Calificacionproveedor[num_incumplimientos]',
+                        $numIncumplimientos,
+                        ['id' => 'campo-num-incumplimientos']
+                    ) ?>
+                    <div id="lista-incumplimientos">
+                        <?php if (empty($incumplimientos)): ?>
+                            <div id="sin-incumplimientos" class="text-muted small py-1">
+                                <i class="fas fa-check-circle text-success mr-1"></i>Sin incumplimientos registrados.
+                            </div>
+                        <?php else: ?>
+                            <div id="sin-incumplimientos" style="display:none;"></div>
+                            <?php foreach ($incumplimientos as $inc): ?>
+                            <div class="alert alert-warning py-1 px-2 mb-1 small d-flex justify-content-between align-items-start">
+                                <span><i class="fas fa-times-circle text-danger mr-1"></i><?= Html::encode($inc->descripcion) ?></span>
+                                <small class="text-muted ml-2 text-nowrap"><?= substr($inc->created_at ?? '', 0, 10) ?></small>
+                            </div>
+                            <?php endforeach ?>
+                        <?php endif ?>
+                    </div>
+                    <div class="mt-2 border-top pt-2">
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="nuevo-incumplimiento" class="form-control"
+                                   placeholder="Descripción del incumplimiento a registrar...">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-danger" id="btn-add-incumplimiento">
+                                    <i class="fas fa-plus"></i> Registrar
+                                </button>
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            Fórmula: (puntaje + <?= $numIncumplimientos ?> incumpl.) / (1 + <?= $numIncumplimientos ?>)
+                            <span id="formula-preview" class="font-weight-bold text-danger"></span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <?php endif ?>
 
             <!-- Preview scores calculados -->
             <div class="card shadow-sm border-0 mb-3">

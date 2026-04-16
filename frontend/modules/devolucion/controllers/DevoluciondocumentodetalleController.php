@@ -89,6 +89,49 @@ class DevoluciondocumentodetalleController extends Controller
         $dataProvider->pagination = ['pageSize' => 50]; // paginación normal
     }
 
+    // ✅ Pre-cargar tipoInventario en batch: 1 query a SIESA en vez de N queries
+    $models = $dataProvider->getModels();
+    if (!empty($models)) {
+        $barcodes = [];
+        foreach ($models as $m) {
+            $barcodes[] = $m->codigoBarras;
+        }
+        $barcodes = array_unique($barcodes);
+
+        $inParams = [];
+        foreach ($barcodes as $i => $ean) {
+            $inParams[":ean{$i}"] = $ean;
+        }
+        $inClause = implode(',', array_keys($inParams));
+
+        $sql = "
+            SELECT IE.f121_id_barras_principal AS ean,
+                   IC.f125_id_criterio_mayor   AS criterio
+            FROM   t125_mc_items_criterios   IC
+            JOIN   t120_mc_items             I  ON I.f120_rowid       = IC.f125_rowid_item
+            JOIN   t121_mc_items_extensiones IE ON IE.f121_rowid_item = I.f120_rowid
+            WHERE  IC.f125_id_plan = '008'
+              AND  IE.f121_id_barras_principal IN ($inClause)
+        ";
+
+        $rows = Yii::$app->dbSiesa->createCommand($sql, $inParams)->queryAll();
+
+        $tipoMap = [];
+        foreach ($rows as $row) {
+            $tipoMap[$row['ean']] = match ($row['criterio']) {
+                '0001' => 'VMI',
+                '0002' => 'FIRME',
+                default => 'N/A',
+            };
+        }
+
+        foreach ($models as $model) {
+            $model->tipoInventario = $tipoMap[$model->codigoBarras] ?? 'N/A';
+        }
+
+        $dataProvider->setModels($models);
+    }
+
     return $this->render('index_all', [
         'searchModel' => $searchModel,
         'dataProvider' => $dataProvider,

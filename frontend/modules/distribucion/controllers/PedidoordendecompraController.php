@@ -21,6 +21,7 @@ use frontend\models\Ordendecompra;
 use frontend\models\Pedidoordendecompraitem;
 use frontend\models\Pedidodetalle;
 use frontend\models\FileFormInput;
+use frontend\models\Logborradopedido;
 
 use common\components\PedidoImportService;
 
@@ -200,51 +201,62 @@ class PedidoordendecompraController extends Controller
 
         $tx = Yii::$app->db->beginTransaction();
         try {
-            // 1) IDs de items de la OC
-            $pociIds = Pedidoordendecompraitem::find()
-                ->select('id')
-                ->where(['idPedidoOrdenCompra' => $id])
-                ->column();
+            // 1) Validar que ningún SKU tenga unidades recibidas (ya fue contado)
+            $totalRecibidas = (int) Pedidodetalle::find()
+                ->where([
+                    'idPedido'      => $model->idPedido,
+                    'idOrdenCompra' => $model->idOrdenCompra,
+                ])
+                ->sum('unidadesRecibidas');
 
-            // Validar si hay unidades recibidas
-            if (!empty($pociIds)) {
-                $totalRecibidas = (int) Pedidodetalle::find()
-                    ->where(['idPedidoOrdenCompraItem' => $pociIds])
-                    ->sum('unidadesRecibidas');
-
-                if ($totalRecibidas > 0) {
-                    Yii::$app->session->setFlash(
-                        'warning',
-                        'No se puede eliminar la Orden de Compra porque existen unidades recibidas.'
-                    );
-                    return $this->redirect(['index', 'idpedido' => $idpedido]);
-                }
+            if ($totalRecibidas > 0) {
+                Yii::$app->session->setFlash(
+                    'warning',
+                    'No se puede eliminar la OC porque ya tiene unidades contadas/recibidas.'
+                );
+                return $this->redirect(['index', 'idpedido' => $idpedido]);
             }
 
-            // 2) Borrar detalles (si hay)
-            $deletedDet = 0;
-            if (!empty($pociIds)) {
-                $deletedDet = Pedidodetalle::deleteAll(['idPedidoOrdenCompraItem' => $pociIds]);
-            }
+            // 2) Registrar log ANTES de borrar (necesitamos los datos de relaciones)
+            $unidadesAntes = (int) $model->totalUnidades;
+            Logborradopedido::registrarEliminarOC($model, $unidadesAntes);
 
-            // 3) Borrar items de la OC
-            $deletedPoci = Pedidoordendecompraitem::deleteAll(['idPedidoOrdenCompra' => $id]);
+            // 3) Borrar pedidodetalle de esta OC
+            $deletedDet = Pedidodetalle::deleteAll([
+                'idPedido'      => $model->idPedido,
+                'idOrdenCompra' => $model->idOrdenCompra,
+            ]);
 
-            Yii::$app->db->createCommand(
-                'EXEC dbo.usp_PedidoOC_RecalcularTotales :ocId',
-                [':ocId' => $id]
-            )->execute();
+            // 4) Borrar pedidoordendecompraitem de esta OC
+            $deletedItem = Pedidoordendecompraitem::deleteAll([
+                'idPedido'      => $model->idPedido,
+                'idOrdenCompra' => $model->idOrdenCompra,
+            ]);
+
+            // 5) Borrar el registro pedidoordendecompra
+            $idPedido = $model->idPedido;
+            $model->delete();
+
+            // 6) Recalcular totales del pedido padre
+            Yii::$app->db->createCommand("
+                UPDATE pedido SET
+                    nroOrdenesCompra = (
+                        SELECT COUNT(*) FROM pedidoordendecompra WHERE idPedido = :p1
+                    ),
+                    totalUnidades = ISNULL((
+                        SELECT SUM(totalUnidades) FROM pedidoordendecompra WHERE idPedido = :p2
+                    ), 0)
+                WHERE id = :p3
+            ", [':p1' => $idPedido, ':p2' => $idPedido, ':p3' => $idPedido])->execute();
 
             $tx->commit();
             Yii::$app->session->setFlash(
                 'success',
-                "Eliminados $deletedDet detalles y $deletedPoci items de la OC #$id."
+                "OC eliminada del pedido. ({$deletedItem} items, {$deletedDet} SKUs borrados)"
             );
         } catch (\Throwable $e) {
             $tx->rollBack();
-            Yii::$app->session->setFlash('error', 'No se pudo eliminar: ' . $e->getMessage());
-        } catch (\yii\db\Exception $e) {
-            Yii::$app->session->setFlash('error', 'No fue posible recalcular Totales: ' . $e->getMessage());
+            Yii::$app->session->setFlash('error', 'No se pudo eliminar la OC: ' . $e->getMessage());
         }
 
         return $this->redirect(['index', 'idpedido' => $idpedido]);

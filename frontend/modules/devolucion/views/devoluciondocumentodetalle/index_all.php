@@ -79,6 +79,13 @@ Modal::end();
 ?>
 <?php
 $gridColumns = [
+    [
+        'attribute' => 'nombreProveedor',
+        'label' => 'Proveedor',
+        'value' => function ($model) {
+            return $model->nombreProveedor ?? 'Proveedor No Asignado';
+        },
+    ],
     'codigoBodegaSalida',
     'nombreBodega',
     'numeroDocumento',
@@ -169,6 +176,13 @@ $gridColumns = [
             return $model->registrada == 1 ? 'SI' : 'NO';
         },
         'label' => 'Tiene Registro'
+    ],
+    [
+        'attribute' => 'tipoInventario',
+        'label' => 'Tipo Inv.',
+        'value' => function ($model) {
+            return $model->tipoInventario ?? 'N/A';
+        },
     ],
 ];
 ?>
@@ -486,7 +500,7 @@ $gridColumns = [
     'label'     => 'Tipo Inv.',
     'attribute' => 'tipoInventario',
     'value'     => function ($model) {
-        return $model->getTipoInventario();   // tu método existente
+        return $model->tipoInventario ?? 'N/A';
     },
 ],
 

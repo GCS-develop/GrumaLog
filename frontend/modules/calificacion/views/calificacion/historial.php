@@ -44,12 +44,12 @@ $hayFiltros = !empty($filtros['q_oc']) || !empty($filtros['q_proveedor'])
                                value="<?= Html::encode($filtros['q_proveedor']) ?>">
                     </div>
                     <div class="col-md-2 col-sm-6 mb-1">
-                        <label class="small text-muted mb-0">Fecha Desde</label>
+                        <label class="small text-muted mb-0">Fecha Cita Desde <small class="text-info">(fecha recepción)</small></label>
                         <?= DatePicker::widget([
                             'name'          => 'q_desde',
                             'value'         => $filtros['q_desde'],
                             'language'      => 'es',
-                            'options'       => ['placeholder' => 'Fecha Desde...', 'class' => 'form-control form-control-sm'],
+                            'options'       => ['placeholder' => 'Fecha Cita Desde...', 'class' => 'form-control form-control-sm'],
                             'pluginOptions' => [
                                 'autoclose'      => true,
                                 'format'         => 'yyyy-mm-dd',
@@ -58,12 +58,12 @@ $hayFiltros = !empty($filtros['q_oc']) || !empty($filtros['q_proveedor'])
                         ]) ?>
                     </div>
                     <div class="col-md-2 col-sm-6 mb-1">
-                        <label class="small text-muted mb-0">Fecha Hasta</label>
+                        <label class="small text-muted mb-0">Fecha Cita Hasta <small class="text-info">(fecha recepción)</small></label>
                         <?= DatePicker::widget([
                             'name'          => 'q_hasta',
                             'value'         => $filtros['q_hasta'],
                             'language'      => 'es',
-                            'options'       => ['placeholder' => 'Fecha Hasta...', 'class' => 'form-control form-control-sm'],
+                            'options'       => ['placeholder' => 'Fecha Cita Hasta...', 'class' => 'form-control form-control-sm'],
                             'pluginOptions' => [
                                 'autoclose'      => true,
                                 'format'         => 'yyyy-mm-dd',
@@ -112,7 +112,7 @@ $hayFiltros = !empty($filtros['q_oc']) || !empty($filtros['q_proveedor'])
                             <th class="text-center">Cal. Criterios<br><small>30%</small></th>
                             <th class="text-center">Cal. Producto<br><small>30%</small></th>
                             <th class="text-center">Puntaje Total</th>
-                            <th class="text-center">Fecha</th>
+                            <th class="text-center">Fecha Cita<br><small class="font-weight-normal">(recepción OC)</small></th>
                             <th class="text-center">Calificado Por</th>
                             <th class="text-center">Acciones</th>
                         </tr>
@@ -171,7 +171,11 @@ $hayFiltros = !empty($filtros['q_oc']) || !empty($filtros['q_proveedor'])
                                     <?= $lt ?> (<?= number_format((float)$cal['puntaje_total'], 2) ?>)
                                 </span>
                             </td>
-                            <td class="text-center text-muted"><?= substr($cal['created_at'] ?? '', 0, 10) ?></td>
+                            <td class="text-center text-muted">
+                                <?= $cal['fecha_entrega_cita']
+                                    ? Html::encode(substr($cal['fecha_entrega_cita'], 0, 10))
+                                    : '<span class="text-muted">—</span>' ?>
+                            </td>
                             <td class="text-center"><?= Html::encode($username) ?></td>
                             <td class="text-center" style="white-space:nowrap">
                                 <?php if ($cal['id_ordendecompra']): ?>

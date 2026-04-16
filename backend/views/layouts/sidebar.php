@@ -61,7 +61,7 @@ $baseUrl = Url::base(true);
                             ['label' => 'Empleado', 'url' => ['/catalogos/empleado/index'], 'iconStyle' => 'far'],
                             ['label' => 'Usuarios', 'url' => ['/admin/user'], 'iconStyle' => 'far'],
 
-                            ['label' => 'Reiniciar clave', 'url' => ['/admin/user/reset-password'], 'iconStyle' => 'far'],
+//                 Existe algo llamado cambiar clave, que la cambien por ahi para evitar depender de ti           // ['label' => 'Reiniciar clave', 'url' => ['/admin/user/reset-password'], 'iconStyle' => 'far'],
 
 
                             ['label' => 'Permisos', 'url' => ['/admin/permission'], 'iconStyle' => 'far'],

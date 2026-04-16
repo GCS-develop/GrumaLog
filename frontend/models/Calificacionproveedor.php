@@ -12,7 +12,7 @@ use yii\db\Expression;
  *
  * Fórmulas:
  *  - calidad_ponderada  = promedio ponderado de 14 criterios (escala 1-5)
- *  - oportunidad_formula= 5 (mismo día) | 4 (hasta 2 días tarde) | 1 (más tarde)
+ *  - oportunidad_formula= promedio histórico binario (5=a tiempo | 1=tarde) de todas las entregas del proveedor
  *  - cantidad_formula   = 1 (<80%) | 4 (80-99%) | 5 (>=100%)
  *  - puntaje_total      = oportunidad*20% + cantidad*30% + calidad_ponderada*50%
  *
@@ -76,6 +76,10 @@ class Calificacionproveedor extends \yii\db\ActiveRecord
             [['id_ordendecompra', 'id_proveedor', 'unidades_ordenadas', 'unidades_entregadas',
               'created_by', 'updated_by'], 'integer'],
 
+            // Incumplimientos
+            [['num_incumplimientos'], 'integer', 'min' => 0],
+            [['num_incumplimientos'], 'default', 'value' => 0],
+
             // Criterios de calidad: entero 1-5
             [['caja_bulto','calibre','rotulo','contiene_documentos','separa_tallas',
               'separa_color','separa_referencia','etiquetado','error_tiqueteo',
@@ -87,9 +91,10 @@ class Calificacionproveedor extends \yii\db\ActiveRecord
             [['gancho','tallero'], 'integer', 'min' => 1, 'max' => 5],
             [['gancho','tallero'], 'default', 'value' => null],
 
-            // Strings
+            // Strings — revisado_por ampliado a 500 para soportar múltiples personas
             [['numero_oc','proveedor','categoria','subcategoria','tipo_mercancia',
-              'producto','transportadora','revisado_por'], 'string', 'max' => 200],
+              'producto','transportadora'], 'string', 'max' => 200],
+            [['revisado_por'], 'string', 'max' => 500],
             [['observacion'], 'string'],
 
             // Fechas
@@ -118,6 +123,7 @@ class Calificacionproveedor extends \yii\db\ActiveRecord
             'fecha_entrega_cita'    => 'Fecha Cita',
             'fecha_entrega_oc'      => 'Fecha Entrega OC',
             'revisado_por'          => 'Revisado Por',
+            'num_incumplimientos'   => 'N° Incumplimientos',
             'caja_bulto'            => 'Caja / Bulto',
             'calibre'               => 'Calibre',
             'rotulo'                => 'Rótulo',
@@ -197,6 +203,24 @@ class Calificacionproveedor extends \yii\db\ActiveRecord
     }
 
     /**
+     * Calidad del producto efectiva, penalizada por incumplimientos.
+     * Fórmula: (score + N × 1) / (1 + N)
+     * Cada incumplimiento añade un peso de "1" (peor puntaje) al promedio.
+     * Ej: score=5, 1 incumpl → (5+1)/2 = 3 | score=5, 2 incumpl → (5+1+1)/3 ≈ 2.33
+     */
+    public function calcularCalidadProductoEfectiva()
+    {
+        if (!$this->calidad_producto) {
+            return null;
+        }
+        $n = max(0, (int)($this->num_incumplimientos ?? 0));
+        if ($n === 0) {
+            return (float)$this->calidad_producto;
+        }
+        return round(((float)$this->calidad_producto + $n) / (1 + $n), 4);
+    }
+
+    /**
      * Promedio ponderado de los 14 criterios.
      * Resultado en escala 1-5.
      */
@@ -210,24 +234,37 @@ class Calificacionproveedor extends \yii\db\ActiveRecord
     }
 
     /**
-     * Oportunidad: 5=mismo día, 4=hasta 2 días tarde, 1=más tarde.
+     * Oportunidad: promedio de todos los intentos de entrega de ESTA OC.
+     * Cada incumplimiento previo aporta 1 al pool (intento fallido).
+     * La entrega actual aporta 5 (a tiempo) o 1 (tarde).
+     * Fórmula: (num_incumplimientos + score_actual) / (num_incumplimientos + 1)
+     * Ej: 2 incumpl. + a tiempo → (2+5)/3 = 2.33
      */
     public function calcularOportunidad()
     {
-        if (!$this->fecha_entrega_cita || !$this->fecha_entrega_oc) {
+        $scoreActual = self::scoreBinarioOportunidad($this->fecha_entrega_cita, $this->fecha_entrega_oc);
+        if ($scoreActual === null) {
             return null;
         }
-        $cita     = new \DateTime($this->fecha_entrega_cita);
-        $entrega  = new \DateTime($this->fecha_entrega_oc);
-        $diasDiff = (int)$cita->diff($entrega)->format('%r%a'); // negativo=adelantado, positivo=tarde
-
-        if ($diasDiff <= 0) {
-            return 5;
-        } elseif ($diasDiff <= 2) {
-            return 4;
-        } else {
-            return 1;
+        $n = max(0, (int)($this->num_incumplimientos ?? 0));
+        if ($n === 0) {
+            return $scoreActual;
         }
+        return round(($n + $scoreActual) / ($n + 1), 2);
+    }
+
+    /**
+     * Score binario de puntualidad para una entrega: 5 (a tiempo) | 1 (tarde).
+     * Retorna null si faltan las fechas.
+     */
+    public static function scoreBinarioOportunidad($fechaCita, $fechaOc)
+    {
+        if (!$fechaCita || !$fechaOc) {
+            return null;
+        }
+        $cita    = new \DateTime(substr($fechaCita, 0, 10));
+        $entrega = new \DateTime(substr($fechaOc, 0, 10));
+        return ($entrega <= $cita) ? 5 : 1;
     }
 
     /**
@@ -250,24 +287,25 @@ class Calificacionproveedor extends \yii\db\ActiveRecord
 
     /**
      * Puntaje final ponderado.
-     * oportunidad*10% + cantidad*30% + calidad_criterios*30% + calidad_producto*30%
+     * oportunidad*10% + cantidad*30% + calidad_criterios*30% + calidad_producto_efectiva*30%
+     * La calidad_producto_efectiva incorpora penalización por incumplimientos.
      */
     public function calcularPuntajeTotal()
     {
-        $oportunidad      = $this->oportunidad_formula ?? $this->calcularOportunidad();
-        $cantidad         = $this->cantidad_formula    ?? $this->calcularCantidad();
-        $calidad          = $this->calidad_ponderada   ?? $this->calcularCalidad();
-        $calidadProducto  = $this->calidad_producto    ? (float)$this->calidad_producto : null;
+        $oportunidad             = $this->oportunidad_formula ?? $this->calcularOportunidad();
+        $cantidad                = $this->cantidad_formula    ?? $this->calcularCantidad();
+        $calidad                 = $this->calidad_ponderada   ?? $this->calcularCalidad();
+        $calidadProductoEfectiva = $this->calcularCalidadProductoEfectiva();
 
-        if ($oportunidad === null || $cantidad === null || $calidadProducto === null) {
+        if ($oportunidad === null || $cantidad === null || $calidadProductoEfectiva === null) {
             return null;
         }
 
         return round(
-            $oportunidad     * self::PESO_OPORTUNIDAD      +
-            $cantidad        * self::PESO_CANTIDAD         +
-            $calidad         * self::PESO_CALIDAD          +
-            $calidadProducto * self::PESO_CALIDAD_PRODUCTO,
+            $oportunidad             * self::PESO_OPORTUNIDAD      +
+            $cantidad                * self::PESO_CANTIDAD         +
+            $calidad                 * self::PESO_CALIDAD          +
+            $calidadProductoEfectiva * self::PESO_CALIDAD_PRODUCTO,
             2
         );
     }
@@ -368,7 +406,11 @@ class Calificacionproveedor extends \yii\db\ActiveRecord
                 ISNULL(co.nombre,'') AS centro_operacion,
                 ISNULL(cal.total_calif, 0)  AS total_calificaciones,
                 cal.puntaje_ponderado,
-                cal.ultima_fecha
+                cal.ultima_fecha,
+                (SELECT TOP 1 CONVERT(VARCHAR(10), ag.fechaCita, 120)
+                 FROM agendaentregamercancia ag
+                 WHERE ag.idOrdenCompra = oc.id
+                 ORDER BY ag.id DESC) AS fecha_recepcion
             FROM ordendecompra oc
             LEFT JOIN proveedor      p   ON p.id  = oc.idProveedor
             LEFT JOIN tipodocumento  td  ON td.id = oc.idTipoDocumento

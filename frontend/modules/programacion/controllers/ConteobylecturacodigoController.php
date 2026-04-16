@@ -2,8 +2,13 @@
 
 namespace frontend\modules\programacion\controllers;
 
+use Yii;
 use frontend\models\Conteobylecturacodigo;
 use frontend\models\search\ConteobylecturacodigoSearch;
+use frontend\models\Conteoentregamercancia;
+use frontend\models\Programacionentregamercancia;
+use frontend\models\Logborradoconteo;
+use frontend\models\Item;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -122,7 +127,41 @@ class ConteobylecturacodigoController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+
+        $idconteodetalle = $model->idConteoDetalle;
+        $idprogramacion  = $model->idConteoDestino;
+        $unidadesconteo  = $model->unidades;
+
+        // Capturar datos del item antes de eliminar el scan
+        $itemModel  = Item::findOne(['codigoBarras' => $model->codigoBarras]);
+        $itemCodigo = $itemModel ? $itemModel->item : null;
+        $itemColor  = $itemModel && $itemModel->color ? $itemModel->color->nombre : null;
+        $itemTalla  = $itemModel && $itemModel->talla ? trim($itemModel->talla->nombre) : null;
+
+        $model->delete();
+
+        // Actualizar el total del conteo
+        $modelconteo = Conteoentregamercancia::findOne(['id' => $idconteodetalle]);
+        if ($modelconteo) {
+            $unidadesAntes = (int) $modelconteo->unidadesConteo;
+            $modelconteo->unidadesConteo = $modelconteo->unidadesConteo - $unidadesconteo;
+            $modelconteo->save(false);
+
+            // Registrar en el log de borrados
+            $programacion = Programacionentregamercancia::findOne(['id' => $idprogramacion]);
+            if ($programacion) {
+                Logborradoconteo::registrar(
+                    $programacion,
+                    'ELIMINAR_SCAN',
+                    $unidadesAntes,
+                    $unidadesconteo,
+                    $itemCodigo,
+                    $itemColor,
+                    $itemTalla
+                );
+            }
+        }
 
         return $this->redirect(['index']);
     }

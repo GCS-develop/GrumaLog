@@ -45,10 +45,10 @@ class AuditoriaentradaController extends Controller
             $query->andWhere(['consecutivoOrdenCompra' => (int)$filtroConsecutivo]);
         }
         if ($filtroDesde !== '') {
-            $query->andWhere(['>=', 'created_at', $filtroDesde . ' 00:00:00']);
+            $query->andWhere('CONVERT(date, created_at) >= :desde', [':desde' => $filtroDesde]);
         }
         if ($filtroHasta !== '') {
-            $query->andWhere(['<=', 'created_at', $filtroHasta . ' 23:59:59']);
+            $query->andWhere('CONVERT(date, created_at) <= :hasta', [':hasta' => $filtroHasta]);
         }
         $auditorias = $query->all();
 
@@ -368,8 +368,8 @@ class AuditoriaentradaController extends Controller
         $query = Auditoriaentrada::find()->orderBy(['id' => SORT_ASC]);
         if ($filtroEstado !== '')      { $query->andWhere(['idestado' => (int)$filtroEstado]); }
         if ($filtroConsecutivo !== '') { $query->andWhere(['consecutivoOrdenCompra' => (int)$filtroConsecutivo]); }
-        if ($filtroDesde !== '')       { $query->andWhere(['>=', 'created_at', $filtroDesde . ' 00:00:00']); }
-        if ($filtroHasta !== '')       { $query->andWhere(['<=', 'created_at', $filtroHasta . ' 23:59:59']); }
+        if ($filtroDesde !== '')       { $query->andWhere('CONVERT(date, created_at) >= :desde', [':desde' => $filtroDesde]); }
+        if ($filtroHasta !== '')       { $query->andWhere('CONVERT(date, created_at) <= :hasta', [':hasta' => $filtroHasta]); }
         $auditorias = $query->all();
 
         $spread = new Spreadsheet();
@@ -377,8 +377,8 @@ class AuditoriaentradaController extends Controller
         $sh->setTitle('Auditoría Entradas');
 
         // Cabecera
-        $headers = ['OC', 'Fecha', 'Estado', 'Auditor', 'Conteo Entrada', 'Item', 'Color', 'Talla',
-                    'UNDentradas', 'Cto.Entrada', 'Paquetes', 'Auditado (uds)', 'Diferencia'];
+        $headers = ['Orden de compra', 'Fecha', 'Hora', 'Estado', 'Auditor', 'Conteo Entrada', 'Item', 'Color', 'Talla',
+                    'Unidades entradas', 'Conteo entradas', 'Auditado paquetería', 'Auditado unidades', 'Diferencia'];
         $sh->fromArray($headers, null, 'A1');
 
         // Estilo cabecera
@@ -387,7 +387,7 @@ class AuditoriaentradaController extends Controller
             'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2C3E50']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ];
-        $sh->getStyle('A1:M1')->applyFromArray($headerStyle);
+        $sh->getStyle('A1:N1')->applyFromArray($headerStyle);
 
         $row = 2;
         foreach ($auditorias as $aud) {
@@ -410,7 +410,8 @@ class AuditoriaentradaController extends Controller
             $conteoEntradaStr = implode(', ', $contadoresEntrada);
 
             $ocLabel = $aud->tipoDocumentoOrdenCompra . '-' . $aud->consecutivoOrdenCompra;
-            $fecha   = date('d/m/Y H:i', strtotime($aud->created_at));
+            $fecha   = date('d/m/Y', strtotime($aud->created_at));
+            $hora    = date('H:i', strtotime($aud->created_at));
             $estado  = $aud->estadoLabel;
 
             // SKUs esperados
@@ -467,7 +468,7 @@ class AuditoriaentradaController extends Controller
 
             if (empty($allKeys)) {
                 // Auditoría sin datos — fila vacía
-                $sh->fromArray([$ocLabel, $fecha, $estado, $auditorName, $conteoEntradaStr,
+                $sh->fromArray([$ocLabel, $fecha, $hora, $estado, $auditorName, $conteoEntradaStr,
                     '—', '—', '—', 0, '', 0, 0, 0], null, 'A' . $row);
                 $row++;
                 continue;
@@ -483,30 +484,30 @@ class AuditoriaentradaController extends Controller
                 $dif   = $aud_u - $esp;
 
                 $sh->fromArray([
-                    $ocLabel, $fecha, $estado, $auditorName, $conteoEntradaStr,
+                    $ocLabel, $fecha, $hora, $estado, $auditorName, $conteoEntradaStr,
                     $item, $color, $talla, $esp, $ent, $paq, $aud_u, $dif
                 ], null, 'A' . $row);
 
-                // Color diferencia
+                // Color diferencia (columna N)
                 $difColor = $dif == 0 ? '27AE60' : ($dif < 0 ? 'E74C3C' : 'E67E22');
-                $sh->getStyle('M' . $row)->getFont()->getColor()->setRGB($difColor);
-                $sh->getStyle('M' . $row)->getFont()->setBold(true);
+                $sh->getStyle('N' . $row)->getFont()->getColor()->setRGB($difColor);
+                $sh->getStyle('N' . $row)->getFont()->setBold(true);
 
                 $row++;
             }
 
             // Borde de separación entre auditorías
             if ($row > $firstRow) {
-                $sh->getStyle('A' . $firstRow . ':M' . ($row - 1))
+                $sh->getStyle('A' . $firstRow . ':N' . ($row - 1))
                    ->getBorders()->getBottom()->setBorderStyle('thin');
             }
         }
 
         // Autosize columnas
-        foreach (range('A', 'M') as $col) {
+        foreach (range('A', 'N') as $col) {
             $sh->getColumnDimension($col)->setAutoSize(true);
         }
-        $sh->getColumnDimension('E')->setWidth(25); // Conteo Entrada (usuarios, puede ser largo)
+        $sh->getColumnDimension('F')->setWidth(25); // Conteo Entrada (usuarios, puede ser largo)
 
         $filename = 'Auditoria_Entradas_' . date('Ymd_His') . '.xlsx';
         $writer   = new Xlsx($spread);

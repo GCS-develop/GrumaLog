@@ -98,26 +98,28 @@ $yaBusco = ($termValue !== '');
 
                         $btnPrecio1 = '';
                         if (!empty($model['precio1'])) {
+                            $p1 = (float)$model['precio1'];
                             $btnPrecio1 = Html::a(
                                 '<i class="fa fa-print"></i> Imprimir precio 1',
                                 '#',
                                 [
                                     'class' => 'btn btn-sm btn-success',
                                     'title' => 'Imprimir precio 1',
-                                    'onclick' => "openPrintModal('{$rowid}', '{$printUrl}', 'precio1'); return false;",
+                                    'onclick' => "openPrintModal('{$rowid}', '{$printUrl}', 'precio1', {$p1}); return false;",
                                 ]
                             );
                         }
 
                         $btnPrecio2 = '';
                         if (!empty($model['precio2'])) {
+                            $p2 = (float)$model['precio2'];
                             $btnPrecio2 = Html::a(
                                 '<i class="fa fa-print"></i> Imprimir precio 2',
                                 '#',
                                 [
                                     'class' => 'btn btn-sm btn-warning',
                                     'title' => 'Imprimir precio 2',
-                                    'onclick' => "openPrintModal('{$rowid}', '{$printUrl}', 'precio2'); return false;",
+                                    'onclick' => "openPrintModal('{$rowid}', '{$printUrl}', 'precio2', {$p2}); return false;",
                                 ]
                             );
                         }
@@ -139,7 +141,7 @@ $yaBusco = ($termValue !== '');
 <script src="<?= Yii::$app->request->baseUrl ?>/js/sweetalert2@11.js"></script>
 
 <script>
-    function openPrintModal(rowidItem, url, tipo) {
+    function openPrintModal(rowidItem, url, tipo, precioValor) {
         let titulo = (tipo === 'precio2') ? 'Imprimir precio 2' : 'Imprimir precio 1';
 
         Swal.fire({
@@ -169,7 +171,8 @@ $yaBusco = ($termValue !== '');
             $.post(url, {
                     rowidItem: rowidItem,
                     input: result.value,
-                    tipo: tipo
+                    tipo: tipo,
+                    precio: precioValor
                 })
                 .done(function(response) {
                     if (response.status === 'success') {

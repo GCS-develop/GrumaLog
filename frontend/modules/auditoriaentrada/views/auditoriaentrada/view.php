@@ -117,7 +117,7 @@ $this->registerCss('
         </div>
         <!-- Barra de progreso global -->
         <div style="margin-top:10px; font-size:12px; opacity:.9;">
-            <?= number_format($totalEscaneado) ?> uds escaneadas de <?= number_format($totalEsperado) ?> UNDentradas
+            <?= number_format($totalEscaneado) ?> uds escaneadas de <?= number_format($totalEsperado) ?> unidades entradas
             &nbsp;(<strong><?= $pctTotal ?>%</strong>)
         </div>
         <div class="progress-aud">
@@ -131,21 +131,21 @@ $this->registerCss('
         <div class="col-md-3 col-xs-6">
             <div class="kpi-box">
                 <div class="val" style="color:#3498db;"><?= number_format($totalEsperado) ?></div>
-                <div class="lbl">UNDentradas</div>
+                <div class="lbl">Unidades entradas</div>
             </div>
         </div>
         <?php if ($totalEntrada > 0): ?>
         <div class="col-md-3 col-xs-6">
             <div class="kpi-box">
                 <div class="val" style="color:#e67e22;"><?= number_format($totalEntrada) ?></div>
-                <div class="lbl">Conteo Entrada</div>
+                <div class="lbl">Conteo entradas</div>
             </div>
         </div>
         <?php endif; ?>
         <div class="col-md-3 col-xs-6">
             <div class="kpi-box">
                 <div class="val" style="color:#27ae60;"><?= number_format($totalEscaneado) ?></div>
-                <div class="lbl">Auditoría (uds)</div>
+                <div class="lbl">Auditado unidades</div>
             </div>
         </div>
         <div class="col-md-3 col-xs-6">
@@ -207,10 +207,10 @@ $this->registerCss('
                     <th style="text-align:left;">Item</th>
                     <th>Color</th>
                     <th>Talla</th>
-                    <th>UNDentradas</th>
-                    <?php if ($totalEntrada > 0): ?><th style="background:#d35400;">Cto. Entrada</th><?php endif; ?>
-                    <th>Paquetes</th>
-                    <th>Auditoría</th>
+                    <th>Unidades entradas</th>
+                    <?php if ($totalEntrada > 0): ?><th style="background:#d35400;">Conteo entradas</th><?php endif; ?>
+                    <th>Auditado paquetería</th>
+                    <th>Auditado unidades</th>
                     <th>Dif.</th>
                     <th>Op. Aud.</th>
                     <th></th>
@@ -282,7 +282,7 @@ $this->registerCss('
     </div>
 
     <div style="font-size:11px;color:#888;margin-top:8px;line-height:1.8;">
-        Nota: "UNDentradas" viene de cantidadBase en la OC. "Unidades" = paquetes escaneados × equivalencia por unidad de empaque.
+        Nota: "Unidades entradas" viene de cantidadBase en la OC. "Auditado unidades" = auditado paquetería × equivalencia por unidad de empaque.
     </div>
 </div>
 

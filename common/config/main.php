@@ -77,6 +77,14 @@ return [
 			'gii/*',
 			//'catalogos/*',
 			'api/*',
+			'siesa/proveedores-ws/sincronizarsiesa',
+			'siesa/proveedores-ws/buscarfaltantes',
+			'siesa/proveedores-ws/sincronizarfaltantes',
+			'devolucion/transferdevdocumentos/buscarproveedor',
+			'compras/portal-proveedores/ventas-diario',
+			'compras/portal-proveedores/ventas-fecha',
+			'compras/portal-proveedores/existencia-general',
+			'compras/portal-proveedores/existencia-resultado',
 		]
 	],
 

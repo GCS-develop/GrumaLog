@@ -38,8 +38,16 @@ if (isset($params["ProveedoresWsSearch"]["Nit"])) {
     <?php echo $this->render('_search', ['model' => $searchModel]); ?>
 
     <p align="center">
-        <?= Html::a('Sincronizar ERP', ['sincronizarerp', 'nit' => $nit], ['class' => 'btn btn-success btn-lg btn-create']) ?>
-    </p>    
+        <?= Html::a('Sincronizar ERP', ['sincronizarerp', 'nit' => $nit], ['class' => 'btn btn-success btn-sm']) ?>
+        &nbsp;
+        <?= Html::a('🔍 Buscar Proveedores Faltantes', ['buscarfaltantes'], ['class' => 'btn btn-warning btn-sm']) ?>
+        &nbsp;
+        <?= Html::a('Sincronizar Todos desde SIESA', ['sincronizarsiesa'], [
+            'class' => 'btn btn-primary btn-sm',
+            'data-confirm' => '¿Sincronizar TODOS los proveedores desde SIESA DB? Esto puede tardar unos segundos.',
+            'data-method' => 'get',
+        ]) ?>
+    </p>
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,

@@ -35,6 +35,7 @@ use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use kartik\grid\GridView;
 use kartik\export\ExportMenu;
+use common\widgets\Alert;
 
 /** @var yii\web\View $this */
 /** @var frontend\models\search\PedidoordendecompraitemSearch $searchModel */
@@ -278,6 +279,8 @@ $gridColumns = [
 
 <div class="pedidoordendecompraitem-index">
 
+    <?= Alert::widget() ?>
+
     <div id="search-form" style="display:none; margin-bottom:15px;">
         <?= $this->render('_search', ['model' => $searchModel, 
                                         'idpedido' => $modelpoc->idPedido, 
@@ -409,11 +412,29 @@ $gridColumns = [
                 },
             ],
 
-            //'totalUnidades',
-            //'created_at',
-            //'created_by',
-            //'updated_at',
-            //'updated_by',
+            [
+                'class'    => ActionColumn::className(),
+                'header'   => 'Acción',
+                'template' => '{delete}',
+                'buttons'  => [
+                    'delete' => function ($url, $model) {
+                        $item  = $model->item;
+                        $label = $item ? $item->item : $model->idItem;
+                        return Html::a(
+                            '<i class="fa fa-trash"></i>',
+                            ['/distribucion/pedidoordendecompraitem/delete', 'id' => $model->id],
+                            [
+                                'class' => 'btn btn-danger btn-sm',
+                                'title' => 'Eliminar item del pedido',
+                                'data'  => [
+                                    'confirm' => '¿Eliminar el item ' . $label . ' de este pedido? La acción quedará en el log de auditoría.',
+                                    'method'  => 'post',
+                                ],
+                            ]
+                        );
+                    },
+                ],
+            ],
 
         ],
     ]); ?>

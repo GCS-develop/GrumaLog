@@ -38,6 +38,45 @@ class TransferdevdocumentosController extends Controller
     }
 
     /**
+     * Búsqueda AJAX de proveedores para Select2.
+     * Retorna JSON: [{id, text}]
+     */
+    public function actionBuscarproveedor()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $q = trim(Yii::$app->request->get('q', ''));
+
+        $query = \frontend\models\Proveedor::find()
+            ->select(['nit', 'razonSocial'])
+            ->distinct()
+            ->orderBy('razonSocial');
+
+        if (!empty($q)) {
+            $query->andWhere(['or',
+                ['like', 'nit', $q],
+                ['like', 'razonSocial', $q],
+            ]);
+        }
+
+        $results = $query->limit(30)->asArray()->all();
+
+        $data = [];
+        $seen = [];
+        foreach ($results as $row) {
+            $nit = trim($row['nit']);
+            if (isset($seen[$nit])) continue;
+            $seen[$nit] = true;
+            $data[] = [
+                'id'   => $nit,
+                'text' => $nit . ' - ' . $row['razonSocial'],
+            ];
+        }
+
+        return ['results' => $data];
+    }
+
+    /**
      * Lists all Transferdevdocumentos models.
      *
      * @return string
