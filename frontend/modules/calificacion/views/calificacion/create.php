@@ -336,13 +336,15 @@ function calcularOportunidadPreview() {
                         <label class="control-label">Categoría</label>
                         <input type="text" id="campo-categoria" class="form-control form-control-sm"
                                name="Calificacionproveedor[categoria]"
-                               value="<?= Html::encode($model->categoria) ?>">
+                               value="<?= Html::encode($model->categoria) ?>"
+                               readonly style="background:#f8f9fa; cursor:not-allowed;">
                     </div>
                     <div class="form-group">
                         <label class="control-label">Subcategoría</label>
                         <input type="text" id="campo-subcategoria" class="form-control form-control-sm"
                                name="Calificacionproveedor[subcategoria]"
-                               value="<?= Html::encode($model->subcategoria) ?>">
+                               value="<?= Html::encode($model->subcategoria) ?>"
+                               readonly style="background:#f8f9fa; cursor:not-allowed;">
                     </div>
                     <?= $form->field($model, 'tipo_mercancia')->textInput(['maxlength' => 100]) ?>
                     <?= $form->field($model, 'producto')->textInput(['maxlength' => 200]) ?>
