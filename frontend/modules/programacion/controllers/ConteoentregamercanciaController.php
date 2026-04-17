@@ -691,14 +691,40 @@ class ConteoentregamercanciaController extends Controller
             $dataByItem[$item][] = $model;
         }
 
-        //var_dump($modelfactura);die("hola");
+        // --- Actualizar unidades_entregadas en calificacionproveedor ---
+        // Sumar totalUnidadesConteo una sola vez por item (evita doble conteo si hay múltiples filas)
+        $totalConteo = 0;
+        foreach ($dataByItem as $filas) {
+            $totalConteo += (int)($filas[0]['totalUnidadesConteo'] ?? 0);
+        }
+        $idOcCalif = $modelagenda->idOrdenCompra ?? null;
+        $calificacionAviso = null;
+        if ($idOcCalif) {
+            $calificacionesOc = \frontend\models\Calificacionproveedor::findAll(['id_ordendecompra' => $idOcCalif]);
+            if (!empty($calificacionesOc)) {
+                foreach ($calificacionesOc as $calReg) {
+                    $calReg->unidades_entregadas = $totalConteo;
+                    $calReg->save(false);
+                }
+                $calificacionAviso = [
+                    'type' => 'success',
+                    'msg'  => "Calificación actualizada: {$totalConteo} unidades contadas guardadas como unidades entregadas.",
+                ];
+            } else {
+                $calificacionAviso = [
+                    'type' => 'warning',
+                    'msg'  => 'Esta OC no tiene calificación registrada al momento de hacer la legalización del conteo.',
+                ];
+            }
+        }
 
         return $this->render('view_legalizacion_conteo', [
-            'dataProvider' => $dataProvider,
-            'dataByItem' => $dataByItem,
-            'dataProviderBD' => $dataProviderBD,
-            'modelagenda' => $modelagenda,
-            'modelfactura' => $modelfactura
+            'dataProvider'      => $dataProvider,
+            'dataByItem'        => $dataByItem,
+            'dataProviderBD'    => $dataProviderBD,
+            'modelagenda'       => $modelagenda,
+            'modelfactura'      => $modelfactura,
+            'calificacionAviso' => $calificacionAviso,
         ]);
     }
 

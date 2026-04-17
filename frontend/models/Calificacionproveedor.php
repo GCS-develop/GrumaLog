@@ -3,6 +3,7 @@
 namespace frontend\models;
 
 use Yii;
+use frontend\models\Calificacionincumplimiento;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
@@ -181,6 +182,11 @@ class Calificacionproveedor extends \yii\db\ActiveRecord
     {
         if (!parent::beforeSave($insert)) {
             return false;
+        }
+        // Recontamos desde BD para garantizar que num_incumplimientos siempre sea correcto,
+        // independientemente de lo que haya enviado el formulario.
+        if ($this->id_ordendecompra) {
+            $this->num_incumplimientos = Calificacionincumplimiento::countByOc($this->id_ordendecompra);
         }
         $this->calcularPuntajes();
         return true;
@@ -410,7 +416,11 @@ class Calificacionproveedor extends \yii\db\ActiveRecord
                 (SELECT TOP 1 CONVERT(VARCHAR(10), ag.fechaCita, 120)
                  FROM agendaentregamercancia ag
                  WHERE ag.idOrdenCompra = oc.id
-                 ORDER BY ag.id DESC) AS fecha_recepcion
+                 ORDER BY ag.id DESC) AS fecha_recepcion,
+                (SELECT TOP 1 cp2.producto
+                 FROM calificacionproveedor cp2
+                 WHERE cp2.id_ordendecompra = oc.id
+                 ORDER BY cp2.created_at DESC) AS producto
             FROM ordendecompra oc
             LEFT JOIN proveedor      p   ON p.id  = oc.idProveedor
             LEFT JOIN tipodocumento  td  ON td.id = oc.idTipoDocumento

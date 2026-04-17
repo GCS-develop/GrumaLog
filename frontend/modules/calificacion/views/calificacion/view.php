@@ -84,7 +84,7 @@ $criteriosInfo = [
                     <!-- CALIDAD CRITERIOS 30% -->
                     <div class="col-md-2 border-right">
                         <?php $lQ = Calificacionproveedor::puntajeALetra($model->calidad_ponderada) ?>
-                        <div class="text-muted small">CALIDAD CRITERIOS <span class="badge badge-secondary">30%</span></div>
+                        <div class="text-muted small"> CALIDAD ENTREGA <span class="badge badge-secondary">30%</span></div>
                         <div class="h2 font-weight-bold text-<?= Calificacionproveedor::letraClase($lQ) ?>"><?= $lQ ?></div>
                         <div class="text-muted"><?= number_format((float)$model->calidad_ponderada, 2) ?> / 5</div>
                     </div>

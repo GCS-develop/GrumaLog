@@ -123,6 +123,7 @@ $hayFiltros = !empty($filtros['q_oc']) || !empty($filtros['q_proveedor']) || !em
                             <th>CO</th>
                             <th>Fecha OC</th>
                             <th class="text-center">Fecha Recepción<br><small class="font-weight-normal">(cita agenda)</small></th>
+                            <th>Producto</th>
                             <th class="text-center">Subcats calificadas</th>
                             <th class="text-center">Ponderado OC</th>
                             <th class="text-center">Última Calif.</th>
@@ -132,7 +133,7 @@ $hayFiltros = !empty($filtros['q_oc']) || !empty($filtros['q_proveedor']) || !em
                     <tbody>
                     <?php if (empty($ocs)): ?>
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
+                            <td colspan="9" class="text-center text-muted py-4">
                                 <i class="fas fa-search fa-2x mb-2"></i><br>
                                 <?= $hayFiltros
                                     ? 'No se encontraron OC con los filtros aplicados.'
@@ -156,6 +157,9 @@ $hayFiltros = !empty($filtros['q_oc']) || !empty($filtros['q_proveedor']) || !em
                             <td><?= Html::encode(substr($oc['fecha'] ?? '', 0, 10)) ?></td>
                             <td class="text-center">
                                 <?= $oc['fecha_recepcion'] ? Html::encode($oc['fecha_recepcion']) : '<span class="text-muted">—</span>' ?>
+                            </td>
+                            <td style="font-size:0.82rem; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="<?= Html::encode($oc['producto'] ?? '') ?>">
+                                <?= $oc['producto'] ? Html::encode($oc['producto']) : '<span class="text-muted">—</span>' ?>
                             </td>
                             <td class="text-center">
                                 <?php if ($califs > 0): ?>

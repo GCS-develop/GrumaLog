@@ -223,27 +223,7 @@ function calcularOportunidadPreview() {
     });
 });
 
-// Selector de subcategorías (modo con OC)
-\$(document).on('click', '.btn-subcatsel', function() {
-    var sub = \$(this).data('sub');
-    var cat = \$(this).data('cat');
-    var ord = \$(this).data('ord');
-    var ent = \$(this).data('ent');
-
-    \$('.btn-subcatsel').removeClass('btn-warning').each(function() {
-        var wasCalif = \$(this).find('.fa-check-circle').length > 0;
-        \$(this).addClass(wasCalif ? 'btn-outline-success' : 'btn-outline-secondary');
-    });
-    \$(this).removeClass('btn-outline-secondary btn-outline-success').addClass('btn-warning');
-
-    \$('#campo-subcategoria').val(sub);
-    \$('#campo-categoria').val(cat);
-    \$('#calificacionproveedor-unidades_ordenadas').val(ord);
-    \$('#calificacionproveedor-unidades_entregadas').val(ent);
-
-    calcularCantidadPreview();
-    recalcularTotal();
-});
+// Selector de subcategorías: manejado por onclick directo en cada botón (función seleccionarSubcat)
 "); ?>
 
 <div class="container-fluid py-3">
@@ -257,6 +237,46 @@ function calcularOportunidadPreview() {
             <?= Html::a('<i class="fas fa-arrow-left"></i> Volver', ['/calificacion/calificacion/index'], ['class' => 'btn btn-secondary']) ?>
         </div>
     </div>
+
+    <script>
+    function seleccionarSubcat(btn) {
+        var sub = btn.getAttribute('data-sub');
+        var cat = btn.getAttribute('data-cat');
+        var ord = btn.getAttribute('data-ord');
+        var ent = btn.getAttribute('data-ent');
+
+        // Resetear todos los botones
+        document.querySelectorAll('.btn-subcatsel').forEach(function(b) {
+            b.classList.remove('btn-warning');
+            b.classList.add(b.querySelector('.fa-check-circle') ? 'btn-outline-success' : 'btn-outline-secondary');
+        });
+        btn.classList.remove('btn-outline-secondary', 'btn-outline-success');
+        btn.classList.add('btn-warning');
+
+        // Actualizar hidden inputs (para el POST)
+        document.getElementById('campo-subcategoria').value = sub;
+        document.getElementById('campo-categoria').value    = cat;
+
+        // Actualizar divs de display
+        var dSub = document.getElementById('display-subcategoria');
+        var dCat = document.getElementById('display-categoria');
+        dSub.textContent = sub;
+        dSub.style.background    = '#fff3cd';
+        dSub.style.borderColor   = '#ffc107';
+        dSub.style.fontWeight    = 'bold';
+        dCat.textContent = cat;
+        dCat.style.background    = '#fff3cd';
+        dCat.style.borderColor   = '#ffc107';
+
+        // Actualizar unidades
+        document.getElementById('calificacionproveedor-unidades_ordenadas').value  = ord;
+        document.getElementById('calificacionproveedor-unidades_entregadas').value = ent;
+
+        // Recalcular previews (si ya cargó jQuery y las funciones)
+        if (typeof calcularCantidadPreview === 'function') calcularCantidadPreview();
+        if (typeof recalcularTotal          === 'function') recalcularTotal();
+    }
+    </script>
 
     <?php if ($tieneSubcats): ?>
     <!-- Panel selector de subcategorías -->
@@ -281,6 +301,7 @@ function calcularOportunidadPreview() {
                             data-cat="<?= Html::encode($sc['categoria']) ?>"
                             data-ord="<?= (int)$sc['unidades_ordenadas'] ?>"
                             data-ent="<?= (int)$sc['unidades_entregadas'] ?>"
+                            onclick="seleccionarSubcat(this)"
                             style="font-size:0.82rem; padding:6px 8px;">
                         <?php if ($calif): ?>
                             <i class="fas fa-check-circle text-success"></i>
@@ -331,20 +352,28 @@ function calcularOportunidadPreview() {
                         'pluginOptions' => ['allowClear' => true],
                     ]) ?>
                     <?php endif ?>
-                    <?php /* Categoría y subcategoría siempre readonly cuando viene de OC */ ?>
+                    <?php /* Categoría y subcategoría: hidden input para envío + div visual */ ?>
+                    <?= Html::hiddenInput('Calificacionproveedor[categoria]',    $model->categoria,    ['id' => 'campo-categoria']) ?>
+                    <?= Html::hiddenInput('Calificacionproveedor[subcategoria]', $model->subcategoria, ['id' => 'campo-subcategoria']) ?>
                     <div class="form-group">
                         <label class="control-label">Categoría</label>
-                        <input type="text" id="campo-categoria" class="form-control form-control-sm"
-                               name="Calificacionproveedor[categoria]"
-                               value="<?= Html::encode($model->categoria) ?>"
-                               readonly style="background:#f8f9fa; cursor:not-allowed;">
+                        <div id="display-categoria"
+                             class="form-control form-control-sm"
+                             style="background:#fffbe6; border:1px dashed #ffc107; cursor:not-allowed; min-height:31px; line-height:1.6;">
+                            <?= $model->categoria
+                                ? Html::encode($model->categoria)
+                                : '<span class="text-muted" style="font-size:0.82rem;">← Seleccione una subcategoría arriba</span>' ?>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="control-label">Subcategoría</label>
-                        <input type="text" id="campo-subcategoria" class="form-control form-control-sm"
-                               name="Calificacionproveedor[subcategoria]"
-                               value="<?= Html::encode($model->subcategoria) ?>"
-                               readonly style="background:#f8f9fa; cursor:not-allowed;">
+                        <div id="display-subcategoria"
+                             class="form-control form-control-sm"
+                             style="background:#fffbe6; border:1px dashed #ffc107; cursor:not-allowed; min-height:31px; line-height:1.6;">
+                            <?= $model->subcategoria
+                                ? Html::encode($model->subcategoria)
+                                : '<span class="text-muted" style="font-size:0.82rem;">← Seleccione una subcategoría arriba</span>' ?>
+                        </div>
                     </div>
                     <?= $form->field($model, 'tipo_mercancia')->textInput(['maxlength' => 100]) ?>
                     <?= $form->field($model, 'producto')->textInput(['maxlength' => 200]) ?>

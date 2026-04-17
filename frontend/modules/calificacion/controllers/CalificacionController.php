@@ -665,6 +665,13 @@ class CalificacionController extends Controller
 
         if ($inc->save()) {
             $total = Calificacionincumplimiento::countByOc($idOc);
+
+            // Recalcular puntajes de todas las calificaciones de esta OC
+            // (beforeSave recontará num_incumplimientos y recalculará oportunidad + calidad_producto)
+            foreach (Calificacionproveedor::findAll(['id_ordendecompra' => $idOc]) as $cal) {
+                $cal->save(false);
+            }
+
             return [
                 'success'     => true,
                 'total'       => $total,

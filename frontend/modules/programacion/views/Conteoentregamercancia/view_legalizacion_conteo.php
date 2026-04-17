@@ -74,6 +74,15 @@ $filenameBD = "Relacion_Conteo_BD_CurvaTallasColores_" . $numeroorden . "_" . $f
 
 ?>
 
+<?php if (!empty($calificacionAviso)): ?>
+<div class="alert alert-<?= $calificacionAviso['type'] ?> alert-dismissible fade show" role="alert" style="margin:10px 0;">
+    <i class="fas fa-<?= $calificacionAviso['type'] === 'success' ? 'check-circle' : 'exclamation-triangle' ?>"></i>
+    <strong><?= $calificacionAviso['type'] === 'success' ? 'Calificación actualizada:' : 'Aviso:' ?></strong>
+    <?= \yii\helpers\Html::encode($calificacionAviso['msg']) ?>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Cerrar"><span>&times;</span></button>
+</div>
+<?php endif ?>
+
 <?php
 Modal::begin([
     'title' => '<h4>Registro datos básicos legalización conteo</h4>',

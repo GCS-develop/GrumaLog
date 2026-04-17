@@ -28,6 +28,7 @@ class ZonasController extends Controller
             INNER JOIN programacionentregamercancia pem ON pem.id = cem.idProgramacionEntregaMercancia
             INNER JOIN agendaentregamercancia aem  ON aem.id = pem.idAgendaEntregaMercancia
             INNER JOIN ordendecompra oc            ON oc.id  = aem.idOrdenCompra
+            INNER JOIN proveedor p                   ON p.id   = oc.idProveedor
             INNER JOIN tipodocumento td            ON td.id  = oc.idTipoDocumento
             LEFT  JOIN empleadologistica el        ON el.id  = cz.idEmpleadoLogistica
             LEFT  JOIN empleado emp               ON emp.id = el.idEmpleado
@@ -65,6 +66,7 @@ class ZonasController extends Controller
             SELECT
                 z.codigo                                                         AS zona,
                 td.codigo + '-' + CAST(oc.consecutivo AS NVARCHAR(50))          AS numeroOrden,
+                p.razonSocial                                                          AS proveedor,
                 it.item,
                 it.descripcion,
                 col.codigo                                                        AS color,
@@ -78,6 +80,7 @@ class ZonasController extends Controller
             GROUP BY
                 z.codigo,
                 td.codigo + '-' + CAST(oc.consecutivo AS NVARCHAR(50)),
+                p.razonSocial,
                 it.item,
                 it.descripcion,
                 col.codigo,

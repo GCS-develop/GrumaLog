@@ -223,6 +223,13 @@ $this->registerCss('
                 'width'     => '110px',
             ],
             [
+                'attribute' => 'proveedor',
+                'label'     => 'Proveedor',
+                'hAlign'    => 'center',
+                'vAlign'    => 'middle',
+                'width'     => '110px',
+            ],
+            [
                 'attribute' => 'item',
                 'label'     => 'Item',
                 'hAlign'    => 'center',
